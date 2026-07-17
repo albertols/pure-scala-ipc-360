@@ -1,0 +1,1699 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_F_PM_MAPLEGATE_CREDITS",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "ID_MIS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_SUBSTR_ID_MIS",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_MIS"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_THRESHOLD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NUM",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_ENTITYREF"
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NUM",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_BRANCHREF"
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PACT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TO_CHAR",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NUM_VARCHAR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_PACT"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_THRESHOLD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_ONBOARD_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_CEDARMILL_THRESHOLD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_CEDARMILL_THRESHOLD"
+                }
+              ]
+            },
+            "oakcombe1cedardell" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL"
+            }
+          },
+          {
+            "name" : "IMP_THRESHOLD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_KIND_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MONETARY",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_CIPHERKEY_MONETARY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CORALGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.CORALGROVE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_BIRCHGARTH_DEALMAKER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.DESC_BIRCHGARTH_DEALMAKER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_PINEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IND_PINEBLUFF_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PINETRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_PINETRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_OAKCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_CEDARBRIDGE_OAKCROSS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_KIND_ENTITYREF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_GRADING",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_GRADING"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_BIRCHTOWER",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_HAZELPIER",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_BIRCHTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_CEDARWICK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OPERATOR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_OPERATOR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_CEDARTRAIL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_KIND_CEDARTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_MIN_CEDARTRAIL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_MIN_CEDARTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_HAZARD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_KIND_HAZARD"
+                }
+              ]
+            },
+            "oakcombe1cedardell" : {
+              "name" : "EXP_MAPLEVALE_NOT_NULL"
+            }
+          },
+          {
+            "name" : "IND_FIRMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IND_FIRMOOR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_TOPAZGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_KIND_TOPAZGROVE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEBLUFF_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.DESC_MAPLEBLUFF_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_MAPLEBLUFF_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IND_MAPLEBLUFF_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_KIND_MAPLEBLUFF_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_MAPLEBLUFF_THRESHOLD_NO_CEDARCLIFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEBLUFF_THRESHOLD_NO_CEDARCLIFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARCLIFF_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARCLIFF_MAPLEBLUFF_THRESHOLD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_MAPLEGATE_MAPLECOMBE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEGATE_MAPLECOMBE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_FIRVALE_MAPLEBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_FIRVALE_MAPLEBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEBLUFF_THRESHOLD_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.DESC_MAPLEBLUFF_THRESHOLD_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_MAPLEBLUFF_THRESHOLD_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IND_MAPLEBLUFF_THRESHOLD_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_KIND_MAPLEBLUFF_THRESHOLD_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_MAPLEBLUFF_THRESHOLD_NO_CEDARCLIFF_2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEBLUFF_THRESHOLD_NO_CEDARCLIFF_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARCLIFF_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARCLIFF_MAPLEBLUFF_THRESHOLD_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_MAPLEGATE_MAPLECOMBE_2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEGATE_MAPLECOMBE_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_FIRVALE_MAPLEBLUFF_2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_FIRVALE_MAPLEBLUFF_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_NO_MAPLEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARTRAIL_NO_MAPLEDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARTRAIL_1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARTRAIL_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_DEALFLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_DEALFLOW_1",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_DEALFLOW_1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_DEALFLOW_2",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.FCH_DEALFLOW_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_TOPAZGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_TOPAZGLADE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_BIRCHTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_KIND_BIRCHTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_KIND_BIRCHTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.DESC_KIND_BIRCHTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ASHVAULT_CONTROL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_ASHVAULT_CONTROL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_SEQ_MEMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ID_SEQ_MEMBER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PCT_AMBERCROFT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.PCT_AMBERCROFT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          },
+          {
+            "name" : "TOPAZFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.TOPAZFIELD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "JADEWARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.JADEWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.TOPAZVALE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "JADEHOLM",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.JADEHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.TOPAZRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "JADESTEAD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.JADESTEAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.PEARLHEATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "JADEDELL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.JADEDELL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.TOPAZRIVER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "JADECROFT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.JADECROFT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.PEARLMOOR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "JADEHOLLOW",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.JADEHOLLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "JADEBLUFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.JADEBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "JADESPRING",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.JADESPRING"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.PEARLGARTH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLCOMBE2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.PEARLCOMBE2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATELAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.AGATELAKE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATECREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.AGATECREEK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATESTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.AGATESTONE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.AGATEBROOK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXFORK1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ONYXFORK1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.AGATEPOND"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXPASS1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ONYXPASS1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.AGATEFALLS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALTRAIL1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.OPALTRAIL1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXBEND1",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.ONYXBEND1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.AGATEFORK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEHOLM_37_MAPLEGATE.AGATEPASS"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_PINEHOLM_37_MAPLEGATE",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_PINEHOLM_37_MAPLEGATE",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_MIS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_MIS"
+            }
+          },
+          {
+            "name" : "ID_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_THRESHOLD"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_ENTITYREF"
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_BRANCHREF"
+            }
+          },
+          {
+            "name" : "ID_PACT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_PACT"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_ONBOARD_THRESHOLD"
+            }
+          },
+          {
+            "name" : "FCH_CEDARMILL_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_CEDARMILL_THRESHOLD"
+            }
+          },
+          {
+            "name" : "IMP_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_THRESHOLD"
+            }
+          },
+          {
+            "name" : "ID_KIND_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_KIND_THRESHOLD"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MONETARY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_CIPHERKEY_MONETARY"
+            }
+          },
+          {
+            "name" : "CORALGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.CORALGROVE"
+            }
+          },
+          {
+            "name" : "DESC_BIRCHGARTH_DEALMAKER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.DESC_BIRCHGARTH_DEALMAKER"
+            }
+          },
+          {
+            "name" : "IND_PINEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IND_PINEBLUFF_THRESHOLD"
+            }
+          },
+          {
+            "name" : "ID_PINETRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_PINETRAIL"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_OAKCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_CEDARBRIDGE_OAKCROSS"
+            }
+          },
+          {
+            "name" : "ID_KIND_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_KIND_ENTITYREF"
+            }
+          },
+          {
+            "name" : "ID_GRADING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_GRADING"
+            }
+          },
+          {
+            "name" : "FCH_BIRCHTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_BIRCHTOWER"
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_CEDARWICK"
+            }
+          },
+          {
+            "name" : "ID_OPERATOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_OPERATOR"
+            }
+          },
+          {
+            "name" : "ID_KIND_CEDARTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_KIND_CEDARTRAIL"
+            }
+          },
+          {
+            "name" : "IMP_MIN_CEDARTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_MIN_CEDARTRAIL"
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARTRAIL"
+            }
+          },
+          {
+            "name" : "ID_KIND_HAZARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_KIND_HAZARD"
+            }
+          },
+          {
+            "name" : "IND_FIRMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IND_FIRMOOR"
+            }
+          },
+          {
+            "name" : "ID_KIND_TOPAZGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_KIND_TOPAZGROVE"
+            }
+          },
+          {
+            "name" : "IMP_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEBLUFF_THRESHOLD"
+            }
+          },
+          {
+            "name" : "DESC_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.DESC_MAPLEBLUFF_THRESHOLD"
+            }
+          },
+          {
+            "name" : "FCH_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_MAPLEBLUFF_THRESHOLD"
+            }
+          },
+          {
+            "name" : "IND_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IND_MAPLEBLUFF_THRESHOLD"
+            }
+          },
+          {
+            "name" : "ID_KIND_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_KIND_MAPLEBLUFF_THRESHOLD"
+            }
+          },
+          {
+            "name" : "IMP_MAPLEBLUFF_THRESHOLD_NO_CEDARCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEBLUFF_THRESHOLD_NO_CEDARCLIFF"
+            }
+          },
+          {
+            "name" : "IMP_CEDARCLIFF_MAPLEBLUFF_THRESHOLD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARCLIFF_MAPLEBLUFF_THRESHOLD"
+            }
+          },
+          {
+            "name" : "IMP_MAPLEGATE_MAPLECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEGATE_MAPLECOMBE"
+            }
+          },
+          {
+            "name" : "FCH_FIRVALE_MAPLEBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_FIRVALE_MAPLEBLUFF"
+            }
+          },
+          {
+            "name" : "IMP_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEBLUFF_THRESHOLD_2"
+            }
+          },
+          {
+            "name" : "DESC_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.DESC_MAPLEBLUFF_THRESHOLD_2"
+            }
+          },
+          {
+            "name" : "FCH_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_MAPLEBLUFF_THRESHOLD_2"
+            }
+          },
+          {
+            "name" : "IND_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IND_MAPLEBLUFF_THRESHOLD_2"
+            }
+          },
+          {
+            "name" : "ID_KIND_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_KIND_MAPLEBLUFF_THRESHOLD_2"
+            }
+          },
+          {
+            "name" : "IMP_MAPLEBLUFF_THRESHOLD_NO_CEDARCLIFF_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEBLUFF_THRESHOLD_NO_CEDARCLIFF_2"
+            }
+          },
+          {
+            "name" : "IMP_CEDARCLIFF_MAPLEBLUFF_THRESHOLD_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARCLIFF_MAPLEBLUFF_THRESHOLD_2"
+            }
+          },
+          {
+            "name" : "IMP_MAPLEGATE_MAPLECOMBE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_MAPLEGATE_MAPLECOMBE_2"
+            }
+          },
+          {
+            "name" : "FCH_FIRVALE_MAPLEBLUFF_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_FIRVALE_MAPLEBLUFF_2"
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_NO_MAPLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARTRAIL_NO_MAPLEDOCK"
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARTRAIL_1"
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.IMP_CEDARTRAIL_2"
+            }
+          },
+          {
+            "name" : "FCH_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_DEALFLOW"
+            }
+          },
+          {
+            "name" : "FCH_DEALFLOW_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_DEALFLOW_1"
+            }
+          },
+          {
+            "name" : "FCH_DEALFLOW_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.FCH_DEALFLOW_2"
+            }
+          },
+          {
+            "name" : "ID_TOPAZGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_TOPAZGLADE"
+            }
+          },
+          {
+            "name" : "ID_KIND_BIRCHTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_KIND_BIRCHTRAIL"
+            }
+          },
+          {
+            "name" : "DESC_KIND_BIRCHTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.DESC_KIND_BIRCHTRAIL"
+            }
+          },
+          {
+            "name" : "ID_ASHVAULT_CONTROL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_ASHVAULT_CONTROL"
+            }
+          },
+          {
+            "name" : "ID_SEQ_MEMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ID_SEQ_MEMBER"
+            }
+          },
+          {
+            "name" : "PCT_AMBERCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.PCT_AMBERCROFT"
+            }
+          },
+          {
+            "name" : "TOPAZFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.TOPAZFIELD"
+            }
+          },
+          {
+            "name" : "JADEWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.JADEWARD"
+            }
+          },
+          {
+            "name" : "TOPAZVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.TOPAZVALE"
+            }
+          },
+          {
+            "name" : "JADEHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.JADEHOLM"
+            }
+          },
+          {
+            "name" : "TOPAZRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.TOPAZRIDGE"
+            }
+          },
+          {
+            "name" : "JADESTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.JADESTEAD"
+            }
+          },
+          {
+            "name" : "PEARLHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.PEARLHEATH"
+            }
+          },
+          {
+            "name" : "JADEDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.JADEDELL"
+            }
+          },
+          {
+            "name" : "TOPAZRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.TOPAZRIVER"
+            }
+          },
+          {
+            "name" : "JADECROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.JADECROFT"
+            }
+          },
+          {
+            "name" : "PEARLMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.PEARLMOOR"
+            }
+          },
+          {
+            "name" : "JADEHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.JADEHOLLOW"
+            }
+          },
+          {
+            "name" : "JADEBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.JADEBLUFF"
+            }
+          },
+          {
+            "name" : "JADESPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.JADESPRING"
+            }
+          },
+          {
+            "name" : "PEARLGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.PEARLGARTH"
+            }
+          },
+          {
+            "name" : "PEARLCOMBE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.PEARLCOMBE2"
+            }
+          },
+          {
+            "name" : "AGATELAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.AGATELAKE"
+            }
+          },
+          {
+            "name" : "AGATECREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.AGATECREEK"
+            }
+          },
+          {
+            "name" : "AGATESTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.AGATESTONE"
+            }
+          },
+          {
+            "name" : "AGATEBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.AGATEBROOK"
+            }
+          },
+          {
+            "name" : "ONYXFORK1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ONYXFORK1"
+            }
+          },
+          {
+            "name" : "AGATEPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.AGATEPOND"
+            }
+          },
+          {
+            "name" : "ONYXPASS1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ONYXPASS1"
+            }
+          },
+          {
+            "name" : "AGATEFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.AGATEFALLS"
+            }
+          },
+          {
+            "name" : "OPALTRAIL1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.OPALTRAIL1"
+            }
+          },
+          {
+            "name" : "ONYXBEND1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.ONYXBEND1"
+            }
+          },
+          {
+            "name" : "AGATEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.AGATEFORK"
+            }
+          },
+          {
+            "name" : "AGATEPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEHOLM_37_MAPLEGATE.AGATEPASS"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_PINEHOLM_37_MAPLEGATE",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_F_PM_MAPLEGATE_CREDITS"
+    ],
+    "sourceTableNames" : [
+      "STG_PINEHOLM_37_MAPLEGATE"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "ID_THRESHOLD"
+      ]
+    }
+  }
+}

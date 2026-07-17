@@ -1,0 +1,213 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_MAPLEGROVE_COD_DISTRICT",
+        "type" : "table",
+        "primaryKeys" : [
+          "ID_COD_DISTRICT",
+          "FCH_ONBOARD"
+        ],
+        "weststone" : [
+          {
+            "name" : "ID_COD_DISTRICT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_COD_DISTRICT_INSERT.ID_COD_DISTRICT"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_ROWANCLIFF_OUTERCROFT",
+              "parameters" : [
+                {
+                  "name" : "EXP_GET_SYSTEM_DATE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DES_COD_DISTRICT_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_COD_DISTRICT_INSERT.DES_COD_DISTRICT_1"
+            }
+          },
+          {
+            "name" : "DES_COD_DISTRICT_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_COD_DISTRICT_INSERT.DES_COD_DISTRICT_2"
+            }
+          },
+          {
+            "name" : "FCH_CEDARMILL",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : "NULL"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "FIL_DWH_MAPLEGROVE_COD_DISTRICT_INSERT",
+          "type" : "filter"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "FIL_DWH_MAPLEGROVE_COD_DISTRICT_INSERT",
+        "type" : "filter",
+        "filterCondition" : {
+          "name" : "EXP_OAKPEAK",
+          "parameters" : [
+            {
+              "source" : "LOAD_DATA"
+            },
+            {
+              "value" : "="
+            },
+            {
+              "value" : "'Y'"
+            }
+          ]
+        },
+        "weststone" : [
+          {
+            "name" : "ID_COD_DISTRICT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CEDARVALE_0008_COD_DISTRICT.ID_COD_DISTRICT"
+            }
+          },
+          {
+            "name" : "DES_COD_DISTRICT_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CEDARVALE_0008_COD_DISTRICT.DES_COD_DISTRICT_1"
+            }
+          },
+          {
+            "name" : "DES_COD_DISTRICT_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CEDARVALE_0008_COD_DISTRICT.DES_COD_DISTRICT_2"
+            }
+          },
+          {
+            "name" : "LOAD_DATA",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "name" : "LKP_DWH_MAPLEGROVE_COD_DISTRICT",
+                      "outputField" : "ID_COD_DISTRICT",
+                      "table" : "DWH_MAPLEGROVE_COD_DISTRICT",
+                      "condition" : "ID_COD_DISTRICT = IN_ID_COD_DISTRICT",
+                      "sourceFilter" : "FCH_CEDARMILL IS NULL",
+                      "matchPolicy" : "Any",
+                      "parameters" : [
+                        {
+                          "name" : "IN_ID_COD_DISTRICT",
+                          "dataType" : "String",
+                          "transformation" : {
+                            "source" : "SQ_ODS_CEDARVALE_0008_COD_DISTRICT.ID_COD_DISTRICT"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "'Y'"
+                },
+                {
+                  "value" : "'N'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ODS_CEDARVALE_0008_COD_DISTRICT",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ODS_CEDARVALE_0008_COD_DISTRICT",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CEDARVALE_0008_COD_DISTRICT.ID_RECORD"
+            }
+          },
+          {
+            "name" : "ID_COD_DISTRICT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CEDARVALE_0008_COD_DISTRICT.ID_COD_DISTRICT"
+            }
+          },
+          {
+            "name" : "DES_COD_DISTRICT_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CEDARVALE_0008_COD_DISTRICT.DES_COD_DISTRICT_1"
+            }
+          },
+          {
+            "name" : "DES_COD_DISTRICT_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CEDARVALE_0008_COD_DISTRICT.DES_COD_DISTRICT_2"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_CEDARVALE_0008_COD_DISTRICT.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_CEDARVALE_0008_COD_DISTRICT",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_MAPLEGROVE_COD_DISTRICT"
+    ],
+    "sourceTableNames" : [
+      "ODS_CEDARVALE_0008_COD_DISTRICT"
+    ]
+  }
+}

@@ -1,0 +1,845 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_TSX61",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.FCH_DATAENTRY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLLANE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_INNERPASS_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.PEARLLANE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXHOLLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXHOLLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.AGATECOMBE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.AGATEHEATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.BERYLFIELD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXWARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.BERYLVALE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.BERYLCLIFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_TSX61.BERYLGROVE"
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_TSX61.BERYLGLADE"
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXCOMBE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXCOMBE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXTHORP",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXTHORP"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.BERYLPEAK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.BERYLRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLRIVER2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.BERYLRIVER2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXWICK",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXWICK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXMOOR",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXMOOR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLGLADE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.PEARLGLADE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXCROFT",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXCROFT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXSTEAD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXSTEAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXHOLM",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.AGATEMOOR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.BERYLMARSH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.PEARLRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.AGATEGARTH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.BERYLSHORE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLRIVER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.PEARLRIVER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXHEATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXHEATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXGARTH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ONYXGARTH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLFIELD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.PEARLFIELD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ASHHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ASHHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_TSX61.OPALPASS"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_TSX61.OPALSTONE"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.HAZELWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ASHTOWER",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_HAZELPIER",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TSX61.ASHTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          },
+          {
+            "name" : "BERYLCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_TSX61.BERYLCROSS"
+            }
+          },
+          {
+            "name" : "BERYLBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_TSX61.BERYLBEND"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_TSX61",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_TSX61",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "PEARLLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.PEARLLANE"
+            }
+          },
+          {
+            "name" : "ONYXHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXHOLLOW"
+            }
+          },
+          {
+            "name" : "AGATECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.AGATECOMBE"
+            }
+          },
+          {
+            "name" : "AGATEHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.AGATEHEATH"
+            }
+          },
+          {
+            "name" : "BERYLFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLFIELD"
+            }
+          },
+          {
+            "name" : "ONYXWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXWARD"
+            }
+          },
+          {
+            "name" : "BERYLVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLVALE"
+            }
+          },
+          {
+            "name" : "BERYLCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLCLIFF"
+            }
+          },
+          {
+            "name" : "BERYLGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLGROVE"
+            }
+          },
+          {
+            "name" : "BERYLGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLGLADE"
+            }
+          },
+          {
+            "name" : "ONYXCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXCOMBE"
+            }
+          },
+          {
+            "name" : "ONYXTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXTHORP"
+            }
+          },
+          {
+            "name" : "BERYLPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLPEAK"
+            }
+          },
+          {
+            "name" : "BERYLRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLRIDGE"
+            }
+          },
+          {
+            "name" : "BERYLRIVER2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLRIVER2"
+            }
+          },
+          {
+            "name" : "ONYXWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXWICK"
+            }
+          },
+          {
+            "name" : "ONYXMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXMOOR"
+            }
+          },
+          {
+            "name" : "PEARLGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.PEARLGLADE"
+            }
+          },
+          {
+            "name" : "ONYXBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXBLUFF"
+            }
+          },
+          {
+            "name" : "ONYXCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXCROFT"
+            }
+          },
+          {
+            "name" : "ONYXSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXSTEAD"
+            }
+          },
+          {
+            "name" : "ONYXHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXHOLM"
+            }
+          },
+          {
+            "name" : "AGATEMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.AGATEMOOR"
+            }
+          },
+          {
+            "name" : "BERYLMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLMARSH"
+            }
+          },
+          {
+            "name" : "PEARLRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.PEARLRIDGE"
+            }
+          },
+          {
+            "name" : "AGATEGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.AGATEGARTH"
+            }
+          },
+          {
+            "name" : "BERYLSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLSHORE"
+            }
+          },
+          {
+            "name" : "PEARLRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.PEARLRIVER"
+            }
+          },
+          {
+            "name" : "ONYXHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXHEATH"
+            }
+          },
+          {
+            "name" : "ONYXGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ONYXGARTH"
+            }
+          },
+          {
+            "name" : "PEARLFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.PEARLFIELD"
+            }
+          },
+          {
+            "name" : "ASHHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ASHHOLM"
+            }
+          },
+          {
+            "name" : "OPALPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.OPALPASS"
+            }
+          },
+          {
+            "name" : "OPALSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.OPALSTONE"
+            }
+          },
+          {
+            "name" : "HAZELWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.HAZELWARD"
+            }
+          },
+          {
+            "name" : "ASHTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.ASHTOWER"
+            }
+          },
+          {
+            "name" : "BERYLCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLCROSS"
+            }
+          },
+          {
+            "name" : "BERYLBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TSX61.BERYLBEND"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_TSX61",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_TSX61"
+    ],
+    "sourceTableNames" : [
+      "STG_TSX61"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "PEARLLANE"
+      ]
+    }
+  }
+}

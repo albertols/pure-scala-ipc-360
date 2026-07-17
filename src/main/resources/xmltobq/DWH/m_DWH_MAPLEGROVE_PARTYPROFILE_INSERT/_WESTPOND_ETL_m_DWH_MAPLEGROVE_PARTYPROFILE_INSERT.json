@@ -1,0 +1,11 @@
+{
+  "items" : [
+    {
+      "name" : "LKP_DWH_MAPLEGROVE_PARTYPROFILE_EXISTING_PROFILES",
+      "translationEngine" : "default",
+      "translatedBigQueryCompliant" : false,
+      "sqlOverride" : "SELECT DISTINCT ID_PARTYPROFILE AS ID_PARTYPROFILE FROM DWH_MAPLEGROVE_PARTYPROFILE",
+      "sqlOverrideTranslated" : "SELECT DISTINCT ID_PARTYPROFILE AS ID_PARTYPROFILE FROM `DWH.DWH_MAPLEGROVE_PARTYPROFILE`"
+    }
+  ]
+}

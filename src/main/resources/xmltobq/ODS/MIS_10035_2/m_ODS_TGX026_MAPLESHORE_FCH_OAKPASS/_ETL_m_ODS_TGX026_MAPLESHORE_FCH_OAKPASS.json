@@ -1,0 +1,117 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_TGX026_MAPLESHORE_FCH_OAKPASS",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_OAKPASS_ID",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_CALMBROOK_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TGX026_MAPLESHORE_FCH_OAKPASS.FCH_OAKPASS_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARWARD_INGEST",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TGX026_MAPLESHORE_FCH_OAKPASS.CEDARWARD_INGEST"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_OAKPASS_DESC",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_TGX026_MAPLESHORE_FCH_OAKPASS.FCH_OAKPASS_DESC"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_TGX026_MAPLESHORE_FCH_OAKPASS",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_TGX026_MAPLESHORE_FCH_OAKPASS",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_OAKPASS_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TGX026_MAPLESHORE_FCH_OAKPASS.FCH_OAKPASS_ID"
+            }
+          },
+          {
+            "name" : "CEDARWARD_INGEST",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TGX026_MAPLESHORE_FCH_OAKPASS.CEDARWARD_INGEST"
+            }
+          },
+          {
+            "name" : "FCH_OAKPASS_DESC",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_TGX026_MAPLESHORE_FCH_OAKPASS.FCH_OAKPASS_DESC"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_TGX026_MAPLESHORE_FCH_OAKPASS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_TGX026_MAPLESHORE_FCH_OAKPASS"
+    ],
+    "sourceTableNames" : [
+      "STG_TGX026_MAPLESHORE_FCH_OAKPASS"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "FCH_OAKPASS_ID"
+      ]
+    }
+  }
+}

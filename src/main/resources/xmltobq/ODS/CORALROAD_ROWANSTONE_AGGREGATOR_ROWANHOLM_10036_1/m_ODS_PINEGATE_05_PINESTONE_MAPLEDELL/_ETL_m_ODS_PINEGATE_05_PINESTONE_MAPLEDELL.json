@@ -1,0 +1,226 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_PINEGATE_05_PINESTONE_MAPLEDELL",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "PINEPIER_ID",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.PINEPIER_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALCROFT_JADECLIFF_AND_ONYXMARSH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.OPALCROFT_JADECLIFF_AND_ONYXMARSH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CREATION_TIME",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_5",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.CREATION_TIME"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXYARD_CORALBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.ONYXYARD_CORALBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXTRACK_TIME",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_5",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.ONYXTRACK_TIME"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FIRST_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.FIRST_NAME"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.BERYLMILL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CORALSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL.CORALSHORE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_PINEGATE_05_PINESTONE_MAPLEDELL",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "PINEPIER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.PINEPIER_ID"
+            }
+          },
+          {
+            "name" : "OPALCROFT_JADECLIFF_AND_ONYXMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.OPALCROFT_JADECLIFF_AND_ONYXMARSH"
+            }
+          },
+          {
+            "name" : "CREATION_TIME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.CREATION_TIME"
+            }
+          },
+          {
+            "name" : "ONYXYARD_CORALBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.ONYXYARD_CORALBLUFF"
+            }
+          },
+          {
+            "name" : "ONYXTRACK_TIME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.ONYXTRACK_TIME"
+            }
+          },
+          {
+            "name" : "FIRST_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.FIRST_NAME"
+            }
+          },
+          {
+            "name" : "BERYLMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.BERYLMILL"
+            }
+          },
+          {
+            "name" : "CORALSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL.CORALSHORE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_PINEGATE_05_PINESTONE_MAPLEDELL",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_PINEGATE_05_PINESTONE_MAPLEDELL"
+    ],
+    "sourceTableNames" : [
+      "STG_PINEGATE_05_PINESTONE_MAPLEDELL"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "PINEPIER_ID"
+      ]
+    }
+  }
+}

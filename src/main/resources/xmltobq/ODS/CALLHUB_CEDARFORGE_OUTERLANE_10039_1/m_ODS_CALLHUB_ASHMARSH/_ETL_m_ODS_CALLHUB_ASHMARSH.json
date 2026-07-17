@@ -1,0 +1,141 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_CALLHUB_ASHMARSH",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "CREATED_FIRTHORP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_CALLHUB_HAZELPIER_1",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_ASHMARSH.CREATED_FIRTHORP"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZBLUFF_TYPE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_ASHMARSH.TOPAZBLUFF_TYPE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CALLHUB_ASHMARSH.ID"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "UUID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_ASHMARSH.UUID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_CALLHUB_ASHMARSH",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_CALLHUB_ASHMARSH",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "CREATED_FIRTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_ASHMARSH.CREATED_FIRTHORP"
+            }
+          },
+          {
+            "name" : "TOPAZBLUFF_TYPE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_ASHMARSH.TOPAZBLUFF_TYPE"
+            }
+          },
+          {
+            "name" : "ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_ASHMARSH.ID"
+            }
+          },
+          {
+            "name" : "UUID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_ASHMARSH.UUID"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_CALLHUB_ASHMARSH",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_CALLHUB_ASHMARSH"
+    ],
+    "sourceTableNames" : [
+      "STG_CALLHUB_ASHMARSH"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "ID"
+      ]
+    }
+  }
+}

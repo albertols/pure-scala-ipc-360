@@ -1,0 +1,628 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX",
+        "type" : "table",
+        "primaryKeys" : [
+          "ID_GROUPING_MAPLEMILL4PINERIDGE",
+          "FCH_OAKBARN"
+        ],
+        "weststone" : [
+          {
+            "name" : "ID_GROUPING_MAPLEMILL4PINERIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_OUTERSTEAD"
+            }
+          },
+          {
+            "name" : "ID_KIND_ROWANCLIFF_EX",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALSTONE"
+            }
+          },
+          {
+            "name" : "ID_PHASE_ROWANCLIFF_EX",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALPASS"
+            }
+          },
+          {
+            "name" : "DESC_CEDARSHORE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_WESTROAD1"
+            }
+          },
+          {
+            "name" : "DESC_CEDARSHORE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_WESTROAD2"
+            }
+          },
+          {
+            "name" : "FCH_ROWANTHORP_ROWANCLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALBROOK"
+            }
+          },
+          {
+            "name" : "ID_NUM_GROUPING_MAPLEMILL4PINERIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALSPRING"
+            }
+          },
+          {
+            "name" : "ID_MONETARY_GROUPING_MAPLEMILL4PINERIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALFORK"
+            }
+          },
+          {
+            "name" : "ID_KIND_MAPLEFORGE_EX",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALBEND"
+            }
+          },
+          {
+            "name" : "ID_MAPLEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_REPLACECHR",
+              "parameters" : [
+                {
+                  "value" : "TRUE"
+                },
+                {
+                  "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALGLADE"
+                },
+                {
+                  "value" : "'.'"
+                },
+                {
+                  "value" : "''"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_GROUPING_MAPLEMILL4PINERIDGE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALLAKE"
+            }
+          },
+          {
+            "name" : "ID_DEALFLOW_EX",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALDELL"
+            }
+          },
+          {
+            "name" : "ID_CEDARCREEK_EX",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALFALLS"
+            }
+          },
+          {
+            "name" : "FCH_CEDARCREEK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALCREEK"
+            }
+          },
+          {
+            "name" : "FCH_BIRCHSHORE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALPOND"
+            }
+          },
+          {
+            "name" : "IND_DEEPDELL_BQ",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_CENTRALHOLLOW"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_GROUPING_MAPLEMILL4PINERIDGE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_EASTRIVER"
+            }
+          },
+          {
+            "name" : "ID_OPERATOR_ONBOARD_MAPLEMILL4PINERIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_EASTMARSH"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_EASTFIELD"
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_EASTVALE"
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_EASTGLADE"
+            }
+          },
+          {
+            "name" : "ID_OPERATOR_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_EASTSHORE"
+            }
+          },
+          {
+            "name" : "FCH_MAPLEMARSH_MOD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX.ods_EASTRIDGE"
+            }
+          },
+          {
+            "name" : "FCH_OAKBARN",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          },
+          {
+            "name" : "FCH_MAPLELANE",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "value" : "NULL"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX",
+          "type" : "filter"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "FIL_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX",
+        "type" : "filter",
+        "filterCondition" : {
+          "name" : "EXP_OAKPEAK",
+          "parameters" : [
+            {
+              "source" : "LOAD_DATA"
+            },
+            {
+              "value" : "="
+            },
+            {
+              "value" : "'Y'"
+            }
+          ]
+        },
+        "weststone" : [
+          {
+            "name" : "ods_OUTERSTEAD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_OUTERSTEAD"
+            }
+          },
+          {
+            "name" : "ods_CENTRALSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALSTONE"
+            }
+          },
+          {
+            "name" : "ods_CENTRALPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALPASS"
+            }
+          },
+          {
+            "name" : "ods_WESTROAD1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_WESTROAD1"
+            }
+          },
+          {
+            "name" : "ods_WESTROAD2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_WESTROAD2"
+            }
+          },
+          {
+            "name" : "ods_CENTRALBROOK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALBROOK"
+            }
+          },
+          {
+            "name" : "ods_CENTRALSPRING",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALSPRING"
+            }
+          },
+          {
+            "name" : "ods_CENTRALFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALFORK"
+            }
+          },
+          {
+            "name" : "ods_CENTRALBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALBEND"
+            }
+          },
+          {
+            "name" : "ods_CENTRALGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALGLADE"
+            }
+          },
+          {
+            "name" : "ods_CENTRALLAKE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALLAKE"
+            }
+          },
+          {
+            "name" : "ods_CENTRALDELL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALDELL"
+            }
+          },
+          {
+            "name" : "ods_CENTRALFALLS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALFALLS"
+            }
+          },
+          {
+            "name" : "ods_CENTRALCREEK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALCREEK"
+            }
+          },
+          {
+            "name" : "ods_CENTRALPOND",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALPOND"
+            }
+          },
+          {
+            "name" : "ods_CENTRALHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_CENTRALHOLLOW"
+            }
+          },
+          {
+            "name" : "ods_EASTRIVER",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_EASTRIVER"
+            }
+          },
+          {
+            "name" : "ods_EASTMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_EASTMARSH"
+            }
+          },
+          {
+            "name" : "ods_EASTRIDGE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_EASTRIDGE"
+            }
+          },
+          {
+            "name" : "ods_EASTFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_EASTFIELD"
+            }
+          },
+          {
+            "name" : "ods_EASTVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_EASTVALE"
+            }
+          },
+          {
+            "name" : "ods_EASTGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_EASTGLADE"
+            }
+          },
+          {
+            "name" : "ods_EASTSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ48.ods_EASTSHORE"
+            }
+          },
+          {
+            "name" : "LOAD_DATA",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "name" : "LKP_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX",
+                      "outputField" : "ID_GROUPING_MAPLEMILL4PINERIDGE",
+                      "table" : "DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX",
+                      "condition" : "ID_GROUPING_MAPLEMILL4PINERIDGE = ods_OUTERSTEAD",
+                      "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                      "matchPolicy" : "Any",
+                      "parameters" : [
+                        {
+                          "name" : "ods_OUTERSTEAD",
+                          "dataType" : "BigDecimal",
+                          "transformation" : {
+                            "source" : "SQ_ODS_TEZ48.ods_OUTERSTEAD"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "'Y'"
+                },
+                {
+                  "value" : "'N'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ODS_TEZ48",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ODS_TEZ48",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ods_OUTERSTEAD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ48.OUTERSTEAD"
+            }
+          },
+          {
+            "name" : "ods_CENTRALSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALSTONE"
+            }
+          },
+          {
+            "name" : "ods_CENTRALPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALPASS"
+            }
+          },
+          {
+            "name" : "ods_WESTROAD1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.WESTROAD1"
+            }
+          },
+          {
+            "name" : "ods_WESTROAD2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.WESTROAD2"
+            }
+          },
+          {
+            "name" : "ods_CENTRALBROOK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALBROOK"
+            }
+          },
+          {
+            "name" : "ods_CENTRALSPRING",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALSPRING"
+            }
+          },
+          {
+            "name" : "ods_CENTRALFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALFORK"
+            }
+          },
+          {
+            "name" : "ods_CENTRALBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALBEND"
+            }
+          },
+          {
+            "name" : "ods_CENTRALGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALGLADE"
+            }
+          },
+          {
+            "name" : "ods_CENTRALLAKE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALLAKE"
+            }
+          },
+          {
+            "name" : "ods_CENTRALDELL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALDELL"
+            }
+          },
+          {
+            "name" : "ods_CENTRALFALLS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALFALLS"
+            }
+          },
+          {
+            "name" : "ods_CENTRALCREEK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALCREEK"
+            }
+          },
+          {
+            "name" : "ods_CENTRALPOND",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALPOND"
+            }
+          },
+          {
+            "name" : "ods_CENTRALHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.CENTRALHOLLOW"
+            }
+          },
+          {
+            "name" : "ods_EASTRIVER",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_TEZ48.EASTRIVER"
+            }
+          },
+          {
+            "name" : "ods_EASTMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.EASTMARSH"
+            }
+          },
+          {
+            "name" : "ods_EASTRIDGE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_TEZ48.EASTRIDGE"
+            }
+          },
+          {
+            "name" : "ods_EASTFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.EASTFIELD"
+            }
+          },
+          {
+            "name" : "ods_EASTVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.EASTVALE"
+            }
+          },
+          {
+            "name" : "ods_EASTGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.EASTGLADE"
+            }
+          },
+          {
+            "name" : "ods_EASTSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ48.EASTSHORE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_TEZ48",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX"
+    ],
+    "sourceTableNames" : [
+      "ODS_TEZ48"
+    ]
+  }
+}

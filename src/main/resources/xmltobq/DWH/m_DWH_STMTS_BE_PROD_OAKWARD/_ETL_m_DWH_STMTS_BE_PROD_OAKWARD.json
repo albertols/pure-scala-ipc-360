@@ -1,0 +1,1602 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_STMTS_BE_PROD_OAKWARD",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "FIRGROVE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.FIRGROVE_ID"
+            }
+          },
+          {
+            "name" : "PROD_ID",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.PROD_ID"
+            }
+          },
+          {
+            "name" : "BIRCHTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHTRACK"
+            }
+          },
+          {
+            "name" : "INNERBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.INNERBEND"
+            }
+          },
+          {
+            "name" : "BIRCHFORD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_IS_NUMBER",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_TO_DECIMAL",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BIRCHFORD_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_SUBSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+                        },
+                        {
+                          "value" : "1"
+                        },
+                        {
+                          "value" : "1"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "'-'"
+                    }
+                  ]
+                },
+                {
+                  "value" : "-1"
+                },
+                {
+                  "value" : "1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_IS_NUMBER",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_TO_DECIMAL",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPATH_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_IS_NUMBER",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            },
+                            {
+                              "value" : "1"
+                            },
+                            {
+                              "value" : "1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'-'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "-1"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPATH_VAR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_NOT",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IS_NUMBER",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IIF",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_IN",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_SUBSTR",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                    },
+                                    {
+                                      "value" : "1"
+                                    },
+                                    {
+                                      "value" : "1"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "'+'"
+                                },
+                                {
+                                  "value" : "'-'"
+                                }
+                              ]
+                            },
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                },
+                                {
+                                  "value" : "2"
+                                },
+                                {
+                                  "name" : "EXP_LENGTH",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IN",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            },
+                            {
+                              "value" : "1"
+                            },
+                            {
+                              "value" : "1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "'+'"
+                        },
+                        {
+                          "value" : "'-'"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "EXP_SUBSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                        },
+                        {
+                          "value" : "2"
+                        },
+                        {
+                          "name" : "EXP_LENGTH",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPATH_VAR_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_NOT",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IS_NUMBER",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IIF",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_IN",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_SUBSTR",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                    },
+                                    {
+                                      "value" : "1"
+                                    },
+                                    {
+                                      "value" : "1"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "'+'"
+                                },
+                                {
+                                  "value" : "'-'"
+                                }
+                              ]
+                            },
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                },
+                                {
+                                  "value" : "2"
+                                },
+                                {
+                                  "name" : "EXP_LENGTH",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+                            },
+                            {
+                              "value" : "1"
+                            },
+                            {
+                              "value" : "1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'-'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "-1"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPATH_PINEBLUFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH_PINEBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPIER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_IS_NUMBER",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_TO_DECIMAL",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPIER_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_IS_NUMBER",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            },
+                            {
+                              "value" : "1"
+                            },
+                            {
+                              "value" : "1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'-'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "-1"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPIER_VAR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_NOT",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IS_NUMBER",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IIF",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_IN",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_SUBSTR",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                    },
+                                    {
+                                      "value" : "1"
+                                    },
+                                    {
+                                      "value" : "1"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "'+'"
+                                },
+                                {
+                                  "value" : "'-'"
+                                }
+                              ]
+                            },
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                },
+                                {
+                                  "value" : "2"
+                                },
+                                {
+                                  "name" : "EXP_LENGTH",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IN",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            },
+                            {
+                              "value" : "1"
+                            },
+                            {
+                              "value" : "1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "'+'"
+                        },
+                        {
+                          "value" : "'-'"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "EXP_SUBSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                        },
+                        {
+                          "value" : "2"
+                        },
+                        {
+                          "name" : "EXP_LENGTH",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPIER_VAR_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_NOT",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IS_NUMBER",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IIF",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_IN",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_SUBSTR",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                    },
+                                    {
+                                      "value" : "1"
+                                    },
+                                    {
+                                      "value" : "1"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "'+'"
+                                },
+                                {
+                                  "value" : "'-'"
+                                }
+                              ]
+                            },
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                },
+                                {
+                                  "value" : "2"
+                                },
+                                {
+                                  "name" : "EXP_LENGTH",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+                            },
+                            {
+                              "value" : "1"
+                            },
+                            {
+                              "value" : "1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'-'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "-1"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BIRCHRIVER_HAZELRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_IS_NUMBER",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_TO_DECIMAL",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BIRCHRIVER_MAPLEGARTH_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_IS_NUMBER",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_IN",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_SUBSTR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                                },
+                                {
+                                  "value" : "1"
+                                },
+                                {
+                                  "value" : "1"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "'+'"
+                            },
+                            {
+                              "value" : "'-'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                            },
+                            {
+                              "value" : "2"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+                            },
+                            {
+                              "value" : "1"
+                            },
+                            {
+                              "value" : "1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'-'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "-1"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BIRCHRIVER_INNERPIER",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "BIRCHRIVER_MAPLERIDGE_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "LOWERTRAIL",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "LOWERTRAIL_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "LOWERFORGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "LOWERFORGE_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "LOWERVAULT",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "LOWERVAULT_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "SOUTHPATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "SOUTHPATH_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "SOUTHPATH_VAR",
+            "dataType" : "String",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "SOUTHPATH_VAR_PINECLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "value" : ""
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ODS_STMTS_BE_PROD_OAKWARD",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ODS_STMTS_BE_PROD_OAKWARD",
+        "type" : "BERYLFALLS",
+        "sqlQuery" : "WITH DATA AS (SELECT FIRGROVE_ID, PROD_ID, BIRCHTRACK, INNERBEND, ROWANHOLLOW(BIRCHFORD, '*') AS BIRCHFORD, ROWANHOLLOW(CEDARPATH, '*') AS CEDARPATH, ROWANHOLLOW(CEDARPATH_PINEBLUFF, '*') AS CEDARPATH_PINEBLUFF, ROWANHOLLOW(CEDARPIER, '*') AS CEDARPIER, ROWANHOLLOW(BIRCHRIVER_HAZELRIDGE, '*') AS BIRCHRIVER_HAZELRIDGE FROM ODS_STMTS_BE_PROD_OAKWARD) SELECT DATA.FIRGROVE_ID, DATA.PROD_ID, DATA.BIRCHTRACK, DATA.INNERBEND, REPLACE(trim(a.COLUMN_VALUE), '*', '') as BIRCHFORD, REPLACE(trim(cedardell.COLUMN_VALUE), '*', '') as CEDARPATH, REPLACE(trim(pineridge.COLUMN_VALUE), '*', '') as CEDARPATH_PINEBLUFF, REPLACE(trim(maplegrove.COLUMN_VALUE), '*', '') as CEDARPIER, REPLACE(trim(e.COLUMN_VALUE), '*', '') as BIRCHRIVER_HAZELRIDGE, null as BIRCHRIVER_INNERPIER, null as LOWERTRAIL, null as LOWERFORGE, null as LOWERVAULT, null as SOUTHPATH FROM DATA, tealpath(('\"' || REPLACE(birchford, ',', '\",\"') || '\"')) a, tealpath(('\"' || REPLACE(cedarpath, ',', '\",\"') || '\"')) cedardell, tealpath(('\"' || REPLACE(cedarpath_pinebluff, ',', '\",\"') || '\"')) pineridge, tealpath(('\"' || REPLACE(cedarpier, ',', '\",\"') || '\"')) maplegrove, tealpath(('\"' || REPLACE(birchriver_hazelridge, ',', '\",\"') || '\"')) e",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FIRGROVE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.FIRGROVE_ID"
+            }
+          },
+          {
+            "name" : "PROD_ID",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.PROD_ID"
+            }
+          },
+          {
+            "name" : "BIRCHTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.BIRCHTRACK"
+            }
+          },
+          {
+            "name" : "INNERBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.INNERBEND"
+            }
+          },
+          {
+            "name" : "BIRCHFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.BIRCHFORD"
+            }
+          },
+          {
+            "name" : "CEDARPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH"
+            }
+          },
+          {
+            "name" : "CEDARPATH_PINEBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.CEDARPATH_PINEBLUFF"
+            }
+          },
+          {
+            "name" : "CEDARPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.CEDARPIER"
+            }
+          },
+          {
+            "name" : "BIRCHRIVER_HAZELRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_HAZELRIDGE"
+            }
+          },
+          {
+            "name" : "BIRCHRIVER_INNERPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.BIRCHRIVER_INNERPIER"
+            }
+          },
+          {
+            "name" : "LOWERTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.LOWERTRAIL"
+            }
+          },
+          {
+            "name" : "LOWERFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.LOWERFORGE"
+            }
+          },
+          {
+            "name" : "LOWERVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.LOWERVAULT"
+            }
+          },
+          {
+            "name" : "SOUTHPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_STMTS_BE_PROD_OAKWARD.SOUTHPATH"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_STMTS_BE_PROD_OAKWARD",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_STMTS_BE_PROD_OAKWARD"
+    ],
+    "sourceTableNames" : [
+      "ODS_STMTS_BE_PROD_OAKWARD"
+    ]
+  }
+}

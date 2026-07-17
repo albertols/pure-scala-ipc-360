@@ -1,0 +1,88 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_E_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_LAWFUL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL.ID_ENTITYREF_LAWFUL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_ENTITYREF_LAWFUL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL.DESC_ENTITYREF_LAWFUL"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_ENTITYREF_LAWFUL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL.ID_ENTITYREF_LAWFUL"
+            }
+          },
+          {
+            "name" : "DESC_ENTITYREF_LAWFUL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL.DESC_ENTITYREF_LAWFUL"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_E_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL"
+    ],
+    "sourceTableNames" : [
+      "ODS_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL"
+    ]
+  }
+}

@@ -1,0 +1,568 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_E_MAPLESHORE_ERP_STAFF",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_OAKBARN",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_OUTERCROFT_TO_DATE",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_DECIMAL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_OAKBARN"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_MAPLELANE",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_OUTERCROFT_TO_DATE",
+              "parameters" : [
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_MAPLELANE"
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'99991231'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "NULL"
+                    },
+                    {
+                      "name" : "EXP_TO_DECIMAL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_MAPLELANE"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_ENTITYREF"
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_FLINTGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_SUBSTR",
+              "parameters" : [
+                {
+                  "name" : "EXP_TRIM",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_NUCLEUS_FLINTGLADE"
+                    }
+                  ]
+                },
+                {
+                  "value" : "3"
+                },
+                {
+                  "value" : "6"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_ASHDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_SUBSTR",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_NUCLEUS_ASHDOCK"
+                },
+                {
+                  "value" : "7"
+                },
+                {
+                  "value" : "4"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHDOCK",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_BIRCHDOCK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_BIRCHDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.DESC_OAKRIDGE_BIRCHDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_FLINTFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_FLINTFORK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_AGATECROSS",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_AGATECROSS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_NUCLEUS_MAPLEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_ENTITYREF_NUCLEUS_MAPLEFORD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_TOPAZCLIFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DECIMAL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.NUM_TOPAZCLIFF"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_HAZELTRACK_CEDARBRIDGE_ACME",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_HAZELTRACK_CEDARBRIDGE_ACME"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_HAZELTRACK_LENDING",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_HAZELTRACK_LENDING"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_ENTITYREF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_ONBOARD_ENTITYREF"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARGARTH_FLINTBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_CEDARGARTH_FLINTBRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHSTONE_CEDARGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_BIRCHSTONE_CEDARGARTH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_CEDARGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_OAKYARD_CEDARGARTH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_OAKYARD_CEDARGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.DESC_OAKYARD_CEDARGARTH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_OAKBARN_ELMMARSH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_OAKBARN_ELMMARSH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_MAPLELANE_ELMMARSH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_MAPLELANE_ELMMARSH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_CEDARMILL_ENTITYREF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.FCH_CEDARMILL_ENTITYREF"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_ELMMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESHORE_ERP_STAFF.ID_KIND_ELMMARSH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_MAPLESHORE_ERP_STAFF",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_MAPLESHORE_ERP_STAFF",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_OAKBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.FCH_OAKBARN"
+            }
+          },
+          {
+            "name" : "FCH_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.FCH_MAPLELANE"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_ENTITYREF"
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_FLINTGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_NUCLEUS_FLINTGLADE"
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_ASHDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_NUCLEUS_ASHDOCK"
+            }
+          },
+          {
+            "name" : "ID_BIRCHDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_BIRCHDOCK"
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_BIRCHDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.DESC_OAKRIDGE_BIRCHDOCK"
+            }
+          },
+          {
+            "name" : "ID_FLINTFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_FLINTFORK"
+            }
+          },
+          {
+            "name" : "ID_AGATECROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_AGATECROSS"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_NUCLEUS_MAPLEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_ENTITYREF_NUCLEUS_MAPLEFORD"
+            }
+          },
+          {
+            "name" : "NUM_TOPAZCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.NUM_TOPAZCLIFF"
+            }
+          },
+          {
+            "name" : "FCH_HAZELTRACK_CEDARBRIDGE_ACME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.FCH_HAZELTRACK_CEDARBRIDGE_ACME"
+            }
+          },
+          {
+            "name" : "FCH_HAZELTRACK_LENDING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.FCH_HAZELTRACK_LENDING"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.FCH_ONBOARD_ENTITYREF"
+            }
+          },
+          {
+            "name" : "ID_CEDARGARTH_FLINTBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_CEDARGARTH_FLINTBRIDGE"
+            }
+          },
+          {
+            "name" : "ID_BIRCHSTONE_CEDARGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_BIRCHSTONE_CEDARGARTH"
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_CEDARGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_OAKYARD_CEDARGARTH"
+            }
+          },
+          {
+            "name" : "DESC_OAKYARD_CEDARGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.DESC_OAKYARD_CEDARGARTH"
+            }
+          },
+          {
+            "name" : "FCH_OAKBARN_ELMMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.FCH_OAKBARN_ELMMARSH"
+            }
+          },
+          {
+            "name" : "FCH_MAPLELANE_ELMMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.FCH_MAPLELANE_ELMMARSH"
+            }
+          },
+          {
+            "name" : "FCH_CEDARMILL_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.FCH_CEDARMILL_ENTITYREF"
+            }
+          },
+          {
+            "name" : "ID_KIND_ELMMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_MAPLESHORE_ERP_STAFF.ID_KIND_ELMMARSH"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_MAPLESHORE_ERP_STAFF",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_E_MAPLESHORE_ERP_STAFF"
+    ],
+    "sourceTableNames" : [
+      "ODS_MAPLESHORE_ERP_STAFF"
+    ]
+  }
+}

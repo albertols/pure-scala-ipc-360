@@ -1,0 +1,1005 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "BIZLINK",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_OAKBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_ADD_TO_DATE",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_TO_DATE",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ff_BIZLINK.FCH_DATAENTRY"
+                            },
+                            {
+                              "value" : "'YYYYMMDD'"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "'MM'"
+                        },
+                        {
+                          "value" : "-1"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "'ROWANFIELD'"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "GREENBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENBLUFF"
+            }
+          },
+          {
+            "name" : "GRAYVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYVALE"
+            }
+          },
+          {
+            "name" : "GRAYCREEK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYCREEK"
+            }
+          },
+          {
+            "name" : "GRAYROAD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYROAD"
+            }
+          },
+          {
+            "name" : "GREENGARTH",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENGARTH"
+            }
+          },
+          {
+            "name" : "GRAYTRACK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYTRACK"
+            }
+          },
+          {
+            "name" : "GREENCROFT",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENCROFT"
+            }
+          },
+          {
+            "name" : "GRAYDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYDOCK"
+            }
+          },
+          {
+            "name" : "GRAYPASS",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYPASS"
+            }
+          },
+          {
+            "name" : "GREENCOMBE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENCOMBE"
+            }
+          },
+          {
+            "name" : "GRAYMARSH",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYMARSH"
+            }
+          },
+          {
+            "name" : "GRAYVAULT",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYVAULT"
+            }
+          },
+          {
+            "name" : "GRAYMILL",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYMILL"
+            }
+          },
+          {
+            "name" : "GRAYSTONE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYSTONE"
+            }
+          },
+          {
+            "name" : "GRAYCLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYCLIFF"
+            }
+          },
+          {
+            "name" : "GRAYBROOK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYBROOK"
+            }
+          },
+          {
+            "name" : "GREENWICK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENWICK"
+            }
+          },
+          {
+            "name" : "GRAYFORD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYFORD"
+            }
+          },
+          {
+            "name" : "MIDDLECOMBE1",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.MIDDLECOMBE1"
+            }
+          },
+          {
+            "name" : "MIDDLECOMBE2",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.MIDDLECOMBE2"
+            }
+          },
+          {
+            "name" : "GRAYPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYPOND"
+            }
+          },
+          {
+            "name" : "GREENMOOR",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENMOOR"
+            }
+          },
+          {
+            "name" : "GRAYRIVER",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYRIVER"
+            }
+          },
+          {
+            "name" : "GRAYRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYRIDGE"
+            }
+          },
+          {
+            "name" : "GREENHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENHOLM"
+            }
+          },
+          {
+            "name" : "GREENRIDGE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_REPLACECHR",
+              "parameters" : [
+                {
+                  "value" : "TRUE"
+                },
+                {
+                  "source" : "SQ_ff_BIZLINK.GREENRIDGE"
+                },
+                {
+                  "value" : "','"
+                },
+                {
+                  "value" : "'.'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "GRAYBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYBRIDGE"
+            }
+          },
+          {
+            "name" : "GREENRIVER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_REPLACECHR",
+              "parameters" : [
+                {
+                  "value" : "TRUE"
+                },
+                {
+                  "source" : "SQ_ff_BIZLINK.GREENRIVER"
+                },
+                {
+                  "value" : "','"
+                },
+                {
+                  "value" : "'.'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "GRAYLANE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYLANE"
+            }
+          },
+          {
+            "name" : "GRAYCROSS",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYCROSS"
+            }
+          },
+          {
+            "name" : "GREENGROVE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_REPLACECHR",
+              "parameters" : [
+                {
+                  "value" : "TRUE"
+                },
+                {
+                  "source" : "SQ_ff_BIZLINK.GREENGROVE"
+                },
+                {
+                  "value" : "','"
+                },
+                {
+                  "value" : "'.'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "GRAYTRAIL",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYTRAIL"
+            }
+          },
+          {
+            "name" : "MIDDLETHORP2",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.MIDDLETHORP2"
+            }
+          },
+          {
+            "name" : "GRAYYARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYYARD"
+            }
+          },
+          {
+            "name" : "MIDDLETHORP1",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.MIDDLETHORP1"
+            }
+          },
+          {
+            "name" : "GREENHEATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENHEATH"
+            }
+          },
+          {
+            "name" : "GRAYFIELD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYFIELD"
+            }
+          },
+          {
+            "name" : "GRAYSHORE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYSHORE"
+            }
+          },
+          {
+            "name" : "MIDDLEGARTH1",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.MIDDLEGARTH1"
+            }
+          },
+          {
+            "name" : "MIDDLEGARTH2",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.MIDDLEGARTH2"
+            }
+          },
+          {
+            "name" : "GREENSTEAD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENSTEAD"
+            }
+          },
+          {
+            "name" : "GRAYGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYGROVE"
+            }
+          },
+          {
+            "name" : "MIDDLEHEATH1",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.MIDDLEHEATH1"
+            }
+          },
+          {
+            "name" : "MIDDLEHEATH2",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.MIDDLEHEATH2"
+            }
+          },
+          {
+            "name" : "LOWERBROOK1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_REPLACECHR",
+              "parameters" : [
+                {
+                  "value" : "TRUE"
+                },
+                {
+                  "source" : "SQ_ff_BIZLINK.LOWERBROOK1"
+                },
+                {
+                  "value" : "','"
+                },
+                {
+                  "value" : "'.'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "GREENVALE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_REPLACECHR",
+              "parameters" : [
+                {
+                  "value" : "TRUE"
+                },
+                {
+                  "source" : "SQ_ff_BIZLINK.GREENVALE"
+                },
+                {
+                  "value" : "','"
+                },
+                {
+                  "value" : "'.'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "GRAYBARN",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYBARN"
+            }
+          },
+          {
+            "name" : "GREENWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENWARD"
+            }
+          },
+          {
+            "name" : "LOWERBROOK2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_REPLACECHR",
+              "parameters" : [
+                {
+                  "value" : "TRUE"
+                },
+                {
+                  "source" : "SQ_ff_BIZLINK.LOWERBROOK2"
+                },
+                {
+                  "value" : "','"
+                },
+                {
+                  "value" : "'.'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "GRAYPATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYPATH"
+            }
+          },
+          {
+            "name" : "GRAYPEAK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYPEAK"
+            }
+          },
+          {
+            "name" : "GRAYFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYFORGE"
+            }
+          },
+          {
+            "name" : "GRAYGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYGATE"
+            }
+          },
+          {
+            "name" : "GREENTHORP",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GREENTHORP"
+            }
+          },
+          {
+            "name" : "GRAYGLADE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYGLADE"
+            }
+          },
+          {
+            "name" : "GRAYPIER",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYPIER"
+            }
+          },
+          {
+            "name" : "GRAYTOWER",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYTOWER"
+            }
+          },
+          {
+            "name" : "GRAYFORK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYFORK"
+            }
+          },
+          {
+            "name" : "GRAYBEND",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_BIZLINK.GRAYBEND"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ff_BIZLINK",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ff_BIZLINK",
+        "type" : "BERYLFALLS",
+        "sqlQuery" : "SELECT * FROM ff_BIZLINK WHERE DATE(FCH_TIMESTAMP) = (SELECT MAX(DATE(FCH_TIMESTAMP)) FROM ff_BIZLINK)",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "GREENBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENBLUFF"
+            }
+          },
+          {
+            "name" : "GRAYVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYVALE"
+            }
+          },
+          {
+            "name" : "GRAYCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYCREEK"
+            }
+          },
+          {
+            "name" : "GRAYROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYROAD"
+            }
+          },
+          {
+            "name" : "GREENGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENGARTH"
+            }
+          },
+          {
+            "name" : "GRAYTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYTRACK"
+            }
+          },
+          {
+            "name" : "GREENCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENCROFT"
+            }
+          },
+          {
+            "name" : "GRAYDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYDOCK"
+            }
+          },
+          {
+            "name" : "GRAYPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYPASS"
+            }
+          },
+          {
+            "name" : "GREENCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENCOMBE"
+            }
+          },
+          {
+            "name" : "GRAYMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYMARSH"
+            }
+          },
+          {
+            "name" : "GRAYVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYVAULT"
+            }
+          },
+          {
+            "name" : "GRAYMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYMILL"
+            }
+          },
+          {
+            "name" : "GRAYSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYSTONE"
+            }
+          },
+          {
+            "name" : "GRAYCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYCLIFF"
+            }
+          },
+          {
+            "name" : "GRAYBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYBROOK"
+            }
+          },
+          {
+            "name" : "GREENWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENWICK"
+            }
+          },
+          {
+            "name" : "GRAYFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYFORD"
+            }
+          },
+          {
+            "name" : "MIDDLECOMBE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.MIDDLECOMBE1"
+            }
+          },
+          {
+            "name" : "MIDDLECOMBE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.MIDDLECOMBE2"
+            }
+          },
+          {
+            "name" : "GRAYPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYPOND"
+            }
+          },
+          {
+            "name" : "GREENMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENMOOR"
+            }
+          },
+          {
+            "name" : "GRAYRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYRIVER"
+            }
+          },
+          {
+            "name" : "GRAYRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYRIDGE"
+            }
+          },
+          {
+            "name" : "GREENHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENHOLM"
+            }
+          },
+          {
+            "name" : "GREENRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENRIDGE"
+            }
+          },
+          {
+            "name" : "GRAYBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYBRIDGE"
+            }
+          },
+          {
+            "name" : "GREENRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENRIVER"
+            }
+          },
+          {
+            "name" : "GRAYLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYLANE"
+            }
+          },
+          {
+            "name" : "GRAYCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYCROSS"
+            }
+          },
+          {
+            "name" : "GREENGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENGROVE"
+            }
+          },
+          {
+            "name" : "GRAYTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYTRAIL"
+            }
+          },
+          {
+            "name" : "MIDDLETHORP2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.MIDDLETHORP2"
+            }
+          },
+          {
+            "name" : "GRAYYARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYYARD"
+            }
+          },
+          {
+            "name" : "MIDDLETHORP1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.MIDDLETHORP1"
+            }
+          },
+          {
+            "name" : "GREENHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENHEATH"
+            }
+          },
+          {
+            "name" : "GRAYFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYFIELD"
+            }
+          },
+          {
+            "name" : "GRAYSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYSHORE"
+            }
+          },
+          {
+            "name" : "MIDDLEGARTH1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.MIDDLEGARTH1"
+            }
+          },
+          {
+            "name" : "MIDDLEGARTH2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.MIDDLEGARTH2"
+            }
+          },
+          {
+            "name" : "GREENSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENSTEAD"
+            }
+          },
+          {
+            "name" : "GRAYGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYGROVE"
+            }
+          },
+          {
+            "name" : "MIDDLEHEATH1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.MIDDLEHEATH1"
+            }
+          },
+          {
+            "name" : "MIDDLEHEATH2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.MIDDLEHEATH2"
+            }
+          },
+          {
+            "name" : "LOWERBROOK1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.LOWERBROOK1"
+            }
+          },
+          {
+            "name" : "GREENVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENVALE"
+            }
+          },
+          {
+            "name" : "GRAYBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYBARN"
+            }
+          },
+          {
+            "name" : "GREENWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENWARD"
+            }
+          },
+          {
+            "name" : "LOWERBROOK2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.LOWERBROOK2"
+            }
+          },
+          {
+            "name" : "GRAYPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYPATH"
+            }
+          },
+          {
+            "name" : "GRAYPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYPEAK"
+            }
+          },
+          {
+            "name" : "GRAYFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYFORGE"
+            }
+          },
+          {
+            "name" : "GRAYGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYGATE"
+            }
+          },
+          {
+            "name" : "GREENTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GREENTHORP"
+            }
+          },
+          {
+            "name" : "GRAYGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYGLADE"
+            }
+          },
+          {
+            "name" : "GRAYPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYPIER"
+            }
+          },
+          {
+            "name" : "GRAYTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYTOWER"
+            }
+          },
+          {
+            "name" : "GRAYFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYFORK"
+            }
+          },
+          {
+            "name" : "GRAYBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_BIZLINK.GRAYBEND"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ff_BIZLINK",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "BIZLINK"
+    ],
+    "sourceTableNames" : [
+      "FF_BIZLINK"
+    ]
+  }
+}

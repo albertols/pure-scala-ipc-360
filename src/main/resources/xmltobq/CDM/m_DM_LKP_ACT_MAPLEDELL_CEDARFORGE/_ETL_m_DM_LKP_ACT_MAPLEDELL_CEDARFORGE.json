@@ -1,0 +1,1555 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "LKP_ACT_MAPLEDELL_CEDARFORGE",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_BIRCHGLADE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ID_BIRCHGLADE"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_PINEGROVE_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_CONCAT",
+              "parameters" : [
+                {
+                  "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_PINEGROVE_PEARLBROOK"
+                },
+                {
+                  "name" : "EXP_DECODE",
+                  "parameters" : [
+                    {
+                      "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.BLUERIDGE_ID_MEMBER_HAZELPEAK"
+                    },
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "value" : "'A'"
+                    },
+                    {
+                      "value" : "2"
+                    },
+                    {
+                      "value" : "'CEDARDELL'"
+                    },
+                    {
+                      "value" : "3"
+                    },
+                    {
+                      "value" : "'PINERIDGE'"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEDELL_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK"
+                    }
+                  ]
+                },
+                {
+                  "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_ID"
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_ID"
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK"
+                        }
+                      ]
+                    },
+                    {
+                      "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_ID"
+                    },
+                    {
+                      "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARFORGE_DATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_DATE"
+            }
+          },
+          {
+            "name" : "GUIDE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.GUIDE_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_BIRCHFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_BIRCHFORK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_UPPERPOND_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_UPPERPOND_ID"
+            }
+          },
+          {
+            "name" : "MAPLEDELL_OUTERBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_OUTERBLUFF"
+            }
+          },
+          {
+            "name" : "OUTERHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERHEATH"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_GUIDE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.BIRCHBLUFF_GUIDE_ID"
+            }
+          },
+          {
+            "name" : "LOWERPATH_BIRCHFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.LOWERPATH_BIRCHFORK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_UPPERTRACK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_UPPERTRACK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_SOURCE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_SOURCE_ID"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_SOURCE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.BIRCHBLUFF_SOURCE"
+            }
+          },
+          {
+            "name" : "FIRCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.FIRCLIFF"
+            }
+          },
+          {
+            "name" : "OUTERWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERWARD"
+            }
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHRIDGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.SOUTHFORGE_BIRCHRIDGE_ID"
+            }
+          },
+          {
+            "name" : "OUTERGARTH_TO",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERGARTH_TO"
+            }
+          },
+          {
+            "name" : "OAKRIVER_LOWERBARN_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OAKRIVER_LOWERBARN_ID"
+            }
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.SOUTHFORGE_BIRCHFORK"
+            }
+          },
+          {
+            "name" : "ROWANWICK_NUMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ROWANWICK_NUMBER"
+            }
+          },
+          {
+            "name" : "MAILBOX_ASHSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAILBOX_ASHSHORE"
+            }
+          },
+          {
+            "name" : "OUTERPOND_BIRCHRIDGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERPOND_BIRCHRIDGE_ID"
+            }
+          },
+          {
+            "name" : "WESTVAULT_ELMVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.WESTVAULT_ELMVALE"
+            }
+          },
+          {
+            "name" : "OUTERHOLM_IO_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERHOLM_IO_ID"
+            }
+          },
+          {
+            "name" : "ROWANSTONE_UPPERFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ROWANSTONE_UPPERFORGE_ID"
+            }
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_MAILBOX",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.IND_OAKBROOK_CEDARPASS_MAILBOX"
+            }
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_OUTERCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.IND_OAKBROOK_CEDARPASS_OUTERCOMBE"
+            }
+          },
+          {
+            "name" : "OAKBROOK_CEDARPASS_INNERRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OAKBROOK_CEDARPASS_INNERRIVER"
+            }
+          },
+          {
+            "name" : "ID_OAKBROOK_CEDARPASS_LOWERWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ID_OAKBROOK_CEDARPASS_LOWERWARD"
+            }
+          },
+          {
+            "name" : "WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "PINEVALE_PINEGROVE_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.PINEVALE_PINEGROVE_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "OUTERDELL_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERDELL_NAME"
+            }
+          },
+          {
+            "name" : "LOWERFIELD_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.LOWERFIELD_NAME"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_1"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_2"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_3"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE",
+          "type" : "filter"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "FIL_DM_LKP_ACT_MAPLEDELL_CEDARFORGE",
+        "type" : "filter",
+        "filterCondition" : {
+          "value" : "not isnull(ID_MEMBER_HAZELPEAK)"
+        },
+        "weststone" : [
+          {
+            "name" : "ID_BIRCHGLADE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ID_BIRCHGLADE"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_PINEGROVE_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_PINEGROVE_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "MAPLEDELL_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_DATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_DATE"
+            }
+          },
+          {
+            "name" : "GUIDE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.GUIDE_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_BIRCHFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_BIRCHFORK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_UPPERPOND_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_UPPERPOND_ID"
+            }
+          },
+          {
+            "name" : "MAPLEDELL_OUTERBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_OUTERBLUFF"
+            }
+          },
+          {
+            "name" : "OUTERHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERHEATH"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_GUIDE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.BIRCHBLUFF_GUIDE_ID"
+            }
+          },
+          {
+            "name" : "LOWERPATH_BIRCHFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.LOWERPATH_BIRCHFORK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_UPPERTRACK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_UPPERTRACK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_SOURCE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_SOURCE_ID"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_SOURCE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.BIRCHBLUFF_SOURCE"
+            }
+          },
+          {
+            "name" : "FIRCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.FIRCLIFF"
+            }
+          },
+          {
+            "name" : "OUTERWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERWARD"
+            }
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHRIDGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.SOUTHFORGE_BIRCHRIDGE_ID"
+            }
+          },
+          {
+            "name" : "OUTERGARTH_TO",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERGARTH_TO"
+            }
+          },
+          {
+            "name" : "OAKRIVER_LOWERBARN_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OAKRIVER_LOWERBARN_ID"
+            }
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.SOUTHFORGE_BIRCHFORK"
+            }
+          },
+          {
+            "name" : "ROWANWICK_NUMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ROWANWICK_NUMBER"
+            }
+          },
+          {
+            "name" : "MAILBOX_ASHSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAILBOX_ASHSHORE"
+            }
+          },
+          {
+            "name" : "OUTERPOND_BIRCHRIDGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERPOND_BIRCHRIDGE_ID"
+            }
+          },
+          {
+            "name" : "WESTVAULT_ELMVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.WESTVAULT_ELMVALE"
+            }
+          },
+          {
+            "name" : "OUTERHOLM_IO_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERHOLM_IO_ID"
+            }
+          },
+          {
+            "name" : "ROWANSTONE_UPPERFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ROWANSTONE_UPPERFORGE_ID"
+            }
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_MAILBOX",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.IND_OAKBROOK_CEDARPASS_MAILBOX"
+            }
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_OUTERCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.IND_OAKBROOK_CEDARPASS_OUTERCOMBE"
+            }
+          },
+          {
+            "name" : "OAKBROOK_CEDARPASS_INNERRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OAKBROOK_CEDARPASS_INNERRIVER"
+            }
+          },
+          {
+            "name" : "ID_OAKBROOK_CEDARPASS_LOWERWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ID_OAKBROOK_CEDARPASS_LOWERWARD"
+            }
+          },
+          {
+            "name" : "WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "PINEVALE_PINEGROVE_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.PINEVALE_PINEGROVE_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "OUTERDELL_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.OUTERDELL_NAME"
+            }
+          },
+          {
+            "name" : "LOWERFIELD_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.LOWERFIELD_NAME"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_1"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_2"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_3"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK"
+            }
+          },
+          {
+            "name" : "BLUERIDGE_ID_MEMBER_HAZELPEAK",
+            "dataType" : "Integer",
+            "transformation" : {
+              "source" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE.BLUERIDGE_ID_MEMBER_HAZELPEAK"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE",
+          "type" : "normalizer"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "NRM_DM_LKP_ACT_MAPLEDELL_CEDARFORGE",
+        "type" : "normalizer",
+        "normalizedFields" : [
+          {
+            "name" : "ID_BIRCHGLADE",
+            "refSource" : [
+              "ID_BIRCHGLADE_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "CEDARFORGE_PINEGROVE_PEARLBROOK",
+            "refSource" : [
+              "CEDARFORGE_PINEGROVE_PEARLBROOK_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "MAPLEDELL_ID",
+            "refSource" : [
+              "MAPLEDELL_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "CEDARFORGE_DATE",
+            "refSource" : [
+              "CEDARFORGE_DATE_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "GUIDE_ID",
+            "refSource" : [
+              "GUIDE_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "CEDARFORGE_BIRCHFORK_ID",
+            "refSource" : [
+              "CEDARFORGE_BIRCHFORK_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "CEDARFORGE_UPPERPOND_ID",
+            "refSource" : [
+              "CEDARFORGE_UPPERPOND_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "MAPLEDELL_OUTERBLUFF",
+            "refSource" : [
+              "MAPLEDELL_OUTERBLUFF_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "OUTERHEATH",
+            "refSource" : [
+              "OUTERHEATH_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "BIRCHBLUFF_GUIDE_ID",
+            "refSource" : [
+              "BIRCHBLUFF_GUIDE_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "LOWERPATH_BIRCHFORK_ID",
+            "refSource" : [
+              "LOWERPATH_BIRCHFORK_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "CEDARFORGE_UPPERTRACK_ID",
+            "refSource" : [
+              "CEDARFORGE_UPPERTRACK_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "CEDARFORGE_SOURCE_ID",
+            "refSource" : [
+              "CEDARFORGE_SOURCE_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "BIRCHBLUFF_SOURCE",
+            "refSource" : [
+              "BIRCHBLUFF_SOURCE_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "FIRCLIFF",
+            "refSource" : [
+              "FIRCLIFF_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "OUTERWARD",
+            "refSource" : [
+              "OUTERWARD_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHRIDGE_ID",
+            "refSource" : [
+              "SOUTHFORGE_BIRCHRIDGE_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "OUTERGARTH_TO",
+            "refSource" : [
+              "OUTERGARTH_TO_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "OAKRIVER_LOWERBARN_ID",
+            "refSource" : [
+              "OAKRIVER_LOWERBARN_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHFORK",
+            "refSource" : [
+              "SOUTHFORGE_BIRCHFORK_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "ROWANWICK_NUMBER",
+            "refSource" : [
+              "ROWANWICK_NUMBER_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "MAILBOX_ASHSHORE",
+            "refSource" : [
+              "MAILBOX_ASHSHORE_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "OUTERPOND_BIRCHRIDGE_ID",
+            "refSource" : [
+              "OUTERPOND_BIRCHRIDGE_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "WESTVAULT_ELMVALE",
+            "refSource" : [
+              "WESTVAULT_ELMVALE_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "OUTERHOLM_IO_ID",
+            "refSource" : [
+              "OUTERHOLM_IO_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "ROWANSTONE_UPPERFORGE_ID",
+            "refSource" : [
+              "ROWANSTONE_UPPERFORGE_ID_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_MAILBOX",
+            "refSource" : [
+              "IND_OAKBROOK_CEDARPASS_MAILBOX_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_OUTERCOMBE",
+            "refSource" : [
+              "IND_OAKBROOK_CEDARPASS_OUTERCOMBE_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "OAKBROOK_CEDARPASS_INNERRIVER",
+            "refSource" : [
+              "OAKBROOK_CEDARPASS_INNERRIVER_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "ID_OAKBROOK_CEDARPASS_LOWERWARD",
+            "refSource" : [
+              "ID_OAKBROOK_CEDARPASS_LOWERWARD_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK",
+            "refSource" : [
+              "WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "PINEVALE_PINEGROVE_PEARLBROOK",
+            "refSource" : [
+              "PINEVALE_PINEGROVE_PEARLBROOK_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "OUTERDELL_NAME",
+            "refSource" : [
+              "OUTERDELL_NAME_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "LOWERFIELD_NAME",
+            "refSource" : [
+              "LOWERFIELD_NAME_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_1",
+            "refSource" : [
+              "MAILCODE_ASHSHORE_LINE_1_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_2",
+            "refSource" : [
+              "MAILCODE_ASHSHORE_LINE_2_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_3",
+            "refSource" : [
+              "MAILCODE_ASHSHORE_LINE_3_in"
+            ],
+            "generatedColumnId" : false,
+            "generatedKey" : false
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK",
+            "refSource" : [
+              "ID_MEMBER_HAZELPEAK_in1",
+              "ID_MEMBER_HAZELPEAK_in2",
+              "ID_MEMBER_HAZELPEAK_in3"
+            ],
+            "generatedColumnId" : true,
+            "generatedKey" : true
+          }
+        ],
+        "weststone" : [
+          {
+            "name" : "ID_BIRCHGLADE_in",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.ID_BIRCHGLADE"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_PINEGROVE_PEARLBROOK_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_PINEGROVE_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "MAPLEDELL_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_DATE_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_DATE"
+            }
+          },
+          {
+            "name" : "GUIDE_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.GUIDE_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_BIRCHFORK_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_BIRCHFORK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_UPPERPOND_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_UPPERPOND_ID"
+            }
+          },
+          {
+            "name" : "MAPLEDELL_OUTERBLUFF_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_OUTERBLUFF"
+            }
+          },
+          {
+            "name" : "OUTERHEATH_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.OUTERHEATH"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_GUIDE_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.BIRCHBLUFF_GUIDE_ID"
+            }
+          },
+          {
+            "name" : "LOWERPATH_BIRCHFORK_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.LOWERPATH_BIRCHFORK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_UPPERTRACK_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_UPPERTRACK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_SOURCE_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_SOURCE_ID"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_SOURCE_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.BIRCHBLUFF_SOURCE"
+            }
+          },
+          {
+            "name" : "FIRCLIFF_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.FIRCLIFF"
+            }
+          },
+          {
+            "name" : "OUTERWARD_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.OUTERWARD"
+            }
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHRIDGE_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.SOUTHFORGE_BIRCHRIDGE_ID"
+            }
+          },
+          {
+            "name" : "OUTERGARTH_TO_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.OUTERGARTH_TO"
+            }
+          },
+          {
+            "name" : "OAKRIVER_LOWERBARN_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.OAKRIVER_LOWERBARN_ID"
+            }
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHFORK_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.SOUTHFORGE_BIRCHFORK"
+            }
+          },
+          {
+            "name" : "ROWANWICK_NUMBER_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.ROWANWICK_NUMBER"
+            }
+          },
+          {
+            "name" : "MAILBOX_ASHSHORE_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.MAILBOX_ASHSHORE"
+            }
+          },
+          {
+            "name" : "OUTERPOND_BIRCHRIDGE_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.OUTERPOND_BIRCHRIDGE_ID"
+            }
+          },
+          {
+            "name" : "WESTVAULT_ELMVALE_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.WESTVAULT_ELMVALE"
+            }
+          },
+          {
+            "name" : "OUTERHOLM_IO_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.OUTERHOLM_IO_ID"
+            }
+          },
+          {
+            "name" : "ROWANSTONE_UPPERFORGE_ID_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.ROWANSTONE_UPPERFORGE_ID"
+            }
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_MAILBOX_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.IND_OAKBROOK_CEDARPASS_MAILBOX"
+            }
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_OUTERCOMBE_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.IND_OAKBROOK_CEDARPASS_OUTERCOMBE"
+            }
+          },
+          {
+            "name" : "OAKBROOK_CEDARPASS_INNERRIVER_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.OAKBROOK_CEDARPASS_INNERRIVER"
+            }
+          },
+          {
+            "name" : "ID_OAKBROOK_CEDARPASS_LOWERWARD_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.ID_OAKBROOK_CEDARPASS_LOWERWARD"
+            }
+          },
+          {
+            "name" : "WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "PINEVALE_PINEGROVE_PEARLBROOK_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.PINEVALE_PINEGROVE_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "OUTERDELL_NAME_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.OUTERDELL_NAME"
+            }
+          },
+          {
+            "name" : "LOWERFIELD_NAME_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.LOWERFIELD_NAME"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_1_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_1"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_2_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_2"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_3_in",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_3"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK_in1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK_1"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK_in2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK_2"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK_in3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK_3"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_BIRCHGLADE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.ID_BIRCHGLADE"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_PINEGROVE_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_PINEGROVE_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "MAPLEDELL_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_DATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_DATE"
+            }
+          },
+          {
+            "name" : "GUIDE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.GUIDE_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_BIRCHFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_BIRCHFORK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_UPPERPOND_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_UPPERPOND_ID"
+            }
+          },
+          {
+            "name" : "MAPLEDELL_OUTERBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.MAPLEDELL_OUTERBLUFF"
+            }
+          },
+          {
+            "name" : "OUTERHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.OUTERHEATH"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_GUIDE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.BIRCHBLUFF_GUIDE_ID"
+            }
+          },
+          {
+            "name" : "LOWERPATH_BIRCHFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.LOWERPATH_BIRCHFORK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_UPPERTRACK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_UPPERTRACK_ID"
+            }
+          },
+          {
+            "name" : "CEDARFORGE_SOURCE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.CEDARFORGE_SOURCE_ID"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_SOURCE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.BIRCHBLUFF_SOURCE"
+            }
+          },
+          {
+            "name" : "FIRCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.FIRCLIFF"
+            }
+          },
+          {
+            "name" : "OUTERWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.OUTERWARD"
+            }
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHRIDGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.SOUTHFORGE_BIRCHRIDGE_ID"
+            }
+          },
+          {
+            "name" : "OUTERGARTH_TO",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.OUTERGARTH_TO"
+            }
+          },
+          {
+            "name" : "OAKRIVER_LOWERBARN_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.OAKRIVER_LOWERBARN_ID"
+            }
+          },
+          {
+            "name" : "SOUTHFORGE_BIRCHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.SOUTHFORGE_BIRCHFORK"
+            }
+          },
+          {
+            "name" : "ROWANWICK_NUMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.ROWANWICK_NUMBER"
+            }
+          },
+          {
+            "name" : "MAILBOX_ASHSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.MAILBOX_ASHSHORE"
+            }
+          },
+          {
+            "name" : "OUTERPOND_BIRCHRIDGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.OUTERPOND_BIRCHRIDGE_ID"
+            }
+          },
+          {
+            "name" : "WESTVAULT_ELMVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.WESTVAULT_ELMVALE"
+            }
+          },
+          {
+            "name" : "OUTERHOLM_IO_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.OUTERHOLM_IO_ID"
+            }
+          },
+          {
+            "name" : "ROWANSTONE_UPPERFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.ROWANSTONE_UPPERFORGE_ID"
+            }
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_MAILBOX",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.IND_OAKBROOK_CEDARPASS_MAILBOX"
+            }
+          },
+          {
+            "name" : "IND_OAKBROOK_CEDARPASS_OUTERCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.IND_OAKBROOK_CEDARPASS_OUTERCOMBE"
+            }
+          },
+          {
+            "name" : "OAKBROOK_CEDARPASS_INNERRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.OAKBROOK_CEDARPASS_INNERRIVER"
+            }
+          },
+          {
+            "name" : "ID_OAKBROOK_CEDARPASS_LOWERWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.ID_OAKBROOK_CEDARPASS_LOWERWARD"
+            }
+          },
+          {
+            "name" : "WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.WESTCROSS_OAKBROOK_CEDARPASS_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "PINEVALE_PINEGROVE_PEARLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.PINEVALE_PINEGROVE_PEARLBROOK"
+            }
+          },
+          {
+            "name" : "OUTERDELL_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.OUTERDELL_NAME"
+            }
+          },
+          {
+            "name" : "LOWERFIELD_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.LOWERFIELD_NAME"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_1"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_2"
+            }
+          },
+          {
+            "name" : "MAILCODE_ASHSHORE_LINE_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.MAILCODE_ASHSHORE_LINE_3"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK_1"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK_2"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.ID_MEMBER_HAZELPEAK_3"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_ACT_MAPLEDELL_CEDARFORGE.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_ACT_MAPLEDELL_CEDARFORGE",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "LKP_ACT_MAPLEDELL_CEDARFORGE"
+    ],
+    "sourceTableNames" : [
+      "ODS_ACT_MAPLEDELL_CEDARFORGE"
+    ]
+  }
+}

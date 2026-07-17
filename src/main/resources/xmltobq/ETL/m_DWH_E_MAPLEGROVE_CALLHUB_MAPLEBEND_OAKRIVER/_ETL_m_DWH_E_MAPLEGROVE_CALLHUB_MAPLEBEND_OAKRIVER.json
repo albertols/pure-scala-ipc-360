@@ -1,0 +1,2695 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_E_MAPLEGROVE_CALLHUB_MAPLEBEND_OAKRIVER",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_BIRCHGLADE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ID_BIRCHGLADE"
+            }
+          },
+          {
+            "name" : "ID_ROWANSHORE_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.REDWICK_ID"
+            }
+          },
+          {
+            "name" : "ID_ROWANSHORE_CALLHUB",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.CORALSTEAD"
+            }
+          },
+          {
+            "name" : "ID_PHASE_ROWANSHORE_CALLHUB",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.BIRCHRIDGE"
+            }
+          },
+          {
+            "name" : "FCH_AMBERDELL_ROWANBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.FCH_AMBERDELL_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_AMBERDELL_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.CEDARLAKE_AMBERDELL_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_AMBERDELL_CALLHUB",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.FLINTROAD_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_AMBERDELL_BERYLLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.FLINTROAD_REDBLUFF"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_NAVYHOLM_DEALMAKER_OAKBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.FLINTROAD_INNERPASS"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_NAVYHOLM_DEALMAKER_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.FLINTROAD_MAPLELANE"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_ROWANSHORE_DEALMAKER1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTWARD_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_ROWANSHORE_MAPLEFORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTWARD_CEDARCLIFF_LOWERCROFT"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_PINEHEATH_DEALMAKER1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.GREENLANE_OAKVAULT"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_BLUEBROOK_DEALMAKER1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.BLUEBROOK_OAKVAULT"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_JADEPIER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTWARD_GREENBRIDGE_CORALLAKE_GREENSHORE"
+            }
+          },
+          {
+            "name" : "ID_DEALMAKER_PEARLFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ASHLANE_ID_LIST"
+            }
+          },
+          {
+            "name" : "ID_DEALMAKER_ASHPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ID_DEALMAKER_ASHPOND"
+            }
+          },
+          {
+            "name" : "ID_DEALMAKER_FINAL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ID_DEALMAKER_FINAL"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_BROKERS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.REDSPRING_GREENCLIFF_ID"
+            }
+          },
+          {
+            "name" : "DESC_NUM_PINETOWER_CALMROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NO_REDHOLLOW"
+            }
+          },
+          {
+            "name" : "DESC_OAKYARD_OLIVEVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NORTHPATH_EASTFORD"
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_OLIVEVALE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NORTHPATH_EASTFORD_ID"
+            }
+          },
+          {
+            "name" : "ID_SWIFTCROSS_MAPLELANE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NORTHPATH_MAPLELANE_ID"
+            }
+          },
+          {
+            "name" : "DESC_SWIFTCROSS_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NORTHPATH_MAPLELANE"
+            }
+          },
+          {
+            "name" : "IND_ASHRIVER",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.CEDARWARD_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_NAVYTRACK_ASHPOND",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTFALLS"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_NAVYTRACK_PINEHEATH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTFALLS_LOWERCROFT"
+            }
+          },
+          {
+            "name" : "IND_EARLYBRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.REDFALLS"
+            }
+          },
+          {
+            "name" : "IND_OLIVEVALE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTFORD"
+            }
+          },
+          {
+            "name" : "IND_NAVYTRACK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ROWANPEAK_EASTFALLS"
+            }
+          },
+          {
+            "name" : "DESC_NUM_PINETOWER_QUIETBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NO_LOWERFORK"
+            }
+          },
+          {
+            "name" : "DESC_STILLBEND_QUIETTOWER_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.TIME_JADEMILL_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_MAPLELANE_ROWANSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.MAPLELANE_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_LOWERSTEAD_STEEPSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHFORD_LOWERFORK_ID"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_LOWERSTEAD_NAVYHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHFORD_REDDELL_ID"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_LOWERSTEAD_PEARLFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHFORD_ALL"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_LOWERSTEAD_ASHPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ID_CEDARBRIDGE_LOWERSTEAD_ASHPOND"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_LOWERSTEAD_FINAL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ID_CEDARBRIDGE_LOWERSTEAD_FINAL"
+            }
+          },
+          {
+            "name" : "ID_BERYLLAKE_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.BERYLLAKE"
+            }
+          },
+          {
+            "name" : "ID_BERYLLAKE_CIPHERKEY_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.BERYLLAKE2"
+            }
+          },
+          {
+            "name" : "ID_BERYLLAKE_ASHRIVER_ASHPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.BERYLLAKE_FIRST_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "ID_BERYLLAKE_ASHRIVER_FINAL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.BERYLLAKE_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "DESC_OFFERING_SANDSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.OFFERING"
+            }
+          },
+          {
+            "name" : "IND_MEMBER_FLINTMARSH_UPPERRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.MEMBER_FLINTMARSH_UPPERRIVER"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_FLINTMARSH_UPPERRIVER",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ID_MEMBER_FLINTMARSH_UPPERRIVER"
+            }
+          },
+          {
+            "name" : "IND_MEMBER_FLINTMARSH_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.MEMBER_FLINTMARSH_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_FLINTMARSH_ROWANBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ID_MEMBER_FLINTMARSH_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "IND_MEMBER_BLUELANE_BLUECROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.MEMBER_BLUELANE_BLUECROSS"
+            }
+          },
+          {
+            "name" : "ID_ELMHOLLOW_BLUETRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMHOLLOW_BLUETRACK"
+            }
+          },
+          {
+            "name" : "IND_UPPERWARD_CENTRALCROFT_ENGAGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.UPPERWARD_CENTRALCROFT_ENGAGE"
+            }
+          },
+          {
+            "name" : "IND_CALMROAD_CORALLAKE_PEARLFORK_BLUETOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.PEARLFORK_BLUETOWER"
+            }
+          },
+          {
+            "name" : "IND_WESTTOWER_BLUEVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.WESTTOWER_BLUEVAULT"
+            }
+          },
+          {
+            "name" : "DESC_OLIVEBARN_OPERATOR1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTHOLM_OPERATOR1"
+            }
+          },
+          {
+            "name" : "DESC_OLIVEBARN_OPERATOR2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTHOLM_OPERATOR2"
+            }
+          },
+          {
+            "name" : "DESC_OLIVEBARN_OPERATOR3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.EASTHOLM_OPERATOR3"
+            }
+          },
+          {
+            "name" : "DESC_PINEGLADE_SOUTHSHORE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.PINEGLADE_SOUTHSHORE1"
+            }
+          },
+          {
+            "name" : "DESC_PINEGLADE_SOUTHSHORE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.PINEGLADE_SOUTHSHORE2"
+            }
+          },
+          {
+            "name" : "DESC_PINEGLADE_SOUTHSHORE3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.PINEGLADE_SOUTHSHORE3"
+            }
+          },
+          {
+            "name" : "IND_DEALFLOW_OLIVESHORE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.DEALFLOW_EASTSPRING_EASTBEND1"
+            }
+          },
+          {
+            "name" : "IND_DEALFLOW_OLIVESHORE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.DEALFLOW_EASTSPRING_EASTBEND2"
+            }
+          },
+          {
+            "name" : "IND_DEALFLOW_OLIVESHORE3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.DEALFLOW_EASTSPRING_EASTBEND3"
+            }
+          },
+          {
+            "name" : "IND_BLUEFORGE_PEARLTRAIL_DEALMAKER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.BLUEFORGE_PEARLTRAIL_DEALMAKER"
+            }
+          },
+          {
+            "name" : "IND_INNERPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.INNERPATH"
+            }
+          },
+          {
+            "name" : "IND_CENTRALCROSS_ROWANSHORE_BLUEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.CENTRALCROSS_ROWANSHORE_BLUEFORK"
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_MAPLELANE_ROWANSHORE_ROWANBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ID_GREENPIER_MAPLELANE_ROWANSHORE_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "NUM_LOWERGLADE_GRAYMOOR",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NUM_LOWERGLADE_GRAYMOOR"
+            }
+          },
+          {
+            "name" : "NUM_ASHRIVER_QUIETROAD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.AMBERPATH_BERYLMOOR_GREENPATH"
+            }
+          },
+          {
+            "name" : "NUM_ASHRIVER_SOLIDPIER",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.AMBERPATH_BERYLMOOR_OK"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_INNERHEATH_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH_1"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_INNERHEATH_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH_2"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_INNERHEATH_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH_3"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_INNERHEATH_4",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH_4"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_INNERHEATH_5",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH_5"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_INNERHEATH_6",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH_6"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH2_1"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH2_2"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH2_3"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_4",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH2_4"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_5",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH2_5"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_6",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ELMGARTH_ELMHEATH2_6"
+            }
+          },
+          {
+            "name" : "DESC_EASTCREEK_BERYLDOCK_BLUEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.VAL_ELMHEATH_BLUEFORD_ELMGARTH_BLUEPIER"
+            }
+          },
+          {
+            "name" : "IND_SOUTHGATE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHGATE_1"
+            }
+          },
+          {
+            "name" : "IND_SOUTHGATE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHGATE_2"
+            }
+          },
+          {
+            "name" : "IND_SOUTHGATE_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHGATE_3"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.IND_SOUTHCLIFF_1"
+            }
+          },
+          {
+            "name" : "DESC_SOUTHBARN_SOUTHDOCK_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHBARN_SOUTHDOCK_1"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.IND_SOUTHCLIFF_2"
+            }
+          },
+          {
+            "name" : "DESC_SOUTHBARN_SOUTHDOCK_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHBARN_SOUTHDOCK_2"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.IND_SOUTHCLIFF_3"
+            }
+          },
+          {
+            "name" : "DESC_SOUTHBARN_SOUTHDOCK_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.SOUTHBARN_SOUTHDOCK_3"
+            }
+          },
+          {
+            "name" : "IND_CENTRALSTEAD_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.IND_CENTRALSTEAD_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_CORALHEATH_ROWANMOOR",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NUM_TIMESPAN_CORALHEATH_ROWANMOOR"
+            }
+          },
+          {
+            "name" : "DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_1"
+            }
+          },
+          {
+            "name" : "DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_MAPLEMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_MAPLEMARSH"
+            }
+          },
+          {
+            "name" : "IND_CORALHEATH_ROWANMOOR_CARDSET",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.IND_CORALHEATH_ROWANMOOR_CARDSET"
+            }
+          },
+          {
+            "name" : "IND_CORALHEATH_ROWANMOOR_BLUEDOCK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.IND_CORALHEATH_ROWANMOOR_BLUEDOCK"
+            }
+          },
+          {
+            "name" : "NUM_SOUTHTHORP",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NUM_SOUTHTHORP"
+            }
+          },
+          {
+            "name" : "DESC_TIMESPAN_SOUTHTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.DESC_TIMESPAN_SOUTHTHORP1"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_BRISKDOCK_SOUTHTHORP",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.NUM_TIMESPAN_BRISKDOCK_SOUTHTHORP"
+            }
+          },
+          {
+            "name" : "DESC_BUSINESS_SOLIDWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.REDSTEAD_GREENTRAIL"
+            }
+          },
+          {
+            "name" : "ID_AMBERGARTH_STILLTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ROWANMOOR_GREENGATE"
+            }
+          },
+          {
+            "name" : "IND_CORALHEATH_ROWANMOOR_PRIMECREEK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.ROWANMOOR_GREENMARSH"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "source" : "ASHYARD_ashgate.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ASHYARD_ashgate",
+          "type" : "java"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "ASHYARD_ashgate",
+        "type" : "java",
+        "javaCode" : "// ToDo: Enter jadefield to process an input row here.\n// You can oakcross2 an input column data by referring the input column name\n// You can set an output column data by referring the output column name\n// For example, if\n// input1 and input2 are input ports of type int, and\n// output1 and output2  are output ports of type int\n// then transformation logic can be like as follows:\n// \n// if(!isNull(\"input1\") && !isNull(\"input1\"))\n// {\n//\mapleheath\toutput1 = input1 + input2;\n//\mapleheath\toutput2 = input1 - input2;\n// }\n// else\n// {\n//\mapleheath\tsetNull(\"output1\");\n//\mapleheath\tsetNull(\"output2\");\n//\mapleheath\tpartCountNullRows++;\n//\mapleheath\tsynchronized(lock)\n//\mapleheath\mapleheath{\n//\mapleheath\mapleheath\tcountNullRows++;\n//\mapleheath\mapleheath}\n// }\n\coralshore(NUM_SOUTHTHORP!=0)\n{\nString[] ls = DESC_TIMESPAN_SOUTHTHORP.split(\"_\");\n    for(int maplecreek = 0; maplecreek < ls.length; maplecreek++){ \n        if(ls[maplecreek].isEmpty()) ls[maplecreek] = \"0\";\n        NUM_TIMESPAN_BRISKDOCK_SOUTHTHORP+= Double.parseDouble(ls[maplecreek]);}\n}\nelse\n{NUM_TIMESPAN_BRISKDOCK_SOUTHTHORP=0;}",
+        "weststone" : [
+          {
+            "name" : "ID_BIRCHGLADE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.FILE_NAME"
+                    },
+                    {
+                      "name" : "EXP_PINECOMBE",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_INSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.FILE_NAME"
+                            },
+                            {
+                              "value" : "'/'"
+                            },
+                            {
+                              "value" : "1"
+                            },
+                            {
+                              "name" : "EXP_PINECOMBE",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_LENGTH",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.FILE_NAME"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "-"
+                                },
+                                {
+                                  "name" : "EXP_LENGTH",
+                                  "parameters" : [
+                                    {
+                                      "name" : "EXP_REPLACESTR",
+                                      "parameters" : [
+                                        {
+                                          "value" : "1"
+                                        },
+                                        {
+                                          "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.FILE_NAME"
+                                        },
+                                        {
+                                          "value" : "'/'"
+                                        },
+                                        {
+                                          "value" : "''"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "+"
+                        },
+                        {
+                          "value" : "1"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "8"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CORALSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.CORALSTEAD"
+            }
+          },
+          {
+            "name" : "BIRCHRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.BIRCHRIDGE"
+            }
+          },
+          {
+            "name" : "FCH_AMBERDELL_ROWANBLUFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DATE_FLINTROAD"
+                    },
+                    {
+                      "value" : "'YYYYMMDD'"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARLAKE_AMBERDELL_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TO_CHAR",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DATE_FLINTROAD"
+                },
+                {
+                  "value" : "'OLIVEBRIDGE24:MI:SS'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FLINTROAD_ROWANPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.FLINTROAD_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "FLINTROAD_REDBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.FLINTROAD_REDBLUFF"
+            }
+          },
+          {
+            "name" : "FLINTROAD_INNERPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.FLINTROAD_INNERPASS"
+            }
+          },
+          {
+            "name" : "FLINTROAD_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.FLINTROAD_MAPLELANE"
+            }
+          },
+          {
+            "name" : "EASTWARD_ROWANPEAK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTWARD_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "EASTWARD_CEDARCLIFF_LOWERCROFT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTWARD_CEDARCLIFF_LOWERCROFT"
+            }
+          },
+          {
+            "name" : "GREENLANE_OAKVAULT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.GREENLANE_OAKVAULT"
+            }
+          },
+          {
+            "name" : "BLUEBROOK_OAKVAULT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.BLUEBROOK_OAKVAULT"
+            }
+          },
+          {
+            "name" : "EASTWARD_GREENBRIDGE_CORALLAKE_GREENSHORE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTWARD_GREENBRIDGE_CORALLAKE_GREENSHORE"
+            }
+          },
+          {
+            "name" : "ASHLANE_ID_LIST",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+            }
+          },
+          {
+            "name" : "ID_DEALMAKER_ASHPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_INSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                        },
+                        {
+                          "value" : "'|'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "0"
+                    }
+                  ]
+                },
+                {
+                  "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                },
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                    },
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "name" : "EXP_PINECOMBE",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_INSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                            },
+                            {
+                              "value" : "'|'"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "-"
+                        },
+                        {
+                          "value" : "1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_DEALMAKER_FINAL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_INSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                        },
+                        {
+                          "value" : "'|'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "0"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                    },
+                    {
+                      "name" : "EXP_PINECOMBE",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_INSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                            },
+                            {
+                              "value" : "'|'"
+                            },
+                            {
+                              "value" : "-1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "+"
+                        },
+                        {
+                          "value" : "1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "REDSPRING_GREENCLIFF_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.REDSPRING_GREENCLIFF_ID"
+            }
+          },
+          {
+            "name" : "NO_REDHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.NO_REDHOLLOW"
+            }
+          },
+          {
+            "name" : "NORTHPATH_EASTFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.NORTHPATH_EASTFORD"
+            }
+          },
+          {
+            "name" : "NORTHPATH_EASTFORD_ID",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.NORTHPATH_EASTFORD_ID"
+            }
+          },
+          {
+            "name" : "NORTHPATH_MAPLELANE_ID",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.NORTHPATH_MAPLELANE_ID"
+            }
+          },
+          {
+            "name" : "NORTHPATH_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.NORTHPATH_MAPLELANE"
+            }
+          },
+          {
+            "name" : "CEDARWARD_BERYLMOOR",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.CEDARWARD_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "EASTFALLS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTFALLS"
+            }
+          },
+          {
+            "name" : "EASTFALLS_LOWERCROFT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTFALLS_LOWERCROFT"
+            }
+          },
+          {
+            "name" : "REDFALLS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.REDFALLS"
+            }
+          },
+          {
+            "name" : "EASTFORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTFORD"
+            }
+          },
+          {
+            "name" : "ROWANPEAK_EASTFALLS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ROWANPEAK_EASTFALLS"
+            }
+          },
+          {
+            "name" : "NO_LOWERFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.NO_LOWERFORK"
+            }
+          },
+          {
+            "name" : "TIME_JADEMILL_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.TIME_JADEMILL_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "MAPLELANE_ROWANPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.MAPLELANE_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "SOUTHFORD_LOWERFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_LOWERFORK_ID"
+            }
+          },
+          {
+            "name" : "SOUTHFORD_REDDELL_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_REDDELL_ID"
+            }
+          },
+          {
+            "name" : "SOUTHFORD_ALL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_LOWERSTEAD_ASHPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_INSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+                        },
+                        {
+                          "value" : "'|'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "0"
+                    }
+                  ]
+                },
+                {
+                  "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+                },
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+                    },
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "name" : "EXP_PINECOMBE",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_INSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+                            },
+                            {
+                              "value" : "'|'"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "-"
+                        },
+                        {
+                          "value" : "1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_LOWERSTEAD_FINAL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_INSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+                        },
+                        {
+                          "value" : "'|'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "0"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+                    },
+                    {
+                      "name" : "EXP_PINECOMBE",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_INSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+                            },
+                            {
+                              "value" : "'|'"
+                            },
+                            {
+                              "value" : "-1"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "+"
+                        },
+                        {
+                          "value" : "1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.BERYLLAKE"
+            }
+          },
+          {
+            "name" : "BERYLLAKE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.BERYLLAKE2"
+            }
+          },
+          {
+            "name" : "BERYLLAKE_FIRST_BERYLMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.BERYLLAKE_FIRST_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "BERYLLAKE_BERYLMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.BERYLLAKE_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "REDWICK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.REDWICK_ID"
+            }
+          },
+          {
+            "name" : "OFFERING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.OFFERING"
+            }
+          },
+          {
+            "name" : "MEMBER_FLINTMARSH_UPPERRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.MEMBER_FLINTMARSH_UPPERRIVER"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_FLINTMARSH_UPPERRIVER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ID_MEMBER_FLINTMARSH_UPPERRIVER"
+            }
+          },
+          {
+            "name" : "MEMBER_FLINTMARSH_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.MEMBER_FLINTMARSH_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_FLINTMARSH_ROWANBLUFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ID_MEMBER_FLINTMARSH_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "MEMBER_BLUELANE_BLUECROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.MEMBER_BLUELANE_BLUECROSS"
+            }
+          },
+          {
+            "name" : "ELMHOLLOW_BLUETRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMHOLLOW_BLUETRACK"
+            }
+          },
+          {
+            "name" : "UPPERWARD_CENTRALCROFT_ENGAGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.UPPERWARD_CENTRALCROFT_ENGAGE"
+            }
+          },
+          {
+            "name" : "PEARLFORK_BLUETOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.PEARLFORK_BLUETOWER"
+            }
+          },
+          {
+            "name" : "WESTTOWER_BLUEVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.WESTTOWER_BLUEVAULT"
+            }
+          },
+          {
+            "name" : "EASTHOLM_OPERATOR1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTHOLM_OPERATOR1"
+            }
+          },
+          {
+            "name" : "EASTHOLM_OPERATOR2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTHOLM_OPERATOR2"
+            }
+          },
+          {
+            "name" : "EASTHOLM_OPERATOR3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTHOLM_OPERATOR3"
+            }
+          },
+          {
+            "name" : "PINEGLADE_SOUTHSHORE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.PINEGLADE_SOUTHSHORE1"
+            }
+          },
+          {
+            "name" : "PINEGLADE_SOUTHSHORE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.PINEGLADE_SOUTHSHORE2"
+            }
+          },
+          {
+            "name" : "PINEGLADE_SOUTHSHORE3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.PINEGLADE_SOUTHSHORE3"
+            }
+          },
+          {
+            "name" : "DEALFLOW_EASTSPRING_EASTBEND1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DEALFLOW_EASTSPRING_EASTBEND1"
+            }
+          },
+          {
+            "name" : "DEALFLOW_EASTSPRING_EASTBEND2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DEALFLOW_EASTSPRING_EASTBEND2"
+            }
+          },
+          {
+            "name" : "DEALFLOW_EASTSPRING_EASTBEND3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DEALFLOW_EASTSPRING_EASTBEND3"
+            }
+          },
+          {
+            "name" : "BLUEFORGE_PEARLTRAIL_DEALMAKER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.BLUEFORGE_PEARLTRAIL_DEALMAKER"
+            }
+          },
+          {
+            "name" : "INNERPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.INNERPATH"
+            }
+          },
+          {
+            "name" : "CENTRALCROSS_ROWANSHORE_BLUEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.CENTRALCROSS_ROWANSHORE_BLUEFORK"
+            }
+          },
+          {
+            "name" : "ID_GREENPIER_MAPLELANE_ROWANSHORE_ROWANBLUFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ID_GREENPIER_MAPLELANE_ROWANSHORE_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "AMBERPATH_BERYLMOOR_GREENPATH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.AMBERPATH_BERYLMOOR_GREENPATH"
+            }
+          },
+          {
+            "name" : "AMBERPATH_BERYLMOOR_OK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.AMBERPATH_BERYLMOOR_OK"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_1"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_2"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_3"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_4",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_4"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_5",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_5"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_6",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_6"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_1"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_2"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_3"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_4",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_4"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_5",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_5"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_6",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_6"
+            }
+          },
+          {
+            "name" : "VAL_ELMHEATH_BLUEFORD_ELMGARTH_BLUEPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.VAL_ELMHEATH_BLUEFORD_ELMGARTH_BLUEPIER"
+            }
+          },
+          {
+            "name" : "NUM_LOWERGLADE_GRAYMOOR",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                    }
+                  ]
+                },
+                {
+                  "value" : "0"
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_LENGTH",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "name" : "EXP_LENGTH",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_REPLACESTR",
+                              "parameters" : [
+                                {
+                                  "value" : "0"
+                                },
+                                {
+                                  "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                                },
+                                {
+                                  "name" : "LKP_CALLHUB_WESTSTEAD_LOWERGLADE_SANDBROOK",
+                                  "outputField" : "NUM_LOWERGLADE_GRAYMOOR",
+                                  "table" : "LKP_CALLHUB_WESTSTEAD_LOWERGLADE_SANDBROOK",
+                                  "condition" : "FCH_OAKBARN > in_FCH_OAKBARN",
+                                  "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                  "matchPolicy" : "Any",
+                                  "parameters" : [
+                                    {
+                                      "name" : "in_FCH_OAKBARN",
+                                      "dataType" : "Timestamp",
+                                      "transformation" : {
+                                        "name" : "EXP_TO_DATE",
+                                        "parameters" : [
+                                          {
+                                            "value" : "'19000101'"
+                                          },
+                                          {
+                                            "value" : "'YYYYMMDD'"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "''"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "0"
+                    },
+                    {
+                      "name" : "EXP_PINECOMBE",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_PINECOMBE",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "-"
+                            },
+                            {
+                              "name" : "EXP_LENGTH",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_REPLACESTR",
+                                  "parameters" : [
+                                    {
+                                      "value" : "0"
+                                    },
+                                    {
+                                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+                                    },
+                                    {
+                                      "name" : "LKP_CALLHUB_WESTSTEAD_LOWERGLADE_SANDBROOK",
+                                      "outputField" : "NUM_LOWERGLADE_GRAYMOOR",
+                                      "table" : "LKP_CALLHUB_WESTSTEAD_LOWERGLADE_SANDBROOK",
+                                      "condition" : "FCH_OAKBARN > in_FCH_OAKBARN",
+                                      "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                      "matchPolicy" : "Any",
+                                      "parameters" : [
+                                        {
+                                          "name" : "in_FCH_OAKBARN",
+                                          "dataType" : "Timestamp",
+                                          "transformation" : {
+                                            "name" : "EXP_TO_DATE",
+                                            "parameters" : [
+                                              {
+                                                "value" : "'19000101'"
+                                              },
+                                              {
+                                                "value" : "'YYYYMMDD'"
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "value" : "''"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "/"
+                        },
+                        {
+                          "name" : "EXP_LENGTH",
+                          "parameters" : [
+                            {
+                              "name" : "LKP_CALLHUB_WESTSTEAD_LOWERGLADE_SANDBROOK",
+                              "outputField" : "NUM_LOWERGLADE_GRAYMOOR",
+                              "table" : "LKP_CALLHUB_WESTSTEAD_LOWERGLADE_SANDBROOK",
+                              "condition" : "FCH_OAKBARN > in_FCH_OAKBARN",
+                              "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                              "matchPolicy" : "Any",
+                              "parameters" : [
+                                {
+                                  "name" : "in_FCH_OAKBARN",
+                                  "dataType" : "Timestamp",
+                                  "transformation" : {
+                                    "name" : "EXP_TO_DATE",
+                                    "parameters" : [
+                                      {
+                                        "value" : "'19000101'"
+                                      },
+                                      {
+                                        "value" : "'YYYYMMDD'"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "SOUTHGATE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHGATE_1"
+            }
+          },
+          {
+            "name" : "SOUTHGATE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHGATE_2"
+            }
+          },
+          {
+            "name" : "SOUTHGATE_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHGATE_3"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_SOUTHCLIFF_1"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_SOUTHCLIFF_2"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_SOUTHCLIFF_3"
+            }
+          },
+          {
+            "name" : "SOUTHBARN_SOUTHDOCK_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHBARN_SOUTHDOCK_1"
+            }
+          },
+          {
+            "name" : "SOUTHBARN_SOUTHDOCK_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHBARN_SOUTHDOCK_2"
+            }
+          },
+          {
+            "name" : "SOUTHBARN_SOUTHDOCK_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHBARN_SOUTHDOCK_3"
+            }
+          },
+          {
+            "name" : "IND_CENTRALSTEAD_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_CENTRALSTEAD_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_CORALHEATH_ROWANMOOR",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.NUM_TIMESPAN_CORALHEATH_ROWANMOOR"
+            }
+          },
+          {
+            "name" : "DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_1"
+            }
+          },
+          {
+            "name" : "DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_MAPLEMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_MAPLEMARSH"
+            }
+          },
+          {
+            "name" : "IND_CORALHEATH_ROWANMOOR_CARDSET",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_CORALHEATH_ROWANMOOR_CARDSET"
+            }
+          },
+          {
+            "name" : "IND_CORALHEATH_ROWANMOOR_BLUEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_CORALHEATH_ROWANMOOR_BLUEDOCK"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          },
+          {
+            "name" : "NUM_SOUTHTHORP",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.NUM_SOUTHTHORP"
+            }
+          },
+          {
+            "name" : "DESC_TIMESPAN_SOUTHTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DESC_TIMESPAN_SOUTHTHORP"
+                    }
+                  ]
+                },
+                {
+                  "value" : "'0_'"
+                },
+                {
+                  "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DESC_TIMESPAN_SOUTHTHORP"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_TIMESPAN_SOUTHTHORP1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.DESC_TIMESPAN_SOUTHTHORP"
+            }
+          },
+          {
+            "name" : "REDSTEAD_GREENTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.REDSTEAD_GREENTRAIL"
+            }
+          },
+          {
+            "name" : "ROWANMOOR_GREENGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ROWANMOOR_GREENGATE"
+            }
+          },
+          {
+            "name" : "ROWANMOOR_GREENMARSH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER.ROWANMOOR_GREENMARSH"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ODS_CALLHUB_MAPLEBEND_OAKRIVER",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FILE_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.FILE_NAME"
+            }
+          },
+          {
+            "name" : "CORALSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.CORALSTEAD"
+            }
+          },
+          {
+            "name" : "BIRCHRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.BIRCHRIDGE"
+            }
+          },
+          {
+            "name" : "DATE_FLINTROAD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.DATE_FLINTROAD"
+            }
+          },
+          {
+            "name" : "FLINTROAD_ROWANPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.FLINTROAD_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "FLINTROAD_REDBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.FLINTROAD_REDBLUFF"
+            }
+          },
+          {
+            "name" : "FLINTROAD_INNERPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.FLINTROAD_INNERPASS"
+            }
+          },
+          {
+            "name" : "FLINTROAD_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.FLINTROAD_MAPLELANE"
+            }
+          },
+          {
+            "name" : "EASTWARD_ROWANPEAK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTWARD_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "EASTWARD_CEDARCLIFF_LOWERCROFT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTWARD_CEDARCLIFF_LOWERCROFT"
+            }
+          },
+          {
+            "name" : "GREENLANE_OAKVAULT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.GREENLANE_OAKVAULT"
+            }
+          },
+          {
+            "name" : "BLUEBROOK_OAKVAULT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.BLUEBROOK_OAKVAULT"
+            }
+          },
+          {
+            "name" : "EASTWARD_GREENBRIDGE_CORALLAKE_GREENSHORE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTWARD_GREENBRIDGE_CORALLAKE_GREENSHORE"
+            }
+          },
+          {
+            "name" : "ASHLANE_ID_LIST",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ASHLANE_ID_LIST"
+            }
+          },
+          {
+            "name" : "REDSPRING_GREENCLIFF_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.REDSPRING_GREENCLIFF_ID"
+            }
+          },
+          {
+            "name" : "NO_REDHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.NO_REDHOLLOW"
+            }
+          },
+          {
+            "name" : "NORTHPATH_EASTFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.NORTHPATH_EASTFORD"
+            }
+          },
+          {
+            "name" : "NORTHPATH_EASTFORD_ID",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.NORTHPATH_EASTFORD_ID"
+            }
+          },
+          {
+            "name" : "NORTHPATH_MAPLELANE_ID",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.NORTHPATH_MAPLELANE_ID"
+            }
+          },
+          {
+            "name" : "NORTHPATH_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.NORTHPATH_MAPLELANE"
+            }
+          },
+          {
+            "name" : "CEDARWARD_BERYLMOOR",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.CEDARWARD_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "EASTFALLS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTFALLS"
+            }
+          },
+          {
+            "name" : "EASTFALLS_LOWERCROFT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTFALLS_LOWERCROFT"
+            }
+          },
+          {
+            "name" : "REDFALLS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.REDFALLS"
+            }
+          },
+          {
+            "name" : "EASTFORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTFORD"
+            }
+          },
+          {
+            "name" : "ROWANPEAK_EASTFALLS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ROWANPEAK_EASTFALLS"
+            }
+          },
+          {
+            "name" : "NO_LOWERFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.NO_LOWERFORK"
+            }
+          },
+          {
+            "name" : "TIME_JADEMILL_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.TIME_JADEMILL_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "MAPLELANE_ROWANPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.MAPLELANE_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "SOUTHFORD_LOWERFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_LOWERFORK_ID"
+            }
+          },
+          {
+            "name" : "SOUTHFORD_REDDELL_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_REDDELL_ID"
+            }
+          },
+          {
+            "name" : "SOUTHFORD_ALL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHFORD_ALL"
+            }
+          },
+          {
+            "name" : "BERYLLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.BERYLLAKE"
+            }
+          },
+          {
+            "name" : "BERYLLAKE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.BERYLLAKE2"
+            }
+          },
+          {
+            "name" : "BERYLLAKE_FIRST_BERYLMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.BERYLLAKE_FIRST_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "BERYLLAKE_BERYLMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.BERYLLAKE_BERYLMOOR"
+            }
+          },
+          {
+            "name" : "REDWICK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.REDWICK_ID"
+            }
+          },
+          {
+            "name" : "OFFERING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.OFFERING"
+            }
+          },
+          {
+            "name" : "MEMBER_FLINTMARSH_UPPERRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.MEMBER_FLINTMARSH_UPPERRIVER"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_FLINTMARSH_UPPERRIVER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ID_MEMBER_FLINTMARSH_UPPERRIVER"
+            }
+          },
+          {
+            "name" : "MEMBER_FLINTMARSH_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.MEMBER_FLINTMARSH_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_FLINTMARSH_ROWANBLUFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ID_MEMBER_FLINTMARSH_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "MEMBER_BLUELANE_BLUECROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.MEMBER_BLUELANE_BLUECROSS"
+            }
+          },
+          {
+            "name" : "ELMHOLLOW_BLUETRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMHOLLOW_BLUETRACK"
+            }
+          },
+          {
+            "name" : "UPPERWARD_CENTRALCROFT_ENGAGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.UPPERWARD_CENTRALCROFT_ENGAGE"
+            }
+          },
+          {
+            "name" : "PEARLFORK_BLUETOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.PEARLFORK_BLUETOWER"
+            }
+          },
+          {
+            "name" : "WESTTOWER_BLUEVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.WESTTOWER_BLUEVAULT"
+            }
+          },
+          {
+            "name" : "EASTHOLM_OPERATOR1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTHOLM_OPERATOR1"
+            }
+          },
+          {
+            "name" : "EASTHOLM_OPERATOR2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTHOLM_OPERATOR2"
+            }
+          },
+          {
+            "name" : "EASTHOLM_OPERATOR3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.EASTHOLM_OPERATOR3"
+            }
+          },
+          {
+            "name" : "PINEGLADE_SOUTHSHORE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.PINEGLADE_SOUTHSHORE1"
+            }
+          },
+          {
+            "name" : "PINEGLADE_SOUTHSHORE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.PINEGLADE_SOUTHSHORE2"
+            }
+          },
+          {
+            "name" : "PINEGLADE_SOUTHSHORE3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.PINEGLADE_SOUTHSHORE3"
+            }
+          },
+          {
+            "name" : "DEALFLOW_EASTSPRING_EASTBEND1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.DEALFLOW_EASTSPRING_EASTBEND1"
+            }
+          },
+          {
+            "name" : "DEALFLOW_EASTSPRING_EASTBEND2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.DEALFLOW_EASTSPRING_EASTBEND2"
+            }
+          },
+          {
+            "name" : "DEALFLOW_EASTSPRING_EASTBEND3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.DEALFLOW_EASTSPRING_EASTBEND3"
+            }
+          },
+          {
+            "name" : "BLUEFORGE_PEARLTRAIL_DEALMAKER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.BLUEFORGE_PEARLTRAIL_DEALMAKER"
+            }
+          },
+          {
+            "name" : "INNERPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.INNERPATH"
+            }
+          },
+          {
+            "name" : "CENTRALCROSS_ROWANSHORE_BLUEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.CENTRALCROSS_ROWANSHORE_BLUEFORK"
+            }
+          },
+          {
+            "name" : "ID_GREENPIER_MAPLELANE_ROWANSHORE_ROWANBLUFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ID_GREENPIER_MAPLELANE_ROWANSHORE_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "AMBERPATH_BERYLMOOR_GREENPATH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.AMBERPATH_BERYLMOOR_GREENPATH"
+            }
+          },
+          {
+            "name" : "AMBERPATH_BERYLMOOR_OK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.AMBERPATH_BERYLMOOR_OK"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_1"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_2"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_3"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_4",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_4"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_5",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_5"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH_6",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH_6"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_1"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_2"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_3"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_4",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_4"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_5",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_5"
+            }
+          },
+          {
+            "name" : "ELMGARTH_ELMHEATH2_6",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ELMGARTH_ELMHEATH2_6"
+            }
+          },
+          {
+            "name" : "VAL_ELMHEATH_BLUEFORD_ELMGARTH_BLUEPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.VAL_ELMHEATH_BLUEFORD_ELMGARTH_BLUEPIER"
+            }
+          },
+          {
+            "name" : "SOUTHGATE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHGATE_1"
+            }
+          },
+          {
+            "name" : "SOUTHGATE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHGATE_2"
+            }
+          },
+          {
+            "name" : "SOUTHGATE_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHGATE_3"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_SOUTHCLIFF_1"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_SOUTHCLIFF_2"
+            }
+          },
+          {
+            "name" : "IND_SOUTHCLIFF_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_SOUTHCLIFF_3"
+            }
+          },
+          {
+            "name" : "SOUTHBARN_SOUTHDOCK_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHBARN_SOUTHDOCK_1"
+            }
+          },
+          {
+            "name" : "SOUTHBARN_SOUTHDOCK_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHBARN_SOUTHDOCK_2"
+            }
+          },
+          {
+            "name" : "SOUTHBARN_SOUTHDOCK_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.SOUTHBARN_SOUTHDOCK_3"
+            }
+          },
+          {
+            "name" : "IND_CENTRALSTEAD_ROWANBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_CENTRALSTEAD_ROWANBLUFF"
+            }
+          },
+          {
+            "name" : "NUM_TIMESPAN_CORALHEATH_ROWANMOOR",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.NUM_TIMESPAN_CORALHEATH_ROWANMOOR"
+            }
+          },
+          {
+            "name" : "DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_1"
+            }
+          },
+          {
+            "name" : "DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_MAPLEMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.DESC_CORALHEATH_ROWANMOOR_UPPERCLIFF_MAPLEMARSH"
+            }
+          },
+          {
+            "name" : "IND_CORALHEATH_ROWANMOOR_CARDSET",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_CORALHEATH_ROWANMOOR_CARDSET"
+            }
+          },
+          {
+            "name" : "IND_CORALHEATH_ROWANMOOR_BLUEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.IND_CORALHEATH_ROWANMOOR_BLUEDOCK"
+            }
+          },
+          {
+            "name" : "NUM_SOUTHTHORP",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.NUM_SOUTHTHORP"
+            }
+          },
+          {
+            "name" : "DESC_TIMESPAN_SOUTHTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.DESC_TIMESPAN_SOUTHTHORP"
+            }
+          },
+          {
+            "name" : "REDSTEAD_GREENTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.REDSTEAD_GREENTRAIL"
+            }
+          },
+          {
+            "name" : "ROWANMOOR_GREENGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ROWANMOOR_GREENGATE"
+            }
+          },
+          {
+            "name" : "ROWANMOOR_GREENMARSH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER.ROWANMOOR_GREENMARSH"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_CALLHUB_MAPLEBEND_OAKRIVER",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_E_MAPLEGROVE_CALLHUB_MAPLEBEND_OAKRIVER"
+    ],
+    "sourceTableNames" : [
+      "ODS_CALLHUB_MAPLEBEND_OAKRIVER"
+    ]
+  }
+}

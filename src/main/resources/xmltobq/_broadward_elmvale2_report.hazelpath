@@ -1,0 +1,200 @@
+ScalamaticaRecipeAndMappingsBlueprintPicker report
+- all units discovered:     6982
+- units with elmtower2:       6982
+- picked units:             45
+- pineheath required items:     116
+- pineheath covered by picked:  109
+- missing after picking:    7
+
+Missing coverage items (namespaced):
+- EXP:EXP_AVG
+- EXP:EXP_IS_SPACES
+- EXP:EXP_LOWER
+- EXP:EXP_MAPLEVALE_DATE_DEFAULT
+- EXP:EXP_MAPLEVALE_TIMESTAMP_3_NOT_NULL
+- EXP:EXP_MAPLEVALE_TIMESTAMP_ENGAGE_NOT_NULL
+- EXP:EXP_MAPLEVALE_TIMESTAMP_LE
+
+Picked units:
+- DWH/N/A/m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES  recipe=_ETL_m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES.json  covered=20
+  - srcTypes=[joiner,BERYLFALLS,table]
+  - tgtTypes=[ASHPATH2,BERYLFALLS,table]
+  - exprsCount=14
+- ETL/N/A/m_DWH_E_F_OVERSIGHT  recipe=_ETL_m_DWH_E_F_OVERSIGHT.json  covered=30
+  - srcTypes=[aggregator,filter,BERYLFALLS,table,union]
+  - tgtTypes=[aggregator,filter,BERYLFALLS,table,EARLYGLADE]
+  - exprsCount=20
+- ETL/N/A/m_DWH_E_MAPLESHORE_ERP_STAFF  recipe=_ETL_m_DWH_E_MAPLESHORE_ERP_STAFF.json  covered=17
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=13
+- DWH/N/A/m_LOAD_LKP_MEMBER_SEGMENTED_RULESET_INSERT  recipe=_ETL_m_LOAD_LKP_MEMBER_SEGMENTED_RULESET_INSERT.json  covered=17
+  - srcTypes=[aggregator,filter,BERYLFALLS,table]
+  - tgtTypes=[aggregator,filter,BERYLFALLS,table]
+  - exprsCount=9
+- ETL/N/A/m_DWH_E_MAPLEGROVE_DEALFLOW_MIS_GCP1  recipe=_ETL_m_DWH_E_MAPLEGROVE_DEALFLOW_MIS_GCP1.json  covered=27
+  - srcTypes=[filter,router,BERYLFALLS,table,union]
+  - tgtTypes=[filter,router,BERYLFALLS,table,EARLYGLADE]
+  - exprsCount=17
+- ETL/N/A/m_DWH_E_MAPLEGROVE_CALLHUB_MAPLEBEND_OAKRIVER  recipe=_ETL_m_DWH_E_MAPLEGROVE_CALLHUB_MAPLEBEND_OAKRIVER.json  covered=18
+  - srcTypes=[java,BERYLFALLS,table]
+  - tgtTypes=[java,BERYLFALLS,table]
+  - exprsCount=12
+- DWH/N/A/m_OAKCOMBE3_ODS_TEZ52  recipe=_ETL_m_OAKCOMBE3_ODS_TEZ52.json  covered=15
+  - srcTypes=[filter,BERYLFALLS,table]
+  - tgtTypes=[filter,BERYLFALLS,table]
+  - exprsCount=9
+- DWH/N/A/m_DWH_MAPLEGROVE_PARTYPROFILE_INSERT  recipe=_ETL_m_DWH_MAPLEGROVE_PARTYPROFILE_INSERT.json  covered=14
+  - srcTypes=[filter,BERYLFALLS,table]
+  - tgtTypes=[filter,BERYLFALLS,table]
+  - exprsCount=8
+- DWH/N/A/m_DWH_E_LKP_DIR_PHONELIST  recipe=_ETL_m_DWH_E_LKP_DIR_PHONELIST.json  covered=20
+  - srcTypes=[filter,normalizer,BERYLFALLS,table,union]
+  - tgtTypes=[filter,normalizer,BERYLFALLS,table,EARLYGLADE]
+  - exprsCount=10
+- QDM/N/A/m_GENERATE_ERROR_BRISKGROVE  recipe=_ETL_m_GENERATE_ERROR_BRISKGROVE.json  covered=10
+  - srcTypes=[filter,BERYLFALLS,CEDARWICK2,table]
+  - tgtTypes=[filter,BERYLFALLS,CEDARWICK2,table]
+  - exprsCount=2
+- DWH/N/A/m_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX_INSERT  recipe=_ETL_m_DWH_MAPLEGROVE_GROUPING_MAPLEMILL4PINERIDGE_EX_INSERT.json  covered=11
+  - srcTypes=[filter,BERYLFALLS,table]
+  - tgtTypes=[filter,BERYLFALLS,table]
+  - exprsCount=5
+- DWH/N/A/m_DWH_STMTS_BE_PROD_OAKWARD  recipe=_ETL_m_DWH_STMTS_BE_PROD_OAKWARD.json  covered=13
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=9
+- DWH/N/A/m_DWH_E_MAPLESHORE_MAPLEBARN_MEMBERS  recipe=_ETL_m_DWH_E_MAPLESHORE_MAPLEBARN_MEMBERS.json  covered=19
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=15
+- DWH/N/A/m_LOAD_HIER_GRADING_MIS  recipe=_ETL_m_LOAD_HIER_GRADING_MIS.json  covered=7
+  - srcTypes=[aggregator,BERYLFALLS,table]
+  - tgtTypes=[aggregator,BERYLFALLS,table]
+  - exprsCount=1
+- ETL/N/A/m_DWH_E_MAPLEGROVE_DEALFLOW_LINKED_RISKREG_GCP  recipe=_ETL_m_DWH_E_MAPLEGROVE_DEALFLOW_LINKED_RISKREG_GCP.json  covered=19
+  - srcTypes=[aggregator,filter,BERYLFALLS,table,union]
+  - tgtTypes=[aggregator,filter,BERYLFALLS,table,EARLYGLADE]
+  - exprsCount=9
+- ETL/N/A/m_DWH_E_MAPLEGROVE_CEDARYARD_PEARLPIER_Y_CEDARPIER_RATEIDX  recipe=_ETL_m_DWH_E_MAPLEGROVE_CEDARYARD_PEARLPIER_Y_CEDARPIER_RATEIDX.json  covered=22
+  - srcTypes=[BERYLFALLS,table,union]
+  - tgtTypes=[BERYLFALLS,table,EARLYGLADE]
+  - exprsCount=16
+- ETL/N/A/m_DWH_E_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL  recipe=_ETL_m_DWH_E_MAPLESHORE_COREAPP_ENTITYREF_LAWFUL.json  covered=7
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=3
+- CDM/N/A/m_DM_STG_LKP_MEMBER_CALLHUB  recipe=_ETL_m_DM_STG_LKP_MEMBER_CALLHUB.json  covered=21
+  - srcTypes=[filter,BERYLFALLS,table]
+  - tgtTypes=[filter,BERYLFALLS,table]
+  - exprsCount=15
+- CDM/N/A/m_LKP_ACT_OPPORTUNITY_LEADREF  recipe=_ETL_m_LKP_ACT_OPPORTUNITY_LEADREF.json  covered=8
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=4
+- RDM/N/A/m_RDM_TMP_DTX_ACTIVESET_RECAP  recipe=_ETL_m_RDM_TMP_DTX_ACTIVESET_RECAP.json  covered=9
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=5
+- ODS/MAPLEDELL_REDBARN_10012_1/m_ODS_MKTGCLOUD_MAPLEWARD  recipe=_ETL_m_ODS_MKTGCLOUD_MAPLEWARD.json  covered=14
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=10
+- ODS/FLINTFORGE_AND_PEARLWICK_10034_1/m_ODS_F_PM_MAPLEGATE_CREDITS  recipe=_ETL_m_ODS_F_PM_MAPLEGATE_CREDITS.json  covered=19
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=15
+- ODS/CLIENTMGR_ENGAGE_MEMBER_10049_2/m_ODS_ACT_GUIDE_AWAY_DAYS  recipe=_ETL_m_ODS_ACT_GUIDE_AWAY_DAYS.json  covered=10
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=6
+- ODS/PINEVALE_10003_1/m_STG_MOD_ROWANBRIDGE  recipe=_ETL_m_STG_MOD_ROWANBRIDGE.json  covered=9
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=5
+- ODS/RISKREG_10005_1/m_ODS_CEDARFIELD_OAKSTONE81S_OAKBEND001  recipe=_ETL_m_ODS_CEDARFIELD_OAKSTONE81S_OAKBEND001.json  covered=12
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=8
+- ODS/PINEPIER_DATA_10041_1/m_ODS_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS  recipe=_ETL_m_ODS_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.json  covered=17
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=13
+- ODS/NAVYGROVE_TEALTRAIL_10043_4/m_ODS_MAPLESTONE_MAPLEFORK_MAPLEPASS  recipe=_ETL_m_ODS_MAPLESTONE_MAPLEFORK_MAPLEPASS.json  covered=12
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=8
+- ODS/CLIENTMGR_ENGAGE_MEMBER_10049_2/m_ODS_ACT_HANDLED_FLEX_NOTE  recipe=_ETL_m_ODS_ACT_HANDLED_FLEX_NOTE.json  covered=10
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=6
+- ODS/PINEVALE_10003_1/m_ODS_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE  recipe=_ETL_m_ODS_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.json  covered=12
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=8
+- ODS/SOUTHPEAK_SOUTHTOWER_10004_1/m_ODS_TDX4_LOG_POUCH  recipe=_ETL_m_ODS_TDX4_LOG_POUCH.json  covered=17
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=13
+- ODS/TEALPASS_TEALTRACK_NAVYPEAK_ROWANHOLM_10007_1/m_STG_MOD_DEBTMGR  recipe=_ETL_m_STG_MOD_DEBTMGR.json  covered=14
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=10
+- ODS/ACME_UPPERHEATH_10016_3/m_ODS_STMTS_CEDARRIDGE_OVERSIGHT  recipe=_ETL_m_ODS_STMTS_CEDARRIDGE_OVERSIGHT.json  covered=14
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=10
+- ODS/OUTERFORD_REDGLADE_10021_1/m_ODS_CEDARBLUFF_50_TREASURYSYS  recipe=_ETL_m_ODS_CEDARBLUFF_50_TREASURYSYS.json  covered=13
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=9
+- ODS/ELMMILL_ASHFIELD_10022_1/m_ODS_MAPLESPRING_11_ORDERS  recipe=_ETL_m_ODS_MAPLESPRING_11_ORDERS.json  covered=16
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=12
+- ODS/FIXED_CORALTOWER_TEALSTONE_10023_1/m_ODS_F_MAPLEPEAK_TERMSAVES  recipe=_ETL_m_ODS_F_MAPLEPEAK_TERMSAVES.json  covered=19
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=15
+- ODS/MAPLEMILL_NAVYRIDGE_PRISM_10025_1/m_ODS_MSGSYS_MSGFEED_MAPLEMILL  recipe=_ETL_m_ODS_MSGSYS_MSGFEED_MAPLEMILL.json  covered=15
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=11
+- ODS/FIRBRIDGE_TABLES_10027_1/m_ODS_MAPLESHORE_CEDARVALE_PINEBRIDGE_BIRCHGATE  recipe=_ETL_m_ODS_MAPLESHORE_CEDARVALE_PINEBRIDGE_BIRCHGATE.json  covered=8
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=4
+- ODS/CALMDOCK_CALMFORK_10031_1/m_ODS_TSX61  recipe=_ETL_m_ODS_TSX61.json  covered=13
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=9
+- ODS/MIS_10035_2/m_ODS_MOD_MAPLETHORP_FLOWS  recipe=_ETL_m_ODS_MOD_MAPLETHORP_FLOWS.json  covered=13
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=9
+- ODS/MIS_10035_2/m_ODS_TGX026_MAPLESHORE_FCH_OAKPASS  recipe=_ETL_m_ODS_TGX026_MAPLESHORE_FCH_OAKPASS.json  covered=9
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=5
+- ODS/MIS_10035_2/m_STG_LKP_MEMBER_MIS_MAPLEGROVE  recipe=_ETL_m_STG_LKP_MEMBER_MIS_MAPLEGROVE.json  covered=9
+  - srcTypes=[normalizer,table]
+  - tgtTypes=[normalizer,table]
+  - exprsCount=5
+- ODS/CORALROAD_ROWANSTONE_AGGREGATOR_ROWANHOLM_10036_1/m_ODS_PINEGATE_05_PINESTONE_MAPLEDELL  recipe=_ETL_m_ODS_PINEGATE_05_PINESTONE_MAPLEDELL.json  covered=10
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=6
+- ODS/CALLHUB_CEDARFORGE_OUTERLANE_10039_1/m_ODS_CALLHUB_ASHMARSH  recipe=_ETL_m_ODS_CALLHUB_ASHMARSH.json  covered=9
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=5
+- ODS/CALLHUB_CEDARFORGE_OUTERLANE_10039_1/m_ODS_CALLHUB_MAPLEBEND_CEDARRIVER  recipe=_ETL_m_ODS_CALLHUB_MAPLEBEND_CEDARRIVER.json  covered=11
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=7
+- ODS/BLUEWARD_HAZELMILL_10055_1/m_ODS_MAPLECROFT_04_MAPLEHOLM  recipe=_ETL_m_ODS_MAPLECROFT_04_MAPLEHOLM.json  covered=18
+  - srcTypes=[BERYLFALLS,table]
+  - tgtTypes=[BERYLFALLS,table]
+  - exprsCount=14
+
+Firpier2 (units that topazgarth recipe parsing / missing recipe):

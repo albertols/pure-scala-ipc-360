@@ -1,0 +1,32 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_TIMESPAN",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "TABLE_NAME",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_RECORD",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FIELD_ERROR",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CREATION_DATE",
+  "type": "DATETIME",
+  "description": ""
+  }
+]

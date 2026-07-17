@@ -1,0 +1,4257 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_E_MAPLESHORE_MAPLEBARN_MEMBERS",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_TO_CHAR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "name" : "EXP_PINECOMBE",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_LENGTH",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_TO_CHAR",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "-"
+                        },
+                        {
+                          "value" : "2"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_MEMBER_ELMCROSS1",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_MEMBER_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_AMBERGARTH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "LKP_ODS_SOUTHFORK_8001_EASTTHORP",
+                  "outputField" : "ID_EASTTHORP_OUT",
+                  "table" : "ODS_SOUTHFORK_8001_EASTTHORP",
+                  "condition" : "ID_EASTTHORP_IN = in_ID_EASTTHORP",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_EASTTHORP",
+                      "dataType" : "String",
+                      "transformation" : {
+                        "name" : "EXP_LPAD",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_TO_CHAR",
+                            "parameters" : [
+                              {
+                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BLUEROAD"
+                              }
+                            ]
+                          },
+                          {
+                            "value" : "2"
+                          },
+                          {
+                            "value" : "'0'"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_NORTHMILL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_NORTHMILL"
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "10101"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_NORTHMILL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ROWANLAKE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_ROWANLAKE"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_INNERMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_PINETRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_WESTPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.IND_WESTPEAK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OPERATOR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_OPERATOR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_BIRCHTOWER_2",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_BIRCHTOWER_2"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE_WESTVALE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE_WESTVALE"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE_2",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE_2"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE_3",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE_3"
+            }
+          },
+          {
+            "name" : "DESC_MEMBER_ROWANCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_OAKRIDGE_PARTYPROFILE_WESTFORD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_WESTHEATH_PINETHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_PINETHORP"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_PINETHORP",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_OAKPEAK",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                            },
+                            {
+                              "value" : "="
+                            },
+                            {
+                              "value" : "'3'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "LKP_DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                          "outputField" : "FCH_BRISKHOLLOW",
+                          "table" : "DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                          "condition" : "ID_MEMBER = ID_MEMBER1",
+                          "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                          "matchPolicy" : "Any",
+                          "parameters" : [
+                            {
+                              "name" : "ID_MEMBER1",
+                              "dataType" : "BigDecimal",
+                              "transformation" : {
+                                "name" : "EXP_TO_DECIMAL",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_SUBSTR",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "1"
+                                      },
+                                      {
+                                        "name" : "EXP_PINECOMBE",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_LENGTH",
+                                            "parameters" : [
+                                              {
+                                                "name" : "EXP_TO_CHAR",
+                                                "parameters" : [
+                                                  {
+                                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "value" : "-"
+                                          },
+                                          {
+                                            "value" : "2"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_PINETHORP"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "10101"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'3'"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "LKP_DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                      "outputField" : "FCH_BRISKHOLLOW",
+                      "table" : "DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                      "condition" : "ID_MEMBER = ID_MEMBER1",
+                      "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                      "matchPolicy" : "Any",
+                      "parameters" : [
+                        {
+                          "name" : "ID_MEMBER1",
+                          "dataType" : "BigDecimal",
+                          "transformation" : {
+                            "name" : "EXP_TO_DECIMAL",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_SUBSTR",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "1"
+                                  },
+                                  {
+                                    "name" : "EXP_PINECOMBE",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_LENGTH",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_TO_CHAR",
+                                            "parameters" : [
+                                              {
+                                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "-"
+                                      },
+                                      {
+                                        "value" : "2"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_PINETHORP"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_BIRCHTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TO_CHAR",
+              "parameters" : [
+                {
+                  "name" : "LKP_LKP_KIND_BIRCHTRAIL_OUTERROAD",
+                  "outputField" : "ID_KIND_BIRCHTRAIL_OUTERROAD",
+                  "table" : "LKP_KIND_BIRCHTRAIL_OUTERROAD",
+                  "condition" : "ID_KIND_BIRCHTRAIL = in_ID_KIND_BIRCHTRAIL",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_KIND_BIRCHTRAIL",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_IIF",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_OAKPEAK",
+                            "parameters" : [
+                              {
+                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                              },
+                              {
+                                "value" : "="
+                              },
+                              {
+                                "value" : "'3'"
+                              }
+                            ]
+                          },
+                          {
+                            "name" : "LKP_DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                            "outputField" : "ID_KIND_PARTYPROFILE_CORALCOMBE",
+                            "table" : "DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                            "condition" : "ID_MEMBER = ID_MEMBER1",
+                            "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                            "matchPolicy" : "Any",
+                            "parameters" : [
+                              {
+                                "name" : "ID_MEMBER1",
+                                "dataType" : "BigDecimal",
+                                "transformation" : {
+                                  "name" : "EXP_TO_DECIMAL",
+                                  "parameters" : [
+                                    {
+                                      "name" : "EXP_SUBSTR",
+                                      "parameters" : [
+                                        {
+                                          "name" : "EXP_TO_CHAR",
+                                          "parameters" : [
+                                            {
+                                              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "value" : "1"
+                                        },
+                                        {
+                                          "name" : "EXP_PINECOMBE",
+                                          "parameters" : [
+                                            {
+                                              "name" : "EXP_LENGTH",
+                                              "parameters" : [
+                                                {
+                                                  "name" : "EXP_TO_CHAR",
+                                                  "parameters" : [
+                                                    {
+                                                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "value" : "-"
+                                            },
+                                            {
+                                              "value" : "2"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "name" : "EXP_TO_DECIMAL",
+                            "parameters" : [
+                              {
+                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_KIND_BIRCHTRAIL"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_EASTFORGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_ROWANTHORP"
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "10101"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_ROWANTHORP"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_WESTGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_WESTGLADE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUM_CORALFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_ASHBROOK",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_ISNULL",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_TRIM",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_MEMBER_2"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "OR"
+                            },
+                            {
+                              "name" : "EXP_REG_MATCH",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_TRIM",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_MEMBER_2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "'^(REDLAKE| )*$'"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "1"
+                        },
+                        {
+                          "value" : "0"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                },
+                {
+                  "value" : "'99999999REDLAKE'"
+                },
+                {
+                  "name" : "EXP_TRIM",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_OAKPEAK",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                            },
+                            {
+                              "value" : "="
+                            },
+                            {
+                              "value" : "'3'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "LKP_DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                          "outputField" : "ID_PARTYPROFILE_CORALCOMBE",
+                          "table" : "DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                          "condition" : "ID_MEMBER = ID_MEMBER1",
+                          "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                          "matchPolicy" : "Any",
+                          "parameters" : [
+                            {
+                              "name" : "ID_MEMBER1",
+                              "dataType" : "BigDecimal",
+                              "transformation" : {
+                                "name" : "EXP_TO_DECIMAL",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_SUBSTR",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "1"
+                                      },
+                                      {
+                                        "name" : "EXP_PINECOMBE",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_LENGTH",
+                                            "parameters" : [
+                                              {
+                                                "name" : "EXP_TO_CHAR",
+                                                "parameters" : [
+                                                  {
+                                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "value" : "-"
+                                          },
+                                          {
+                                            "value" : "2"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CEDARSHORE"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_SEQ_CEDARSHORE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "'3'"
+                    }
+                  ]
+                },
+                {
+                  "name" : "LKP_DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                  "outputField" : "ID_CEDARVAULT",
+                  "table" : "DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                  "condition" : "ID_MEMBER = ID_MEMBER1",
+                  "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "ID_MEMBER1",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_SEQ_CEDARSHORE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PHASE_ROWANTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "LKP_ODS_SOUTHFORK_9002_MAPLEBRIDGE_PHASE_ROWANTRACK",
+              "outputField" : "ID_PHASE_ROWANTRACK_VAR",
+              "table" : "ODS_SOUTHFORK_9002_MAPLEBRIDGE_PHASE_ROWANTRACK",
+              "condition" : "ID_PHASE_ROWANTRACK_NUM = ID_PHASE_ROWANTRACK",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "ID_PHASE_ROWANTRACK",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_PHASE_ROWANTRACK"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_AMBERGATE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_AMBERGATE"
+            }
+          },
+          {
+            "name" : "FCH_SOUTHPOND",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_OAKPEAK",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                            },
+                            {
+                              "value" : "="
+                            },
+                            {
+                              "value" : "'3'"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "LKP_DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                          "outputField" : "FCH_THRESHOLD_CLEARROAD",
+                          "table" : "DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                          "condition" : "ID_MEMBER = ID_MEMBER1",
+                          "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                          "matchPolicy" : "Any",
+                          "parameters" : [
+                            {
+                              "name" : "ID_MEMBER1",
+                              "dataType" : "BigDecimal",
+                              "transformation" : {
+                                "name" : "EXP_TO_DECIMAL",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_SUBSTR",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "1"
+                                      },
+                                      {
+                                        "name" : "EXP_PINECOMBE",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_LENGTH",
+                                            "parameters" : [
+                                              {
+                                                "name" : "EXP_TO_CHAR",
+                                                "parameters" : [
+                                                  {
+                                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "value" : "-"
+                                          },
+                                          {
+                                            "value" : "2"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_SOUTHPOND"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "10101"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'3'"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "LKP_DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                      "outputField" : "FCH_THRESHOLD_CLEARROAD",
+                      "table" : "DWH_MAPLESHORE_MAPLEBARN_LOWERSPRING",
+                      "condition" : "ID_MEMBER = ID_MEMBER1",
+                      "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                      "matchPolicy" : "Any",
+                      "parameters" : [
+                        {
+                          "name" : "ID_MEMBER1",
+                          "dataType" : "BigDecimal",
+                          "transformation" : {
+                            "name" : "EXP_TO_DECIMAL",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_SUBSTR",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "1"
+                                  },
+                                  {
+                                    "name" : "EXP_PINECOMBE",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_LENGTH",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_TO_CHAR",
+                                            "parameters" : [
+                                              {
+                                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "-"
+                                      },
+                                      {
+                                        "value" : "2"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_SOUTHPOND"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_ASHGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'3'"
+                        }
+                      ]
+                    },
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_PINETRAIL"
+                    },
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_ASHGROVE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ASHLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_KIND_AMBERHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PHASE_BIRCHDOCK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_PHASE_BIRCHDOCK"
+            }
+          },
+          {
+            "name" : "DESC_MEMBER_ELMCROSS2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_REDFIELD_BIRCHMARSH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_WESTMILL",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_WESTMILL"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MAILCODE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CIPHERKEY_MAILCODE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_CORALGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CIPHERKEY_CORALGATE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_PINETRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_PINETRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_BERYLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_BERYLBROOK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_LOCATION",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_CONCAT",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_SUBSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_LOCATION"
+                        },
+                        {
+                          "value" : "1"
+                        },
+                        {
+                          "value" : "2"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "EXP_CONCAT",
+                      "parameters" : [
+                        {
+                          "value" : "' '"
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_LOCATION"
+                            },
+                            {
+                              "value" : "3"
+                            },
+                            {
+                              "value" : "35"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_LOCATION_NUM",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_LOCATION_NUM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_LOCATION_CORALFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_LOCATION_CORALFIELD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_ELMLAKE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_ELMLAKE_1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BERYLSPRING_ELMLAKE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BERYLSPRING_ELMLAKE_1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ELMLAKE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_ELMLAKE_1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_WESTBRIDGE_ROWANLAKE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.IND_WESTBRIDGE_ROWANLAKE"
+            }
+          },
+          {
+            "name" : "IND_WESTGATE_ROWANLAKE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.IND_WESTGATE_ROWANLAKE"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_PEARLCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CIPHERKEY_PEARLCROFT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_BERYLPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.IND_BERYLPASS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_WESTMOOR_WESTPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BERYLPASS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_GRADING",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_GRADING"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ROWANPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_ROWANPIER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKCROSS",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE_WESTVALE"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_NORTHMILL"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_PINEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_1_PINEDOCK",
+                  "outputField" : "ID_ENTITYREF_PINEDOCK",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 2 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_PINEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_1_PINEDOCK",
+                  "outputField" : "ID_NUCLEUS_PINEDOCK",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 2 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_HANDLER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "LKP_FLINTFIELD_QUERY_1_PINEDOCK",
+              "outputField" : "ID_HANDLER",
+              "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+              "condition" : "ID_MEMBER = in_ID_MEMBER",
+              "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 2 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "in_ID_MEMBER",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "name" : "EXP_TO_DECIMAL",
+                    "parameters" : [
+                      {
+                        "name" : "EXP_SUBSTR",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_TO_CHAR",
+                            "parameters" : [
+                              {
+                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                              }
+                            ]
+                          },
+                          {
+                            "value" : "1"
+                          },
+                          {
+                            "name" : "EXP_PINECOMBE",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_LENGTH",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "-"
+                              },
+                              {
+                                "value" : "2"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PINEBEND",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "LKP_ODS_F_MAPLEBARN_UPPERGARTH",
+              "outputField" : "ID_CEDARBRIDGE_ROWANLAKE",
+              "table" : "ODS_F_MAPLEBARN_UPPERGARTH",
+              "condition" : "ID_MEMBER = in_ID_MEMBER",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "in_ID_MEMBER",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_DEALMAKER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_1_DEALMAKER",
+                  "outputField" : "ID_ENTITYREF_PINEDOCK",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 6 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_DEALMAKER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_1_DEALMAKER",
+                  "outputField" : "ID_NUCLEUS_PINEDOCK",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 6 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_DEALMAKER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "LKP_FLINTFIELD_QUERY_1_DEALMAKER",
+              "outputField" : "ID_HANDLER",
+              "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+              "condition" : "ID_MEMBER = in_ID_MEMBER",
+              "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 6 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "in_ID_MEMBER",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "name" : "EXP_TO_DECIMAL",
+                    "parameters" : [
+                      {
+                        "name" : "EXP_SUBSTR",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_TO_CHAR",
+                            "parameters" : [
+                              {
+                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                              }
+                            ]
+                          },
+                          {
+                            "value" : "1"
+                          },
+                          {
+                            "name" : "EXP_PINECOMBE",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_LENGTH",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "-"
+                              },
+                              {
+                                "value" : "2"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_LKP_OAKFALLS_DEALMAKER",
+                  "outputField" : "ID_OAKFALLS",
+                  "table" : "LKP_OAKFALLS_DEALMAKER",
+                  "condition" : "ID_ASHSTONE = in_ID_ASHSTONE",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_ASHSTONE",
+                      "dataType" : "String",
+                      "transformation" : {
+                        "name" : "EXP_SUBSTR",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_TO_CHAR",
+                            "parameters" : [
+                              {
+                                "name" : "LKP_FLINTFIELD_QUERY_1_DEALMAKER",
+                                "outputField" : "ID_HANDLER",
+                                "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                                "condition" : "ID_MEMBER = in_ID_MEMBER",
+                                "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 6 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                                "matchPolicy" : "Any",
+                                "parameters" : [
+                                  {
+                                    "name" : "in_ID_MEMBER",
+                                    "dataType" : "BigDecimal",
+                                    "transformation" : {
+                                      "name" : "EXP_TO_DECIMAL",
+                                      "parameters" : [
+                                        {
+                                          "name" : "EXP_SUBSTR",
+                                          "parameters" : [
+                                            {
+                                              "name" : "EXP_TO_CHAR",
+                                              "parameters" : [
+                                                {
+                                                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "value" : "1"
+                                            },
+                                            {
+                                              "name" : "EXP_PINECOMBE",
+                                              "parameters" : [
+                                                {
+                                                  "name" : "EXP_LENGTH",
+                                                  "parameters" : [
+                                                    {
+                                                      "name" : "EXP_TO_CHAR",
+                                                      "parameters" : [
+                                                        {
+                                                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "value" : "-"
+                                                },
+                                                {
+                                                  "value" : "2"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "value" : "1"
+                          },
+                          {
+                            "value" : "4"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_PARTYPROFILE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_PINEDOCK_MAPLECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_2_PINEDOCK_MAPLECOMBE",
+                  "outputField" : "ID_ENTITYREF_PINEDOCK",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, FCH_CEDARMILL as FCH_BIRCHCOMBE_HANDLER from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, FCH_CEDARMILL, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER ORDER BY FCH_CEDARMILL) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) is not null then '00000' || substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) else '000000000000000' end as ID_HANDLER, A.FCH_CEDARMILL from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is not null and A.ID_KIND_OFFERING = 2 order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_PINEDOCK_MAPLECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_2_PINEDOCK_MAPLECOMBE",
+                  "outputField" : "ID_NUCLEUS_PINEDOCK",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, FCH_CEDARMILL as FCH_BIRCHCOMBE_HANDLER from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, FCH_CEDARMILL, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER ORDER BY FCH_CEDARMILL) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) is not null then '00000' || substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) else '000000000000000' end as ID_HANDLER, A.FCH_CEDARMILL from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is not null and A.ID_KIND_OFFERING = 2 order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PACT_PINEDOCK_MAPLECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_2_PINEDOCK_MAPLECOMBE",
+                  "outputField" : "ID_HANDLER",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, FCH_CEDARMILL as FCH_BIRCHCOMBE_HANDLER from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, FCH_CEDARMILL, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER ORDER BY FCH_CEDARMILL) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) is not null then '00000' || substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) else '000000000000000' end as ID_HANDLER, A.FCH_CEDARMILL from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is not null and A.ID_KIND_OFFERING = 2 order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_BIRCHCOMBE_HANDLER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "LKP_FLINTFIELD_QUERY_2_PINEDOCK_MAPLECOMBE",
+                      "outputField" : "FCH_BIRCHCOMBE_HANDLER",
+                      "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                      "condition" : "ID_MEMBER = in_ID_MEMBER",
+                      "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, FCH_CEDARMILL as FCH_BIRCHCOMBE_HANDLER from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, FCH_CEDARMILL, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER ORDER BY FCH_CEDARMILL) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) is not null then '00000' || substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) else '000000000000000' end as ID_HANDLER, A.FCH_CEDARMILL from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is not null and A.ID_KIND_OFFERING = 2 order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                      "matchPolicy" : "Any",
+                      "parameters" : [
+                        {
+                          "name" : "in_ID_MEMBER",
+                          "dataType" : "BigDecimal",
+                          "transformation" : {
+                            "name" : "EXP_TO_DECIMAL",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_SUBSTR",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "1"
+                                  },
+                                  {
+                                    "name" : "EXP_PINECOMBE",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_LENGTH",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_TO_CHAR",
+                                            "parameters" : [
+                                              {
+                                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "-"
+                                      },
+                                      {
+                                        "value" : "2"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "10101"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_2_PINEDOCK_MAPLECOMBE",
+                  "outputField" : "FCH_BIRCHCOMBE_HANDLER",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, FCH_CEDARMILL as FCH_BIRCHCOMBE_HANDLER from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, FCH_CEDARMILL, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER ORDER BY FCH_CEDARMILL) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) is not null then '00000' || substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10) else '000000000000000' end as ID_HANDLER, A.FCH_CEDARMILL from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is not null and A.ID_KIND_OFFERING = 2 order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_HANDLER_ROWANPATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "name" : "LKP_FLINTFIELD_QUERY_1_ROWANPATH",
+                      "outputField" : "ID_HANDLER",
+                      "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                      "condition" : "ID_MEMBER = in_ID_MEMBER",
+                      "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 4 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                      "matchPolicy" : "Any",
+                      "parameters" : [
+                        {
+                          "name" : "in_ID_MEMBER",
+                          "dataType" : "BigDecimal",
+                          "transformation" : {
+                            "name" : "EXP_TO_DECIMAL",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_SUBSTR",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "1"
+                                  },
+                                  {
+                                    "name" : "EXP_PINECOMBE",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_LENGTH",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_TO_CHAR",
+                                            "parameters" : [
+                                              {
+                                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "-"
+                                      },
+                                      {
+                                        "value" : "2"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "9190000"
+                },
+                {
+                  "name" : "LKP_FLINTFIELD_QUERY_1_ROWANPATH",
+                  "outputField" : "ID_HANDLER",
+                  "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 4 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_NUCLEUS_ROWANPATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_TO_DECIMAL",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_CONCAT",
+                          "parameters" : [
+                            {
+                              "name" : "LKP_FLINTFIELD_QUERY_1_ROWANPATH",
+                              "outputField" : "ID_ENTITYREF_PINEDOCK",
+                              "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                              "condition" : "ID_MEMBER = in_ID_MEMBER",
+                              "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 4 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                              "matchPolicy" : "Any",
+                              "parameters" : [
+                                {
+                                  "name" : "in_ID_MEMBER",
+                                  "dataType" : "BigDecimal",
+                                  "transformation" : {
+                                    "name" : "EXP_TO_DECIMAL",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_SUBSTR",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_TO_CHAR",
+                                            "parameters" : [
+                                              {
+                                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "value" : "1"
+                                          },
+                                          {
+                                            "name" : "EXP_PINECOMBE",
+                                            "parameters" : [
+                                              {
+                                                "name" : "EXP_LENGTH",
+                                                "parameters" : [
+                                                  {
+                                                    "name" : "EXP_TO_CHAR",
+                                                    "parameters" : [
+                                                      {
+                                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "value" : "-"
+                                              },
+                                              {
+                                                "value" : "2"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "name" : "LKP_FLINTFIELD_QUERY_1_ROWANPATH",
+                              "outputField" : "ID_NUCLEUS_PINEDOCK",
+                              "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                              "condition" : "ID_MEMBER = in_ID_MEMBER",
+                              "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 4 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                              "matchPolicy" : "Any",
+                              "parameters" : [
+                                {
+                                  "name" : "in_ID_MEMBER",
+                                  "dataType" : "BigDecimal",
+                                  "transformation" : {
+                                    "name" : "EXP_TO_DECIMAL",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_SUBSTR",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_TO_CHAR",
+                                            "parameters" : [
+                                              {
+                                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "value" : "1"
+                                          },
+                                          {
+                                            "name" : "EXP_PINECOMBE",
+                                            "parameters" : [
+                                              {
+                                                "name" : "EXP_LENGTH",
+                                                "parameters" : [
+                                                  {
+                                                    "name" : "EXP_TO_CHAR",
+                                                    "parameters" : [
+                                                      {
+                                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "value" : "-"
+                                              },
+                                              {
+                                                "value" : "2"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "9190000"
+                },
+                {
+                  "name" : "EXP_TO_DECIMAL",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_CONCAT",
+                      "parameters" : [
+                        {
+                          "name" : "LKP_FLINTFIELD_QUERY_1_ROWANPATH",
+                          "outputField" : "ID_ENTITYREF_PINEDOCK",
+                          "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                          "condition" : "ID_MEMBER = in_ID_MEMBER",
+                          "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 4 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                          "matchPolicy" : "Any",
+                          "parameters" : [
+                            {
+                              "name" : "in_ID_MEMBER",
+                              "dataType" : "BigDecimal",
+                              "transformation" : {
+                                "name" : "EXP_TO_DECIMAL",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_SUBSTR",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "1"
+                                      },
+                                      {
+                                        "name" : "EXP_PINECOMBE",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_LENGTH",
+                                            "parameters" : [
+                                              {
+                                                "name" : "EXP_TO_CHAR",
+                                                "parameters" : [
+                                                  {
+                                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "value" : "-"
+                                          },
+                                          {
+                                            "value" : "2"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "LKP_FLINTFIELD_QUERY_1_ROWANPATH",
+                          "outputField" : "ID_NUCLEUS_PINEDOCK",
+                          "table" : "ODS_BIRCHFIELD_MEMBER_HANDLER",
+                          "condition" : "ID_MEMBER = in_ID_MEMBER",
+                          "sqlOverride" : "select ID_MEMBER AS ID_MEMBER, ID_ENTITYREF_PINEDOCK AS ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK AS ID_NUCLEUS_PINEDOCK, ID_HANDLER AS ID_HANDLER, ID_KIND_OFFERING AS ID_KIND_OFFERING from ( SELECT ID_MEMBER, ID_ENTITYREF_PINEDOCK, ID_NUCLEUS_PINEDOCK, ID_HANDLER, ID_KIND_OFFERING, PEARLSTONE () ROWANDOCK (PARTITION BY ID_MEMBER, ID_KIND_OFFERING ORDER BY ID_KIND_OFFERING) AS CORALCLIFF FROM ( select A.ID_MEMBER, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) as ID_ENTITYREF_PINEDOCK, substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 5, 4) as ID_NUCLEUS_PINEDOCK, case when ID_KIND_OFFERING in (2,4) and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6) is not null then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 18, 6)) when ID_KIND_OFFERING = 6 then to_number(substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 14, 10)) else 0 end as ID_HANDLER, ID_KIND_OFFERING from VDX81_OWNER.ODS_BIRCHFIELD_MEMBER_HANDLER A left join VDX81_OWNER.ODS_BIRCHFIELD_HANDLER CEDARDELL on (A.ID_HANDLER = CEDARDELL.ID_HANDLER) where CEDARDELL.ID_HANDLER is not null and A.FCH_CEDARMILL is null and ID_KIND_OFFERING = 4 and substr(CEDARDELL.DESC_NAME_OAKFORGE_OFFERING, 1, 4) = '0019' order by ID_MEMBER, ID_KIND_OFFERING, A.FCH_ONBOARD, ID_HANDLER ) ) where coralcliff = 1",
+                          "matchPolicy" : "Any",
+                          "parameters" : [
+                            {
+                              "name" : "in_ID_MEMBER",
+                              "dataType" : "BigDecimal",
+                              "transformation" : {
+                                "name" : "EXP_TO_DECIMAL",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_SUBSTR",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "1"
+                                      },
+                                      {
+                                        "name" : "EXP_PINECOMBE",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_LENGTH",
+                                            "parameters" : [
+                                              {
+                                                "name" : "EXP_TO_CHAR",
+                                                "parameters" : [
+                                                  {
+                                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "value" : "-"
+                                          },
+                                          {
+                                            "value" : "2"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_AMBERBEND_OUTERSPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_INNERFORD_MEMBER"
+                    },
+                    {
+                      "value" : "10"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_LOWERPIER_SOUTHRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_INNERFORD_MEMBER"
+                    },
+                    {
+                      "value" : "8"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_PINETHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_TRIM",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_OAKRIDGE_BLUEPASS"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "value" : "2"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_UPPERTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_INNERFORD_MEMBER"
+                    },
+                    {
+                      "value" : "9"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_SOUTHRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_LKP_BIRCHSTONE_MEMBER",
+                  "outputField" : "ID_KIND_BIRCHSTONE_MEMBER_X",
+                  "table" : "LKP_BIRCHSTONE_MEMBER",
+                  "condition" : "ID_MEMBER = in_ID_MEMBER",
+                  "sourceFilter" : "FCH_CEDARMILL_BIRCHSTONE_X IS NULL AND FCH_MAPLELANE IS NULL",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "in_ID_MEMBER",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKCLIFF_HOLDINGS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_INNERFORD_MEMBER"
+                    },
+                    {
+                      "value" : "5"
+                    },
+                    {
+                      "value" : "2"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_WESTRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.NUM_WESTRIDGE"
+            }
+          },
+          {
+            "name" : "ID_PHASE_SOUTHSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "LKP_ODS_SOUTHFORK_8005",
+              "outputField" : "ID_CORALHOLM_CLEARCROFT",
+              "table" : "ODS_SOUTHFORK_8005",
+              "condition" : "ID_CORALHOLM_AMBERDELL = ID_PHASE_SOUTHSTONE",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "ID_PHASE_SOUTHSTONE",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_PHASE_SOUTHSTONE"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_EASTCROSS",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_EASTCROSS"
+            }
+          },
+          {
+            "name" : "ID_EASTHOLLOW_EASTGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_EASTHOLLOW_EASTGARTH"
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "2"
+                    }
+                  ]
+                },
+                {
+                  "value" : "'E'"
+                },
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_EASTHOLLOW_EASTGARTH"
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "3"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "'MAPLEHEATH'"
+                    },
+                    {
+                      "name" : "EXP_IIF",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_OAKPEAK",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_IIF",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_OAKPEAK",
+                                  "parameters" : [
+                                    {
+                                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_PINETHORP"
+                                    },
+                                    {
+                                      "value" : "="
+                                    },
+                                    {
+                                      "value" : "10101"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "NULL"
+                                },
+                                {
+                                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_PINETHORP"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : ">"
+                            },
+                            {
+                              "name" : "EXP_TO_DECIMAL",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_TO_CHAR",
+                                  "parameters" : [
+                                    {
+                                      "name" : "EXP_ADD_TO_DATE",
+                                      "parameters" : [
+                                        {
+                                          "name" : "EXP_GET_SYSTEM_DATE"
+                                        },
+                                        {
+                                          "value" : "'YYYY'"
+                                        },
+                                        {
+                                          "value" : "-18"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "value" : "'YYYYMMDD'"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "'M'"
+                        },
+                        {
+                          "value" : "null"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_EASTWICK_NO_PINETRAIL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_EASTWICK_NO_PINETRAIL"
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "10101"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_EASTWICK_NO_PINETRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_OAKBARN_EASTCROFT",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_OAKBARN_EASTCROFT"
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "10101"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_OAKBARN_EASTCROFT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_AMBERPIER_HAZELGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "LKP_ODS_SOUTHFORK_8012",
+              "outputField" : "ID_CORALHOLM_CLEARCROFT",
+              "table" : "ODS_SOUTHFORK_8012",
+              "condition" : "ID_CORALHOLM_AMBERDELL = ID_AMBERPIER_HAZELGATE",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "ID_AMBERPIER_HAZELGATE",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_AMBERPIER_HAZELGATE"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_FIRCROSS_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_KIND_FIRCROSS_ENTITYREF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ROWANROAD_EASTROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_IIF",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'3'"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "LKP_ODS_F_MAPLEBARN_LOWERSPRING",
+                      "outputField" : "ID_CEDARGARTH_LAWFUL",
+                      "table" : "ODS_F_MAPLEBARN_LOWERSPRING",
+                      "condition" : "ID_MEMBER = in_ID_MEMBER",
+                      "matchPolicy" : "Any",
+                      "parameters" : [
+                        {
+                          "name" : "in_ID_MEMBER",
+                          "dataType" : "BigDecimal",
+                          "transformation" : {
+                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_ROWANROAD_EASTROAD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_PINETOWER_1",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_OAKRIDGE_PINETOWER_1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_WESTYARD_WESTSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_WESTYARD_WESTSHORE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_PINETOWER_2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_OAKRIDGE_PINETOWER_2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_NUCLEUS_AMBERHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_NUCLEUS_AMBERHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_INFO_EXTRA_CORALPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_INFO_EXTRA_CORALPEAK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_PACT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_KIND_PACT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_FIRMARSH_JADETRACK_1",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_ODS_MAPLEROAD68_OAKPIER_GREENGLADE",
+                  "outputField" : "ID_CEDARBROOK_FIRMARSH_JADETRACK_1",
+                  "table" : "ODS_MAPLEROAD68_OAKPIER_GREENGLADE",
+                  "condition" : "ID_MEMBER = ID_MEMBER1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "ID_MEMBER1",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_FIRMARSH_JADETRACK_2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_ODS_MAPLEROAD68_OAKPIER_GREENGLADE",
+                  "outputField" : "ID_CEDARBROOK_FIRMARSH_JADETRACK_2",
+                  "table" : "ODS_MAPLEROAD68_OAKPIER_GREENGLADE",
+                  "condition" : "ID_MEMBER = ID_MEMBER1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "ID_MEMBER1",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_FIRMARSH_JADETRACK_3",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "LKP_ODS_MAPLEROAD68_OAKPIER_GREENGLADE",
+                  "outputField" : "ID_CEDARBROOK_FIRMARSH_JADETRACK_3",
+                  "table" : "ODS_MAPLEROAD68_OAKPIER_GREENGLADE",
+                  "condition" : "ID_MEMBER = ID_MEMBER1",
+                  "matchPolicy" : "Any",
+                  "parameters" : [
+                    {
+                      "name" : "ID_MEMBER1",
+                      "dataType" : "BigDecimal",
+                      "transformation" : {
+                        "name" : "EXP_TO_DECIMAL",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_TO_CHAR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "name" : "EXP_PINECOMBE",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LENGTH",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "-"
+                                  },
+                                  {
+                                    "value" : "2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_WESTFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "LKP_ODS_MAPLEBARN_MEMBER_WESTFORGE",
+              "outputField" : "IND_WESTFORGE",
+              "table" : "ODS_MAPLEBARN_MEMBER_WESTFORGE",
+              "condition" : "ID_MEMBER = in_ID_MEMBER",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "in_ID_MEMBER",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "name" : "EXP_TO_DECIMAL",
+                    "parameters" : [
+                      {
+                        "name" : "EXP_SUBSTR",
+                        "parameters" : [
+                          {
+                            "name" : "EXP_TO_CHAR",
+                            "parameters" : [
+                              {
+                                "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                              }
+                            ]
+                          },
+                          {
+                            "value" : "1"
+                          },
+                          {
+                            "name" : "EXP_PINECOMBE",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_LENGTH",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "-"
+                              },
+                              {
+                                "value" : "2"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_INNERVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_INNERFORD_MEMBER"
+                    },
+                    {
+                      "value" : "11"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_ROWANMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_INNERFORD_MEMBER"
+                    },
+                    {
+                      "value" : "12"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ROWANMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.DESC_INNERFORD_MEMBER"
+                    },
+                    {
+                      "value" : "13"
+                    },
+                    {
+                      "value" : "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MAILCODE_FLINTSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_CIPHERKEY_MAILCODE_FLINTSTONE"
+            }
+          },
+          {
+            "name" : "ID_PINEBEND_ELMFORD_1",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "LKP_ODS_F_MAPLEBARN_UPPERGARTH",
+              "outputField" : "BLUEPOND1",
+              "table" : "ODS_F_MAPLEBARN_UPPERGARTH",
+              "condition" : "ID_MEMBER = in_ID_MEMBER",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "in_ID_MEMBER",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PINEBEND_ELMFORD_2",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "LKP_ODS_F_MAPLEBARN_UPPERGARTH",
+              "outputField" : "BLUEPOND2",
+              "table" : "ODS_F_MAPLEBARN_UPPERGARTH",
+              "condition" : "ID_MEMBER = in_ID_MEMBER",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "in_ID_MEMBER",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PINEBEND_ELMFORD_3",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "LKP_ODS_F_MAPLEBARN_UPPERGARTH",
+              "outputField" : "BLUEPOND3",
+              "table" : "ODS_F_MAPLEBARN_UPPERGARTH",
+              "condition" : "ID_MEMBER = in_ID_MEMBER",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "in_ID_MEMBER",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PINEBEND_ELMFORD_4",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "LKP_ODS_F_MAPLEBARN_UPPERGARTH",
+              "outputField" : "BLUEPOND4",
+              "table" : "ODS_F_MAPLEBARN_UPPERGARTH",
+              "condition" : "ID_MEMBER = in_ID_MEMBER",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "in_ID_MEMBER",
+                  "dataType" : "BigDecimal",
+                  "transformation" : {
+                    "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "source" : "SQ_ODS_F_MAPLEBARN_MEMBERS.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ODS_F_MAPLEBARN_MEMBERS",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ODS_F_MAPLEBARN_MEMBERS",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_RECORD"
+            }
+          },
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER"
+            }
+          },
+          {
+            "name" : "DESC_MEMBER_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_MEMBER_2"
+            }
+          },
+          {
+            "name" : "ID_BLUEROAD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_BLUEROAD"
+            }
+          },
+          {
+            "name" : "FCH_NORTHMILL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_NORTHMILL"
+            }
+          },
+          {
+            "name" : "ID_ROWANLAKE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_ROWANLAKE"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_PINETRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_PINETRAIL"
+            }
+          },
+          {
+            "name" : "IND_WESTPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.IND_WESTPEAK"
+            }
+          },
+          {
+            "name" : "ID_OPERATOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_OPERATOR"
+            }
+          },
+          {
+            "name" : "FCH_BIRCHTOWER_2",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_BIRCHTOWER_2"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE_WESTVALE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE_WESTVALE"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE_2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE_2"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE_3",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_BIRCHLANE_3"
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_PARTYPROFILE_WESTFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_OAKRIDGE_PARTYPROFILE_WESTFORD"
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_BLUEPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_OAKRIDGE_BLUEPASS"
+            }
+          },
+          {
+            "name" : "DESC_PINETHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_PINETHORP"
+            }
+          },
+          {
+            "name" : "FCH_PINETHORP",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_PINETHORP"
+            }
+          },
+          {
+            "name" : "ID_KIND_BIRCHTRAIL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_KIND_BIRCHTRAIL"
+            }
+          },
+          {
+            "name" : "FCH_ROWANTHORP",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_ROWANTHORP"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_WESTGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_WESTGLADE"
+            }
+          },
+          {
+            "name" : "ID_CEDARSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CEDARSHORE"
+            }
+          },
+          {
+            "name" : "ID_SEQ_CEDARSHORE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_SEQ_CEDARSHORE"
+            }
+          },
+          {
+            "name" : "ID_PHASE_ROWANTRACK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_PHASE_ROWANTRACK"
+            }
+          },
+          {
+            "name" : "ID_AMBERGATE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_AMBERGATE"
+            }
+          },
+          {
+            "name" : "FCH_SOUTHPOND",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_SOUTHPOND"
+            }
+          },
+          {
+            "name" : "ID_ASHGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_ASHGROVE"
+            }
+          },
+          {
+            "name" : "ID_KIND_AMBERHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_KIND_AMBERHOLM"
+            }
+          },
+          {
+            "name" : "ID_PHASE_BIRCHDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_PHASE_BIRCHDOCK"
+            }
+          },
+          {
+            "name" : "DESC_REDFIELD_BIRCHMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_REDFIELD_BIRCHMARSH"
+            }
+          },
+          {
+            "name" : "ID_WESTMILL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_WESTMILL"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MAILCODE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CIPHERKEY_MAILCODE"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_CORALGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CIPHERKEY_CORALGATE"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK"
+            }
+          },
+          {
+            "name" : "DESC_BERYLBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_BERYLBROOK"
+            }
+          },
+          {
+            "name" : "DESC_DIR_MAILCODE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_DIR_MAILCODE_1"
+            }
+          },
+          {
+            "name" : "DESC_LOCATION",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_LOCATION"
+            }
+          },
+          {
+            "name" : "DESC_LOCATION_NUM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_LOCATION_NUM"
+            }
+          },
+          {
+            "name" : "DESC_LOCATION_CORALFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_LOCATION_CORALFIELD"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_ELMLAKE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_ELMLAKE_1"
+            }
+          },
+          {
+            "name" : "ID_BERYLSPRING_ELMLAKE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_BERYLSPRING_ELMLAKE_1"
+            }
+          },
+          {
+            "name" : "ID_ELMLAKE_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_ELMLAKE_1"
+            }
+          },
+          {
+            "name" : "IND_WESTBRIDGE_ROWANLAKE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.IND_WESTBRIDGE_ROWANLAKE"
+            }
+          },
+          {
+            "name" : "IND_WESTGATE_ROWANLAKE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.IND_WESTGATE_ROWANLAKE"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_PEARLCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CIPHERKEY_PEARLCROFT"
+            }
+          },
+          {
+            "name" : "IND_BERYLPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.IND_BERYLPASS"
+            }
+          },
+          {
+            "name" : "ID_BERYLPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_BERYLPASS"
+            }
+          },
+          {
+            "name" : "ID_GRADING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_GRADING"
+            }
+          },
+          {
+            "name" : "ID_ROWANPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_ROWANPIER"
+            }
+          },
+          {
+            "name" : "NUM_WESTRIDGE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.NUM_WESTRIDGE"
+            }
+          },
+          {
+            "name" : "ID_PHASE_SOUTHSTONE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_PHASE_SOUTHSTONE"
+            }
+          },
+          {
+            "name" : "FCH_EASTCROSS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_EASTCROSS"
+            }
+          },
+          {
+            "name" : "ID_EASTHOLLOW_EASTGARTH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_EASTHOLLOW_EASTGARTH"
+            }
+          },
+          {
+            "name" : "FCH_EASTWICK_NO_PINETRAIL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_EASTWICK_NO_PINETRAIL"
+            }
+          },
+          {
+            "name" : "FCH_OAKBARN_EASTCROFT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_OAKBARN_EASTCROFT"
+            }
+          },
+          {
+            "name" : "ID_AMBERPIER_HAZELGATE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_AMBERPIER_HAZELGATE"
+            }
+          },
+          {
+            "name" : "ID_KIND_FIRCROSS_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_KIND_FIRCROSS_ENTITYREF"
+            }
+          },
+          {
+            "name" : "ID_ROWANROAD_EASTROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_ROWANROAD_EASTROAD"
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_PINETOWER_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_OAKRIDGE_PINETOWER_1"
+            }
+          },
+          {
+            "name" : "DESC_WESTYARD_WESTSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_WESTYARD_WESTSHORE"
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_PINETOWER_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_OAKRIDGE_PINETOWER_2"
+            }
+          },
+          {
+            "name" : "DESC_NUCLEUS_AMBERHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_NUCLEUS_AMBERHOLM"
+            }
+          },
+          {
+            "name" : "DESC_INFO_EXTRA_CORALPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_INFO_EXTRA_CORALPEAK"
+            }
+          },
+          {
+            "name" : "ID_KIND_PACT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_KIND_PACT"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_ELMLAKE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CEDARBROOK_ELMLAKE_2"
+            }
+          },
+          {
+            "name" : "ID_BERYLSPRING_ELMLAKE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_BERYLSPRING_ELMLAKE_2"
+            }
+          },
+          {
+            "name" : "ID_ELMLAKE_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_ELMLAKE_2"
+            }
+          },
+          {
+            "name" : "NUM_ELMCROFT_OAKHOLLOW1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.NUM_ELMCROFT_OAKHOLLOW1"
+            }
+          },
+          {
+            "name" : "NUM_ELMCROFT_OAKHOLLOW2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.NUM_ELMCROFT_OAKHOLLOW2"
+            }
+          },
+          {
+            "name" : "ID_KIND_DIR_OAKHOLLOW1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_KIND_DIR_OAKHOLLOW1"
+            }
+          },
+          {
+            "name" : "ID_KIND_DIR_OAKHOLLOW2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_KIND_DIR_OAKHOLLOW2"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_LOCATION1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER_LOCATION1"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_LOCATION2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_MEMBER_LOCATION2"
+            }
+          },
+          {
+            "name" : "NUM_ELMCROFT_LOCATION1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.NUM_ELMCROFT_LOCATION1"
+            }
+          },
+          {
+            "name" : "NUM_ELMCROFT_LOCATION2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.NUM_ELMCROFT_LOCATION2"
+            }
+          },
+          {
+            "name" : "UPPERCROFT1",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.UPPERCROFT1"
+            }
+          },
+          {
+            "name" : "UPPERCROFT2",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.UPPERCROFT2"
+            }
+          },
+          {
+            "name" : "TEALCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.TEALCOMBE"
+            }
+          },
+          {
+            "name" : "TEALDELL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.TEALDELL"
+            }
+          },
+          {
+            "name" : "TEALROAD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.TEALROAD"
+            }
+          },
+          {
+            "name" : "TEALMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.TEALMOOR"
+            }
+          },
+          {
+            "name" : "NAVYVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.NAVYVALE"
+            }
+          },
+          {
+            "name" : "TEALLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.TEALLANE"
+            }
+          },
+          {
+            "name" : "TEALTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.TEALTHORP"
+            }
+          },
+          {
+            "name" : "TEALWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.TEALWICK"
+            }
+          },
+          {
+            "name" : "DESC_INNERFORD_MEMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.DESC_INNERFORD_MEMBER"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MAILCODE_FLINTSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.ID_CIPHERKEY_MAILCODE_FLINTSTONE"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_F_MAPLEBARN_MEMBERS.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_F_MAPLEBARN_MEMBERS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_E_MAPLESHORE_MAPLEBARN_MEMBERS"
+    ],
+    "sourceTableNames" : [
+      "ODS_F_MAPLEBARN_MEMBERS"
+    ]
+  }
+}

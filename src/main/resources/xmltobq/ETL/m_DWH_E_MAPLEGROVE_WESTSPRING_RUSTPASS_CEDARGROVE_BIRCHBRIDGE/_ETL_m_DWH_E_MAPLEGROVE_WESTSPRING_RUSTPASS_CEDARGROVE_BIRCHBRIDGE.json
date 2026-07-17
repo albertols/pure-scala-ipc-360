@@ -1,0 +1,399 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_E_MAPLEGROVE_WESTSPRING_RUSTPASS_CEDARGROVE_BIRCHBRIDGE",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_PHASE_REG_BIRCHBRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMGROVE"
+            }
+          },
+          {
+            "name" : "ID_PACT_BIRCHBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TO_CHAR",
+              "parameters" : [
+                {
+                  "source" : "SQ_ODS_ROWANSTEAD23.RUSTSPRING"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHLANE_BIRCHBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMRIDGE"
+            }
+          },
+          {
+            "name" : "ID_KIND_CEDARGROVE_BIRCHBRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMPEAK"
+            }
+          },
+          {
+            "name" : "FCH_OAKBARN_FIRVALE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMMARSH"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.RUSTDELL"
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.RUSTHOLLOW"
+            }
+          },
+          {
+            "name" : "ID_PACT",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "name" : "LKP_ODS_MAPLEBARN_ELMTRACK800MAPLEHEATH",
+                      "outputField" : "PINECROFT_GRAYWICK_KEY",
+                      "table" : "ODS_MAPLEBARN_ELMTRACK800MAPLEHEATH",
+                      "condition" : "ROWANSTONE_ID = in_ID_ENTITYREF AND CORALRIDGE_NO_MAIN = in_ID_NUCLEUS AND FLINTSPRING_NUMBER = in_ID_PACT",
+                      "matchPolicy" : "First",
+                      "parameters" : [
+                        {
+                          "name" : "in_ID_ENTITYREF",
+                          "dataType" : "String",
+                          "transformation" : {
+                            "source" : "SQ_ODS_ROWANSTEAD23.RUSTDELL"
+                          }
+                        },
+                        {
+                          "name" : "in_ID_NUCLEUS",
+                          "dataType" : "String",
+                          "transformation" : {
+                            "source" : "SQ_ODS_ROWANSTEAD23.RUSTHOLLOW"
+                          }
+                        },
+                        {
+                          "name" : "in_ID_PACT",
+                          "dataType" : "BigDecimal",
+                          "transformation" : {
+                            "name" : "EXP_TO_DECIMAL",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_SUBSTR",
+                                "parameters" : [
+                                  {
+                                    "source" : "SQ_ODS_ROWANSTEAD23.RUSTSPRING"
+                                  },
+                                  {
+                                    "value" : "4"
+                                  },
+                                  {
+                                    "value" : "10"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "value" : "15"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_HAZELYARD_ASHROAD_BIRCHBRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMCLIFF"
+            }
+          },
+          {
+            "name" : "FCH_MAPLELANE_FIRVALE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMSHORE"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMGLADE"
+            }
+          },
+          {
+            "name" : "ID_MONETARY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMVALE"
+            }
+          },
+          {
+            "name" : "PCT_CEDARGROVE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.QUIETRIVER"
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.CALMCREEK"
+            }
+          },
+          {
+            "name" : "FCH_MAPLEMARSH_MOD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.ASHTOWER"
+            }
+          },
+          {
+            "name" : "ID_OPERATOR_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.ASHHOLM"
+            }
+          },
+          {
+            "name" : "ID_KIND_CORALBARN_BIRCHBRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.QUIETGLADE"
+            }
+          },
+          {
+            "name" : "IND_DENSEFIELD_OAKBRIDGE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.QUIETVALE"
+            }
+          },
+          {
+            "name" : "IND_LIGHTRIVER_OAKSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_ROWANSTEAD23.QUIETGROVE"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ODS_ROWANSTEAD23",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ODS_ROWANSTEAD23",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.ID_RECORD"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "CALMGROVE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMGROVE"
+            }
+          },
+          {
+            "name" : "RUSTSPRING",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.RUSTSPRING"
+            }
+          },
+          {
+            "name" : "CALMRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMRIDGE"
+            }
+          },
+          {
+            "name" : "CALMPEAK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMPEAK"
+            }
+          },
+          {
+            "name" : "RUSTDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.RUSTDELL"
+            }
+          },
+          {
+            "name" : "RUSTHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.RUSTHOLLOW"
+            }
+          },
+          {
+            "name" : "CALMCLIFF",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMCLIFF"
+            }
+          },
+          {
+            "name" : "CALMMARSH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMMARSH"
+            }
+          },
+          {
+            "name" : "CALMSHORE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMSHORE"
+            }
+          },
+          {
+            "name" : "CALMGLADE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMGLADE"
+            }
+          },
+          {
+            "name" : "CALMVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMVALE"
+            }
+          },
+          {
+            "name" : "QUIETRIVER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.QUIETRIVER"
+            }
+          },
+          {
+            "name" : "CLEARRIDGE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CLEARRIDGE"
+            }
+          },
+          {
+            "name" : "CALMCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.CALMCREEK"
+            }
+          },
+          {
+            "name" : "ASHTOWER",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.ASHTOWER"
+            }
+          },
+          {
+            "name" : "ASHHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.ASHHOLM"
+            }
+          },
+          {
+            "name" : "QUIETGLADE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.QUIETGLADE"
+            }
+          },
+          {
+            "name" : "QUIETVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.QUIETVALE"
+            }
+          },
+          {
+            "name" : "QUIETGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.QUIETGROVE"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_ROWANSTEAD23.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_ROWANSTEAD23",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_E_MAPLEGROVE_WESTSPRING_RUSTPASS_CEDARGROVE_BIRCHBRIDGE"
+    ],
+    "sourceTableNames" : [
+      "ODS_ROWANSTEAD23"
+    ]
+  }
+}
