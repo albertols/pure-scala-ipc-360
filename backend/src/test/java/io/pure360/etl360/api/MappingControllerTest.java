@@ -35,4 +35,11 @@ class MappingControllerTest {
         mvc.perform(get(URI.create("/api/mappings/dom/..%2F..%2Fetc")))
            .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void realCorpusMappingServesSemanticModel() throws Exception {
+        mvc.perform(get("/api/mappings/model/CDM/m_DM_INFOHUB_BIZLINK"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.repository.name").isNotEmpty());
+    }
 }

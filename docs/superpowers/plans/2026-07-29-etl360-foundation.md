@@ -1158,7 +1158,7 @@ Expected: PASS. Also spot-check: boot the app, `curl -s localhost:8080/api/mappi
 - Consumes: `PathResolver.insideCorpus`.
 - Produces: `record RecipeDto(String path, String fileName, long sizeBytes, String modifiedAt, com.fasterxml.jackson.databind.JsonNode content)`; `RecipeService.recipe(String relJsonPath): RecipeDto` (404 when absent; path must end `.json`); `RecipeService.ddls(String mappingDirRel): Map<String, JsonNode>` keyed by filename minus `.json`, excluding `_ETL_*` and `_sqlTranslations*`. `GET /api/recipes/{*path}` (path = corpus-relative recipe file), `GET /api/ddl/{*path}` (path = mapping output dir).
 
-- [ ] **Step 1: Write failing tests** — `RecipeServiceTest` against the fixture corpus: `recipe("CDM/m_FIXTURE/_ETL_m_FIXTURE.json")` returns content with `name == "m_FIXTURE"` and metadata populated; `ddls("CDM/m_FIXTURE")` returns exactly key `TGT_FIXTURE`; `recipe("CDM/m_FIXTURE/nope.json")` throws `NotFoundException`.
+- [x] **Step 1: Write failing tests** — `RecipeServiceTest` against the fixture corpus: `recipe("CDM/m_FIXTURE/_ETL_m_FIXTURE.json")` returns content with `name == "m_FIXTURE"` and metadata populated; `ddls("CDM/m_FIXTURE")` returns exactly key `TGT_FIXTURE`; `recipe("CDM/m_FIXTURE/nope.json")` throws `NotFoundException`.
 
 ```java
 package io.pure360.etl360.service;
@@ -1192,13 +1192,13 @@ class RecipeServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=RecipeServiceTest` — Expected: compile error.
+- [x] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=RecipeServiceTest` — Expected: compile error.
 
-- [ ] **Step 3: Implement** — `RecipeService` reads via Jackson `ObjectMapper.readTree`; controllers are thin pass-throughs mirroring `MappingController`'s `{*path}` + `stripLeadingSlash` pattern (copy that static). Malformed JSON in a recipe file: catch `JsonProcessingException` and throw a new `UnreadableFileException` (`service.support`, message-only constructor like the others) with a matching `ApiExceptionHandler` case → 422, title "File unreadable". Controller test asserts shapes over the real corpus: `GET /api/recipes/CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json` → 200 with `$.content` object; `GET /api/ddl/CDM/m_DM_INFOHUB_BIZLINK` → 200 map; missing → 404.
+- [x] **Step 3: Implement** — `RecipeService` reads via Jackson `ObjectMapper.readTree`; controllers are thin pass-throughs mirroring `MappingController`'s `{*path}` + `stripLeadingSlash` pattern (copy that static). Malformed JSON in a recipe file: catch `JsonProcessingException` and throw a new `UnreadableFileException` (`service.support`, message-only constructor like the others) with a matching `ApiExceptionHandler` case → 422, title "File unreadable". Controller test asserts shapes over the real corpus: `GET /api/recipes/CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json` → 200 with `$.content` object; `GET /api/ddl/CDM/m_DM_INFOHUB_BIZLINK` → 200 map; missing → 404.
 
-- [ ] **Step 4: Run all backend tests** — Run: `mvn -q -am -pl backend test` — Expected: PASS.
+- [x] **Step 4: Run all backend tests** — Run: `mvn -q -am -pl backend test` — Expected: PASS.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): recipe and DDL endpoints"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): recipe and DDL endpoints"`
 
 ---
 

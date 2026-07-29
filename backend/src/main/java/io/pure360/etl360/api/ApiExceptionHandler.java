@@ -2,6 +2,7 @@ package io.pure360.etl360.api;
 
 import io.pure360.etl360.service.support.InvalidCorpusPathException;
 import io.pure360.etl360.service.support.NotFoundException;
+import io.pure360.etl360.service.support.UnreadableFileException;
 import io.pure360.etl360.service.support.XmlUnparsableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -28,6 +29,13 @@ public class ApiExceptionHandler {
     ProblemDetail unparsable(XmlUnparsableException e) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         pd.setTitle("XML unparsable");
+        return pd;
+    }
+
+    @ExceptionHandler(UnreadableFileException.class)
+    ProblemDetail unreadable(UnreadableFileException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        pd.setTitle("File unreadable");
         return pd;
     }
 }
