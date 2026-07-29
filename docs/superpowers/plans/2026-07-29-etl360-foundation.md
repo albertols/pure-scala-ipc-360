@@ -439,7 +439,7 @@ Run: `mvn -q -am -pl backend spring-boot:run &` then `curl -s localhost:8080/api
 - Consumes: `Etl360Properties.resolvedCorpusRoot()`.
 - Produces: `record TreeNodeDto(String name, String path, String kind, String layer, Long sizeBytes, String modifiedAt, String mappingPath, Boolean hasRecipe, Boolean hasDdl, List<TreeNodeDto> children)` — `kind` ∈ `"dir" | "outputDir" | "xml" | "json"`; `path` corpus-relative with extension; `mappingPath` only on `xml` nodes (path minus `.xml`); `layer` = first path segment (`"root"` on the root node). `CorpusService.tree(): TreeNodeDto`, `CorpusService.xmlCount(): int`, `CorpusService.recipeCount(): int`, `CorpusService.allXmlPaths(): List<String>` (mappingPaths), `CorpusService.allRecipePaths(): List<String>`. `NotFoundException(String detail)` → 404 problem+json via `ApiExceptionHandler`.
 
-- [ ] **Step 1: Create the fixture corpus** (used by unit tests; kept tiny and Powermart-shaped)
+- [x] **Step 1: Create the fixture corpus** (used by unit tests; kept tiny and Powermart-shaped)
 
 `backend/src/test/resources/fixture-corpus/CDM/m_FIXTURE.xml`:
 ```xml
@@ -474,7 +474,7 @@ Run: `mvn -q -am -pl backend spring-boot:run &` then `curl -s localhost:8080/api
 [{"name": "COL_A", "type": "STRING", "mode": "REQUIRED"}]
 ```
 
-- [ ] **Step 2: Write the failing CorpusService test**
+- [x] **Step 2: Write the failing CorpusService test**
 
 ```java
 package io.pure360.etl360.service;
@@ -519,10 +519,10 @@ class CorpusServiceTest {
 }
 ```
 
-- [ ] **Step 3: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=CorpusServiceTest`
+- [x] **Step 3: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=CorpusServiceTest`
 Expected: compile error, `CorpusService` not found.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `TreeNodeDto.java`:
 ```java
@@ -744,10 +744,10 @@ class TreeControllerTest {
 }
 ```
 
-- [ ] **Step 5: Run all backend tests** — Run: `mvn -q -am -pl backend test`
+- [x] **Step 5: Run all backend tests** — Run: `mvn -q -am -pl backend test`
 Expected: PASS.
 
-- [ ] **Step 6: Commit** — `git add -A && git commit -m "feat(backend): /api/tree corpus tree, problem+json 404, real health counts"`
+- [x] **Step 6: Commit** — `git add -A && git commit -m "feat(backend): /api/tree corpus tree, problem+json 404, real health counts"`
 
 ---
 
