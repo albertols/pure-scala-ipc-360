@@ -1267,7 +1267,7 @@ class ExpressionServiceTest {
 - Consumes: `Etl360Properties`.
 - Produces: `DataRoots` bean — `Path corpus()`; `Optional<Path> dwhControl()` (real dir if exists, else mock-mirror subdir `DWH_CONTROL` if exists, else empty); `String dwhControlMode()` ∈ `"real" | "mock" | "absent"`; `Optional<Path> composer()`, `String composerMode()` (same real/absent logic, no mock tier). `record AppConfigDto(String projectId, String region, String dataprocJobUrl, String dataprocClusterUrl, String loggingUrl, String dwhControlMode, String composerMode, String corpusRoot)`. `GET /api/config`.
 
-- [ ] **Step 1: Write the failing DataRoots test** — three cases with `@TempDir`-built property objects (construct `Etl360Properties` directly with absolute temp paths): real dir present → mode `"real"`; only mock mirror (containing `DWH_CONTROL/`) → `"mock"`; neither → `"absent"` + empty Optional.
+- [x] **Step 1: Write the failing DataRoots test** — three cases with `@TempDir`-built property objects (construct `Etl360Properties` directly with absolute temp paths): real dir present → mode `"real"`; only mock mirror (containing `DWH_CONTROL/`) → `"mock"`; neither → `"absent"` + empty Optional.
 
 ```java
 package io.pure360.etl360.config;
@@ -1309,13 +1309,13 @@ class DataRootsTest {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=DataRootsTest` — Expected: compile error.
+- [x] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=DataRootsTest` — Expected: compile error.
 
-- [ ] **Step 3: Implement** — `DataRoots` as `@Component`; `ConfigController` maps properties + modes into `AppConfigDto`. `mock/DWH_CONTROL/README.md` explains the mirror layout (`LAYER_TO_LAYER/<LAYER>/statements.sql`, populated by sub-project 4). `.env.example` lists every `ETL360_*` variable with the default and one commented corp-style example. Slice-test `/api/config` in a new `ConfigControllerTest` (200, `$.dwhControlMode` present, no unexpected secret-ish fields).
+- [x] **Step 3: Implement** — `DataRoots` as `@Component`; `ConfigController` maps properties + modes into `AppConfigDto`. `mock/DWH_CONTROL/README.md` explains the mirror layout (`LAYER_TO_LAYER/<LAYER>/statements.sql`, populated by sub-project 4). `.env.example` lists every `ETL360_*` variable with the default and one commented corp-style example. Slice-test `/api/config` in a new `ConfigControllerTest` (200, `$.dwhControlMode` present, no unexpected secret-ish fields).
 
-- [ ] **Step 4: Run all backend tests** — `mvn -q -am -pl backend test` — Expected: PASS.
+- [x] **Step 4: Run all backend tests** — `mvn -q -am -pl backend test` — Expected: PASS.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): data-root fallback (real/mock/absent) and /api/config"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): data-root fallback (real/mock/absent) and /api/config"`
 
 ---
 
