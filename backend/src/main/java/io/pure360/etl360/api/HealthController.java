@@ -1,5 +1,6 @@
 package io.pure360.etl360.api;
 
+import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.config.Etl360Properties;
 import io.pure360.etl360.service.CorpusService;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +12,12 @@ import java.util.Map;
 public class HealthController {
     private final Etl360Properties props;
     private final CorpusService corpusService;
+    private final DataRoots dataRoots;
 
-    public HealthController(Etl360Properties props, CorpusService corpusService) {
+    public HealthController(Etl360Properties props, CorpusService corpusService, DataRoots dataRoots) {
         this.props = props;
         this.corpusService = corpusService;
+        this.dataRoots = dataRoots;
     }
 
     @GetMapping("/health")
@@ -25,6 +28,8 @@ public class HealthController {
             "corpusRoot", corpus.toString(),
             "corpusPresent", Files.isDirectory(corpus),
             "xmlCount", corpusService.xmlCount(),
-            "recipeCount", corpusService.recipeCount());
+            "recipeCount", corpusService.recipeCount(),
+            "dwhControlMode", dataRoots.dwhControlMode(),
+            "composerMode", dataRoots.composerMode());
     }
 }
