@@ -33,7 +33,11 @@ class RecipeAndDdlControllerTest {
         mvc.perform(get("/api/ddl/CDM/m_DM_INFOHUB_BIZLINK"))
            .andExpect(status().isOk())
            .andExpect(jsonPath("$.BIZLINK").isArray())
-           .andExpect(jsonPath("$._ETL_m_DM_INFOHUB_BIZLINK").doesNotExist());
+           .andExpect(jsonPath("$._ETL_m_DM_INFOHUB_BIZLINK").doesNotExist())
+           // anonymizer-mangled "_sqlTranslations_ETL_*" (real corpus renames it "_WESTPOND_ETL_*")
+           // must not leak through as a spurious DDL key.
+           .andExpect(jsonPath("$._WESTPOND_ETL_m_DM_INFOHUB_BIZLINK").doesNotExist())
+           .andExpect(jsonPath("$._sqlTranslations_ETL_m_DM_INFOHUB_BIZLINK").doesNotExist());
     }
 
     @Test

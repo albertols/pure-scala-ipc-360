@@ -56,7 +56,10 @@ public class CorpusService {
                 for (Path f : out.toList()) {
                     String n = f.getFileName().toString();
                     if (n.startsWith("_ETL_") && n.endsWith(".json")) hasRecipe = true;
-                    else if (n.endsWith(".json") && !n.startsWith("_sqlTranslations")) hasDdl = true;
+                    // Real DDL files are TABLE_NAME.json and never start with "_". This also
+                    // catches anonymizer-mangled "_sqlTranslations_*" files (e.g. "_WESTPOND_ETL_*"
+                    // in the real corpus) that a literal "_sqlTranslations" prefix check would miss.
+                    else if (n.endsWith(".json") && !n.startsWith("_")) hasDdl = true;
                 }
             } catch (IOException e) { throw new UncheckedIOException(e); }
         }

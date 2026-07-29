@@ -53,7 +53,10 @@ public class RecipeService {
             for (Path f : list.sorted().toList()) {
                 String name = f.getFileName().toString();
                 if (!name.endsWith(".json")) continue;
-                if (name.startsWith("_ETL_") || name.startsWith("_sqlTranslations")) continue;
+                // Real DDL files are TABLE_NAME.json and never start with "_". This also
+                // catches anonymizer-mangled "_sqlTranslations_*" files (e.g. "_WESTPOND_ETL_*"
+                // in the real corpus) that a literal "_sqlTranslations" prefix check would miss.
+                if (name.startsWith("_")) continue;
                 String key = name.substring(0, name.length() - ".json".length());
                 result.put(key, readJson(f));
             }
