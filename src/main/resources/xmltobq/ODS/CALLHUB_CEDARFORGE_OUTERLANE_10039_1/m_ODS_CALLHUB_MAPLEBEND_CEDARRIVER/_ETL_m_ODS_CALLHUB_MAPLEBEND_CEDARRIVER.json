@@ -1,0 +1,716 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_CALLHUB_MAPLEBEND_CEDARRIVER",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FILE_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.FILE_NAME"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLSTEAD_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.PEARLSTEAD_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_FIRGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_FIRGARTH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TIME_JADEMILL_FIRGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.TIME_JADEMILL_FIRGARTH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_LAST_ASHLANE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_LAST_ASHLANE_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_ONYXFALLS",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_CALLHUB_2",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_ONYXFALLS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_AMBERPATH_TRY",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_AMBERPATH_TRY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_FIRST",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_CALLHUB_2",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_FIRST"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_FIRST",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_FIRST"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_LAST",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_CALLHUB_2",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_LAST"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_ONYXROAD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_CALLHUB_2",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_ONYXROAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_PEARLBARN",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_CALLHUB_2",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_PEARLBARN"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ID"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ONYXGROVE_NUMBER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ONYXGROVE_NUMBER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_HOUR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_HOUR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ROWANWICK_NUMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ROWANWICK_NUMBER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ASHLANE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ASHLANE_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_PEARLGROVE_ID",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_PEARLGROVE_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_TOPAZGARTH_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_TOPAZGARTH_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEHOLLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_BERYLYARD_OAKVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_BERYLYARD_OAKVAULT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_TOPAZDOCK_OAKVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_TOPAZDOCK_OAKVAULT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_CEDARCLIFF_OAKVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_CEDARCLIFF_OAKVAULT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEFORD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_BERYLROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_BERYLROAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_PINEHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_PINEHEATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_BIRCHFORK_BERYLPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_BIRCHFORK_BERYLPATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_BIRCHFORK_PEARLFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_BIRCHFORK_PEARLFORD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ASHLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ASHLANE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CORALSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CORALSTEAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARFORGE_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEPIER_FIELD_CEDARFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_FIELD_CEDARFORGE_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER.TOPAZCROFT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_CALLHUB_MAPLEBEND_CEDARRIVER",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FILE_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.FILE_NAME"
+            }
+          },
+          {
+            "name" : "PEARLSTEAD_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.PEARLSTEAD_ID"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_FIRGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_FIRGARTH"
+            }
+          },
+          {
+            "name" : "TIME_JADEMILL_FIRGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.TIME_JADEMILL_FIRGARTH"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_LAST_ASHLANE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_LAST_ASHLANE_ID"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_ONYXFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_ONYXFALLS"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_AMBERPATH_TRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_AMBERPATH_TRY"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_FIRST",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_FIRST"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_FIRST",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_FIRST"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_LAST",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_LAST"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_ONYXROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_ONYXROAD"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE_PEARLBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE_PEARLBARN"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ID"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ONYXGROVE_NUMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ONYXGROVE_NUMBER"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_DATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_DATE"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_HOUR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_HOUR"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ROWANWICK_NUMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ROWANWICK_NUMBER"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ASHLANE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ASHLANE_ID"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_PEARLGROVE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_PEARLGROVE_ID"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_TOPAZGARTH_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_TOPAZGARTH_ID"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEHOLLOW"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_BERYLYARD_OAKVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_BERYLYARD_OAKVAULT"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_TOPAZDOCK_OAKVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_TOPAZDOCK_OAKVAULT"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_CEDARCLIFF_OAKVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_CEDARCLIFF_OAKVAULT"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEFORD"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_BERYLROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_BERYLROAD"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARCLIFF_OAKVAULT_PINEHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARCLIFF_OAKVAULT_PINEHEATH"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_BIRCHFORK_BERYLPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_BIRCHFORK_BERYLPATH"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_BIRCHFORK_PEARLFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_BIRCHFORK_PEARLFORD"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_ASHLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_ASHLANE"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CORALSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CORALSTEAD"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_CEDARFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_CEDARFORGE_ID"
+            }
+          },
+          {
+            "name" : "MAPLEPIER_FIELD_CEDARFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.MAPLEPIER_FIELD_CEDARFORGE_ID"
+            }
+          },
+          {
+            "name" : "TOPAZCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER.TOPAZCROFT"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_CALLHUB_MAPLEBEND_CEDARRIVER",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_CALLHUB_MAPLEBEND_CEDARRIVER"
+    ],
+    "sourceTableNames" : [
+      "STG_CALLHUB_MAPLEBEND_CEDARRIVER"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "PEARLSTEAD_ID",
+        "MAPLEPIER_ID",
+        "MAPLEPIER_DATE",
+        "MAPLEPIER_HOUR",
+        "MAPLEPIER_ASHLANE_ID",
+        "MAPLEPIER_CORALSTEAD"
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "items" : [
+    {
+      "name" : "LKP_PEARLCROSS_TIMESPAN",
+      "translationEngine" : "default",
+      "translatedBigQueryCompliant" : false,
+      "sqlOverride" : "$$LKP_TIMESPAN_SQL",
+      "sqlOverrideTranslated" : ""
+    }
+  ]
+}

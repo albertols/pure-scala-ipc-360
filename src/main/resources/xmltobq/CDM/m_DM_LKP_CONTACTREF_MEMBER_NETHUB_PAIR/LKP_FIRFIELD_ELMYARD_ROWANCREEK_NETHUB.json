@@ -1,0 +1,152 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHCROSS_NETHUB",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHBARN_ELMFORK",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHPASS",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ELMBLUFF_MEMBER",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_OAKFALLS_DISPATCH_NETHUB",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_CIPHERKEY_CEDARBROOK_NETHUB",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_AMBERGARTH_NETHUB",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ENTITYREF_NETHUB",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_HAZELFIELD_NETHUB",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_ALIAS_HAZELFIELD_NETHUB",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_ROWANSPRING_NETHUB",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_WESTTOWER_NETHUB",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_1",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_3",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_4",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_5",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_6",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_7",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_8",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_9",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINECROSS_BIRCHPIER_10",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_INNERBRIDGE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_ASHTHORP",
+  "type": "TIMESTAMP",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_TIMESTAMP",
+  "type": "DATETIME",
+  "description": ""
+  }
+]

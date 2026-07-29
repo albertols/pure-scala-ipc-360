@@ -1,0 +1,1692 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "OAKCOMBE3_CLEARTOWER_GREENYARD",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_TIMESPAN",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "maplefield_OAKCOMBE3_ODS_TEZ52_FIL_ERROR_TEZ52.ID_TIMESPAN"
+            }
+          },
+          {
+            "name" : "TABLE_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "maplefield_OAKCOMBE3_ODS_TEZ52_FIL_ERROR_TEZ52.TABLE_NAME"
+            }
+          },
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "maplefield_OAKCOMBE3_ODS_TEZ52_FIL_ERROR_TEZ52.ID_RECORD"
+            }
+          },
+          {
+            "name" : "FIELD_ERROR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "maplefield_OAKCOMBE3_ODS_TEZ52_FIL_ERROR_TEZ52.FIELD_ERROR"
+            }
+          },
+          {
+            "name" : "CREATION_DATE",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "source" : "maplefield_OAKCOMBE3_ODS_TEZ52_FIL_ERROR_TEZ52.CREATION_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "maplefield_OAKCOMBE3_ODS_TEZ52_FIL_ERROR_TEZ52",
+          "type" : "filter"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "maplefield_OAKCOMBE3_ODS_TEZ52_FIL_ERROR_TEZ52",
+        "type" : "filter",
+        "filterCondition" : {
+          "name" : "EXP_OAKPEAK",
+          "parameters" : [
+            {
+              "source" : "LOAD_DATA"
+            },
+            {
+              "value" : "="
+            },
+            {
+              "value" : "'Y'"
+            }
+          ]
+        },
+        "weststone" : [
+          {
+            "name" : "LOAD_DATA",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ASHBROOK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_OAKPEAK",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_MAPLEVALE_LOOKUP",
+                          "parameters" : [
+                            {
+                              "name" : "LKP_LKP_CEDARBROOK",
+                              "outputField" : "ID_CEDARBROOK_CENTRALWARD",
+                              "table" : "LKP_CEDARBROOK",
+                              "condition" : "ID_CEDARBROOK_CENTRALWARD = EASTGROVE",
+                              "sourceFilter" : "FCH_MAPLELANE is NULL",
+                              "matchPolicy" : "Any",
+                              "parameters" : [
+                                {
+                                  "name" : "EASTGROVE",
+                                  "dataType" : "String",
+                                  "transformation" : {
+                                    "name" : "EXP_UPPER",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_TEZ52.EASTGROVE"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "name" : "EXP_UPPER",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_ODS_TEZ52.EASTGROVE"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "="
+                        },
+                        {
+                          "value" : "'Y'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "OR"
+                    },
+                    {
+                      "name" : "EXP_ASHBROOK",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_OAKPEAK",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_MAPLEVALE_LOOKUP",
+                              "parameters" : [
+                                {
+                                  "name" : "LKP_LKP_CEDARBROOK1",
+                                  "outputField" : "ID_CEDARBROOK",
+                                  "table" : "LKP_CEDARBROOK",
+                                  "condition" : "ID_CEDARBROOK = SOUTHDELL",
+                                  "matchPolicy" : "Any",
+                                  "parameters" : [
+                                    {
+                                      "name" : "SOUTHDELL",
+                                      "dataType" : "String",
+                                      "transformation" : {
+                                        "source" : "SQ_ODS_TEZ52.SOUTHDELL"
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "source" : "SQ_ODS_TEZ52.SOUTHDELL"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "="
+                            },
+                            {
+                              "value" : "'Y'"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "OR"
+                        },
+                        {
+                          "name" : "EXP_ASHBROOK",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_OAKPEAK",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_MAPLEVALE_LOOKUP",
+                                  "parameters" : [
+                                    {
+                                      "name" : "LKP_DWH_MAPLEGROVE_KIND_GREENPEAK_BERYLPOND",
+                                      "outputField" : "ID_KIND_GREENPEAK_BERYLPOND",
+                                      "table" : "DWH_MAPLEGROVE_KIND_GREENPEAK_BERYLPOND",
+                                      "condition" : "ID_KIND_GREENPEAK_BERYLPOND = SOUTHHOLLOW",
+                                      "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                      "matchPolicy" : "Any",
+                                      "parameters" : [
+                                        {
+                                          "name" : "SOUTHHOLLOW",
+                                          "dataType" : "String",
+                                          "transformation" : {
+                                            "source" : "SQ_ODS_TEZ52.SOUTHHOLLOW"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "source" : "SQ_ODS_TEZ52.SOUTHHOLLOW"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "="
+                                },
+                                {
+                                  "value" : "'Y'"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "OR"
+                            },
+                            {
+                              "name" : "EXP_ASHBROOK",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_OAKPEAK",
+                                  "parameters" : [
+                                    {
+                                      "name" : "EXP_MAPLEVALE_LOOKUP",
+                                      "parameters" : [
+                                        {
+                                          "name" : "LKP_DWH_LKP_MONETARY",
+                                          "outputField" : "ID_MONETARY",
+                                          "table" : "DWH_LKP_MONETARY",
+                                          "condition" : "ID_MONETARY = SOUTHFALLS",
+                                          "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                          "matchPolicy" : "Any",
+                                          "parameters" : [
+                                            {
+                                              "name" : "SOUTHFALLS",
+                                              "dataType" : "String",
+                                              "transformation" : {
+                                                "source" : "SQ_ODS_TEZ52.SOUTHFALLS"
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "source" : "SQ_ODS_TEZ52.SOUTHFALLS"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "value" : "="
+                                    },
+                                    {
+                                      "value" : "'Y'"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "value" : "OR"
+                                },
+                                {
+                                  "name" : "EXP_ASHBROOK",
+                                  "parameters" : [
+                                    {
+                                      "name" : "EXP_OAKPEAK",
+                                      "parameters" : [
+                                        {
+                                          "name" : "EXP_MAPLEVALE_LOOKUP",
+                                          "parameters" : [
+                                            {
+                                              "name" : "LKP_LKP_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                              "outputField" : "ID_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                              "table" : "LKP_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                              "condition" : "ID_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND = SOUTHBLUFF",
+                                              "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                              "matchPolicy" : "Any",
+                                              "parameters" : [
+                                                {
+                                                  "name" : "SOUTHBLUFF",
+                                                  "dataType" : "String",
+                                                  "transformation" : {
+                                                    "source" : "SQ_ODS_TEZ52.SOUTHBLUFF"
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "source" : "SQ_ODS_TEZ52.SOUTHBLUFF"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "value" : "="
+                                        },
+                                        {
+                                          "value" : "'Y'"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "value" : "OR"
+                                    },
+                                    {
+                                      "name" : "EXP_ASHBROOK",
+                                      "parameters" : [
+                                        {
+                                          "name" : "EXP_OAKPEAK",
+                                          "parameters" : [
+                                            {
+                                              "name" : "EXP_MAPLEVALE_LOOKUP",
+                                              "parameters" : [
+                                                {
+                                                  "name" : "EXP_IIF",
+                                                  "parameters" : [
+                                                    {
+                                                      "name" : "EXP_OAKPEAK",
+                                                      "parameters" : [
+                                                        {
+                                                          "name" : "EXP_LENGTH",
+                                                          "parameters" : [
+                                                            {
+                                                              "name" : "EXP_TRIM",
+                                                              "parameters" : [
+                                                                {
+                                                                  "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "value" : "="
+                                                        },
+                                                        {
+                                                          "value" : "3"
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "name" : "LKP_LKP_0137_PLUMFORGE_MIDDLEMARSH",
+                                                      "outputField" : "ID_OAKPIER_OAKYARD",
+                                                      "table" : "LKP_0137_PLUMFORGE_MIDDLEMARSH",
+                                                      "condition" : "ID_OAKPIER_OAKYARD = in_ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                      "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                                      "matchPolicy" : "Any",
+                                                      "parameters" : [
+                                                        {
+                                                          "name" : "in_ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                          "dataType" : "String",
+                                                          "transformation" : {
+                                                            "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "name" : "EXP_IIF",
+                                                      "parameters" : [
+                                                        {
+                                                          "name" : "EXP_OAKPEAK",
+                                                          "parameters" : [
+                                                            {
+                                                              "name" : "EXP_LENGTH",
+                                                              "parameters" : [
+                                                                {
+                                                                  "name" : "EXP_TRIM",
+                                                                  "parameters" : [
+                                                                    {
+                                                                      "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            },
+                                                            {
+                                                              "value" : "="
+                                                            },
+                                                            {
+                                                              "value" : "4"
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "name" : "LKP_LKP_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                          "outputField" : "ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                          "table" : "LKP_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                          "condition" : "ID_OAKYARD_MIDDLEMARSH_BERYLPOND = in_ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                          "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                                          "matchPolicy" : "Any",
+                                                          "parameters" : [
+                                                            {
+                                                              "name" : "in_ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                              "dataType" : "String",
+                                                              "transformation" : {
+                                                                "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                              }
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "value" : "="
+                                            },
+                                            {
+                                              "value" : "'Y'"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "value" : "OR"
+                                        },
+                                        {
+                                          "name" : "EXP_OAKPEAK",
+                                          "parameters" : [
+                                            {
+                                              "name" : "EXP_MAPLEVALE_LOOKUP",
+                                              "parameters" : [
+                                                {
+                                                  "name" : "LKP_LKP_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND1",
+                                                  "outputField" : "ID_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                                  "table" : "LKP_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                                  "condition" : "ID_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND = SOUTHLAKE",
+                                                  "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                                  "matchPolicy" : "Any",
+                                                  "parameters" : [
+                                                    {
+                                                      "name" : "SOUTHLAKE",
+                                                      "dataType" : "String",
+                                                      "transformation" : {
+                                                        "source" : "SQ_ODS_TEZ52.SOUTHLAKE"
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "source" : "SQ_ODS_TEZ52.SOUTHLAKE"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "value" : "="
+                                            },
+                                            {
+                                              "value" : "'Y'"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "'Y'"
+                },
+                {
+                  "value" : "'N'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_TIMESPAN",
+            "dataType" : "Integer",
+            "transformation" : {
+              "name" : "LKP_PEARLCROSS_TIMESPAN",
+              "outputField" : "",
+              "table" : "STG_MAPLEGROVE_TIMESPAN",
+              "condition" : "ID_TIMESPAN > ID_TIMESPAN1",
+              "sqlOverride" : "$$LKP_TIMESPAN_SQL",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "ID_TIMESPAN1",
+                  "dataType" : "Integer",
+                  "transformation" : {
+                    "value" : "-1"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TABLE_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "value" : "$$FILENAME"
+            }
+          },
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.ID_RECORD"
+            }
+          },
+          {
+            "name" : "FIELD_ERROR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_CONCAT",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_LOOKUP",
+                  "parameters" : [
+                    {
+                      "name" : "LKP_LKP_CEDARBROOK",
+                      "outputField" : "ID_CEDARBROOK_CENTRALWARD",
+                      "table" : "LKP_CEDARBROOK",
+                      "condition" : "ID_CEDARBROOK_CENTRALWARD = EASTGROVE",
+                      "sourceFilter" : "FCH_MAPLELANE is NULL",
+                      "matchPolicy" : "Any",
+                      "parameters" : [
+                        {
+                          "name" : "EASTGROVE",
+                          "dataType" : "String",
+                          "transformation" : {
+                            "name" : "EXP_UPPER",
+                            "parameters" : [
+                              {
+                                "source" : "SQ_ODS_TEZ52.EASTGROVE"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "EXP_UPPER",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_TEZ52.EASTGROVE"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_CONCAT",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_LOOKUP",
+                      "parameters" : [
+                        {
+                          "name" : "LKP_LKP_CEDARBROOK1",
+                          "outputField" : "ID_CEDARBROOK",
+                          "table" : "LKP_CEDARBROOK",
+                          "condition" : "ID_CEDARBROOK = SOUTHDELL",
+                          "matchPolicy" : "Any",
+                          "parameters" : [
+                            {
+                              "name" : "SOUTHDELL",
+                              "dataType" : "String",
+                              "transformation" : {
+                                "source" : "SQ_ODS_TEZ52.SOUTHDELL"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "source" : "SQ_ODS_TEZ52.SOUTHDELL"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "EXP_CONCAT",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_MAPLEVALE_LOOKUP",
+                          "parameters" : [
+                            {
+                              "name" : "LKP_DWH_MAPLEGROVE_KIND_GREENPEAK_BERYLPOND",
+                              "outputField" : "ID_KIND_GREENPEAK_BERYLPOND",
+                              "table" : "DWH_MAPLEGROVE_KIND_GREENPEAK_BERYLPOND",
+                              "condition" : "ID_KIND_GREENPEAK_BERYLPOND = SOUTHHOLLOW",
+                              "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                              "matchPolicy" : "Any",
+                              "parameters" : [
+                                {
+                                  "name" : "SOUTHHOLLOW",
+                                  "dataType" : "String",
+                                  "transformation" : {
+                                    "source" : "SQ_ODS_TEZ52.SOUTHHOLLOW"
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "source" : "SQ_ODS_TEZ52.SOUTHHOLLOW"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_CONCAT",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_MAPLEVALE_LOOKUP",
+                              "parameters" : [
+                                {
+                                  "name" : "LKP_DWH_LKP_MONETARY",
+                                  "outputField" : "ID_MONETARY",
+                                  "table" : "DWH_LKP_MONETARY",
+                                  "condition" : "ID_MONETARY = SOUTHFALLS",
+                                  "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                  "matchPolicy" : "Any",
+                                  "parameters" : [
+                                    {
+                                      "name" : "SOUTHFALLS",
+                                      "dataType" : "String",
+                                      "transformation" : {
+                                        "source" : "SQ_ODS_TEZ52.SOUTHFALLS"
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "source" : "SQ_ODS_TEZ52.SOUTHFALLS"
+                                }
+                              ]
+                            },
+                            {
+                              "name" : "EXP_CONCAT",
+                              "parameters" : [
+                                {
+                                  "name" : "EXP_MAPLEVALE_LOOKUP",
+                                  "parameters" : [
+                                    {
+                                      "name" : "LKP_LKP_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                      "outputField" : "ID_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                      "table" : "LKP_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                      "condition" : "ID_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND = SOUTHBLUFF",
+                                      "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                      "matchPolicy" : "Any",
+                                      "parameters" : [
+                                        {
+                                          "name" : "SOUTHBLUFF",
+                                          "dataType" : "String",
+                                          "transformation" : {
+                                            "source" : "SQ_ODS_TEZ52.SOUTHBLUFF"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "source" : "SQ_ODS_TEZ52.SOUTHBLUFF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name" : "EXP_CONCAT",
+                                  "parameters" : [
+                                    {
+                                      "name" : "EXP_MAPLEVALE_LOOKUP",
+                                      "parameters" : [
+                                        {
+                                          "name" : "EXP_IIF",
+                                          "parameters" : [
+                                            {
+                                              "name" : "EXP_OAKPEAK",
+                                              "parameters" : [
+                                                {
+                                                  "name" : "EXP_LENGTH",
+                                                  "parameters" : [
+                                                    {
+                                                      "name" : "EXP_TRIM",
+                                                      "parameters" : [
+                                                        {
+                                                          "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "value" : "="
+                                                },
+                                                {
+                                                  "value" : "3"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "name" : "LKP_LKP_0137_PLUMFORGE_MIDDLEMARSH",
+                                              "outputField" : "ID_OAKPIER_OAKYARD",
+                                              "table" : "LKP_0137_PLUMFORGE_MIDDLEMARSH",
+                                              "condition" : "ID_OAKPIER_OAKYARD = in_ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                              "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                              "matchPolicy" : "Any",
+                                              "parameters" : [
+                                                {
+                                                  "name" : "in_ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                  "dataType" : "String",
+                                                  "transformation" : {
+                                                    "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "name" : "EXP_IIF",
+                                              "parameters" : [
+                                                {
+                                                  "name" : "EXP_OAKPEAK",
+                                                  "parameters" : [
+                                                    {
+                                                      "name" : "EXP_LENGTH",
+                                                      "parameters" : [
+                                                        {
+                                                          "name" : "EXP_TRIM",
+                                                          "parameters" : [
+                                                            {
+                                                              "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "value" : "="
+                                                    },
+                                                    {
+                                                      "value" : "4"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "name" : "LKP_LKP_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                  "outputField" : "ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                  "table" : "LKP_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                  "condition" : "ID_OAKYARD_MIDDLEMARSH_BERYLPOND = in_ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                  "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                                  "matchPolicy" : "Any",
+                                                  "parameters" : [
+                                                    {
+                                                      "name" : "in_ID_OAKYARD_MIDDLEMARSH_BERYLPOND",
+                                                      "dataType" : "String",
+                                                      "transformation" : {
+                                                        "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "name" : "EXP_MAPLEVALE_LOOKUP",
+                                      "parameters" : [
+                                        {
+                                          "name" : "LKP_LKP_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND1",
+                                          "outputField" : "ID_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                          "table" : "LKP_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND",
+                                          "condition" : "ID_LOWERPASS_ROWANCLIFF_LOWERHOLLOW_BERYLPOND = SOUTHLAKE",
+                                          "sourceFilter" : "FCH_MAPLELANE IS NULL",
+                                          "matchPolicy" : "Any",
+                                          "parameters" : [
+                                            {
+                                              "name" : "SOUTHLAKE",
+                                              "dataType" : "String",
+                                              "transformation" : {
+                                                "source" : "SQ_ODS_TEZ52.SOUTHLAKE"
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "source" : "SQ_ODS_TEZ52.SOUTHLAKE"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CREATION_DATE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          },
+          {
+            "name" : "KIND_ERROR",
+            "dataType" : "String",
+            "transformation" : {
+              "value" : "$$ERROR_TYPE"
+            }
+          },
+          {
+            "name" : "ID_TIMESPAN1",
+            "dataType" : "Integer",
+            "transformation" : {
+              "name" : "LKP_PEARLCROSS_TIMESPAN",
+              "outputField" : "",
+              "table" : "STG_MAPLEGROVE_TIMESPAN",
+              "condition" : "ID_TIMESPAN > ID_TIMESPAN1",
+              "sqlOverride" : "$$LKP_TIMESPAN_SQL",
+              "matchPolicy" : "Any",
+              "parameters" : [
+                {
+                  "name" : "ID_TIMESPAN1",
+                  "dataType" : "Integer",
+                  "transformation" : {
+                    "value" : "-1"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_RECORD1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.ID_RECORD"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "MIDDLEWARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEWARD"
+            }
+          },
+          {
+            "name" : "MIDDLESHORE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLESHORE"
+            }
+          },
+          {
+            "name" : "MIDDLELAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLELAKE"
+            }
+          },
+          {
+            "name" : "SOUTHVALE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHVALE1"
+            }
+          },
+          {
+            "name" : "SOUTHVALE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHVALE2"
+            }
+          },
+          {
+            "name" : "EASTGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "value" : "NULL"
+            }
+          },
+          {
+            "name" : "SOUTHDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHDELL"
+            }
+          },
+          {
+            "name" : "SOUTHHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHHOLLOW"
+            }
+          },
+          {
+            "name" : "MIDDLEBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEBRIDGE"
+            }
+          },
+          {
+            "name" : "MIDDLEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEFORGE"
+            }
+          },
+          {
+            "name" : "MIDDLEGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEGATE"
+            }
+          },
+          {
+            "name" : "MIDDLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEDOCK"
+            }
+          },
+          {
+            "name" : "MIDDLEROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEROAD"
+            }
+          },
+          {
+            "name" : "MIDDLEBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEBARN"
+            }
+          },
+          {
+            "name" : "MIDDLEVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEVAULT"
+            }
+          },
+          {
+            "name" : "MIDDLETRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLETRAIL"
+            }
+          },
+          {
+            "name" : "MIDDLETRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLETRACK"
+            }
+          },
+          {
+            "name" : "MIDDLEPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEPIER"
+            }
+          },
+          {
+            "name" : "MIDDLEPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEPATH"
+            }
+          },
+          {
+            "name" : "MIDDLESTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLESTEAD"
+            }
+          },
+          {
+            "name" : "MIDDLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLELANE"
+            }
+          },
+          {
+            "name" : "MIDDLETOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLETOWER"
+            }
+          },
+          {
+            "name" : "MIDDLEMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEMILL"
+            }
+          },
+          {
+            "name" : "MIDDLEBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEBEND"
+            }
+          },
+          {
+            "name" : "MIDDLEPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEPEAK"
+            }
+          },
+          {
+            "name" : "MIDDLEYARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEYARD"
+            }
+          },
+          {
+            "name" : "MIDDLESTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLESTONE"
+            }
+          },
+          {
+            "name" : "MIDDLEBROOK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEBROOK"
+            }
+          },
+          {
+            "name" : "SOUTHFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHFALLS"
+            }
+          },
+          {
+            "name" : "MIDDLESPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLESPRING"
+            }
+          },
+          {
+            "name" : "MIDDLEDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEDELL"
+            }
+          },
+          {
+            "name" : "MIDDLECLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLECLIFF"
+            }
+          },
+          {
+            "name" : "MIDDLEHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEHOLLOW"
+            }
+          },
+          {
+            "name" : "SOUTHRIDGE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHRIDGE1"
+            }
+          },
+          {
+            "name" : "SOUTHRIDGE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHRIDGE2"
+            }
+          },
+          {
+            "name" : "SOUTHBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHBLUFF"
+            }
+          },
+          {
+            "name" : "MIDDLECREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLECREEK"
+            }
+          },
+          {
+            "name" : "MIDDLEHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEHOLM"
+            }
+          },
+          {
+            "name" : "MIDDLEPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEPOND"
+            }
+          },
+          {
+            "name" : "MIDDLEPASS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEPASS"
+            }
+          },
+          {
+            "name" : "SOUTHSPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHSPRING"
+            }
+          },
+          {
+            "name" : "EASTRIVER",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.EASTRIVER"
+            }
+          },
+          {
+            "name" : "MIDDLEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEFORK"
+            }
+          },
+          {
+            "name" : "MIDDLEFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEFALLS"
+            }
+          },
+          {
+            "name" : "MIDDLECROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLECROFT"
+            }
+          },
+          {
+            "name" : "EASTMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.EASTMARSH"
+            }
+          },
+          {
+            "name" : "EASTRIDGE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.EASTRIDGE"
+            }
+          },
+          {
+            "name" : "EASTFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.EASTFIELD"
+            }
+          },
+          {
+            "name" : "EASTVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.EASTVALE"
+            }
+          },
+          {
+            "name" : "EASTGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.EASTGLADE"
+            }
+          },
+          {
+            "name" : "EASTSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.EASTSHORE"
+            }
+          },
+          {
+            "name" : "MIDDLEWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEWICK"
+            }
+          },
+          {
+            "name" : "MIDDLECROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLECROSS"
+            }
+          },
+          {
+            "name" : "MIDDLEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEFORD"
+            }
+          },
+          {
+            "name" : "SOUTHLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.SOUTHLAKE"
+            }
+          },
+          {
+            "name" : "MIDDLEBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.MIDDLEBLUFF"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "SQ_ODS_TEZ52.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ODS_TEZ52",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ODS_TEZ52",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ52.ID_RECORD"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ52.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "MIDDLEWARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEWARD"
+            }
+          },
+          {
+            "name" : "MIDDLESHORE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLESHORE"
+            }
+          },
+          {
+            "name" : "MIDDLELAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLELAKE"
+            }
+          },
+          {
+            "name" : "SOUTHVALE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHVALE1"
+            }
+          },
+          {
+            "name" : "SOUTHVALE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHVALE2"
+            }
+          },
+          {
+            "name" : "EASTGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.EASTGROVE"
+            }
+          },
+          {
+            "name" : "SOUTHDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHDELL"
+            }
+          },
+          {
+            "name" : "SOUTHHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHHOLLOW"
+            }
+          },
+          {
+            "name" : "MIDDLEBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEBRIDGE"
+            }
+          },
+          {
+            "name" : "MIDDLEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEFORGE"
+            }
+          },
+          {
+            "name" : "MIDDLEGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEGATE"
+            }
+          },
+          {
+            "name" : "MIDDLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEDOCK"
+            }
+          },
+          {
+            "name" : "MIDDLEROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEROAD"
+            }
+          },
+          {
+            "name" : "MIDDLEBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEBARN"
+            }
+          },
+          {
+            "name" : "MIDDLEVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEVAULT"
+            }
+          },
+          {
+            "name" : "MIDDLETRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLETRAIL"
+            }
+          },
+          {
+            "name" : "MIDDLETRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLETRACK"
+            }
+          },
+          {
+            "name" : "MIDDLEPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEPIER"
+            }
+          },
+          {
+            "name" : "MIDDLEPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEPATH"
+            }
+          },
+          {
+            "name" : "MIDDLESTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLESTEAD"
+            }
+          },
+          {
+            "name" : "MIDDLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLELANE"
+            }
+          },
+          {
+            "name" : "MIDDLETOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLETOWER"
+            }
+          },
+          {
+            "name" : "MIDDLEMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEMILL"
+            }
+          },
+          {
+            "name" : "MIDDLEBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEBEND"
+            }
+          },
+          {
+            "name" : "MIDDLEPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEPEAK"
+            }
+          },
+          {
+            "name" : "MIDDLEYARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEYARD"
+            }
+          },
+          {
+            "name" : "MIDDLESTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLESTONE"
+            }
+          },
+          {
+            "name" : "MIDDLEBROOK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEBROOK"
+            }
+          },
+          {
+            "name" : "SOUTHFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHFALLS"
+            }
+          },
+          {
+            "name" : "MIDDLESPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLESPRING"
+            }
+          },
+          {
+            "name" : "MIDDLEDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEDELL"
+            }
+          },
+          {
+            "name" : "MIDDLECLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLECLIFF"
+            }
+          },
+          {
+            "name" : "MIDDLEHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEHOLLOW"
+            }
+          },
+          {
+            "name" : "SOUTHRIDGE1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHRIDGE1"
+            }
+          },
+          {
+            "name" : "SOUTHRIDGE2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHRIDGE2"
+            }
+          },
+          {
+            "name" : "SOUTHBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHBLUFF"
+            }
+          },
+          {
+            "name" : "MIDDLECREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLECREEK"
+            }
+          },
+          {
+            "name" : "MIDDLEHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEHOLM"
+            }
+          },
+          {
+            "name" : "MIDDLEPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEPOND"
+            }
+          },
+          {
+            "name" : "MIDDLEPASS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEPASS"
+            }
+          },
+          {
+            "name" : "SOUTHSPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHSPRING"
+            }
+          },
+          {
+            "name" : "EASTRIVER",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_TEZ52.EASTRIVER"
+            }
+          },
+          {
+            "name" : "MIDDLEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEFORK"
+            }
+          },
+          {
+            "name" : "MIDDLEFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEFALLS"
+            }
+          },
+          {
+            "name" : "MIDDLECROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLECROFT"
+            }
+          },
+          {
+            "name" : "EASTMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.EASTMARSH"
+            }
+          },
+          {
+            "name" : "EASTRIDGE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_TEZ52.EASTRIDGE"
+            }
+          },
+          {
+            "name" : "EASTFIELD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.EASTFIELD"
+            }
+          },
+          {
+            "name" : "EASTVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.EASTVALE"
+            }
+          },
+          {
+            "name" : "EASTGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.EASTGLADE"
+            }
+          },
+          {
+            "name" : "EASTSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.EASTSHORE"
+            }
+          },
+          {
+            "name" : "MIDDLEWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEWICK"
+            }
+          },
+          {
+            "name" : "MIDDLECROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLECROSS"
+            }
+          },
+          {
+            "name" : "MIDDLEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEFORD"
+            }
+          },
+          {
+            "name" : "SOUTHLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.SOUTHLAKE"
+            }
+          },
+          {
+            "name" : "MIDDLEBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_TEZ52.MIDDLEBLUFF"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_TEZ52.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_TEZ52",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "OAKCOMBE3_CLEARTOWER_GREENYARD"
+    ],
+    "sourceTableNames" : [
+      "ODS_TEZ52"
+    ]
+  }
+}

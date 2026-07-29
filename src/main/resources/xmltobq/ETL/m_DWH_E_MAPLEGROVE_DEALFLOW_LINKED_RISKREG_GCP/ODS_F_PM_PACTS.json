@@ -1,0 +1,1022 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_RECORD",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_MIS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ENTITYREF",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BRANCHREF",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_OAKSTEAD_CONTROL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_ACCOUNTREF",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_COD_OFFERING",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_ACCOUNTREF",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEBLUFF_PM",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_FIRGLADE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ITEMREF",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_FIRGLADE_TEALRIDGE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_NUCLEUS_TEALRIDGE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_FIRGLADE_PM",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_MONETARY",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_CEDARSTEAD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_STILLWARD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_BIRCHVAULT",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_BIRCHVAULT_RECAP",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_CEDARCROFT_OAKGLADE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_CEDARCROFT_CEDARPIER",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_GRAYFALLS_PM",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_PINEGARTH",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_PINEMILL",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLELANE_STILLLAKE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLEMARSH_CEDARGARTH",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLELAKE_PINEHEATH",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_CEDARCROFT_RAPIDCREEK",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_CEDARCROFT_REDRIVER",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_INT",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_INT_RECAP",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLEMARSH_BIRCHGROVE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ROWANROAD_PM_OPALDOCK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ROWANROAD_PM",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ROWANROAD_CORALCOMBE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_PINESTEAD_CEDARGLADE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_PINESTEAD_AMBERMOOR",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_PINESTEAD_ELMPATH",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLEMARSH_CEDARGLADE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLEMARSH_AMBERMOOR",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_CEDARYARD_UPPERTHORP",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_FLINTGROVE_EU",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_INT_BROADDOCK",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_INT_STILLSTEAD",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_DENSEBARN",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_VAL_ASHMOOR",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_CEDARPIER_BROADGLADE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_GRANDFORGE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_NAVYMILL_MAPLECOMBE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_ELMMILL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_CEDARPATH2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_CENTRALCROSS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_BIRCHVAULT",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_PINEFIELD_INT",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_FCH_ELMPATH",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_PINEFIELD_INT_ELMCLIFF",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_CEDARFORD2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_SOLIDTRACK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_CEDARGLADE_REDFORD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_MAPLELAKE_MAPLECOMBE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_ELMWARD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_MOD_GRANDFORGE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BROADGATE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "PCT_INNERLAKE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_GRAYSTEAD_INNERWARD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_GRAYSTEAD_FLEETFORD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_GRAYSTEAD_IMP",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ROWANTHORP_ELMBEND",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ROWANROAD_SOUTHPATH",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_MAX_MAPLELAKE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_BIRCHTOWER",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_CEDARWICK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_OPERATOR",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PLEDGE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ROWANROAD_PINESPRING",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_FIRCROSS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_CEDARCROFT_ASHMOOR",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_INT_OAKDOCK",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_MAPLEGATE_BERYLBRIDGE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_ELMPATH_PEARLWICK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLEMARSH_MAPLEMARSH2",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_BROADCOMBE_FIRLANE_WESTTRAIL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_PM_EASTPEAK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_MOD_LIGHTDOCK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_SOUTHMILL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_BIRCHVAULT_SC",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_BIRCHVAULT_ELMCLIFF",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_SOLIDTRACK_BIRCHVAULT",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_BIRCHVAULT_PINEVAULT",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_CEDARCLIFF_CEDARCROSS2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_SOUTHBEND_MAPLELAKE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_DENSELANE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_CLEARCREEK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_PRIMELANE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_DENSETRACK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_PINEPASS_FLINTSTEAD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_RAPIDTOWER_BOLDTRAIL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_RAPIDTOWER_BOLDTRAIL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_CLEARSTEAD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_ONBOARD_CLEARSTEAD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_CLEARSTEAD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_DEALMAKER",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_PINEFALLS_CLEARPEAK",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_SOLIDWARD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_SOLIDWARD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_OLIVEROAD_RUSTLANE_INNERWARD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_OLIVEROAD_RUSTLANE_FLEETFORD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_OLIVEROAD_RUSTLANE_IMP",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_INT_MAPLECOMBE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_INT_MAPLECOMBE_2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_GRANDSTEAD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_GRANDSTEAD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_BIRCHPASS",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_PINEMILL_2",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_BIRCHWICK",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_SOUTHMILL_MAPLEGROVE2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_EARLYSTEAD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_EARLYSTEAD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_CEDARCROFT2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_PLUMDOCK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_OUTSTANDING_PLUMDOCK",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEBLUFF_FINAL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_OAKGATE2_SANDLAKE_INT",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_SANDLAKE_INT",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEFIELD_SANDLAKE_INT",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CORALGROVE1",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CORALGROVE2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_BACK_VALUE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_NORTHSPRING_PM",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CORALGROVE3",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_PLEDGES",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEVAULT_RISKREG",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_CEDARPIER_RISKREG",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_WESTTRACK_RECAP_PINEFIELD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "PCT_HAZARD",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "PCT_HAZARD_BERYLBRIDGE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_NORTHPIER_DENSEPATH",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_TIMESTAMP",
+  "type": "DATETIME",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARTOWER2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARBRIDGE2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARGATE2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARYARD2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARSHORE2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARMARSH2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARCLIFF2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARPEAK2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEHOLLOW2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLESTEAD2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLECROFT2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEGARTH2",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "RAPIDCROFT20",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "RAPIDCROFT20MAPLERIDGE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CLEARPASS",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CLEARSTONE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARMILL2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLECOMBE2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARVALE2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARGROVE2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEHOLM2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEWICK2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARRIVER2",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARRIDGE2",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLETHORP2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEMOOR2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEHEATH2",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARFIELD2",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "PEARLCOMBE2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEWARD2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEBLUFF2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CEDARGLADE2",
+  "type": "STRING",
+  "description": ""
+  }
+]

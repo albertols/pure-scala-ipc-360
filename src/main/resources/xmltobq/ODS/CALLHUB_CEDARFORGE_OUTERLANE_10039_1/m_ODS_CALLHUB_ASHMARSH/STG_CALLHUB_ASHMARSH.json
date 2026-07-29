@@ -1,0 +1,26 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "CREATED_FIRTHORP",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "TOPAZBLUFF_TYPE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "UUID",
+  "type": "STRING",
+  "description": ""
+  }
+]

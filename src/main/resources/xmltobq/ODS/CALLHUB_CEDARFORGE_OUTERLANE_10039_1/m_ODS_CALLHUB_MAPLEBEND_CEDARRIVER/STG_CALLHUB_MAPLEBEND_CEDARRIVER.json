@@ -1,0 +1,206 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "FILE_NAME",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "PEARLSTEAD_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_FIRGARTH",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "TIME_JADEMILL_FIRGARTH",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_LAST_ASHLANE_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_DATE_ONYXFALLS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_AMBERPATH_TRY",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_DATE_FIRST",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARCLIFF_OAKVAULT_FIRST",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_DATE_LAST",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_DATE_ONYXROAD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_DATE_PEARLBARN",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_ONYXGROVE_NUMBER",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_DATE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_HOUR",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_ROWANWICK_NUMBER",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_ASHLANE_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_PEARLGROVE_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_TOPAZGARTH_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEHOLLOW",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARCLIFF_BERYLYARD_OAKVAULT",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARCLIFF_TOPAZDOCK_OAKVAULT",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARCLIFF_CEDARCLIFF_OAKVAULT",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARCLIFF_OAKVAULT_AGATEFORD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARCLIFF_OAKVAULT_BERYLROAD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARCLIFF_OAKVAULT_PINEHEATH",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_BIRCHFORK_BERYLPATH",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_BIRCHFORK_PEARLFORD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_ASHLANE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CORALSTEAD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_CEDARFORGE_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "MAPLEPIER_FIELD_CEDARFORGE_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "TOPAZCROFT",
+  "type": "STRING",
+  "description": ""
+  }
+]

@@ -1,0 +1,720 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_E_MAPLEGROVE_PACTS_PEARLWARD",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_BIRCHGLADE",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "ID_PACT_FLEETPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_ODS_PACT_PEARLWARD.RUSTGROVE"
+                    }
+                  ]
+                },
+                {
+                  "value" : "20"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.EARLYMOOR"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_OFFERING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.EARLYWICK"
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_FLEETPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.EARLYHEATH"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_PACT",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.FLEETRIVER"
+            }
+          },
+          {
+            "name" : "FCH_CEDARMILL_PACT",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.FLEETFIELD"
+            }
+          },
+          {
+            "name" : "ID_MONETARY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.EARLYHOLM"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MAILCODE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.FLEETGLADE"
+            }
+          },
+          {
+            "name" : "IMP_KIND_CEDARGROVE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.FLEETVALE"
+            }
+          },
+          {
+            "name" : "IMP_THRESHOLD_HAZARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.FLEETGROVE"
+            }
+          },
+          {
+            "name" : "IMP_OUTSTANDING_AMBERYARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.EARLYCOMBE"
+            }
+          },
+          {
+            "name" : "IMP_OUTSTANDING",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.EARLYGARTH"
+            }
+          },
+          {
+            "name" : "IMP_OUTSTANDING_MONETARY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.EARLYTHORP"
+            }
+          },
+          {
+            "name" : "IMP_HAZARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.FLEETRIDGE"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_BERYLDOCK_1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM01"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_BERYLDOCK_2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM02"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_BERYLDOCK_3",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM03"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_BERYLDOCK_4",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM04"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_BERYLDOCK_5",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM05"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_BERYLDOCK_6",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM06"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_BERYLDOCK_7",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM07"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_NUM_1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM08"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_NUM_2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM09"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_NUM_3",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM10"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_NUM_4",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM11"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_NUM_5",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM12"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_WESTBLUFF_1",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM13"
+            }
+          },
+          {
+            "name" : "DES_CORALFIELD_WESTBLUFF_2",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ODS_PACT_PEARLWARD.SOUTHHOLM14"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_SUBSTR",
+              "parameters" : [
+                {
+                  "name" : "EXP_LPAD",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_TO_CHAR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_PACT_PEARLWARD.RUSTGROVE"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "20"
+                    },
+                    {
+                      "value" : "'0'"
+                    }
+                  ]
+                },
+                {
+                  "value" : "1"
+                },
+                {
+                  "value" : "4"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_SUBSTR",
+              "parameters" : [
+                {
+                  "name" : "EXP_LPAD",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_TO_CHAR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_ODS_PACT_PEARLWARD.RUSTGROVE"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "20"
+                    },
+                    {
+                      "value" : "'0'"
+                    }
+                  ]
+                },
+                {
+                  "value" : "5"
+                },
+                {
+                  "value" : "4"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PACT",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "name" : "LKP_ODS_MAPLEBARN_ELMTRACK800MAPLEHEATH",
+                      "outputField" : "PINECROFT_GRAYWICK_KEY",
+                      "table" : "ODS_MAPLEBARN_ELMTRACK800MAPLEHEATH",
+                      "condition" : "ROWANSTONE_ID = in_ID_ENTITYREF AND CORALRIDGE_NO_MAIN = in_ID_NUCLEUS AND FLINTSPRING_NUMBER = in_ID_PACT",
+                      "matchPolicy" : "First",
+                      "parameters" : [
+                        {
+                          "name" : "in_ID_ENTITYREF",
+                          "dataType" : "String",
+                          "transformation" : {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_LPAD",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_PACT_PEARLWARD.RUSTGROVE"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "20"
+                                  },
+                                  {
+                                    "value" : "'0'"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "1"
+                              },
+                              {
+                                "value" : "4"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name" : "in_ID_NUCLEUS",
+                          "dataType" : "String",
+                          "transformation" : {
+                            "name" : "EXP_SUBSTR",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_LPAD",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_TO_CHAR",
+                                    "parameters" : [
+                                      {
+                                        "source" : "SQ_ODS_PACT_PEARLWARD.RUSTGROVE"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "20"
+                                  },
+                                  {
+                                    "value" : "'0'"
+                                  }
+                                ]
+                              },
+                              {
+                                "value" : "5"
+                              },
+                              {
+                                "value" : "4"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name" : "in_ID_PACT",
+                          "dataType" : "BigDecimal",
+                          "transformation" : {
+                            "name" : "EXP_TO_DECIMAL",
+                            "parameters" : [
+                              {
+                                "name" : "EXP_SUBSTR",
+                                "parameters" : [
+                                  {
+                                    "name" : "EXP_LPAD",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_TO_CHAR",
+                                        "parameters" : [
+                                          {
+                                            "source" : "SQ_ODS_PACT_PEARLWARD.RUSTGROVE"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "20"
+                                      },
+                                      {
+                                        "value" : "'0'"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "name" : "EXP_PINECOMBE",
+                                    "parameters" : [
+                                      {
+                                        "name" : "EXP_LENGTH",
+                                        "parameters" : [
+                                          {
+                                            "name" : "EXP_LPAD",
+                                            "parameters" : [
+                                              {
+                                                "name" : "EXP_TO_CHAR",
+                                                "parameters" : [
+                                                  {
+                                                    "source" : "SQ_ODS_PACT_PEARLWARD.RUSTGROVE"
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "value" : "20"
+                                              },
+                                              {
+                                                "value" : "'0'"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value" : "-"
+                                      },
+                                      {
+                                        "value" : "9"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value" : "10"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "value" : "15"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ODS_PACT_PEARLWARD",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ODS_PACT_PEARLWARD",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.ID_RECORD"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "RUSTGROVE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.RUSTGROVE"
+            }
+          },
+          {
+            "name" : "EARLYMOOR",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.EARLYMOOR"
+            }
+          },
+          {
+            "name" : "EARLYWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.EARLYWICK"
+            }
+          },
+          {
+            "name" : "EARLYHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.EARLYHEATH"
+            }
+          },
+          {
+            "name" : "FLEETRIVER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.FLEETRIVER"
+            }
+          },
+          {
+            "name" : "FLEETFIELD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.FLEETFIELD"
+            }
+          },
+          {
+            "name" : "EARLYHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.EARLYHOLM"
+            }
+          },
+          {
+            "name" : "FLEETGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.FLEETGLADE"
+            }
+          },
+          {
+            "name" : "FLEETVALE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.FLEETVALE"
+            }
+          },
+          {
+            "name" : "FLEETGROVE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.FLEETGROVE"
+            }
+          },
+          {
+            "name" : "EARLYCOMBE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.EARLYCOMBE"
+            }
+          },
+          {
+            "name" : "EARLYGARTH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.EARLYGARTH"
+            }
+          },
+          {
+            "name" : "EARLYTHORP",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.EARLYTHORP"
+            }
+          },
+          {
+            "name" : "FLEETRIDGE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.FLEETRIDGE"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM01",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM01"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM02",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM02"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM03",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM03"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM04",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM04"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM05",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM05"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM06",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM06"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM07",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM07"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM08",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM08"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM09",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM09"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM10",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM10"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM11",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM11"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM12",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM12"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM13",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM13"
+            }
+          },
+          {
+            "name" : "SOUTHHOLM14",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.SOUTHHOLM14"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "source" : "ODS_PACT_PEARLWARD.FCH_TIMESTAMP"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_PACT_PEARLWARD",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_E_MAPLEGROVE_PACTS_PEARLWARD"
+    ],
+    "sourceTableNames" : [
+      "ODS_PACT_PEARLWARD"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_RECORD",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEBRIDGE_BIRCHGATE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_PINEBRIDGE_BIRCHGATE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_TIMESTAMP",
+  "type": "DATETIME",
+  "description": ""
+  }
+]

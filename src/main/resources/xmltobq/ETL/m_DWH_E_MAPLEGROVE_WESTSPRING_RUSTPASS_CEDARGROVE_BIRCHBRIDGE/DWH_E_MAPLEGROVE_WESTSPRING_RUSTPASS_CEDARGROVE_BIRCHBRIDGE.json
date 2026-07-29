@@ -1,0 +1,122 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PHASE_REG_BIRCHBRIDGE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PACT_BIRCHBRIDGE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHLANE_BIRCHBRIDGE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_KIND_CEDARGROVE_BIRCHBRIDGE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_OAKBARN_FIRVALE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ENTITYREF",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_NUCLEUS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PACT",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_KIND_HAZELYARD_ASHROAD_BIRCHBRIDGE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLELANE_FIRVALE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_ONBOARD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_MONETARY",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "PCT_CEDARGROVE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_CEDARWICK_MAPLEMARSH_MOD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_MAPLEMARSH_MOD",
+  "type": "TIMESTAMP",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_OPERATOR_MAPLEMARSH_MOD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_KIND_CORALBARN_BIRCHBRIDGE",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_DENSEFIELD_OAKBRIDGE2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IND_LIGHTRIVER_OAKSHORE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_TIMESTAMP",
+  "type": "DATETIME",
+  "description": ""
+  }
+]

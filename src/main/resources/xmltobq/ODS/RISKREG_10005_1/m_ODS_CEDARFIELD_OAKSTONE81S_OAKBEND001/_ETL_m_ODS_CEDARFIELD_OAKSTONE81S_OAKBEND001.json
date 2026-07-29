@@ -1,0 +1,575 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_CEDARFIELD_OAKSTONE81S_OAKBEND001",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.FCH_DATAENTRY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHSTEAD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL_RISKREG",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHSTEAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHBROOK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHPASS"
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHSTONE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHCROFT",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_AGATEPATH_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHCROFT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHBEND"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHCREEK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTBARN"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHCOMBE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHCOMBE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTGATE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHFORK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTYARD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTYARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTPIER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTBRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTMILL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHWARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHDELL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHDELL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHHOLLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHHOLLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHHOLM",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NORTHWICK",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHWICK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "EASTPATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTPATH"
+            }
+          },
+          {
+            "name" : "EASTTRACK",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTTRACK"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_CEDARFIELD_OAKSTONE81S_OAKBEND001",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "NORTHSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHSTEAD"
+            }
+          },
+          {
+            "name" : "NORTHBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHBROOK"
+            }
+          },
+          {
+            "name" : "NORTHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHPASS"
+            }
+          },
+          {
+            "name" : "NORTHSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHSTONE"
+            }
+          },
+          {
+            "name" : "NORTHCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHCROFT"
+            }
+          },
+          {
+            "name" : "NORTHBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHBEND"
+            }
+          },
+          {
+            "name" : "NORTHCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHCREEK"
+            }
+          },
+          {
+            "name" : "EASTBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTBARN"
+            }
+          },
+          {
+            "name" : "NORTHCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHCOMBE"
+            }
+          },
+          {
+            "name" : "EASTGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTGATE"
+            }
+          },
+          {
+            "name" : "NORTHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHFORK"
+            }
+          },
+          {
+            "name" : "EASTYARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTYARD"
+            }
+          },
+          {
+            "name" : "EASTPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTPIER"
+            }
+          },
+          {
+            "name" : "EASTTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTTOWER"
+            }
+          },
+          {
+            "name" : "EASTDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTDOCK"
+            }
+          },
+          {
+            "name" : "EASTBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTBRIDGE"
+            }
+          },
+          {
+            "name" : "EASTMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTMILL"
+            }
+          },
+          {
+            "name" : "NORTHBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHBLUFF"
+            }
+          },
+          {
+            "name" : "NORTHWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHWARD"
+            }
+          },
+          {
+            "name" : "NORTHDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHDELL"
+            }
+          },
+          {
+            "name" : "NORTHHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHHOLLOW"
+            }
+          },
+          {
+            "name" : "NORTHHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHHOLM"
+            }
+          },
+          {
+            "name" : "NORTHWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.NORTHWICK"
+            }
+          },
+          {
+            "name" : "EASTPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTPATH"
+            }
+          },
+          {
+            "name" : "EASTTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001.EASTTRACK"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_CEDARFIELD_OAKSTONE81S_OAKBEND001"
+    ],
+    "sourceTableNames" : [
+      "STG_CEDARFIELD_OAKSTONE81S_OAKBEND001"
+    ]
+  }
+}

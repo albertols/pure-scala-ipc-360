@@ -1,0 +1,74 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_PACT",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NUM_DEALFLOW",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "IMP_RISKREG",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_MONETARY",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PHASE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ITEMREF",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_DEALFLOW_MIS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_IMP_DM",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ACCOUNTREF_JOURNAL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_DATAENTRY",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_KIND_BIRCHBARN",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ELMRIVER",
+  "type": "INT64",
+  "description": ""
+  }
+]

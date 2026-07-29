@@ -1,0 +1,158 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_RECORD",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_DATAENTRY",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "OUTERSTEAD",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALSTONE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALPASS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "WESTROAD1",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "WESTROAD2",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALBROOK",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALSPRING",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALFORK",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALBEND",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALGLADE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALLAKE",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALDELL",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALFALLS",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALCREEK",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALPOND",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CENTRALHOLLOW",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "EASTRIVER",
+  "type": "TIMESTAMP",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "EASTMARSH",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "EASTRIDGE",
+  "type": "TIMESTAMP",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "EASTFIELD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "EASTVALE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "EASTGLADE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "EASTSHORE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_TIMESTAMP",
+  "type": "DATETIME",
+  "description": ""
+  }
+]

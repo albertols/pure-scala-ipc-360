@@ -1,0 +1,92 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHTRAIL_CEDARPASS",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_PINEBRIDGE_CEDARPASS",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_OAKRIDGE_CEDARPASS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_INGEST",
+  "type": "TIMESTAMP",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_OPERATOR_INGEST",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_OAKRIDGE_OPERATOR_INGEST",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_OAKPIER",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_CENTRALBLUFF",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHWARD_BIRCHTRAIL_CEDARPASS",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHWARD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHWARD_ROWANFORGE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_HAZELFORD",
+  "type": "TIMESTAMP",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_OPERATOR_HAZELFORD",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_TIMESTAMP",
+  "type": "DATETIME",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "ID_RECORD",
+  "type": "NUMERIC",
+  "description": ""
+  }
+]

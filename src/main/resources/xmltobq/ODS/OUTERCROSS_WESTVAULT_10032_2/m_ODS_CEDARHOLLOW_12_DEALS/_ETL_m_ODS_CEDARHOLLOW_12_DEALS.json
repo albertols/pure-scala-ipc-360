@@ -1,0 +1,2438 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_CEDARHOLLOW_12_DEALS",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ENTITYREF"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_BRANCHREF"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKSTEAD_PACT",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_OAKSTEAD_PACT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ITEMREF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ITEMREF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUM_PACT",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_NUM_PACT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_DEALFLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHGARTH_MAPLEFORGE_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_BIRCHGARTH_MAPLEFORGE_OAKTRAIL"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_BRANCHREF_OAKTRAIL"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKSTEAD_CONTROL_MAPLEFORGE_OAKTRAIL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_OAKSTEAD_CONTROL_MAPLEFORGE_OAKTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ITEMREF_MAPLEFORGE_OAKTRAIL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ITEMREF_MAPLEFORGE_OAKTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUM_MAPLEFORGE_OAKTRAIL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_NUM_MAPLEFORGE_OAKTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_DEALFLOW",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_PART_FIRPASS_PACT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_PART_FIRPASS_PACT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_DEALFLOW",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_CEDARTRAIL_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_KIND_DEALFLOW"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_CEDARCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IND_CEDARCREEK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ELMGATE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_ELMGATE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARLAKE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_CONCAT",
+              "parameters" : [
+                {
+                  "name" : "EXP_SUBSTR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_LPAD",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_MAPLEVALE_TIME_NOT_NULL",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.CEDARLAKE"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "8"
+                        },
+                        {
+                          "value" : "'0'"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "value" : "2"
+                    }
+                  ]
+                },
+                {
+                  "name" : "EXP_CONCAT",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_SUBSTR",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_LPAD",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_MAPLEVALE_TIME_NOT_NULL",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.CEDARLAKE"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "8"
+                            },
+                            {
+                              "value" : "'0'"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "4"
+                        },
+                        {
+                          "value" : "2"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "EXP_SUBSTR",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_LPAD",
+                          "parameters" : [
+                            {
+                              "name" : "EXP_MAPLEVALE_TIME_NOT_NULL",
+                              "parameters" : [
+                                {
+                                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.CEDARLAKE"
+                                }
+                              ]
+                            },
+                            {
+                              "value" : "8"
+                            },
+                            {
+                              "value" : "'0'"
+                            }
+                          ]
+                        },
+                        {
+                          "value" : "7"
+                        },
+                        {
+                          "value" : "2"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OPERATOR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_OPERATOR"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_CEDARWICK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_BRANCHREF_DEALFLOW"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHLAKE_ELMRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_BIRCHLAKE_ELMRIVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ENTITYREF_DEALFLOW"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MONETARY_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_MONETARY_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_DEALFLOW_FIRPIER_FIRSPRING",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_DEALFLOW_FIRPIER_FIRSPRING"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_CORALYARD_OPALRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IND_CORALYARD_OPALRIDGE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_DEALFLOW_OPALLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IND_DEALFLOW_OPALLANE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_DEALFLOW_MONETARY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_DEALFLOW_MONETARY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHFORGE_CORALMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_BIRCHFORGE_CORALMOOR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUM_EXP_MAPLEBRIDGE_FIRSPRING",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_NUM_EXP_MAPLEBRIDGE_FIRSPRING"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_FIRMARSH_DEALFLOW",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_CEDARTRAIL_FIRMARSH_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_PART_ONYXSHORE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_PART_ONYXSHORE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_BIRCHMOOR_FIRPIER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_BIRCHMOOR_FIRPIER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_BIRCHMOOR_MAPLEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_BIRCHMOOR_MAPLEDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PCT_BIRCHMOOR",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.PCT_BIRCHMOOR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_OPALWICK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_OPALWICK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_ONYXCROSS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_ONYXCROSS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUM_DEALFLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_NUM_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ACCOUNTREF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ACCOUNTREF"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ACCOUNTREF_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ACCOUNTREF_OAKTRAIL"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_PEARLMILL_ONYXMILL",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_HAZELPIER",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_PEARLMILL_ONYXMILL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_COD_ELMPEAK",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_COD_ELMPEAK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_CEDARCREEK_DEALFLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_CEDARCREEK_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_DEALFLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_ONBOARD_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARLAKE_ONBOARD_DEALFLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_INTEGER",
+              "parameters" : [
+                {
+                  "name" : "EXP_CONCAT",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_SUBSTR",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.CEDARLAKE_ONBOARD_DEALFLOW"
+                        },
+                        {
+                          "value" : "1"
+                        },
+                        {
+                          "value" : "2"
+                        }
+                      ]
+                    },
+                    {
+                      "name" : "EXP_CONCAT",
+                      "parameters" : [
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.CEDARLAKE_ONBOARD_DEALFLOW"
+                            },
+                            {
+                              "value" : "4"
+                            },
+                            {
+                              "value" : "2"
+                            }
+                          ]
+                        },
+                        {
+                          "name" : "EXP_SUBSTR",
+                          "parameters" : [
+                            {
+                              "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.CEDARLAKE_ONBOARD_DEALFLOW"
+                            },
+                            {
+                              "value" : "7"
+                            },
+                            {
+                              "value" : "2"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_ASHRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_KIND_ASHRIVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ASHRIVER_CORALCROSS",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_ASHRIVER_CORALCROSS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_CEDARVAULT_ASHRIVER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.NUM_CEDARVAULT_ASHRIVER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PACTS_JADEPEAK",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_PACTS_JADEPEAK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_FIRTRAIL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.NUM_FIRTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_ONYXSPRING_PEARLBRIDGE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_ONYXSPRING_PEARLBRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PCT_CEDARTRAIL_ROWANPEAK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.PCT_CEDARTRAIL_ROWANPEAK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_ASHSTONE_ONYXFORD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.NUM_ASHSTONE_ONYXFORD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_COD_OAKPIER_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_COD_OAKPIER_DEALFLOW"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_KIND_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IND_KIND_DEALFLOW"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_JADEBARN_ONYXLAKE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_JADEBARN_ONYXLAKE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_FIRTRAIL_ELMBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.NUM_FIRTRAIL_ELMBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_VAL_FIRDELL_2005",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_VAL_FIRDELL_2005"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_VAL_FIRDELL_2006",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_VAL_FIRDELL_2006"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DES_ASHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.DES_ASHPASS"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DES_JADEMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.DES_JADEMOOR"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXTOWER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ONYXTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_DEALFLOW_FIRPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IND_DEALFLOW_FIRPEAK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_PINESHORE_FIRPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.NUM_PINESHORE_FIRPEAK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP_DISPATCH",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_HAZELPIER",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_TIMESTAMP_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP_FIRRIDGE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_HAZELPIER",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_TIMESTAMP_FIRRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALPEAK_ISIN_BIRCHCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.OPALPEAK_ISIN_BIRCHCREEK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_AMBERYARD_MAPLEGATE_OAKCROSS_OPALWARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_AMBERYARD_MAPLEGATE_OAKCROSS_OPALWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARSHORE_PINESHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_CEDARSHORE_PINESHORE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_MAPLEFORGE_BIRCHFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_KIND_MAPLEFORGE_BIRCHFALLS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MONETARY_MAPLEFORGE_BIRCHFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_MONETARY_MAPLEFORGE_BIRCHFALLS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_KIND_BIRCHGROVE_MAPLEFORGE_HAZELVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.DESC_KIND_BIRCHGROVE_MAPLEFORGE_HAZELVALE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_OAKMOOR_AMBERLAKE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_OAKMOOR_AMBERLAKE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_OAKMOOR_MAPLELANE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_OAKMOOR_MAPLELANE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ACCOUNTREF_OAKTRAIL_TOPAZPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ACCOUNTREF_OAKTRAIL_TOPAZPIER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_DISPATCH_FIRDOCK",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_DISPATCH_FIRDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARLAKE_DISPATCH_FIRDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.CEDARLAKE_DISPATCH_FIRDOCK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_CEDARSTEAD_FIRSTONE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_CEDARSTEAD_FIRSTONE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARLAKE_CEDARSTEAD_FIRSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.CEDARLAKE_CEDARSTEAD_FIRSTONE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ENTITYREF_OAKHEATH"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TO_CHAR",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_BRANCHREF_OAKHEATH"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "4"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKSTEAD_PACT_OAKHEATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_OAKSTEAD_PACT_OAKHEATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ITEMREF_OAKHEATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_ITEMREF_OAKHEATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUM_PACT_OAKHEATH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_NUM_PACT_OAKHEATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PHASE_DISPATCH_AGATEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_PHASE_DISPATCH_AGATEFORGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_BIRCHCOMBE_MONETARY",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.FCH_BIRCHCOMBE_MONETARY"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_BIRCHCOMBE_MONETARY",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_BIRCHCOMBE_MONETARY"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MAPLEFORGE_BIRCHFALLS_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_MAPLEFORGE_BIRCHFALLS_OAKHEATH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_BIRCHGROVE_ROWANTOWER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_BIRCHGROVE_ROWANTOWER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_OPALGLADE_OPALMARSH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_OPALGLADE_OPALMARSH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_AMBERROAD_AMBERCOMBE_MAPLEFORGE_HAZELVALE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_AMBERROAD_AMBERCOMBE_MAPLEFORGE_HAZELVALE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_ASHPOND",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_ASHPOND"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_OPALCROSS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_OPALCROSS"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_HAZELHEATH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_HAZELHEATH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CORALLAKE_FIRCOMBE_MAPLETOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_CORALLAKE_FIRCOMBE_MAPLETOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MEMBER_JADEFALLS_PEARLPOND",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_MEMBER_JADEFALLS_PEARLPOND"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_REF_JADEFORK_ROWANCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_REF_JADEFORK_ROWANCLIFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARSHORE_OPALFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_CEDARSHORE_OPALFALLS"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_OUTSTANDING_PART_MAPLECOMBE_BIRCHGROVE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_OUTSTANDING_PART_MAPLECOMBE_BIRCHGROVE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_OUTSTANDING_PART_DES_BIRCHGROVE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.IMP_OUTSTANDING_PART_DES_BIRCHGROVE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PHASE_BIRCHWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_PHASE_BIRCHWICK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_BIRCHWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_CEDARHOLLOW_12_DEALS.ID_OAKYARD_BIRCHWICK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_CEDARHOLLOW_12_DEALS",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_CEDARHOLLOW_12_DEALS",
+        "type" : "BERYLFALLS",
+        "sourceFilter" : "TRIM(IND_KIND_DEALFLOW)<>'MAPLECREEK' OR TRIM(IND_KIND_DEALFLOW) IS NULL",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ENTITYREF"
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_BRANCHREF"
+            }
+          },
+          {
+            "name" : "ID_OAKSTEAD_PACT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_OAKSTEAD_PACT"
+            }
+          },
+          {
+            "name" : "ID_ITEMREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ITEMREF"
+            }
+          },
+          {
+            "name" : "ID_NUM_PACT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_NUM_PACT"
+            }
+          },
+          {
+            "name" : "FCH_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_DEALFLOW"
+            }
+          },
+          {
+            "name" : "ID_BIRCHGARTH_MAPLEFORGE_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_BIRCHGARTH_MAPLEFORGE_OAKTRAIL"
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_BRANCHREF_OAKTRAIL"
+            }
+          },
+          {
+            "name" : "ID_OAKSTEAD_CONTROL_MAPLEFORGE_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_OAKSTEAD_CONTROL_MAPLEFORGE_OAKTRAIL"
+            }
+          },
+          {
+            "name" : "ID_ITEMREF_MAPLEFORGE_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ITEMREF_MAPLEFORGE_OAKTRAIL"
+            }
+          },
+          {
+            "name" : "ID_NUM_MAPLEFORGE_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_NUM_MAPLEFORGE_OAKTRAIL"
+            }
+          },
+          {
+            "name" : "IMP_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_DEALFLOW"
+            }
+          },
+          {
+            "name" : "IMP_PART_FIRPASS_PACT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_PART_FIRPASS_PACT"
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_CEDARTRAIL_DEALFLOW"
+            }
+          },
+          {
+            "name" : "ID_KIND_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_KIND_DEALFLOW"
+            }
+          },
+          {
+            "name" : "IND_CEDARCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IND_CEDARCREEK"
+            }
+          },
+          {
+            "name" : "FCH_ELMGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_ELMGATE"
+            }
+          },
+          {
+            "name" : "CEDARLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.CEDARLAKE"
+            }
+          },
+          {
+            "name" : "ID_OPERATOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_OPERATOR"
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_CEDARWICK"
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_BRANCHREF_DEALFLOW"
+            }
+          },
+          {
+            "name" : "ID_BIRCHLAKE_ELMRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_BIRCHLAKE_ELMRIVER"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ENTITYREF_DEALFLOW"
+            }
+          },
+          {
+            "name" : "ID_MONETARY_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_MONETARY_DEALFLOW"
+            }
+          },
+          {
+            "name" : "IMP_DEALFLOW_FIRPIER_FIRSPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_DEALFLOW_FIRPIER_FIRSPRING"
+            }
+          },
+          {
+            "name" : "IND_CORALYARD_OPALRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IND_CORALYARD_OPALRIDGE"
+            }
+          },
+          {
+            "name" : "IND_DEALFLOW_OPALLANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IND_DEALFLOW_OPALLANE"
+            }
+          },
+          {
+            "name" : "IMP_DEALFLOW_MONETARY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_DEALFLOW_MONETARY"
+            }
+          },
+          {
+            "name" : "ID_BIRCHFORGE_CORALMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_BIRCHFORGE_CORALMOOR"
+            }
+          },
+          {
+            "name" : "ID_NUM_EXP_MAPLEBRIDGE_FIRSPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_NUM_EXP_MAPLEBRIDGE_FIRSPRING"
+            }
+          },
+          {
+            "name" : "IMP_CEDARTRAIL_FIRMARSH_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_CEDARTRAIL_FIRMARSH_DEALFLOW"
+            }
+          },
+          {
+            "name" : "IMP_PART_ONYXSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_PART_ONYXSHORE"
+            }
+          },
+          {
+            "name" : "IMP_BIRCHMOOR_FIRPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_BIRCHMOOR_FIRPIER"
+            }
+          },
+          {
+            "name" : "IMP_BIRCHMOOR_MAPLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_BIRCHMOOR_MAPLEDOCK"
+            }
+          },
+          {
+            "name" : "PCT_BIRCHMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.PCT_BIRCHMOOR"
+            }
+          },
+          {
+            "name" : "IMP_OPALWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_OPALWICK"
+            }
+          },
+          {
+            "name" : "IMP_ONYXCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_ONYXCROSS"
+            }
+          },
+          {
+            "name" : "ID_NUM_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_NUM_DEALFLOW"
+            }
+          },
+          {
+            "name" : "ID_ACCOUNTREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ACCOUNTREF"
+            }
+          },
+          {
+            "name" : "ID_ACCOUNTREF_OAKTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ACCOUNTREF_OAKTRAIL"
+            }
+          },
+          {
+            "name" : "FCH_PEARLMILL_ONYXMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_PEARLMILL_ONYXMILL"
+            }
+          },
+          {
+            "name" : "ID_COD_ELMPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_COD_ELMPEAK"
+            }
+          },
+          {
+            "name" : "FCH_CEDARCREEK_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_CEDARCREEK_DEALFLOW"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_ONBOARD_DEALFLOW"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_ONBOARD_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.CEDARLAKE_ONBOARD_DEALFLOW"
+            }
+          },
+          {
+            "name" : "ID_KIND_ASHRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_KIND_ASHRIVER"
+            }
+          },
+          {
+            "name" : "FCH_ASHRIVER_CORALCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_ASHRIVER_CORALCROSS"
+            }
+          },
+          {
+            "name" : "NUM_CEDARVAULT_ASHRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.NUM_CEDARVAULT_ASHRIVER"
+            }
+          },
+          {
+            "name" : "ID_PACTS_JADEPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_PACTS_JADEPEAK"
+            }
+          },
+          {
+            "name" : "NUM_FIRTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.NUM_FIRTRAIL"
+            }
+          },
+          {
+            "name" : "IMP_ONYXSPRING_PEARLBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_ONYXSPRING_PEARLBRIDGE"
+            }
+          },
+          {
+            "name" : "PCT_CEDARTRAIL_ROWANPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.PCT_CEDARTRAIL_ROWANPEAK"
+            }
+          },
+          {
+            "name" : "NUM_ASHSTONE_ONYXFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.NUM_ASHSTONE_ONYXFORD"
+            }
+          },
+          {
+            "name" : "ID_COD_OAKPIER_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_COD_OAKPIER_DEALFLOW"
+            }
+          },
+          {
+            "name" : "IND_KIND_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IND_KIND_DEALFLOW"
+            }
+          },
+          {
+            "name" : "IMP_JADEBARN_ONYXLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_JADEBARN_ONYXLAKE"
+            }
+          },
+          {
+            "name" : "NUM_FIRTRAIL_ELMBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.NUM_FIRTRAIL_ELMBLUFF"
+            }
+          },
+          {
+            "name" : "IMP_VAL_FIRDELL_2005",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_VAL_FIRDELL_2005"
+            }
+          },
+          {
+            "name" : "IMP_VAL_FIRDELL_2006",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_VAL_FIRDELL_2006"
+            }
+          },
+          {
+            "name" : "DES_ASHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.DES_ASHPASS"
+            }
+          },
+          {
+            "name" : "DES_JADEMOOR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.DES_JADEMOOR"
+            }
+          },
+          {
+            "name" : "ONYXTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ONYXTOWER"
+            }
+          },
+          {
+            "name" : "IND_DEALFLOW_FIRPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IND_DEALFLOW_FIRPEAK"
+            }
+          },
+          {
+            "name" : "NUM_PINESHORE_FIRPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.NUM_PINESHORE_FIRPEAK"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_TIMESTAMP_DISPATCH"
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP_FIRRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_TIMESTAMP_FIRRIDGE"
+            }
+          },
+          {
+            "name" : "OPALPEAK_ISIN_BIRCHCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.OPALPEAK_ISIN_BIRCHCREEK"
+            }
+          },
+          {
+            "name" : "IMP_AMBERYARD_MAPLEGATE_OAKCROSS_OPALWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_AMBERYARD_MAPLEGATE_OAKCROSS_OPALWARD"
+            }
+          },
+          {
+            "name" : "ID_CEDARSHORE_PINESHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_CEDARSHORE_PINESHORE"
+            }
+          },
+          {
+            "name" : "ID_KIND_MAPLEFORGE_BIRCHFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_KIND_MAPLEFORGE_BIRCHFALLS"
+            }
+          },
+          {
+            "name" : "ID_MONETARY_MAPLEFORGE_BIRCHFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_MONETARY_MAPLEFORGE_BIRCHFALLS"
+            }
+          },
+          {
+            "name" : "DESC_KIND_BIRCHGROVE_MAPLEFORGE_HAZELVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.DESC_KIND_BIRCHGROVE_MAPLEFORGE_HAZELVALE"
+            }
+          },
+          {
+            "name" : "IMP_OAKMOOR_AMBERLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_OAKMOOR_AMBERLAKE"
+            }
+          },
+          {
+            "name" : "IMP_OAKMOOR_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_OAKMOOR_MAPLELANE"
+            }
+          },
+          {
+            "name" : "ID_ACCOUNTREF_OAKTRAIL_TOPAZPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ACCOUNTREF_OAKTRAIL_TOPAZPIER"
+            }
+          },
+          {
+            "name" : "FCH_DISPATCH_FIRDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_DISPATCH_FIRDOCK"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_DISPATCH_FIRDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.CEDARLAKE_DISPATCH_FIRDOCK"
+            }
+          },
+          {
+            "name" : "FCH_CEDARSTEAD_FIRSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_CEDARSTEAD_FIRSTONE"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_CEDARSTEAD_FIRSTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.CEDARLAKE_CEDARSTEAD_FIRSTONE"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ENTITYREF_OAKHEATH"
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_BRANCHREF_OAKHEATH"
+            }
+          },
+          {
+            "name" : "ID_OAKSTEAD_PACT_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_OAKSTEAD_PACT_OAKHEATH"
+            }
+          },
+          {
+            "name" : "ID_ITEMREF_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_ITEMREF_OAKHEATH"
+            }
+          },
+          {
+            "name" : "ID_NUM_PACT_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_NUM_PACT_OAKHEATH"
+            }
+          },
+          {
+            "name" : "ID_PHASE_DISPATCH_AGATEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_PHASE_DISPATCH_AGATEFORGE"
+            }
+          },
+          {
+            "name" : "FCH_BIRCHCOMBE_MONETARY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.FCH_BIRCHCOMBE_MONETARY"
+            }
+          },
+          {
+            "name" : "IMP_BIRCHCOMBE_MONETARY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_BIRCHCOMBE_MONETARY"
+            }
+          },
+          {
+            "name" : "ID_MAPLEFORGE_BIRCHFALLS_OAKHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_MAPLEFORGE_BIRCHFALLS_OAKHEATH"
+            }
+          },
+          {
+            "name" : "IMP_BIRCHGROVE_ROWANTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_BIRCHGROVE_ROWANTOWER"
+            }
+          },
+          {
+            "name" : "IMP_OPALGLADE_OPALMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_OPALGLADE_OPALMARSH"
+            }
+          },
+          {
+            "name" : "IMP_AMBERROAD_AMBERCOMBE_MAPLEFORGE_HAZELVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_AMBERROAD_AMBERCOMBE_MAPLEFORGE_HAZELVALE"
+            }
+          },
+          {
+            "name" : "IMP_ASHPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_ASHPOND"
+            }
+          },
+          {
+            "name" : "IMP_OPALCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_OPALCROSS"
+            }
+          },
+          {
+            "name" : "IMP_HAZELHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_HAZELHEATH"
+            }
+          },
+          {
+            "name" : "ID_CORALLAKE_FIRCOMBE_MAPLETOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_CORALLAKE_FIRCOMBE_MAPLETOWER"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_JADEFALLS_PEARLPOND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_MEMBER_JADEFALLS_PEARLPOND"
+            }
+          },
+          {
+            "name" : "ID_REF_JADEFORK_ROWANCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_REF_JADEFORK_ROWANCLIFF"
+            }
+          },
+          {
+            "name" : "ID_CEDARSHORE_OPALFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_CEDARSHORE_OPALFALLS"
+            }
+          },
+          {
+            "name" : "IMP_OUTSTANDING_PART_MAPLECOMBE_BIRCHGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_OUTSTANDING_PART_MAPLECOMBE_BIRCHGROVE"
+            }
+          },
+          {
+            "name" : "IMP_OUTSTANDING_PART_DES_BIRCHGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.IMP_OUTSTANDING_PART_DES_BIRCHGROVE"
+            }
+          },
+          {
+            "name" : "ID_PHASE_BIRCHWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_PHASE_BIRCHWICK"
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_BIRCHWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_CEDARHOLLOW_12_DEALS.ID_OAKYARD_BIRCHWICK"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_CEDARHOLLOW_12_DEALS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_CEDARHOLLOW_12_DEALS"
+    ],
+    "sourceTableNames" : [
+      "STG_CEDARHOLLOW_12_DEALS"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "ID_ENTITYREF",
+        "ID_BRANCHREF",
+        "ID_OAKSTEAD_PACT",
+        "ID_ITEMREF",
+        "ID_NUM_PACT",
+        "FCH_DEALFLOW",
+        "NUM_FIRTRAIL",
+        "ID_ENTITYREF_OAKHEATH",
+        "ID_BRANCHREF_OAKHEATH",
+        "ID_OAKSTEAD_PACT_OAKHEATH",
+        "ID_ITEMREF_OAKHEATH",
+        "ID_NUM_PACT_OAKHEATH"
+      ]
+    }
+  }
+}

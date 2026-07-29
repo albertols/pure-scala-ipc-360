@@ -1,0 +1,428 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_F_OAKFIELD_OAKPOND",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "ID_KIND_BIRCHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_KIND_BIRCHPASS"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PLEDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_PLEDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_ASHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_KIND_ASHFORK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_MEMBER"
+                }
+              ]
+            },
+            "oakcombe1cedardell" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL"
+            }
+          },
+          {
+            "name" : "NUM_ELMBEND_ASHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.NUM_ELMBEND_ASHFORK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_HAZELRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_KIND_HAZELRIVER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_OAKGATE_CEDARDOCK_PLEDGE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.IMP_OAKGATE_CEDARDOCK_PLEDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARPEAK_HAZELRIVER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.CEDARPEAK_HAZELRIVER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.FCH_ONBOARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_CEDARMILL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.FCH_CEDARMILL"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "10101"
+                    }
+                  ]
+                },
+                {
+                  "value" : "NULL"
+                },
+                {
+                  "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.FCH_CEDARMILL"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_ENTITYREF_MAPLEMARSH_MOD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_BRANCHREF_MAPLEMARSH_MOD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OPERATOR_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_OPERATOR_MAPLEMARSH_MOD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.ID_CEDARWICK_MAPLEMARSH_MOD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_MAPLEMARSH_MOD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_JADETOWER_04_ELMSTEAD.FCH_MAPLEMARSH_MOD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_JADETOWER_04_ELMSTEAD",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_JADETOWER_04_ELMSTEAD",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "ID_KIND_BIRCHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_KIND_BIRCHPASS"
+            }
+          },
+          {
+            "name" : "ID_PLEDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_PLEDGE"
+            }
+          },
+          {
+            "name" : "ID_KIND_ASHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_KIND_ASHFORK"
+            }
+          },
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_MEMBER"
+            }
+          },
+          {
+            "name" : "NUM_ELMBEND_ASHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.NUM_ELMBEND_ASHFORK"
+            }
+          },
+          {
+            "name" : "ID_KIND_HAZELRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_KIND_HAZELRIVER"
+            }
+          },
+          {
+            "name" : "IMP_OAKGATE_CEDARDOCK_PLEDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.IMP_OAKGATE_CEDARDOCK_PLEDGE"
+            }
+          },
+          {
+            "name" : "CEDARPEAK_HAZELRIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.CEDARPEAK_HAZELRIVER"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.FCH_ONBOARD"
+            }
+          },
+          {
+            "name" : "FCH_CEDARMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.FCH_CEDARMILL"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_ENTITYREF_MAPLEMARSH_MOD"
+            }
+          },
+          {
+            "name" : "ID_BRANCHREF_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_BRANCHREF_MAPLEMARSH_MOD"
+            }
+          },
+          {
+            "name" : "ID_OPERATOR_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_OPERATOR_MAPLEMARSH_MOD"
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.ID_CEDARWICK_MAPLEMARSH_MOD"
+            }
+          },
+          {
+            "name" : "FCH_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_JADETOWER_04_ELMSTEAD.FCH_MAPLEMARSH_MOD"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_JADETOWER_04_ELMSTEAD",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_F_OAKFIELD_OAKPOND"
+    ],
+    "sourceTableNames" : [
+      "STG_JADETOWER_04_ELMSTEAD"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "ID_KIND_BIRCHPASS",
+        "ID_PLEDGE",
+        "ID_KIND_ASHFORK",
+        "ID_MEMBER",
+        "NUM_ELMBEND_ASHFORK"
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_ENTITYREF_LAWFUL",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_ENTITYREF_LAWFUL",
+  "type": "STRING",
+  "description": ""
+  }
+]

@@ -1,0 +1,447 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "LKP_ACT_OPPORTUNITY_LEADREF",
+        "type" : "table",
+        "primaryKeys" : [
+          "ID_LEADREF"
+        ],
+        "weststone" : [
+          {
+            "name" : "ID_LEADREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_LEADREF"
+            }
+          },
+          {
+            "name" : "DESC_LEADREF_ROWANCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_LEADREF_ROWANCROFT"
+            }
+          },
+          {
+            "name" : "DESC_LEADREF_ELMCROSS1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_LEADREF_ELMCROSS1"
+            }
+          },
+          {
+            "name" : "DESC_LEADREF_ELMCROSS2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_LEADREF_ELMCROSS2"
+            }
+          },
+          {
+            "name" : "NUM_PINETOWER_UPPERCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.NUM_PINETOWER_UPPERCROSS"
+            }
+          },
+          {
+            "name" : "DESC_MAILBOX",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_MAILBOX"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MAILCODE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_CIPHERKEY_MAILCODE"
+            }
+          },
+          {
+            "name" : "DESC_LOCATION",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_LOCATION"
+            }
+          },
+          {
+            "name" : "ID_NUM_CORALFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_NUM_CORALFORK"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_ROWANGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_CIPHERKEY_ROWANGATE"
+            }
+          },
+          {
+            "name" : "DESC_OAKPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_OAKPIER"
+            }
+          },
+          {
+            "name" : "DESC_ELMDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_REPLACESTR",
+              "parameters" : [
+                {
+                  "value" : "1"
+                },
+                {
+                  "name" : "EXP_REPLACESTR",
+                  "parameters" : [
+                    {
+                      "value" : "1"
+                    },
+                    {
+                      "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_ELMDELL"
+                    },
+                    {
+                      "value" : "'@@@@'"
+                    },
+                    {
+                      "name" : "EXP_CHR",
+                      "parameters" : [
+                        {
+                          "value" : "10"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "'||||'"
+                },
+                {
+                  "name" : "EXP_CHR",
+                  "parameters" : [
+                    {
+                      "value" : "13"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_REDCREEK_CONTACTREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_REDCREEK_CONTACTREF"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_OAKBARN_CONTACTREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.FCH_OAKBARN_CONTACTREF"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_MAPLELANE_CONTACTREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.FCH_MAPLELANE_CONTACTREF"
+            }
+          },
+          {
+            "name" : "DESC_WESTCROSS_LEADREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_WESTCROSS_LEADREF"
+            }
+          },
+          {
+            "name" : "ID_FIRCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_FIRCOMBE"
+            }
+          },
+          {
+            "name" : "IND_MIDDLEFIELD_NORTHGROVE_OUTERMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.IND_MIDDLEFIELD_NORTHGROVE_OUTERMILL"
+            }
+          },
+          {
+            "name" : "DESC_AMBERYARD_MIDDLEFIELD_BRISKFIELD_OUTERMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_AMBERYARD_MIDDLEFIELD_NORTHGROVE_OUTERMILL"
+            }
+          },
+          {
+            "name" : "ID_CEDARSHORE_WESTHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_CEDARSHORE_WESTHOLLOW"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_CENTRALWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_CEDARBROOK"
+            }
+          },
+          {
+            "name" : "ID_KIND_LEADREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_KIND_LEADREF"
+            }
+          },
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.ID_MEMBER"
+            }
+          },
+          {
+            "name" : "DESC_MEMBERS_GREENROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.DESC_MEMBERS_GREENROAD"
+            }
+          },
+          {
+            "name" : "FCH_ASHTHORP_ENGAGE",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_TO_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF.FCH_ASHTHORP_ENGAGE"
+                },
+                {
+                  "value" : "'MM/DD/YYYY OLIVEBRIDGE24:MI:SS'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_LEADREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_LEADREF"
+            }
+          },
+          {
+            "name" : "DESC_LEADREF_ROWANCROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_LEADREF_ROWANCROFT"
+            }
+          },
+          {
+            "name" : "DESC_LEADREF_ELMCROSS1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_LEADREF_ELMCROSS1"
+            }
+          },
+          {
+            "name" : "DESC_LEADREF_ELMCROSS2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_LEADREF_ELMCROSS2"
+            }
+          },
+          {
+            "name" : "NUM_PINETOWER_UPPERCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.NUM_PINETOWER_UPPERCROSS"
+            }
+          },
+          {
+            "name" : "DESC_MAILBOX",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_MAILBOX"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_MAILCODE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_CIPHERKEY_MAILCODE"
+            }
+          },
+          {
+            "name" : "DESC_LOCATION",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_LOCATION"
+            }
+          },
+          {
+            "name" : "ID_NUM_CORALFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_NUM_CORALFORK"
+            }
+          },
+          {
+            "name" : "ID_CIPHERKEY_ROWANGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_CIPHERKEY_ROWANGATE"
+            }
+          },
+          {
+            "name" : "DESC_OAKPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_OAKPIER"
+            }
+          },
+          {
+            "name" : "DESC_ELMDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_ELMDELL"
+            }
+          },
+          {
+            "name" : "DESC_REDCREEK_CONTACTREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_REDCREEK_CONTACTREF"
+            }
+          },
+          {
+            "name" : "FCH_OAKBARN_CONTACTREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.FCH_OAKBARN_CONTACTREF"
+            }
+          },
+          {
+            "name" : "FCH_MAPLELANE_CONTACTREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.FCH_MAPLELANE_CONTACTREF"
+            }
+          },
+          {
+            "name" : "DESC_WESTCROSS_LEADREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_WESTCROSS_LEADREF"
+            }
+          },
+          {
+            "name" : "ID_FIRCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_FIRCOMBE"
+            }
+          },
+          {
+            "name" : "IND_MIDDLEFIELD_NORTHGROVE_OUTERMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.IND_MIDDLEFIELD_NORTHGROVE_OUTERMILL"
+            }
+          },
+          {
+            "name" : "DESC_AMBERYARD_MIDDLEFIELD_NORTHGROVE_OUTERMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_AMBERYARD_MIDDLEFIELD_NORTHGROVE_OUTERMILL"
+            }
+          },
+          {
+            "name" : "ID_CEDARSHORE_WESTHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_CEDARSHORE_WESTHOLLOW"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_CEDARBROOK"
+            }
+          },
+          {
+            "name" : "ID_KIND_LEADREF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_KIND_LEADREF"
+            }
+          },
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.ID_MEMBER"
+            }
+          },
+          {
+            "name" : "DESC_MEMBERS_GREENROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.DESC_MEMBERS_GREENROAD"
+            }
+          },
+          {
+            "name" : "FCH_ASHTHORP_ENGAGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "FF_LKP_ACT_OPPORTUNITY_LEADREF.FCH_ASHTHORP_ENGAGE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ff_LKP_ACT_OPPORTUNITY_LEADREF",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "LKP_ACT_OPPORTUNITY_LEADREF"
+    ],
+    "sourceTableNames" : [
+      "FF_LKP_ACT_OPPORTUNITY_LEADREF"
+    ]
+  }
+}

@@ -1,0 +1,693 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_STMTS_CEDARRIDGE_OVERSIGHT",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "ID_OAKBLUFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_OAKBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_BIRCHFORGE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ACCOUNTREF_JOURNAL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_ACCOUNTREF_JOURNAL"
+                    }
+                  ]
+                },
+                {
+                  "value" : "'000000000000000'"
+                },
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_ACCOUNTREF_JOURNAL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PARTYPROFILE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_PARTYPROFILE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_DEALFLOW"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_DEALFLOW_LINKED_RISKREG",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_DEALFLOW_LINKED_RISKREG"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_DEALFLOW_OAKMILL_LINKED",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_DEALFLOW_OAKMILL_LINKED"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PHASE_DEALFLOW",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_PHASE_DEALFLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_ACME",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_CEDARBRIDGE_ACME"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MAPLEHOLLOW_CEDARHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_MAPLEHOLLOW_CEDARHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MAPLEHOLLOW_MAPLEFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "name" : "EXP_TRIM",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_MAPLEHOLLOW_MAPLEFALLS"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "8"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_HANDLER_CEDARSPRING",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_HANDLER_CEDARSPRING"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_HAZELVAULT_HAZELDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_HAZELVAULT_HAZELDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_IMP_CEDARHOLM",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_IMP_CEDARHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_IMP_JOURNAL",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_IMP_JOURNAL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_IMP_DM",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_IMP_DM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_JOURNAL_CEDARTOWER_MAPLEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_JOURNAL_CEDARTOWER_MAPLEDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_JOURNAL_CEDARMARSH_MAPLEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_JOURNAL_CEDARMARSH_MAPLEDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_JOURNAL_CEDARTOWER_CEDARDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_JOURNAL_CEDARTOWER_CEDARDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_JOURNAL_CEDARMARSH_CEDARDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_JOURNAL_CEDARMARSH_CEDARDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_ERP_CEDARTOWER_MAPLEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ERP_CEDARTOWER_MAPLEDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_ERP_CEDARMARSH_MAPLEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ERP_CEDARMARSH_MAPLEDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_ERP_CEDARTOWER_CEDARDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ERP_CEDARTOWER_CEDARDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_ERP_CEDARMARSH_CEDARDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ERP_CEDARMARSH_CEDARDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARSPRING_CEDARTOWER_MAPLEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_CEDARSPRING_CEDARTOWER_MAPLEDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARSPRING_CEDARMARSH_MAPLEDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_CEDARSPRING_CEDARMARSH_MAPLEDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARSPRING_CEDARTOWER_CEDARDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_CEDARSPRING_CEDARTOWER_CEDARDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_CEDARSPRING_CEDARMARSH_CEDARDOCK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_CEDARSPRING_CEDARMARSH_CEDARDOCK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMP_ASHFIELD_RISKREG",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NO_AMBERFIELD_FILES",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ASHFIELD_RISKREG"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKWARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_OAKWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PLEDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_PLEDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_STMTS_CEDARRIDGE_OVERSIGHT",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "ID_OAKBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_OAKBLUFF"
+            }
+          },
+          {
+            "name" : "ID_BIRCHFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_BIRCHFORGE"
+            }
+          },
+          {
+            "name" : "ID_ACCOUNTREF_JOURNAL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_ACCOUNTREF_JOURNAL"
+            }
+          },
+          {
+            "name" : "ID_PARTYPROFILE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_PARTYPROFILE"
+            }
+          },
+          {
+            "name" : "ID_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_DEALFLOW"
+            }
+          },
+          {
+            "name" : "ID_DEALFLOW_LINKED_RISKREG",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_DEALFLOW_LINKED_RISKREG"
+            }
+          },
+          {
+            "name" : "ID_DEALFLOW_OAKMILL_LINKED",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_DEALFLOW_OAKMILL_LINKED"
+            }
+          },
+          {
+            "name" : "ID_PHASE_DEALFLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_PHASE_DEALFLOW"
+            }
+          },
+          {
+            "name" : "ID_CEDARBRIDGE_ACME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_CEDARBRIDGE_ACME"
+            }
+          },
+          {
+            "name" : "ID_MAPLEHOLLOW_CEDARHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_MAPLEHOLLOW_CEDARHOLM"
+            }
+          },
+          {
+            "name" : "ID_MAPLEHOLLOW_MAPLEFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_MAPLEHOLLOW_MAPLEFALLS"
+            }
+          },
+          {
+            "name" : "ID_HANDLER_CEDARSPRING",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_HANDLER_CEDARSPRING"
+            }
+          },
+          {
+            "name" : "ID_HAZELVAULT_HAZELDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_HAZELVAULT_HAZELDOCK"
+            }
+          },
+          {
+            "name" : "ID_IMP_CEDARHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_IMP_CEDARHOLM"
+            }
+          },
+          {
+            "name" : "ID_IMP_JOURNAL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_IMP_JOURNAL"
+            }
+          },
+          {
+            "name" : "ID_IMP_DM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_IMP_DM"
+            }
+          },
+          {
+            "name" : "IMP_JOURNAL_CEDARTOWER_MAPLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_JOURNAL_CEDARTOWER_MAPLEDOCK"
+            }
+          },
+          {
+            "name" : "IMP_JOURNAL_CEDARMARSH_MAPLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_JOURNAL_CEDARMARSH_MAPLEDOCK"
+            }
+          },
+          {
+            "name" : "IMP_JOURNAL_CEDARTOWER_CEDARDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_JOURNAL_CEDARTOWER_CEDARDOCK"
+            }
+          },
+          {
+            "name" : "IMP_JOURNAL_CEDARMARSH_CEDARDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_JOURNAL_CEDARMARSH_CEDARDOCK"
+            }
+          },
+          {
+            "name" : "IMP_ERP_CEDARTOWER_MAPLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ERP_CEDARTOWER_MAPLEDOCK"
+            }
+          },
+          {
+            "name" : "IMP_ERP_CEDARMARSH_MAPLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ERP_CEDARMARSH_MAPLEDOCK"
+            }
+          },
+          {
+            "name" : "IMP_ERP_CEDARTOWER_CEDARDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ERP_CEDARTOWER_CEDARDOCK"
+            }
+          },
+          {
+            "name" : "IMP_ERP_CEDARMARSH_CEDARDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ERP_CEDARMARSH_CEDARDOCK"
+            }
+          },
+          {
+            "name" : "IMP_CEDARSPRING_CEDARTOWER_MAPLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_CEDARSPRING_CEDARTOWER_MAPLEDOCK"
+            }
+          },
+          {
+            "name" : "IMP_CEDARSPRING_CEDARMARSH_MAPLEDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_CEDARSPRING_CEDARMARSH_MAPLEDOCK"
+            }
+          },
+          {
+            "name" : "IMP_CEDARSPRING_CEDARTOWER_CEDARDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_CEDARSPRING_CEDARTOWER_CEDARDOCK"
+            }
+          },
+          {
+            "name" : "IMP_CEDARSPRING_CEDARMARSH_CEDARDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_CEDARSPRING_CEDARMARSH_CEDARDOCK"
+            }
+          },
+          {
+            "name" : "IMP_ASHFIELD_RISKREG",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.IMP_ASHFIELD_RISKREG"
+            }
+          },
+          {
+            "name" : "ID_OAKWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_OAKWARD"
+            }
+          },
+          {
+            "name" : "ID_PLEDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_STMTS_CEDARRIDGE_OVERSIGHT.ID_PLEDGE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_STMTS_CEDARRIDGE_OVERSIGHT",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_STMTS_CEDARRIDGE_OVERSIGHT"
+    ],
+    "sourceTableNames" : [
+      "STG_STMTS_CEDARRIDGE_OVERSIGHT"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "ID_OAKBLUFF",
+        "ID_BIRCHFORGE",
+        "ID_ACCOUNTREF_JOURNAL",
+        "ID_PARTYPROFILE",
+        "ID_DEALFLOW",
+        "ID_MAPLEHOLLOW_MAPLEFALLS",
+        "ID_IMP_JOURNAL",
+        "ID_OAKWARD"
+      ]
+    }
+  }
+}

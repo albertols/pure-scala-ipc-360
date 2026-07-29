@@ -1,0 +1,20 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_BIRCHCROSS_NETHUB",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_BERYLDOCK_BIRCHCROSS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FCH_TIMESTAMP",
+  "type": "DATETIME",
+  "description": ""
+  }
+]

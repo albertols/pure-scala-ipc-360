@@ -1,0 +1,225 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.FCH_DATAENTRY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_BIRCHPASS"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_JADEPASS",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.FCH_JADEPASS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PLEDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_PLEDGE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PHASE_BIRCHWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_PHASE_BIRCHWARD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_PHASE_BIRCHWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_OAKYARD_PHASE_BIRCHWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_BIRCHWARD"
+            }
+          },
+          {
+            "name" : "FCH_MAPLEMARSH_BIRCHPEAK",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_3",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.FCH_MAPLEMARSH_BIRCHPEAK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "ID_BIRCHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_BIRCHPASS"
+            }
+          },
+          {
+            "name" : "FCH_JADEPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.FCH_JADEPASS"
+            }
+          },
+          {
+            "name" : "ID_PLEDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_PLEDGE"
+            }
+          },
+          {
+            "name" : "ID_PHASE_BIRCHWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_PHASE_BIRCHWARD"
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_PHASE_BIRCHWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_OAKYARD_PHASE_BIRCHWARD"
+            }
+          },
+          {
+            "name" : "ID_BIRCHWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.ID_BIRCHWARD"
+            }
+          },
+          {
+            "name" : "FCH_MAPLEMARSH_BIRCHPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE.FCH_MAPLEMARSH_BIRCHPEAK"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE"
+    ],
+    "sourceTableNames" : [
+      "STG_PINEWICK_CEDARWARD_AUDIT_LOG_PINEVALE"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "FCH_DATAENTRY",
+        "ID_BIRCHPASS",
+        "FCH_JADEPASS",
+        "ID_PLEDGE"
+      ]
+    }
+  }
+}

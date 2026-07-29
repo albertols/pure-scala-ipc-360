@@ -7,5 +7,3 @@ spark-warehouse/
 
 src/main/resources/DWH_CONTROL
 src/main/scala/io/pure360/ipc/xmltojson/doc
-src/main/resources/xmltobq
-src/main/scala/io/pure360/ipc

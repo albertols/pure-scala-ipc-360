@@ -1,0 +1,1353 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_DATAENTRY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_MEMBER"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "0"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                },
+                {
+                  "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_MEMBER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_ROWANSHORE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.NUM_ROWANSHORE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_DISPATCH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARLAKE_DISPATCH",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_HAZELPIER_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.CEDARLAKE_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_DISPATCH_MAPLECROSS_FLINTVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_OAKYARD_DISPATCH_MAPLECROSS_FLINTVAULT"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_HAZARD_MAPLECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_HAZARD_MAPLECOMBE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_HAZARD_OPALPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_HAZARD_OPALPIER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_HAZARD_FINAL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_HAZARD_FINAL"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_OAKRIDGE_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_BIRCHMARSH1_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_BIRCHMARSH1_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_BIRCHMARSH2_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_BIRCHMARSH2_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_ELMDELL_ELMLANE_MAPLECOMBE_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_ELMDELL_ELMLANE_MAPLECOMBE_PINERIVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_PINETHORP_MAPLESTEAD_DISPATCH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_PINETHORP_MAPLESTEAD_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKCROSS_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_OAKCROSS_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_BIRCHSTONE_MAPLESTEAD_DISPATCH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_ONBOARD_BIRCHSTONE_MAPLESTEAD_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PINEBEND_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_PINEBEND_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ASHLAKE_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ASHLAKE_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ASHGROVE_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ASHGROVE_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_PINETRAIL_MAPLESTEAD_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_CEDARBROOK_PINETRAIL_MAPLESTEAD_PINERIVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_FIRTOWER_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_FIRTOWER_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_CEDARPASS_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_CEDARPASS_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_HANDLER_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_KIND_HANDLER_MAPLESTEAD_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_HANDLER_MAPLESTEAD_DISPATCH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_HANDLER_MAPLESTEAD_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_HANDLER_MAPLESTEAD_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ENTITYREF_HANDLER_MAPLESTEAD_PINERIVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_OAKRIDGE_CEDARSTONE_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_BIRCHMARSH1_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_BIRCHMARSH1_CEDARSTONE_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_BIRCHMARSH2_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_BIRCHMARSH2_CEDARSTONE_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_ELMDELL_ELMLANE_AMBERTOWER_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_ELMDELL_ELMLANE_AMBERTOWER_PINERIVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_PINETHORP_CEDARSTONE_DISPATCH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_PINETHORP_CEDARSTONE_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OAKCROSS_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_OAKCROSS_PINECREEK_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_BIRCHSTONE_CEDARSTONE_DISPATCH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_ONBOARD_BIRCHSTONE_CEDARSTONE_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PINEBEND_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_PINEBEND_PINECREEK_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ASHLAKE_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ASHLAKE_PINECREEK_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ASHGROVE_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ASHGROVE_CEDARSTONE_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_PINETRAIL_CEDARSTONE_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_CEDARBROOK_PINETRAIL_CEDARSTONE_PINERIVER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_FIRTOWER_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_FIRTOWER_PINECREEK_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_CEDARPASS_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_CEDARPASS_PINECREEK_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_HANDLER_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_KIND_HANDLER_CEDARSTONE_DISPATCH"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_HANDLER_CEDARSTONE_DISPATCH",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_HANDLER_CEDARSTONE_DISPATCH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_HANDLER_CEDARSTONE_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ENTITYREF_HANDLER_CEDARSTONE_PINERIVER"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_OAKPEAK",
+                  "parameters" : [
+                    {
+                      "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                      "parameters" : [
+                        {
+                          "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_MEMBER_HAZELPEAK"
+                        }
+                      ]
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "0"
+                    }
+                  ]
+                },
+                {
+                  "value" : "null"
+                },
+                {
+                  "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_MEMBER_HAZELPEAK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_ONBOARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_OPERATOR_ONBOARD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_OPERATOR_ONBOARD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_BIRCHTOWER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_BIRCHTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_MAPLEMARSH_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ENTITYREF_MAPLEMARSH_MAPLEMARSH_MOD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_NUCLEUS_MAPLEMARSH_MOD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_CEDARWICK_MAPLEMARSH_MOD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_MAPLEMARSH_MOD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_MAPLEMARSH_MOD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_BIRCHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_BIRCHPASS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NUM_ELMHOLLOW_HAZARD_ASHBARN",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.NUM_ELMHOLLOW_HAZARD_ASHBARN"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESC_OAKYARD_ELMHOLLOW_ASHBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_OAKYARD_ELMHOLLOW_ASHBARN"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OAKMOOR_HAZARD_CORALVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.OAKMOOR_HAZARD_CORALVALE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.AGATEWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.AGATEBLUFF"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATECROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.AGATECROFT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATESTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.AGATESTEAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "ID_MEMBER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_MEMBER"
+            }
+          },
+          {
+            "name" : "NUM_ROWANSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.NUM_ROWANSHORE"
+            }
+          },
+          {
+            "name" : "FCH_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_DISPATCH"
+            }
+          },
+          {
+            "name" : "CEDARLAKE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.CEDARLAKE_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_OAKYARD_DISPATCH_MAPLECROSS_FLINTVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_OAKYARD_DISPATCH_MAPLECROSS_FLINTVAULT"
+            }
+          },
+          {
+            "name" : "IND_HAZARD_MAPLECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_HAZARD_MAPLECOMBE"
+            }
+          },
+          {
+            "name" : "IND_HAZARD_OPALPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_HAZARD_OPALPIER"
+            }
+          },
+          {
+            "name" : "IND_HAZARD_FINAL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_HAZARD_FINAL"
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_OAKRIDGE_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "DESC_BIRCHMARSH1_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_BIRCHMARSH1_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "DESC_BIRCHMARSH2_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_BIRCHMARSH2_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "DESC_ELMDELL_ELMLANE_MAPLECOMBE_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_ELMDELL_ELMLANE_MAPLECOMBE_PINERIVER"
+            }
+          },
+          {
+            "name" : "FCH_PINETHORP_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_PINETHORP_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_OAKCROSS_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_OAKCROSS_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_BIRCHSTONE_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_ONBOARD_BIRCHSTONE_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_PINEBEND_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_PINEBEND_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_ASHLAKE_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ASHLAKE_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_ASHGROVE_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ASHGROVE_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_PINETRAIL_MAPLESTEAD_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_CEDARBROOK_PINETRAIL_MAPLESTEAD_PINERIVER"
+            }
+          },
+          {
+            "name" : "IND_FIRTOWER_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_FIRTOWER_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "IND_CEDARPASS_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_CEDARPASS_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_KIND_HANDLER_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_KIND_HANDLER_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_HANDLER_MAPLESTEAD_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_HANDLER_MAPLESTEAD_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_HANDLER_MAPLESTEAD_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ENTITYREF_HANDLER_MAPLESTEAD_PINERIVER"
+            }
+          },
+          {
+            "name" : "DESC_OAKRIDGE_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_OAKRIDGE_CEDARSTONE_DISPATCH"
+            }
+          },
+          {
+            "name" : "DESC_BIRCHMARSH1_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_BIRCHMARSH1_CEDARSTONE_DISPATCH"
+            }
+          },
+          {
+            "name" : "DESC_BIRCHMARSH2_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_BIRCHMARSH2_CEDARSTONE_DISPATCH"
+            }
+          },
+          {
+            "name" : "DESC_ELMDELL_ELMLANE_AMBERTOWER_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_ELMDELL_ELMLANE_AMBERTOWER_PINERIVER"
+            }
+          },
+          {
+            "name" : "FCH_PINETHORP_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_PINETHORP_CEDARSTONE_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_OAKCROSS_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_OAKCROSS_PINECREEK_DISPATCH"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD_BIRCHSTONE_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_ONBOARD_BIRCHSTONE_CEDARSTONE_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_PINEBEND_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_PINEBEND_PINECREEK_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_ASHLAKE_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ASHLAKE_PINECREEK_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_ASHGROVE_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ASHGROVE_CEDARSTONE_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_CEDARBROOK_PINETRAIL_CEDARSTONE_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_CEDARBROOK_PINETRAIL_CEDARSTONE_PINERIVER"
+            }
+          },
+          {
+            "name" : "IND_FIRTOWER_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_FIRTOWER_PINECREEK_DISPATCH"
+            }
+          },
+          {
+            "name" : "IND_CEDARPASS_PINECREEK_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.IND_CEDARPASS_PINECREEK_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_KIND_HANDLER_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_KIND_HANDLER_CEDARSTONE_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_HANDLER_CEDARSTONE_DISPATCH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_HANDLER_CEDARSTONE_DISPATCH"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_HANDLER_CEDARSTONE_PINERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ENTITYREF_HANDLER_CEDARSTONE_PINERIVER"
+            }
+          },
+          {
+            "name" : "ID_MEMBER_HAZELPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_MEMBER_HAZELPEAK"
+            }
+          },
+          {
+            "name" : "FCH_ONBOARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_ONBOARD"
+            }
+          },
+          {
+            "name" : "ID_OPERATOR_ONBOARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_OPERATOR_ONBOARD"
+            }
+          },
+          {
+            "name" : "FCH_BIRCHTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_BIRCHTOWER"
+            }
+          },
+          {
+            "name" : "ID_ENTITYREF_MAPLEMARSH_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_ENTITYREF_MAPLEMARSH_MAPLEMARSH_MOD"
+            }
+          },
+          {
+            "name" : "ID_NUCLEUS_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_NUCLEUS_MAPLEMARSH_MOD"
+            }
+          },
+          {
+            "name" : "ID_CEDARWICK_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_CEDARWICK_MAPLEMARSH_MOD"
+            }
+          },
+          {
+            "name" : "FCH_MAPLEMARSH_MOD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.FCH_MAPLEMARSH_MOD"
+            }
+          },
+          {
+            "name" : "ID_BIRCHPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.ID_BIRCHPASS"
+            }
+          },
+          {
+            "name" : "NUM_ELMHOLLOW_HAZARD_ASHBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.NUM_ELMHOLLOW_HAZARD_ASHBARN"
+            }
+          },
+          {
+            "name" : "DESC_OAKYARD_ELMHOLLOW_ASHBARN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.DESC_OAKYARD_ELMHOLLOW_ASHBARN"
+            }
+          },
+          {
+            "name" : "OAKMOOR_HAZARD_CORALVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.OAKMOOR_HAZARD_CORALVALE"
+            }
+          },
+          {
+            "name" : "AGATEWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.AGATEWARD"
+            }
+          },
+          {
+            "name" : "AGATEBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.AGATEBLUFF"
+            }
+          },
+          {
+            "name" : "AGATECROFT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.AGATECROFT"
+            }
+          },
+          {
+            "name" : "AGATESTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS.AGATESTEAD"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS"
+    ],
+    "sourceTableNames" : [
+      "STG_MAPLEROAD_65_MAPLECROSS_MAPLEFORD_RISKS"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "ID_MEMBER",
+        "NUM_ROWANSHORE"
+      ]
+    }
+  }
+}

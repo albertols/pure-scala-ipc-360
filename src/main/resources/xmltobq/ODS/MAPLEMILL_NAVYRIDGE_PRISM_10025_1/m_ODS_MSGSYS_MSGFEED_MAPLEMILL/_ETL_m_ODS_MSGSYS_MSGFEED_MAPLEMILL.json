@@ -1,0 +1,1630 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_MSGSYS_MSGFEED_MAPLEMILL",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "JADEBROOK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.JADEBROOK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "VERSION",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.VERSION"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BIRCHRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BIRCHRIDGE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.OPALROAD"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLPEAK",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLPEAK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLYARD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_4",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLYARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZHOLLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.MAPLEFORK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARFORK_PAIR",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARFORK_PAIR"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARROAD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_NOT",
+                  "parameters" : [
+                    {
+                      "value" : "ASHTRAIL2_CEDARFORK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DESCRIPTION",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.DESCRIPTION"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLMARSH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLMARSH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_CEDARROAD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BIRCHBLUFF_CEDARROAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "VALUE_DATE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.VALUE_DATE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ACME_ID",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ACME_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALFORGE_ELMFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.OPALFORGE_ELMFORGE_ID"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXBRIDGE",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ONYXBRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZHEATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELGLADE_FIRHOLLOW",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELGLADE_FIRHOLLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLCLIFF_FIRHOLLOW",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLCLIFF_FIRHOLLOW"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARROAD_OAKFORK_OAKTOWER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_OAKFORK_OAKTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_CEDARROAD_OAKFORK_OAKTOWER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BIRCHBLUFF_CEDARROAD_OAKFORK_OAKTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARFORK1",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARFORK1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK1",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK1"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK1_OAKFORK_OAKTOWER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK1_OAKFORK_OAKTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARFORK2",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARFORK2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK2",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK2_OAKFORK_OAKTOWER",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK2_OAKFORK_OAKTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OAKFORK_FIRWARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.OAKFORK_FIRWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLVALE_FIRWARD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLVALE_FIRWARD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "VALUE_DATE_HAZELSHORE_OAKTOWER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.VALUE_DATE_HAZELSHORE_OAKTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "VALUE_DATE_OAKFORK_OAKTOWER",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DATE",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.VALUE_DATE_OAKFORK_OAKTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.OPALVALE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELCROSS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLCREEK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLCREEK_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZSPRING_BY",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZSPRING_BY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ASHCREEK_BY",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ASHCREEK_BY"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "LAST_CORALGARTH_FIRTHORP",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_4",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.LAST_CORALGARTH_FIRTHORP"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXGATE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ONYXGATE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLPIER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLPIER_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ISIN",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ISIN"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ISIN_HAZELSHORE_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ISIN_HAZELSHORE_OAKTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ISIN_OAKFORK_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ISIN_OAKFORK_OAKTOWER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FULL_MAPLEFORK_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.FULL_MAPLEFORK_NAME"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLFORGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLHOLLOW_MAPLEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLHOLLOW_MAPLEFORK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZTOWER_INFO",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZTOWER_INFO"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ELMFORGE_AGATEWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ELMFORGE_AGATEWICK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZTHORP"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLVAULT"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ASHFALLS_FIRCREEK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ASHFALLS_FIRCREEK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ASHFALLS_CEDARFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ASHFALLS_CEDARFORK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELMARSH",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELMARSH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELMARSH_CEDARFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELMARSH_CEDARFORK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "NOTES",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_NOT",
+                  "parameters" : [
+                    {
+                      "value" : "ROWANHOLM"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZDELL_BIRCHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZDELL_BIRCHFORK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELPASS_HAZELFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELPASS_HAZELFORK_ID"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELPASS_HAZELFORK_SYSTEM",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELPASS_HAZELFORK_SYSTEM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "MAPLEDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.MAPLEDELL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ASHFALLS_OPALHOLM_FIRCREEK",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ASHFALLS_OPALHOLM_FIRCREEK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AMBERBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.AMBERBRIDGE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_CEDARROAD_CEDARFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BIRCHBLUFF_CEDARROAD_CEDARFORK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OAKMILL_SOURCE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.OAKMILL_SOURCE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEDOCK_SOURCE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.AGATEDOCK_SOURCE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELMILL_HAZELCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELMILL_HAZELCROSS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CEDARROAD__MAPLEDOCK_",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD__MAPLEDOCK_"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "HAZELROAD_DESCRIPTION",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELROAD_DESCRIPTION"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IMPORT_TOPAZCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.IMPORT_TOPAZCOMBE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ITEMREF_PEARLTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ITEMREF_PEARLTHORP"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "DEALFLOW_PEARLDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.DEALFLOW_PEARLDELL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.OPALGATE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "OPALSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.OPALSTEAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLTRACK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.AGATEPIER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "AGATEROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.AGATEROAD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "TOPAZHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZHOLM"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "BERYLTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLTRAIL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ONYXGLADE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_NUM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.ONYXGLADE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "PEARLSHORE",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_DECIMAL_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLSHORE"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_MSGSYS_MSGFEED_MAPLEMILL",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "FCH_DATAENTRY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.FCH_DATAENTRY"
+            }
+          },
+          {
+            "name" : "JADEBROOK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.JADEBROOK"
+            }
+          },
+          {
+            "name" : "VERSION",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.VERSION"
+            }
+          },
+          {
+            "name" : "BIRCHRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BIRCHRIDGE"
+            }
+          },
+          {
+            "name" : "OPALROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.OPALROAD"
+            }
+          },
+          {
+            "name" : "PEARLPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLPEAK"
+            }
+          },
+          {
+            "name" : "PEARLYARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLYARD"
+            }
+          },
+          {
+            "name" : "TOPAZHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZHOLLOW"
+            }
+          },
+          {
+            "name" : "MAPLEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.MAPLEFORK"
+            }
+          },
+          {
+            "name" : "CEDARFORK_PAIR",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARFORK_PAIR"
+            }
+          },
+          {
+            "name" : "CEDARROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD"
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK"
+            }
+          },
+          {
+            "name" : "DESCRIPTION",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.DESCRIPTION"
+            }
+          },
+          {
+            "name" : "PEARLMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLMARSH"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_CEDARROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BIRCHBLUFF_CEDARROAD"
+            }
+          },
+          {
+            "name" : "VALUE_DATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.VALUE_DATE"
+            }
+          },
+          {
+            "name" : "ACME_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ACME_ID"
+            }
+          },
+          {
+            "name" : "OPALFORGE_ELMFORGE_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.OPALFORGE_ELMFORGE_ID"
+            }
+          },
+          {
+            "name" : "ONYXBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ONYXBRIDGE"
+            }
+          },
+          {
+            "name" : "TOPAZHEATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZHEATH"
+            }
+          },
+          {
+            "name" : "HAZELGLADE_FIRHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELGLADE_FIRHOLLOW"
+            }
+          },
+          {
+            "name" : "PEARLCLIFF_FIRHOLLOW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLCLIFF_FIRHOLLOW"
+            }
+          },
+          {
+            "name" : "CEDARROAD_OAKFORK_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_OAKFORK_OAKTOWER"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_CEDARROAD_OAKFORK_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BIRCHBLUFF_CEDARROAD_OAKFORK_OAKTOWER"
+            }
+          },
+          {
+            "name" : "CEDARFORK1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARFORK1"
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK1",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK1"
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK1_OAKFORK_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK1_OAKFORK_OAKTOWER"
+            }
+          },
+          {
+            "name" : "CEDARFORK2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARFORK2"
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK2",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK2"
+            }
+          },
+          {
+            "name" : "CEDARROAD_CEDARFORK2_OAKFORK_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD_CEDARFORK2_OAKFORK_OAKTOWER"
+            }
+          },
+          {
+            "name" : "OAKFORK_FIRWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.OAKFORK_FIRWARD"
+            }
+          },
+          {
+            "name" : "PEARLVALE_FIRWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLVALE_FIRWARD"
+            }
+          },
+          {
+            "name" : "VALUE_DATE_HAZELSHORE_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.VALUE_DATE_HAZELSHORE_OAKTOWER"
+            }
+          },
+          {
+            "name" : "VALUE_DATE_OAKFORK_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.VALUE_DATE_OAKFORK_OAKTOWER"
+            }
+          },
+          {
+            "name" : "OPALVALE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.OPALVALE"
+            }
+          },
+          {
+            "name" : "HAZELCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELCROSS"
+            }
+          },
+          {
+            "name" : "PEARLCREEK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLCREEK_ID"
+            }
+          },
+          {
+            "name" : "TOPAZSPRING_BY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZSPRING_BY"
+            }
+          },
+          {
+            "name" : "ASHCREEK_BY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ASHCREEK_BY"
+            }
+          },
+          {
+            "name" : "LAST_CORALGARTH_FIRTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.LAST_CORALGARTH_FIRTHORP"
+            }
+          },
+          {
+            "name" : "ONYXGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ONYXGATE"
+            }
+          },
+          {
+            "name" : "BERYLPIER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLPIER_ID"
+            }
+          },
+          {
+            "name" : "ISIN",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ISIN"
+            }
+          },
+          {
+            "name" : "ISIN_HAZELSHORE_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ISIN_HAZELSHORE_OAKTOWER"
+            }
+          },
+          {
+            "name" : "ISIN_OAKFORK_OAKTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ISIN_OAKFORK_OAKTOWER"
+            }
+          },
+          {
+            "name" : "FULL_MAPLEFORK_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.FULL_MAPLEFORK_NAME"
+            }
+          },
+          {
+            "name" : "BERYLFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLFORGE"
+            }
+          },
+          {
+            "name" : "PEARLHOLLOW_MAPLEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLHOLLOW_MAPLEFORK"
+            }
+          },
+          {
+            "name" : "TOPAZTOWER_INFO",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZTOWER_INFO"
+            }
+          },
+          {
+            "name" : "ELMFORGE_AGATEWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ELMFORGE_AGATEWICK"
+            }
+          },
+          {
+            "name" : "TOPAZTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZTHORP"
+            }
+          },
+          {
+            "name" : "BERYLVAULT",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLVAULT"
+            }
+          },
+          {
+            "name" : "ASHFALLS_FIRCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ASHFALLS_FIRCREEK"
+            }
+          },
+          {
+            "name" : "ASHFALLS_CEDARFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ASHFALLS_CEDARFORK"
+            }
+          },
+          {
+            "name" : "HAZELMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELMARSH"
+            }
+          },
+          {
+            "name" : "HAZELMARSH_CEDARFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELMARSH_CEDARFORK"
+            }
+          },
+          {
+            "name" : "NOTES",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.NOTES"
+            }
+          },
+          {
+            "name" : "TOPAZDELL_BIRCHFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZDELL_BIRCHFORK"
+            }
+          },
+          {
+            "name" : "HAZELPASS_HAZELFORK_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELPASS_HAZELFORK_ID"
+            }
+          },
+          {
+            "name" : "HAZELPASS_HAZELFORK_SYSTEM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELPASS_HAZELFORK_SYSTEM"
+            }
+          },
+          {
+            "name" : "MAPLEDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.MAPLEDELL"
+            }
+          },
+          {
+            "name" : "ASHFALLS_OPALHOLM_FIRCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ASHFALLS_OPALHOLM_FIRCREEK"
+            }
+          },
+          {
+            "name" : "AMBERBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.AMBERBRIDGE"
+            }
+          },
+          {
+            "name" : "BIRCHBLUFF_CEDARROAD_CEDARFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BIRCHBLUFF_CEDARROAD_CEDARFORK"
+            }
+          },
+          {
+            "name" : "OAKMILL_SOURCE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.OAKMILL_SOURCE"
+            }
+          },
+          {
+            "name" : "AGATEDOCK_SOURCE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.AGATEDOCK_SOURCE"
+            }
+          },
+          {
+            "name" : "HAZELMILL_HAZELCROSS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELMILL_HAZELCROSS"
+            }
+          },
+          {
+            "name" : "CEDARROAD__MAPLEDOCK_",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.CEDARROAD__MAPLEDOCK_"
+            }
+          },
+          {
+            "name" : "HAZELROAD_DESCRIPTION",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.HAZELROAD_DESCRIPTION"
+            }
+          },
+          {
+            "name" : "IMPORT_TOPAZCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.IMPORT_TOPAZCOMBE"
+            }
+          },
+          {
+            "name" : "ITEMREF_PEARLTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ITEMREF_PEARLTHORP"
+            }
+          },
+          {
+            "name" : "DEALFLOW_PEARLDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.DEALFLOW_PEARLDELL"
+            }
+          },
+          {
+            "name" : "OPALGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.OPALGATE"
+            }
+          },
+          {
+            "name" : "OPALSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.OPALSTEAD"
+            }
+          },
+          {
+            "name" : "BERYLTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLTRACK"
+            }
+          },
+          {
+            "name" : "AGATEPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.AGATEPIER"
+            }
+          },
+          {
+            "name" : "AGATEROAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.AGATEROAD"
+            }
+          },
+          {
+            "name" : "TOPAZHOLM",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.TOPAZHOLM"
+            }
+          },
+          {
+            "name" : "BERYLTRAIL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.BERYLTRAIL"
+            }
+          },
+          {
+            "name" : "ONYXGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.ONYXGLADE"
+            }
+          },
+          {
+            "name" : "PEARLSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MSGSYS_MSGFEED_MAPLEMILL.PEARLSHORE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_MSGSYS_MSGFEED_MAPLEMILL",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_MSGSYS_MSGFEED_MAPLEMILL"
+    ],
+    "sourceTableNames" : [
+      "STG_MSGSYS_MSGFEED_MAPLEMILL"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "JADEBROOK",
+        "VERSION"
+      ]
+    }
+  }
+}

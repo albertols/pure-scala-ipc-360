@@ -1,0 +1,872 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_MAPLESTONE_MAPLEFORK_MAPLEPASS",
+        "type" : "table",
+        "weststone" : [
+          {
+            "name" : "ID_RECORD",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "SequenceGenerator"
+            }
+          },
+          {
+            "name" : "PK_MAPLEPASS",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.PK_MAPLEPASS"
+            }
+          },
+          {
+            "name" : "FLINTCREEK_MAPLEPASS",
+            "dataType" : "Long",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.FLINTCREEK_MAPLEPASS"
+            }
+          },
+          {
+            "name" : "ID_ELMSHORE_ASHPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERFORD"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_PHASE_ELMSHORE_ASHPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYTHORP"
+            }
+          },
+          {
+            "name" : "FCH_CORALBEND_HAZELFORD",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP_2_NOT_NULL",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERCREEK"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_ELMSHORE_ASHPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVEBEND"
+            }
+          },
+          {
+            "name" : "ID_OAKCLIFF_CEDARHEATH_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYSTEAD"
+            }
+          },
+          {
+            "name" : "ID_OAKFALLS_MAPLESTONE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVECOMBE"
+            }
+          },
+          {
+            "name" : "DESC_OPERATOR_HAZELFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVEGARTH"
+            }
+          },
+          {
+            "name" : "IND_DISPATCH_CEDARPASS_ELMBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVELAKE"
+            }
+          },
+          {
+            "name" : "ID_ELMBRIDGE_ASHPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYBLUFF"
+            }
+          },
+          {
+            "name" : "FCH_ELMBRIDGE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERPATH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_CORALGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVEFALLS"
+            }
+          },
+          {
+            "name" : "FCH_CORALGLADE",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERPASS"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_FLINTBARN",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYDELL"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_NORTHTRACK",
+            "dataType" : "Timestamp",
+            "transformation" : {
+              "name" : "EXP_MAPLEVALE_TIMESTAMP",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVERIVER"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "ID_KIND_ELMBRIDGE_ASHPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVEFORK"
+            }
+          },
+          {
+            "name" : "FCH_PEARLDOCK_EASTPOND_WESTCLIFF",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERBRIDGE"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_PEARLDOCK_NORTHGROVE_SOUTHYARD",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_MAPLEVALE_DATE",
+                  "parameters" : [
+                    {
+                      "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERDOCK"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "IND_NORTHFIELD_NORTHLAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYWARD"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_AMBERFORD_AMBERCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.INNERCOMBE"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_AMBERFORD_AMBERCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.INNERCOMBE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_HAZELGATE_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALSHORE"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_HAZELGATE_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALSHORE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "DESC_NORTHFALLS_NORTHTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYGARTH"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_TEALSPRING_SOUTHCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERGROVE"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_TEALSPRING_SOUTHCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERGROVE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_ASHSTEAD_SOUTHCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERSHORE"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_ASHSTEAD_SOUTHCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERSHORE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_PHASE_GRAYLAKE_SOUTHCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERMARSH"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_PHASE_GRAYLAKE_SOUTHCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERMARSH_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_PHASE_LOG",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERCLIFF"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_PHASE_LOG",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERCLIFF_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_IND_FIRRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERRIDGE"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_IND_FIRRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERRIDGE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_IND_WESTGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERGLADE"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_IND_WESTGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERGLADE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_ELMGROVE_PINEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALDOCK"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_ELMGROVE_PINEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALDOCK_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_ASHSTEAD_PINEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALPIER"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_ASHSTEAD_PINEFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALPIER_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_AMBERPOND_ELMGLADE_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALCLIFF"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_AMBERPOND_ELMGLADE_MAPLELANE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALCLIFF_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_BIRCHTHORP_CEDARFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALPEAK"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_BIRCHTHORP_CEDARFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALPEAK_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_ELMGROVE_PINEFORD_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALTOWER"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_ELMGROVE_PINEFORD_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALTOWER_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_ASHSTEAD_PINEFORD_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALMILL"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_ASHSTEAD_PINEFORD_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALMILL_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_ELMGLADE_MAPLELANE_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALGATE"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_ELMGLADE_MAPLELANE_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALGATE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "ID_OAKPATH_BIRCHTHORP_CEDARFALLS_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALBRIDGE"
+            }
+          },
+          {
+            "name" : "ID_CEDARGATE_BIRCHTHORP_CEDARFALLS_OAKTRACK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALBRIDGE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "DESC_ENTITYREF_AMBERWICK",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TRIM",
+              "parameters" : [
+                {
+                  "source" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.INNERMARSH"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "FCH_TIMESTAMP",
+            "dataType" : "LocalDateTime",
+            "transformation" : {
+              "name" : "EXP_GET_SYSTEM_DATE"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS",
+          "type" : "BERYLFALLS"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "SQ_STG_MAPLESTONE_MAPLEFORK_MAPLEPASS",
+        "type" : "BERYLFALLS",
+        "selectDistinct" : false,
+        "weststone" : [
+          {
+            "name" : "PK_MAPLEPASS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.PK_MAPLEPASS"
+            }
+          },
+          {
+            "name" : "FLINTCREEK_MAPLEPASS",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.FLINTCREEK_MAPLEPASS"
+            }
+          },
+          {
+            "name" : "UPPERFORD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERFORD"
+            }
+          },
+          {
+            "name" : "NAVYTHORP",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYTHORP"
+            }
+          },
+          {
+            "name" : "UPPERCREEK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERCREEK"
+            }
+          },
+          {
+            "name" : "OLIVEBEND",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVEBEND"
+            }
+          },
+          {
+            "name" : "NAVYSTEAD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYSTEAD"
+            }
+          },
+          {
+            "name" : "OLIVECOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVECOMBE"
+            }
+          },
+          {
+            "name" : "OLIVEGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVEGARTH"
+            }
+          },
+          {
+            "name" : "OLIVELAKE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVELAKE"
+            }
+          },
+          {
+            "name" : "NAVYBLUFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYBLUFF"
+            }
+          },
+          {
+            "name" : "UPPERPATH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERPATH"
+            }
+          },
+          {
+            "name" : "OLIVEFALLS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVEFALLS"
+            }
+          },
+          {
+            "name" : "UPPERPASS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERPASS"
+            }
+          },
+          {
+            "name" : "NAVYDELL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYDELL"
+            }
+          },
+          {
+            "name" : "OLIVERIVER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVERIVER"
+            }
+          },
+          {
+            "name" : "OLIVEFORK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.OLIVEFORK"
+            }
+          },
+          {
+            "name" : "UPPERBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERBRIDGE"
+            }
+          },
+          {
+            "name" : "UPPERDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.UPPERDOCK"
+            }
+          },
+          {
+            "name" : "NAVYWARD",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYWARD"
+            }
+          },
+          {
+            "name" : "INNERCOMBE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.INNERCOMBE"
+            }
+          },
+          {
+            "name" : "INNERCOMBE_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.INNERCOMBE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALSHORE"
+            }
+          },
+          {
+            "name" : "CENTRALSHORE_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALSHORE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "NAVYGARTH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.NAVYGARTH"
+            }
+          },
+          {
+            "name" : "AMBERGROVE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERGROVE"
+            }
+          },
+          {
+            "name" : "AMBERGROVE_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERGROVE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "AMBERSHORE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERSHORE"
+            }
+          },
+          {
+            "name" : "AMBERSHORE_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERSHORE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "AMBERMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERMARSH"
+            }
+          },
+          {
+            "name" : "AMBERMARSH_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERMARSH_PINEFORGE"
+            }
+          },
+          {
+            "name" : "AMBERCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERCLIFF"
+            }
+          },
+          {
+            "name" : "AMBERCLIFF_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERCLIFF_PINEFORGE"
+            }
+          },
+          {
+            "name" : "AMBERRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERRIDGE"
+            }
+          },
+          {
+            "name" : "AMBERRIDGE_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERRIDGE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "AMBERGLADE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERGLADE"
+            }
+          },
+          {
+            "name" : "AMBERGLADE_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.AMBERGLADE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALDOCK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALDOCK"
+            }
+          },
+          {
+            "name" : "CENTRALDOCK_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALDOCK_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALPIER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALPIER"
+            }
+          },
+          {
+            "name" : "CENTRALPIER_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALPIER_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALCLIFF",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALCLIFF"
+            }
+          },
+          {
+            "name" : "CENTRALCLIFF_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALCLIFF_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALPEAK",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALPEAK"
+            }
+          },
+          {
+            "name" : "CENTRALPEAK_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALPEAK_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALTOWER",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALTOWER"
+            }
+          },
+          {
+            "name" : "CENTRALTOWER_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALTOWER_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALMILL",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALMILL"
+            }
+          },
+          {
+            "name" : "CENTRALMILL_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALMILL_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALGATE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALGATE"
+            }
+          },
+          {
+            "name" : "CENTRALGATE_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALGATE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "CENTRALBRIDGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALBRIDGE"
+            }
+          },
+          {
+            "name" : "CENTRALBRIDGE_PINEFORGE",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.CENTRALBRIDGE_PINEFORGE"
+            }
+          },
+          {
+            "name" : "INNERMARSH",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS.INNERMARSH"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_MAPLESTONE_MAPLEFORK_MAPLEPASS"
+    ],
+    "sourceTableNames" : [
+      "STG_MAPLESTONE_MAPLEFORK_MAPLEPASS"
+    ],
+    "oakcombe2" : {
+      "keys" : [
+        "ID_ELMSHORE_ASHPEAK",
+        "FCH_CORALBEND_HAZELFORD"
+      ]
+    }
+  }
+}

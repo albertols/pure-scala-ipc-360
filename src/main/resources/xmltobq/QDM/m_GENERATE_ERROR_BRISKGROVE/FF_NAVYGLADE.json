@@ -1,0 +1,14 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "PROCESS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NAVYGLADE",
+  "type": "NUMERIC",
+  "description": ""
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ID_MAPLEHOLLOW",
+  "type": "INT64",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "DESC_MAPLEHOLLOW",
+  "type": "STRING",
+  "description": ""
+  }
+]

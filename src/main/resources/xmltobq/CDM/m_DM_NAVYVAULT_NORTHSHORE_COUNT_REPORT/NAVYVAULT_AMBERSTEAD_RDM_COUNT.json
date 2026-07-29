@@ -1,0 +1,32 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "WESTBLUFF_INGEST",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "LOWERBEND",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FOLDER_NAME",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "WORKFLOW_NAME",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "NORTHSHORE_COUNT",
+  "type": "NUMERIC",
+  "description": ""
+  }
+]
