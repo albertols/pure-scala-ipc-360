@@ -1327,7 +1327,7 @@ class DataRootsTest {
 **Interfaces:**
 - Consumes: every endpoint from Tasks 3–8, `CorpusService.allXmlPaths()/allRecipePaths()`.
 
-- [ ] **Step 1: Write the test** (it should pass immediately — it's the integration gate, not TDD red/green)
+- [x] **Step 1: Write the test** (it should pass immediately — it's the integration gate, not TDD red/green)
 
 ```java
 package io.pure360.etl360;
@@ -1371,10 +1371,10 @@ class CorpusContractTest {
 ```
 (≥ not ==, so sub-project 4's synthetic additions don't break it. Current values: 46 XMLs / 64 recipes.)
 
-- [ ] **Step 2: Run** — `mvn -q -am -pl backend test -Dtest=CorpusContractTest`
+- [x] **Step 2: Run** — `mvn -q -am -pl backend test -Dtest=CorpusContractTest`
 Expected: PASS 46/46 + 64/64. Any failure is a real fidelity bug — fix the service, never skip the file.
 
-- [ ] **Step 3: Commit** — `git add -A && git commit -m "test(backend): corpus contract — every XML serves dom+model, every recipe serves"`
+- [x] **Step 3: Commit** — `git add -A && git commit -m "test(backend): corpus contract — every XML serves dom+model, every recipe serves"`
 
 ---
 
