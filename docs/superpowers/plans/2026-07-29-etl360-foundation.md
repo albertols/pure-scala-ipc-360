@@ -1214,7 +1214,7 @@ class RecipeServiceTest {
 - Consumes: `CorpusService.allXmlPaths()`, `DomService.dom(path)`.
 - Produces: `record ExpressionEntryDto(String mappingPath, String layer, String transformation, String port, String formula, String origin)`; `ExpressionService.all(): List<ExpressionEntryDto>` — walks every mapping's DOM; for each element named `TRANSFORMATION` (any depth), takes `@NAME`; for each child element `TRANSFORMFIELD` whose `EXPRESSION` attribute is non-blank **and differs from its `NAME` attribute** (identity expressions are pass-through noise), emits an entry with `origin = "xml"`, `layer` = first segment of mappingPath. Result cached per corpus scan (invalidated when any contributing file's mtime changes — reuse DomService's per-file cache and just rebuild the aggregate on each call; the DOM cache makes rebuilds cheap). `GET /api/expressions`.
 
-- [ ] **Step 1: Write the failing test** — fixture corpus: exactly one entry, `transformation == "EXP_FIX"`, `port == "COL_A_OUT"`, formula contains `LTRIM`, `origin == "xml"`, `layer == "CDM"`.
+- [x] **Step 1: Write the failing test** — fixture corpus: exactly one entry, `transformation == "EXP_FIX"`, `port == "COL_A_OUT"`, formula contains `LTRIM`, `origin == "xml"`, `layer == "CDM"`.
 
 ```java
 package io.pure360.etl360.service;
@@ -1242,13 +1242,13 @@ class ExpressionServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=ExpressionServiceTest` — Expected: compile error.
+- [x] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=ExpressionServiceTest` — Expected: compile error.
 
-- [ ] **Step 3: Implement** — recursive walk over `XmlNodeDto`; controller is a thin `@GetMapping("/api/expressions")`. Skip mappings whose DOM throws `XmlUnparsableException` (log warn, continue — one damaged file must not empty the archive).
+- [x] **Step 3: Implement** — recursive walk over `XmlNodeDto`; controller is a thin `@GetMapping("/api/expressions")`. Skip mappings whose DOM throws `XmlUnparsableException` (log warn, continue — one damaged file must not empty the archive).
 
-- [ ] **Step 4: Run + spot-check** — `mvn -q -am -pl backend test`; then boot and `curl -s localhost:8080/api/expressions | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d))"` — Expected: PASS; hundreds of entries from the real corpus.
+- [x] **Step 4: Run + spot-check** — `mvn -q -am -pl backend test`; then boot and `curl -s localhost:8080/api/expressions | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d))"` — Expected: PASS; hundreds of entries from the real corpus.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): cross-corpus expressions archive from XML DOM"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): cross-corpus expressions archive from XML DOM"`
 
 ---
 
