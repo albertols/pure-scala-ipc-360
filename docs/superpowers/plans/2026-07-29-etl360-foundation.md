@@ -1496,7 +1496,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 - Consumes: `apiGet`, backend `/v3/api-docs`.
 - Produces: `types.gen.ts` (committed OpenAPI types; source of `TreeNode`, `XmlNode`, `MappingModel`, `RecipeFile`, `ExpressionEntry`, `AppConfig` aliases exported from `queries.ts`); hooks `useTree()`, `useMappingDom(path)`, `useMappingModel(path)`, `useRecipe(path)`, `useDdl(path)`, `useExpressions()`, `useAppConfig()` — each `useQuery({ queryKey: [name, ...args], queryFn })` with `staleTime: 30_000`.
 
-- [ ] **Step 1: Generate types from the live backend**
+- [x] **Step 1: Generate types from the live backend**
 
 ```bash
 ( cd backend && mvn -q -am spring-boot:run ) &   # from repo root: mvn -q -am -pl backend spring-boot:run &
@@ -1506,7 +1506,7 @@ kill %1
 ```
 Expected: `src/api/types.gen.ts` created, non-empty, containing `TreeNodeDto`.
 
-- [ ] **Step 2: Write `queries.ts`** (type aliases re-exported so app code never imports `types.gen.ts` directly)
+- [x] **Step 2: Write `queries.ts`** (type aliases re-exported so app code never imports `types.gen.ts` directly)
 
 ```ts
 import { useQuery } from '@tanstack/react-query'
@@ -1551,7 +1551,7 @@ const queryClient = new QueryClient()
 // wrap: <QueryClientProvider client={queryClient}><App /></QueryClientProvider>
 ```
 
-- [ ] **Step 3: Write the hook test** (MSW serves a mini tree; renderHook from RTL)
+- [x] **Step 3: Write the hook test** (MSW serves a mini tree; renderHook from RTL)
 
 ```tsx
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
@@ -1587,9 +1587,9 @@ describe('useTree', () => {
 })
 ```
 
-- [ ] **Step 4: Run tests + type-check** — Run: `pnpm test && npx tsc --noEmit` — Expected: PASS, clean.
+- [x] **Step 4: Run tests + type-check** — Run: `pnpm test && npx tsc --noEmit` — Expected: PASS, clean.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "feat(frontend): OpenAPI-generated types, TanStack Query hooks, provider"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "feat(frontend): OpenAPI-generated types, TanStack Query hooks, provider"`
 
 ---
 

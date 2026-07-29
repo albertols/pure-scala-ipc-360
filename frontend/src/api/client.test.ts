@@ -21,7 +21,7 @@ describe('apiGet', () => {
   })
 
   it('throws ApiError with problem+json fields', async () => {
-    const err = await apiGet('/recipes/missing.json').catch(e => e)
+    const err = await apiGet<never>('/recipes/missing.json').catch((e): ApiError => e)
     expect(err).toBeInstanceOf(ApiError)
     expect(err.status).toBe(404)
     expect(err.title).toBe('Not found')
