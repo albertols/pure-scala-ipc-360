@@ -5,5 +5,5 @@ target/
 .DS_Store
 spark-warehouse/
 
-src/main/resources/DWH_CONTROL
-src/main/scala/io/pure360/ipc/xmltojson/doc
+parser/src/main/resources/DWH_CONTROL
+parser/src/main/scala/io/pure360/ipc/xmltojson/doc

@@ -38,7 +38,7 @@
 **Interfaces:**
 - Produces: Maven modules `io.pure360:parser:0.1.0-SNAPSHOT` and parent `io.pure360:pure-scala-ipc-360:0.1.0-SNAPSHOT` (packaging pom). Parser classes unchanged: `io.pure360.ipc.xmltojson.XMLParser.getParsedXml(java.io.File): Powermart`, `XMLRoot.parsePowermart(scala.xml.Elem): Powermart`.
 
-- [ ] **Step 1: Record the baseline — regenerate the corpus outputs from current main into a temp dir**
+- [x] **Step 1: Record the baseline — regenerate the corpus outputs from current main into a temp dir**
 
 ```bash
 BASE=$(mktemp -d)
@@ -49,7 +49,7 @@ echo "$BASE" > /tmp/etl360_baseline_dir           # remember for step 5
 ```
 Expected: 46 recipes generated, exit 0 (Calcite SQL-parse error logs are normal noise).
 
-- [ ] **Step 2: Move code into parser/ and write its pom**
+- [x] **Step 2: Move code into parser/ and write its pom**
 
 ```bash
 mkdir parser
@@ -89,7 +89,7 @@ Create `parser/pom.xml` — the current root pom with a parent block, artifactId
 </project>
 ```
 
-- [ ] **Step 3: Rewrite the root pom as the aggregator**
+- [x] **Step 3: Rewrite the root pom as the aggregator**
 
 Replace the entire root `pom.xml` with:
 
@@ -115,12 +115,12 @@ Replace the entire root `pom.xml` with:
 ```
 (`backend` is added to `<modules>` in Task 2.)
 
-- [ ] **Step 4: Build**
+- [x] **Step 4: Build**
 
 Run: `mvn -q compile`
 Expected: BUILD SUCCESS for parent + parser.
 
-- [ ] **Step 5: Regenerate against a fresh temp copy and diff against the baseline**
+- [x] **Step 5: Regenerate against a fresh temp copy and diff against the baseline**
 
 ```bash
 BASE=$(cat /tmp/etl360_baseline_dir)
@@ -131,11 +131,11 @@ diff -r "$BASE/xmltobq" "$AFTER/xmltobq" && echo IDENTICAL
 ```
 Expected: `IDENTICAL`. If not, STOP — the move broke the parser; fix before continuing.
 
-- [ ] **Step 6: Quick-patch CLAUDE.md paths**
+- [x] **Step 6: Quick-patch CLAUDE.md paths**
 
 In root `CLAUDE.md`, replace `src/main/resources/xmltobq` → `parser/src/main/resources/xmltobq`, `src/main/scala/io/pure360/ipc/` → `parser/src/main/scala/io/pure360/ipc/`, `src/main/resources/DWH_CONTROL/` → `parser/src/main/resources/DWH_CONTROL/`, and the run command → `mvn -q -pl parser compile exec:java -Dexec.args="..."`. Also update `.gitignore` if it references `src/main/resources/DWH_CONTROL` (check with `grep -n DWH_CONTROL .gitignore`).
 
-- [ ] **Step 7: Verify nothing tracked was lost, then commit**
+- [x] **Step 7: Verify nothing tracked was lost, then commit**
 
 ```bash
 git status --short   # only renames (R) plus the two poms + CLAUDE.md
