@@ -1032,7 +1032,7 @@ Expected: PASS.
 - Consumes: `PathResolver.xmlFile`, parser statics `io.pure360.ipc.xmltojson.XMLParser.getParsedXml(File): XMLRoot.Powermart` (raw parse — no `XMLReplacementExecutor.preparePowermart`, which applies recipe-oriented renames the Viewer must not see).
 - Produces: `MappingModelDto` with nested records — top level: `record MappingModelDto(String creationDate, String repositoryVersion, RepositoryDto repository)`; `record RepositoryDto(String name, String version, String codepage, String databaseType, FolderDto folder)`; `record FolderDto(String name, String group, String owner, String shared, String description, String permissions, String uuid, List<SourceDto> sources, List<TargetDto> targets, List<TransformationDto> transformations, List<MappletDto> mapplets, List<MappingDto> mappings)`. `SemanticModelService.model(String mappingPath): MappingModelDto` with the same mtime-cache pattern as DomService.
 
-- [ ] **Step 1: Write the failing test** (real corpus file — committed, so deterministic)
+- [x] **Step 1: Write the failing test** (real corpus file — committed, so deterministic)
 
 ```java
 package io.pure360.etl360.service;
@@ -1059,10 +1059,10 @@ class SemanticModelServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=SemanticModelServiceTest`
+- [x] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest=SemanticModelServiceTest`
 Expected: compile error.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `ScalaBridge.java`:
 ```java
@@ -1137,10 +1137,10 @@ public MappingModelDto model(@PathVariable String path) {
 ```
 (constructor-inject `SemanticModelService modelService` alongside `domService`).
 
-- [ ] **Step 4: Run all backend tests** — Run: `mvn -q -am -pl backend test`
+- [x] **Step 4: Run all backend tests** — Run: `mvn -q -am -pl backend test`
 Expected: PASS. Also spot-check: boot the app, `curl -s localhost:8080/api/mappings/model/CDM/m_DM_INFOHUB_BIZLINK | head -c 400`.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): semantic model endpoint via in-JVM Scala parser"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): semantic model endpoint via in-JVM Scala parser"`
 
 ---
 
