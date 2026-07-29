@@ -769,7 +769,7 @@ Expected: PASS.
 - Consumes: `Etl360Properties.resolvedCorpusRoot()`, fixture corpus from Task 3.
 - Produces: `record XmlNodeDto(String name, Map<String,String> attributes, String text, List<XmlNodeDto> children)`; `PathResolver.xmlFile(String mappingPath): Path` and `PathResolver.insideCorpus(String relPath): Path` (throws `InvalidCorpusPathException` → 400, `NotFoundException` → 404); `DomService.dom(String mappingPath): XmlNodeDto` (throws `XmlUnparsableException` → 422, message mentions possible anonymizer entity damage); mtime-keyed cache inside DomService. `GET /api/mappings/dom/{*path}`.
 
-- [ ] **Step 1: Write failing DomService + PathResolver tests**
+- [x] **Step 1: Write failing DomService + PathResolver tests**
 
 ```java
 package io.pure360.etl360.service;
@@ -830,10 +830,10 @@ class PathResolverTest {
 }
 ```
 
-- [ ] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest='DomServiceTest,PathResolverTest'`
+- [x] **Step 2: Run to verify failure** — Run: `mvn -q -am -pl backend test -Dtest='DomServiceTest,PathResolverTest'`
 Expected: compile errors (classes missing).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `PathResolver.java`:
 ```java
@@ -1012,10 +1012,10 @@ ProblemDetail unparsable(XmlUnparsableException e) {
 
 `MappingControllerTest.java` — `@SpringBootTest @AutoConfigureMockMvc`; cases: real corpus `GET /api/mappings/dom/CDM/m_DM_INFOHUB_BIZLINK` → 200 + `$.name == "POWERMART"`; `GET /api/mappings/dom/CDM/missing` → 404 + `$.title == "Not found"` + content type `application/problem+json`; `GET /api/mappings/dom/..%2F..%2Fetc` → 400.
 
-- [ ] **Step 4: Run all backend tests** — Run: `mvn -q -am -pl backend test`
+- [x] **Step 4: Run all backend tests** — Run: `mvn -q -am -pl backend test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): lossless DOM endpoint with mtime cache, 400/422 problem+json"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): lossless DOM endpoint with mtime cache, 400/422 problem+json"`
 
 ---
 
