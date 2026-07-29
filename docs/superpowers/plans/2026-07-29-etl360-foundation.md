@@ -1389,7 +1389,7 @@ Expected: PASS 46/46 + 64/64. Any failure is a real fidelity bug — fix the ser
 **Interfaces:**
 - Produces: `class ApiError extends Error { status: number; title: string; detail?: string }`; `apiGet<T>(path: string): Promise<T>` (prefixes `/api`, parses problem+json into ApiError). npm scripts: `test` (vitest run), `test:watch`, `generate:api`.
 
-- [ ] **Step 1: Install dev deps + wire config**
+- [x] **Step 1: Install dev deps + wire config**
 
 ```bash
 cd frontend
@@ -1416,7 +1416,7 @@ test: {
 import '@testing-library/jest-dom/vitest'
 ```
 
-- [ ] **Step 2: Write the failing client test**
+- [x] **Step 2: Write the failing client test**
 
 ```ts
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
@@ -1451,9 +1451,9 @@ describe('apiGet', () => {
 })
 ```
 
-- [ ] **Step 3: Run to verify failure** — Run: `pnpm test` — Expected: FAIL, `./client` unresolved.
+- [x] **Step 3: Run to verify failure** — Run: `pnpm test` — Expected: FAIL, `./client` unresolved.
 
-- [ ] **Step 4: Implement `client.ts`**
+- [x] **Step 4: Implement `client.ts`**
 
 ```ts
 export class ApiError extends Error {
@@ -1478,9 +1478,9 @@ export async function apiGet<T>(path: string): Promise<T> {
 }
 ```
 
-- [ ] **Step 5: Run tests** — Run: `pnpm test` — Expected: PASS (2).
+- [x] **Step 5: Run tests** — Run: `pnpm test` — Expected: PASS (2).
 
-- [ ] **Step 6: Commit** — `git add -A && git commit -m "feat(frontend): vitest+msw test infra, typed API client with problem+json errors"`
+- [x] **Step 6: Commit** — `git add -A && git commit -m "feat(frontend): vitest+msw test infra, typed API client with problem+json errors"`
 
 ---
 

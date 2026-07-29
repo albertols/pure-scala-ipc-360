@@ -4,6 +4,12 @@ target/
 *.iml
 .DS_Store
 spark-warehouse/
+node_modules/
+
+# Figma Make platform-provisioned config (not present outside the Figma Make sandbox;
+# vite.config.ts statically imports frontend/.figma/make/site.json, so a local stub
+# is needed to run vite/vitest/pnpm build outside that sandbox)
+frontend/.figma/
 
 parser/src/main/resources/DWH_CONTROL
 parser/src/main/scala/io/pure360/ipc/xmltojson/doc
