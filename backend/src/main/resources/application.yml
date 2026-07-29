@@ -1,0 +1,14 @@
+server:
+  address: 127.0.0.1
+  port: 8080
+etl360:
+  corpus-root: ${ETL360_CORPUS_ROOT:parser/src/main/resources/xmltobq}
+  dwh-control-root: ${ETL360_DWH_CONTROL_ROOT:parser/src/main/resources/DWH_CONTROL}
+  mock-root: ${ETL360_MOCK_ROOT:backend/src/main/resources/mock}
+  composer-root: ${ETL360_COMPOSER_ROOT:parser/src/main/resources/composer}
+  gcp:
+    project-id: ${ETL360_GCP_PROJECT:db-dev-example-project}
+    region: ${ETL360_GCP_REGION:europe-southwest1}
+    dataproc-job-url: "https://console.cloud.google.com/dataproc/jobs/{jobId}?project={project}&region={region}"
+    dataproc-cluster-url: "https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}"
+    logging-url: "https://console.cloud.google.com/logs/query;query=resource.labels.job_id%3D%22{jobId}%22?project={project}"

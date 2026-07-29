@@ -162,7 +162,7 @@ Regeneration over the full corpus verified byte-identical pre/post move."
 **Interfaces:**
 - Produces: `RepoRoot.resolve(Path startDir): Path` (static); `Etl360Properties` bean (prefix `etl360`) with `String corpusRoot, dwhControlRoot, mockRoot, composerRoot` and nested `Gcp gcp {String projectId, region, dataprocJobUrl, dataprocClusterUrl, loggingUrl}`; `Etl360Properties.resolvedCorpusRoot(): Path` (repo-root-resolved). `GET /api/health` → `{"status","corpusRoot","corpusPresent","xmlCount","recipeCount"}` (counts are 0 until Task 3 wires CorpusService).
 
-- [ ] **Step 1: Write backend/pom.xml and register the module**
+- [x] **Step 1: Write backend/pom.xml and register the module**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -232,7 +232,7 @@ Regeneration over the full corpus verified byte-identical pre/post move."
 
 Add `<module>backend</module>` after `<module>parser</module>` in the root pom.
 
-- [ ] **Step 2: Write the failing RepoRoot test**
+- [x] **Step 2: Write the failing RepoRoot test**
 
 ```java
 package io.pure360.etl360.config;
@@ -260,10 +260,10 @@ class RepoRootTest {
 }
 ```
 
-- [ ] **Step 3: Run to verify failure** — Run: `mvn -q -am -pl backend test`
+- [x] **Step 3: Run to verify failure** — Run: `mvn -q -am -pl backend test`
 Expected: compile error, `RepoRoot` not found.
 
-- [ ] **Step 4: Implement RepoRoot, Etl360Properties, Application, application.yml, HealthController**
+- [x] **Step 4: Implement RepoRoot, Etl360Properties, Application, application.yml, HealthController**
 
 `RepoRoot.java`:
 ```java
@@ -411,14 +411,14 @@ class HealthControllerTest {
 }
 ```
 
-- [ ] **Step 5: Run tests** — Run: `mvn -q -am -pl backend test`
+- [x] **Step 5: Run tests** — Run: `mvn -q -am -pl backend test`
 Expected: PASS (RepoRootTest 2, HealthControllerTest 2).
 
-- [ ] **Step 6: Boot it once for real**
+- [x] **Step 6: Boot it once for real**
 
 Run: `mvn -q -am -pl backend spring-boot:run &` then `curl -s localhost:8080/api/health` → JSON with `"corpusPresent":true`; `kill %1`.
 
-- [ ] **Step 7: Commit** — `git add -A && git commit -m "feat(backend): Spring Boot 3 module, config properties, /api/health, OpenAPI"` (include this plan file with ticked boxes — same for every task's commit below).
+- [x] **Step 7: Commit** — `git add -A && git commit -m "feat(backend): Spring Boot 3 module, config properties, /api/health, OpenAPI"` (include this plan file with ticked boxes — same for every task's commit below).
 
 ---
 
