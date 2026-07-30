@@ -138,18 +138,19 @@ beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
-function renderViewer() {
+function renderViewer(searchQuery = '') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
+  const utils = render(
     <QueryClientProvider client={client}>
-      <ETLViewer searchQuery="" />
+      <ETLViewer searchQuery={searchQuery} />
     </QueryClientProvider>,
   )
+  return { ...utils, client }
 }
 
 describe('ETLViewer — real canvas', () => {
   it('shows the empty hint, then renders the real mapping canvas after selecting an xml file', async () => {
-    renderViewer()
+    const { rerender, container, client } = renderViewer()
 
     expect(await screen.findByText('Select an .xml mapping to view')).toBeInTheDocument()
 
@@ -176,5 +177,38 @@ describe('ETLViewer — real canvas', () => {
     // SOURCE has 3 children (2 SOURCEFIELD + 1 non-field TABLEATTRIBUTE) —
     // Fields(n) must count only the SOURCEFIELD ones.
     expect(screen.getByText('Fields (2)')).toBeInTheDocument()
+
+    // Deselect (toggle) so the search-highlight assertions below aren't
+    // conflated with click-selection sharing the same stroke treatment.
+    fireEvent.click(sourceName)
+    await waitFor(() => {
+      expect(screen.queryByText('DBDNAME')).not.toBeInTheDocument()
+    })
+
+    // No query: no node carries the selected-stroke treatment (isSelected false everywhere).
+    expect(container.querySelectorAll('rect[stroke-width="2"]')).toHaveLength(0)
+
+    // Global search reuse (Task 5): every port in this fixture is named "ID",
+    // so a padded/mixed-case port substring — trimmed + lowercased per spec —
+    // matches all three nodes (name OR port match) and reuses the EXISTING
+    // isSelected stroke treatment, no new styling.
+    rerender(
+      <QueryClientProvider client={client}>
+        <ETLViewer searchQuery="  ID  " />
+      </QueryClientProvider>,
+    )
+    await waitFor(() => {
+      expect(container.querySelectorAll('rect[stroke-width="2"]')).toHaveLength(3)
+    })
+
+    // Clearing the query removes the highlight.
+    rerender(
+      <QueryClientProvider client={client}>
+        <ETLViewer searchQuery="" />
+      </QueryClientProvider>,
+    )
+    await waitFor(() => {
+      expect(container.querySelectorAll('rect[stroke-width="2"]')).toHaveLength(0)
+    })
   })
 })

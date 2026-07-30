@@ -272,7 +272,7 @@ Behavior: `matchIds = graph.nodes.filter(n => q && (n.name.toLowerCase().include
 
 Test: MSW-rendered viewer (Task 3 fixture), set searchQuery prop to a port substring, assert the matching card gains the selected stroke (query the SVG rect attrs), and the empty query removes it.
 
-- [ ] **Step 1: failing test → Step 2: red → Step 3: implement → Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): global search highlights and pans to matching nodes"` (explicit paths + plan).
+- [x] **Step 1: failing test → Step 2: red → Step 3: implement → Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): global search highlights and pans to matching nodes"` (explicit paths + plan).
 
 ---
 

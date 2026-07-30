@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import type { ETLNode, Connection, FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
 import { useMappingDom, useMappingModel } from '../../api/queries'
@@ -28,16 +28,27 @@ function Canvas({
   connections,
   selectedNode,
   onSelectNode,
+  highlightIds,
 }: {
   nodes: ETLNode[]
   connections: Connection[]
   selectedNode: string | null
   onSelectNode: (id: string) => void
+  highlightIds: string[]
 }) {
   const [pan, setPan] = useState({ x: 30, y: 30 })
   const [zoom, setZoom] = useState(1)
   const dragging = useRef(false)
   const lastPan = useRef({ x: 0, y: 0 })
+
+  // Search jump (Task 5): pan to the first highlighted node whenever the
+  // match set changes (and is non-empty).
+  useEffect(() => {
+    if (highlightIds.length === 0) return
+    const f = nodes.find(n => n.id === highlightIds[0])
+    if (f) setPan({ x: 30 - f.x * zoom + 100, y: 30 - f.y * zoom + 100 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightIds.join(',')])
 
   const canvasW = Math.max(...nodes.map(n => n.x + NODE_WIDTH), 400) + 100
   const canvasH = Math.max(...nodes.map(n => n.y + getNodeHeight(n)), 300) + 100
@@ -121,7 +132,7 @@ function Canvas({
           <NodeBox
             key={n.id}
             node={n}
-            isSelected={selectedNode === n.id}
+            isSelected={selectedNode === n.id || highlightIds.includes(n.id)}
             onClick={() => onSelectNode(n.id)}
           />
         ))}
@@ -165,6 +176,16 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   )
 
   const selectedNode = graph?.nodes.find(n => n.id === selectedNodeId) ?? null
+
+  // Global search reuse (Task 5, spec §3.4 deviation — no canvas toolbar on
+  // Tab 1): matches by node name OR any port name, trimmed/lowercased query.
+  const q = searchQuery.trim().toLowerCase()
+  const matchIds = useMemo(
+    () => (graph?.nodes ?? [])
+      .filter(n => q && (n.name.toLowerCase().includes(q) || n.ports.some(p => p.name.toLowerCase().includes(q))))
+      .map(n => n.id),
+    [graph, q],
+  )
 
   const domElement = useMemo(
     () => (selectedNode && dom.data && graph
@@ -239,6 +260,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
           connections={graph.connections}
           selectedNode={selectedNodeId}
           onSelectNode={id => setSelectedNodeId(id === selectedNodeId ? null : id)}
+          highlightIds={matchIds}
         />
       ) : null}
 
