@@ -24,22 +24,30 @@ The mirror follows the same shape as the real export:
 ```
 DWH_CONTROL/
 └── LAYER_TO_LAYER/
-    └── <LAYER>/
-        └── statements.sql
+    ├── STG/statements.sql
+    ├── ODS/statements.sql
+    ├── DWH/statements.sql
+    ├── CDM/statements.sql
+    ├── RDM/statements.sql
+    ├── QDM/statements.sql
+    ├── ETL/statements.sql
+    ├── OUTPUT/statements.sql
+    └── ARCHIVE/statements.sql
 ```
 
-- `<LAYER>` is one of the corpus layer names (e.g. `CDM`, `DWH`, `ETL`, `ODS`, …) —
-  matching the top-level directories under the `xmltobq/` corpus.
-- `statements.sql` holds the layer's `LayerToLayerConfig` control statements: the SQL
-  DBM Composer/Control-M would issue to move data between that layer's source and
-  target tables.
+- Each `<LAYER>` directory (`STG`, `ODS`, `DWH`, `CDM`, `RDM`, `QDM`, `ETL`, `OUTPUT`)
+  matches a top-level directory under the `xmltobq/` corpus.
+- `statements.sql` holds the layer's `LayerToLayerConfig` control statements: one
+  `INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES (...)` per line, the
+  SQL DBM Composer/Control-M would issue to move data between that layer's source and
+  target tables. `LayerToLayerService` reads exactly these eight layer directories.
+- `ARCHIVE/statements.sql` is a decoy: it lives outside the eight layers the service
+  reads, and its one row references a recipe (`_ETL_m_SYN_DECOY_NEVER_SERVED.json`)
+  that deliberately does not exist in the corpus — proving that anything outside the
+  known layer set is ignored.
 
 ## Status
 
-No `statements.sql` files are populated yet. Generating realistic synthetic
-`LAYER_TO_LAYER/<LAYER>/statements.sql` content is scoped to **sub-project 4 —
-"Synthetic operational data"** of the ETL 360 roadmap (see
-`docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`). This Foundation task
-only establishes the directory, the fallback mechanism, and the mode reporting
-(`dwhControlMode` in `GET /api/config` and `GET /api/health`) — not the mock data
-itself.
+Each of the eight layer directories carries a mix of synthetic (`SYN`-marked, one per
+`m_SYN_*` corpus mapping) and real anonymized rows. Every non-decoy row's `recipe`
+value resolves to an `_ETL_<mapping>.json` file under `parser/src/main/resources/xmltobq`.

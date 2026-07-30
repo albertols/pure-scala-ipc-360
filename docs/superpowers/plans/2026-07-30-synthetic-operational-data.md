@@ -179,15 +179,15 @@ INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES ('CDM', 'src/main/r
 
 (Real rows' source/lookup table names may be plausible SYN-free anonymized names like the example — they describe config, not corpus files; only `recipe` must resolve against the corpus.)
 
-- [ ] **Step 1: Write the eight statements.sql files** (+ README update).
-- [ ] **Step 2: Write the decoy** — `ARCHIVE/statements.sql`, one row with recipe `_ETL_m_SYN_DECOY_NEVER_SERVED.json` (deliberately nonexistent — proves exclusion later).
-- [ ] **Step 3: Verify every non-decoy recipe resolves**
+- [x] **Step 1: Write the eight statements.sql files** (+ README update).
+- [x] **Step 2: Write the decoy** — `ARCHIVE/statements.sql`, one row with recipe `_ETL_m_SYN_DECOY_NEVER_SERVED.json` (deliberately nonexistent — proves exclusion later).
+- [x] **Step 3: Verify every non-decoy recipe resolves**
 
 ```bash
 grep -ho "_ETL_[A-Za-z0-9_]*\.json" backend/src/main/resources/mock/DWH_CONTROL/LAYER_TO_LAYER/{STG,ODS,DWH,CDM,RDM,QDM,ETL,OUTPUT}/statements.sql | sort -u | while read r; do find parser/src/main/resources/xmltobq -name "$r" | grep -q . || echo "MISSING: $r"; done
 ```
 Expected: no output.
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add backend/src/main/resources/mock/DWH_CONTROL docs/superpowers/plans/2026-07-30-synthetic-operational-data.md
