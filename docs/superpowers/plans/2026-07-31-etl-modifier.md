@@ -96,16 +96,16 @@ export function EtlCanvas(props: {
 
 `EtlCanvas` keeps importing `NodeBox, getNodeHeight, getPortY, buildPath, NODE_WIDTH` from `'../tab1/NodeBox'` (spec §3.2: NodeBox stays in tab1). Function body, JSX, pan/zoom/pill logic: byte-identical move — only the name (`Canvas`→`EtlCanvas`) and import paths change.
 
-- [ ] **Step 1: Move layout to `canvasLayout.ts`;** `mappingAdapter.ts` line 1 area gains `import { layoutNodes } from './canvasLayout.ts'` (`.ts` extension mandatory — strip-types constraint above).
-- [ ] **Step 2: Move Canvas to `EtlCanvas.tsx`;** ETLViewer renders `<EtlCanvas …/>` at the old `<Canvas …/>` call site (ETLViewer.tsx:265). No test-file edits expected: `ETLViewer.test.tsx` renders `ETLViewer`, `mappingAdapter.test.ts` imports only `toCanvas` — verify with `grep -rn "from './canvasLayout'\|Canvas" frontend/src/**/*.test.*`.
-- [ ] **Step 3: GREEN unchanged** — `cd frontend && pnpm test && npx tsc --noEmit` (all existing tests pass with zero test edits).
-- [ ] **Step 4: strip-types still loads the adapter chain** (no backend needed):
+- [x] **Step 1: Move layout to `canvasLayout.ts`;** `mappingAdapter.ts` line 1 area gains `import { layoutNodes } from './canvasLayout.ts'` (`.ts` extension mandatory — strip-types constraint above).
+- [x] **Step 2: Move Canvas to `EtlCanvas.tsx`;** ETLViewer renders `<EtlCanvas …/>` at the old `<Canvas …/>` call site (ETLViewer.tsx:265). No test-file edits expected: `ETLViewer.test.tsx` renders `ETLViewer`, `mappingAdapter.test.ts` imports only `toCanvas` — verify with `grep -rn "from './canvasLayout'\|Canvas" frontend/src/**/*.test.*`.
+- [x] **Step 3: GREEN unchanged** — `cd frontend && pnpm test && npx tsc --noEmit` (all existing tests pass with zero test edits).
+- [x] **Step 4: strip-types still loads the adapter chain** (no backend needed):
 
 ```bash
 node --experimental-strip-types -e "import('./frontend/src/api/mappingAdapter.ts').then(m => console.log(typeof m.toCanvas))"   # "function"
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/shared/EtlCanvas.tsx frontend/src/api/canvasLayout.ts \
