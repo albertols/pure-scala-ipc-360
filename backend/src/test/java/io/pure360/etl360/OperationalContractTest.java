@@ -72,4 +72,12 @@ class OperationalContractTest {
         for (var e : g.edges()) { assertThat(ids).contains(e.from()); assertThat(ids).contains(e.to()); }
         assertThat(g.nodes().stream().filter(n -> n.kind().equals("recipe")).count()).isGreaterThanOrEqualTo(18);
     }
+
+    @Test
+    void multiTargetShapeIncludesAuditTable() {   // Spec §3 Tab 5 multi-target shape (final-review I1)
+        var g = relationshipService.graph();
+        assertThat(g.nodes()).extracting(RelationshipsDto.NodeDto::id).contains("table:ETL_SYN_ORDERS_AUDIT");
+        assertThat(g.edges()).contains(new RelationshipsDto.EdgeDto(
+            "recipe:_ETL_m_SYN_ETL_ORDERS_BRIDGE.json", "table:ETL_SYN_ORDERS_AUDIT", "writes"));
+    }
 }
