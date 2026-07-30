@@ -28,7 +28,7 @@ class HealthControllerTest {
         mvc.perform(get("/api/health"))
            .andExpect(status().isOk())
            .andExpect(jsonPath("$.dwhControlMode").value(in(List.of("real", "mock", "absent"))))
-           .andExpect(jsonPath("$.composerMode").value(in(List.of("real", "absent"))));
+           .andExpect(jsonPath("$.composerMode").value(in(List.of("real", "mock", "absent"))));
     }
 
     @Test

@@ -35,7 +35,7 @@ class ConfigControllerTest {
         String body = mvc.perform(get("/api/config"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.dwhControlMode").value(in(List.of("real", "mock", "absent"))))
-            .andExpect(jsonPath("$.composerMode").value(in(List.of("real", "absent"))))
+            .andExpect(jsonPath("$.composerMode").value(in(List.of("real", "mock", "absent"))))
             .andReturn().getResponse().getContentAsString();
 
         JsonNode json = objectMapper.readTree(body);

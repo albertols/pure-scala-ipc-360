@@ -644,8 +644,8 @@ if __name__ == "__main__":
 
 (NOTE the rng discipline: every `rng` call happens in a deterministic sequence — profiles first in sorted-recipe order, then day-major/recipe-minor loops. Do not reorder calls; that changes the byte output.)
 
-- [ ] **Step 1: Write the script**, `chmod +x scripts/gen_b15_history.py`.
-- [ ] **Step 2: Generate + reproducibility proof**
+- [x] **Step 1: Write the script**, `chmod +x scripts/gen_b15_history.py`.
+- [x] **Step 2: Generate + reproducibility proof**
 
 ```bash
 python3 scripts/gen_b15_history.py
@@ -654,8 +654,8 @@ python3 scripts/gen_b15_history.py
 diff -r /tmp/b15_first backend/src/main/resources/mock/composer && echo REPRODUCIBLE
 ```
 Expected: `REPRODUCIBLE`; 14 dirs `2026_07_16`…`2026_07_29`; spot-read one CSV (SUCCESS + FAILED + empty-status rows all present across the set).
-- [ ] **Step 3: Full suite** — `mvn -q -am -pl backend test` — HealthController-area tests must still pass with `composerMode` now `"mock"` (fix any assertion that pinned `"absent"`).
-- [ ] **Step 4: Commit**
+- [x] **Step 3: Full suite** — `mvn -q -am -pl backend test` — HealthController-area tests must still pass with `composerMode` now `"mock"` (fix any assertion that pinned `"absent"`). Fixed: `ConfigControllerTest`/`HealthControllerTest` pinned `composerMode` to `{"real","absent"}`; added `"mock"` to both allowed-value lists (mode value only, mirroring the existing `dwhControlMode` list).
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/gen_b15_history.py backend/src/main/resources/mock/composer docs/superpowers/plans/2026-07-30-synthetic-operational-data.md
