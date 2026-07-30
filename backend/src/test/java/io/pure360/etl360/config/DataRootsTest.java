@@ -34,4 +34,27 @@ class DataRootsTest {
         assertThat(roots.dwhControlMode()).isEqualTo("absent");
         assertThat(roots.dwhControl()).isEmpty();
     }
+
+    @Test
+    void prefersRealComposer(@TempDir Path tmp) throws Exception {
+        Path real = Files.createDirectories(tmp.resolve("composer"));
+        var roots = new DataRoots(props(tmp, tmp.resolve("dwh"), tmp.resolve("mock")));
+        assertThat(roots.composerMode()).isEqualTo("real");
+        assertThat(roots.composer()).contains(real);
+    }
+
+    @Test
+    void fallsBackToMockComposer(@TempDir Path tmp) throws Exception {
+        Path mock = Files.createDirectories(tmp.resolve("mock/composer"));
+        var roots = new DataRoots(props(tmp, tmp.resolve("dwh"), tmp.resolve("mock")));
+        assertThat(roots.composerMode()).isEqualTo("mock");
+        assertThat(roots.composer()).contains(mock);
+    }
+
+    @Test
+    void absentWhenComposerNeitherExists(@TempDir Path tmp) {
+        var roots = new DataRoots(props(tmp, tmp.resolve("dwh"), tmp.resolve("mock")));
+        assertThat(roots.composerMode()).isEqualTo("absent");
+        assertThat(roots.composer()).isEmpty();
+    }
 }

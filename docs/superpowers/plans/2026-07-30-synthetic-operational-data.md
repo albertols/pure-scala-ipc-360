@@ -418,11 +418,11 @@ git commit -m "feat(backend): LayerToLayerService — quote-aware INSERT tokeniz
 **Interfaces:**
 - Produces: `composer(): Optional<Path>` now real→mock→absent; `composerMode(): "real"|"mock"|"absent"`. Mock tier resolves `<mockRoot>/composer`. (`/api/health` and `/api/config` already surface `composerMode` — no controller change.)
 
-- [ ] **Step 1: Failing tests** — add to `DataRootsTest` (mirror the existing dwhControl trio): real composer dir present → `"real"`; only `<mock>/composer` present → `"mock"` and `composer()` contains it; neither → `"absent"`/empty.
-- [ ] **Step 2: Run to verify failure** — `mvn -q -pl backend test -Dtest=DataRootsTest` — new tests FAIL (composer currently has no mock tier).
-- [ ] **Step 3: Implement** — extend `composer()`/`composerMode()` with the mock branch exactly like `dwhControl()`'s (`mockRoot.resolve("composer")`). While in the file, apply the parked Foundation refactor if trivial: collapse duplicated isDirectory checks into a shared `(mode, path)` helper for both roots — only if it keeps the diff small and tests green.
-- [ ] **Step 4: Run** — `mvn -q -pl backend test -Dtest=DataRootsTest` PASS, then full `mvn -q -am -pl backend test` PASS (HealthController test unaffected — mode value changes only when a mock composer dir exists, which arrives in Task 9).
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Failing tests** — add to `DataRootsTest` (mirror the existing dwhControl trio): real composer dir present → `"real"`; only `<mock>/composer` present → `"mock"` and `composer()` contains it; neither → `"absent"`/empty.
+- [x] **Step 2: Run to verify failure** — `mvn -q -pl backend test -Dtest=DataRootsTest` — new tests FAIL (composer currently has no mock tier).
+- [x] **Step 3: Implement** — extend `composer()`/`composerMode()` with the mock branch exactly like `dwhControl()`'s (`mockRoot.resolve("composer")`). While in the file, apply the parked Foundation refactor if trivial: collapse duplicated isDirectory checks into a shared `(mode, path)` helper for both roots — only if it keeps the diff small and tests green.
+- [x] **Step 4: Run** — `mvn -q -pl backend test -Dtest=DataRootsTest` PASS, then full `mvn -q -am -pl backend test` PASS (HealthController test unaffected — mode value changes only when a mock composer dir exists, which arrives in Task 9).
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/config/DataRoots.java backend/src/test/java/io/pure360/etl360/config/DataRootsTest.java docs/superpowers/plans/2026-07-30-synthetic-operational-data.md

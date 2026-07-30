@@ -45,10 +45,16 @@ public class DataRoots {
     public Optional<Path> composer() {
         Path real = props.resolvedComposerRoot();
         if (Files.isDirectory(real)) return Optional.of(real);
+        Path mock = props.resolvedMockRoot().resolve("composer");
+        if (Files.isDirectory(mock)) return Optional.of(mock);
         return Optional.empty();
     }
 
     public String composerMode() {
-        return Files.isDirectory(props.resolvedComposerRoot()) ? "real" : "absent";
+        Path real = props.resolvedComposerRoot();
+        if (Files.isDirectory(real)) return "real";
+        Path mock = props.resolvedMockRoot().resolve("composer");
+        if (Files.isDirectory(mock)) return "mock";
+        return "absent";
     }
 }
