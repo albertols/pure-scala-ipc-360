@@ -1,3 +1,5 @@
+// LEGACY FIGMA MOCK DATA — being retired tab-by-tab per docs/superpowers/specs/2026-07-29-etl360-foundation-design.md.
+// The filesystem tree is REAL now (src/api/filesystemAdapter.ts); tabs below still consume mocks until their sub-project lands.
 import type {
   FSDir, ETLNode, Connection, ETLRecipe, DDLColumn,
   OperationalCard, DagCluster, StatusType

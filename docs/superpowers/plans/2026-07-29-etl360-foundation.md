@@ -1608,7 +1608,7 @@ describe('useTree', () => {
 - Consumes: `useTree()`, `TreeNode` from Task 11; existing `FSDir`/`FSFile` from `types.ts`.
 - Produces: `toFilesystem(root: TreeNode): FSDir`; `useFilesystem(): { fs: FSDir | null, loading: boolean, error: ApiError | null }` — tabs render `fs ?? FILESYSTEM`-style fallback **only while loading**; on error they render the error state, never silently the mock.
 
-- [ ] **Step 1: Write the failing adapter test**
+- [x] **Step 1: Write the failing adapter test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -1649,9 +1649,9 @@ describe('toFilesystem', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure** — Run: `pnpm test` — Expected: FAIL, module missing.
+- [x] **Step 2: Run to verify failure** — Run: `pnpm test` — Expected: FAIL, module missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `filesystemAdapter.ts`:
 ```ts
@@ -1701,11 +1701,12 @@ In `ETLViewer.tsx` and `ETLModifier.tsx`: call the hook, pass `filesystem={fs ??
 // The filesystem tree is REAL now (src/api/filesystemAdapter.ts); tabs below still consume mocks until their sub-project lands.
 ```
 
-- [ ] **Step 4: Run tests + type-check** — Run: `pnpm test && npx tsc --noEmit` — Expected: PASS.
+- [x] **Step 4: Run tests + type-check** — Run: `pnpm test && npx tsc --noEmit` — Expected: PASS.
 
-- [ ] **Step 5: Visual verification against the contract** — run backend + `pnpm dev`, open the app: sidebar shows real layers (CDM, DWH, ETL, ODS, …) with badges/colors/indent identical in style to the prototype; search filters; Viewer/Modifier tabs otherwise unchanged (still mock canvases). Compare side-by-side with a `git stash`-free checkout of `main` if in doubt.
+- [x] **Step 5: Visual verification against the contract** — run backend + `pnpm dev`, open the app: sidebar shows real layers (CDM, DWH, ETL, ODS, …) with badges/colors/indent identical in style to the prototype; search filters; Viewer/Modifier tabs otherwise unchanged (still mock canvases). Compare side-by-side with a `git stash`-free checkout of `main` if in doubt.
+  - Automatable portion done: `pnpm dev` booted without the backend, all touched source files served 200 (no compile errors), and the no-backend loading→error path (502 from the `/api` proxy) was confirmed not to crash the app. Human eyeball sign-off on pixel-identical styling is deferred to Task 15 (acceptance sweep).
 
-- [ ] **Step 6: Commit** — `git add -A && git commit -m "feat(frontend): real corpus tree in sidebar via adapter — Figma look unchanged"`
+- [x] **Step 6: Commit** — `git add -A && git commit -m "feat(frontend): real corpus tree in sidebar via adapter — Figma look unchanged"`
 
 ---
 

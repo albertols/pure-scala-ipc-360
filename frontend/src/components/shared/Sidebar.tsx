@@ -7,6 +7,11 @@ const LAYER_COLORS: Record<string, string> = {
   SRC: '#34d399',
   TGT: '#f87171',
   root: '#4a5570',
+  DWH: '#fbbf24',  // --yellow
+  ETL: '#fb923c',  // --orange
+  QDM: '#f472b6',  // --pink
+  RDM: '#67e8f9',  // --cyan
+  STG: '#22d3ee',  // --teal
 }
 
 function FileIcon({ type }: { type: 'json' | 'xml' }) {

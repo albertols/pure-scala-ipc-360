@@ -1,9 +1,12 @@
 import { useState, useRef, useCallback } from 'react'
-import type { ETLNode, Connection, FSFile } from '../../types'
-import { MAPPINGS, FILESYSTEM } from '../../mockData'
+import type { ETLNode, Connection, FSFile, FSDir } from '../../types'
+import { MAPPINGS } from '../../mockData'
 import { Sidebar } from '../shared/Sidebar'
+import { useFilesystem } from '../shared/useFilesystem'
 import { NodeBox, getNodeHeight, getPortY, buildPath, NODE_WIDTH, NODE_STYLES } from './NodeBox'
 import { DetailPanel } from './DetailPanel'
+
+const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
 const LEGEND = [
   { type: 'source', label: 'Source' },
@@ -148,6 +151,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [activeMapping, setActiveMapping] = useState('m_DM_DWHES_TABLA_COUNT_REPORT')
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const { fs, loading, error } = useFilesystem()
 
   const mapping = MAPPINGS[activeMapping] ?? Object.values(MAPPINGS)[0]
   const selectedNode = mapping.nodes.find(n => n.id === selectedNodeId) ?? null
@@ -158,7 +162,14 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
     if (f.mapping && MAPPINGS[f.mapping]) setActiveMapping(f.mapping)
   }
 
-  const sidebarExtra = (
+  const sidebarExtra = loading ? (
+    <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 12 }}>Loading corpus…</div>
+  ) : error ? (
+    <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
+      <div>{error.title}</div>
+      {error.detail && <div>{error.detail}</div>}
+    </div>
+  ) : (
     <div style={{ borderTop: '1px solid var(--border)', padding: '10px 12px', background: 'var(--surface-2)' }}>
       <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6 }}>Active Mapping</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -184,7 +195,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
         searchQuery={searchQuery}
         selectedPath={selectedPath}
         onSelectFile={handleSelectFile}
-        filesystem={FILESYSTEM}
+        filesystem={fs ?? EMPTY_FS}
         extraContent={sidebarExtra}
       />
 

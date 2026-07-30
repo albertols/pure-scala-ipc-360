@@ -49,7 +49,7 @@ export interface FSFile {
 
 export interface FSDir {
   name: string
-  layer?: 'CDM' | 'ODS' | 'SRC' | 'TGT' | 'root'
+  layer?: string
   children: (FSDir | FSFile)[]
 }
 

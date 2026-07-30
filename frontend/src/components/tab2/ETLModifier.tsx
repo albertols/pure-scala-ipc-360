@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react'
-import type { FSFile, ETLRecipe, RecipeTransformation } from '../../types'
-import { ETL_RECIPES, DDL_SCHEMAS, FILESYSTEM } from '../../mockData'
+import type { FSFile, FSDir, ETLRecipe, RecipeTransformation } from '../../types'
+import { ETL_RECIPES, DDL_SCHEMAS } from '../../mockData'
 import { Sidebar } from '../shared/Sidebar'
+import { useFilesystem } from '../shared/useFilesystem'
 import { CopyButton } from '../shared/CopyButton'
 import { InfoTooltip } from '../shared/InfoTooltip'
 import { GCPIcon } from '../shared/GCPIcon'
+
+const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
 const TYPE_COLORS: Record<string, string> = {
   EXPRESSION: '#818cf8',
@@ -328,6 +331,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   )
   const [originalRecipes] = useState<Record<string, ETLRecipe>>(ETL_RECIPES)
   const [saved, setSaved] = useState(false)
+  const { fs, loading, error } = useFilesystem()
 
   const recipe = activeRecipeId ? recipes[activeRecipeId] : null
   const original = activeRecipeId ? originalRecipes[activeRecipeId] : null
@@ -374,21 +378,30 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
         searchQuery={searchQuery}
         selectedPath={selectedPath}
         onSelectFile={handleSelectFile}
-        filesystem={FILESYSTEM}
+        filesystem={fs ?? EMPTY_FS}
         extraContent={
-          <div style={{ borderTop: '1px solid var(--border)', padding: '10px 12px', background: 'var(--surface-2)' }}>
-            <div style={{ fontSize: 9, color: '#4a5570', marginBottom: 4 }}>Select an _ETL_*.json file to edit</div>
-            {Object.keys(ETL_RECIPES).map(id => (
-              <button key={id} onClick={() => setActiveRecipeId(id)}
-                style={{
-                  display: 'block', width: '100%', padding: '3px 6px',
-                  textAlign: 'left', background: activeRecipeId === id ? 'var(--surface-3)' : 'transparent',
-                  border: 'none', color: activeRecipeId === id ? '#e2e8f8' : '#4a5570',
-                  fontSize: 9, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                  borderRadius: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>{id}</button>
-            ))}
-          </div>
+          loading ? (
+            <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 12 }}>Loading corpus…</div>
+          ) : error ? (
+            <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
+              <div>{error.title}</div>
+              {error.detail && <div>{error.detail}</div>}
+            </div>
+          ) : (
+            <div style={{ borderTop: '1px solid var(--border)', padding: '10px 12px', background: 'var(--surface-2)' }}>
+              <div style={{ fontSize: 9, color: '#4a5570', marginBottom: 4 }}>Select an _ETL_*.json file to edit</div>
+              {Object.keys(ETL_RECIPES).map(id => (
+                <button key={id} onClick={() => setActiveRecipeId(id)}
+                  style={{
+                    display: 'block', width: '100%', padding: '3px 6px',
+                    textAlign: 'left', background: activeRecipeId === id ? 'var(--surface-3)' : 'transparent',
+                    border: 'none', color: activeRecipeId === id ? '#e2e8f8' : '#4a5570',
+                    fontSize: 9, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+                    borderRadius: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>{id}</button>
+              ))}
+            </div>
+          )
         }
       />
 
