@@ -1,0 +1,540 @@
+{
+    "creationDate": "01/07/2026 00:00:00",
+    "repositoryVersion": "188.97",
+    "repository": {
+        "name": "REP_SYN",
+        "version": "188",
+        "codepage": "MS1252",
+        "databaseType": "Oracle",
+        "folder": {
+            "name": "SYN_ORDERS",
+            "group": "",
+            "owner": "syn",
+            "shared": "NOTSHARED",
+            "description": "Synthetic scenario family",
+            "permissions": "rwx------",
+            "uuid": "00000000-0000-0000-0000-000000000403",
+            "sources": [
+                {
+                    "name": "STG_L_SYN_ORDERS",
+                    "businessname": "",
+                    "databasetype": "Oracle",
+                    "dbdname": "SYNDB",
+                    "description": "",
+                    "objectversion": "",
+                    "ownername": "SYN",
+                    "versionnumber": "",
+                    "sourceFields": [
+                        {
+                            "businessname": "",
+                            "dataType": "string",
+                            "description": "",
+                            "fieldnumber": "1",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "ORDER_ID",
+                            "nullable": "NOTNULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "20",
+                            "scale": "0",
+                            "usageflags": "",
+                            "nestedFields": []
+                        },
+                        {
+                            "businessname": "",
+                            "dataType": "string",
+                            "description": "",
+                            "fieldnumber": "2",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "CUSTOMER_ID",
+                            "nullable": "NOTNULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "20",
+                            "scale": "0",
+                            "usageflags": "",
+                            "nestedFields": []
+                        },
+                        {
+                            "businessname": "",
+                            "dataType": "number",
+                            "description": "",
+                            "fieldnumber": "3",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "AMOUNT",
+                            "nullable": "NULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "18",
+                            "scale": "2",
+                            "usageflags": "",
+                            "nestedFields": []
+                        },
+                        {
+                            "businessname": "",
+                            "dataType": "string",
+                            "description": "",
+                            "fieldnumber": "4",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "CURRENCY_CODE",
+                            "nullable": "NULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "3",
+                            "scale": "0",
+                            "usageflags": "",
+                            "nestedFields": []
+                        }
+                    ],
+                    "metadataExtensions": []
+                },
+                {
+                    "name": "SYN_LKP_CURRENCY",
+                    "businessname": "",
+                    "databasetype": "Oracle",
+                    "dbdname": "SYNDB",
+                    "description": "",
+                    "objectversion": "",
+                    "ownername": "SYN",
+                    "versionnumber": "",
+                    "sourceFields": [
+                        {
+                            "businessname": "",
+                            "dataType": "string",
+                            "description": "",
+                            "fieldnumber": "1",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "CURRENCY_CODE",
+                            "nullable": "NOTNULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "3",
+                            "scale": "0",
+                            "usageflags": "",
+                            "nestedFields": []
+                        },
+                        {
+                            "businessname": "",
+                            "dataType": "number",
+                            "description": "",
+                            "fieldnumber": "2",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "FX_RATE",
+                            "nullable": "NULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "9",
+                            "scale": "4",
+                            "usageflags": "",
+                            "nestedFields": []
+                        }
+                    ],
+                    "metadataExtensions": []
+                }
+            ],
+            "targets": [
+                {
+                    "businessName": "",
+                    "constraint": "",
+                    "databaseType": "Oracle",
+                    "description": "",
+                    "name": "ODS_SYN_ORDERS",
+                    "objectVersion": "",
+                    "tableOptions": "",
+                    "versionNumber": "",
+                    "targetFields": [
+                        {
+                            "businessName": "",
+                            "dataType": "varchar2",
+                            "description": "",
+                            "fieldNumber": 1,
+                            "keyType": "",
+                            "name": "ORDER_ID",
+                            "nullable": "NOTNULL",
+                            "pictureText": "",
+                            "precision": "20",
+                            "scale": "0"
+                        },
+                        {
+                            "businessName": "",
+                            "dataType": "varchar2",
+                            "description": "",
+                            "fieldNumber": 2,
+                            "keyType": "",
+                            "name": "CUSTOMER_ID",
+                            "nullable": "NOTNULL",
+                            "pictureText": "",
+                            "precision": "20",
+                            "scale": "0"
+                        },
+                        {
+                            "businessName": "",
+                            "dataType": "number",
+                            "description": "",
+                            "fieldNumber": 3,
+                            "keyType": "",
+                            "name": "AMOUNT",
+                            "nullable": "NULL",
+                            "pictureText": "",
+                            "precision": "18",
+                            "scale": "2"
+                        }
+                    ]
+                }
+            ],
+            "transformations": [],
+            "mapplets": [],
+            "mappings": [
+                {
+                    "description": "Synthetic ODS orders currency conversion",
+                    "isValid": "YES",
+                    "name": "m_SYN_ODS_ORDERS",
+                    "objectVersion": "1",
+                    "versionNumber": "1",
+                    "transformations": [
+                        {
+                            "description": "",
+                            "name": "LKP_SYN_CURRENCY",
+                            "objectVersion": "1",
+                            "reusable": "NO",
+                            "typ": "Lookup Procedure",
+                            "templateName": "",
+                            "versionNumber": "1",
+                            "transformFields": [
+                                {
+                                    "dataType": "string",
+                                    "name": "in_CURRENCY_CODE",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "INPUT",
+                                    "precision": "3",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "0"
+                                },
+                                {
+                                    "dataType": "string",
+                                    "name": "CURRENCY_CODE",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "LOOKUP",
+                                    "precision": "3",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "0"
+                                },
+                                {
+                                    "dataType": "decimal",
+                                    "name": "FX_RATE",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "LOOKUP/OUTPUT",
+                                    "precision": "9",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "4"
+                                }
+                            ],
+                            "tableAttributeFields": [
+                                {
+                                    "name": "Lookup table name",
+                                    "value": "SYN_LKP_CURRENCY"
+                                },
+                                {
+                                    "name": "Lookup condition",
+                                    "value": "CURRENCY_CODE = in_CURRENCY_CODE"
+                                },
+                                {
+                                    "name": "Lookup policy on multiple match",
+                                    "value": "Use First Value"
+                                }
+                            ],
+                            "groups": [],
+                            "metadataExtensions": [],
+                            "fieldDependencies": [],
+                            "sourceFields": []
+                        },
+                        {
+                            "description": "",
+                            "name": "EXP_SYN_ORDERS_CONVERT",
+                            "objectVersion": "1",
+                            "reusable": "NO",
+                            "typ": "Expression",
+                            "templateName": "",
+                            "versionNumber": "1",
+                            "transformFields": [
+                                {
+                                    "dataType": "string",
+                                    "name": "ORDER_ID",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "INPUT/OUTPUT",
+                                    "precision": "20",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "0"
+                                },
+                                {
+                                    "dataType": "string",
+                                    "name": "CUSTOMER_ID",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "INPUT/OUTPUT",
+                                    "precision": "20",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "0"
+                                },
+                                {
+                                    "dataType": "decimal",
+                                    "name": "AMOUNT",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "INPUT",
+                                    "precision": "18",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "2"
+                                },
+                                {
+                                    "dataType": "decimal",
+                                    "name": "FX_RATE",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "INPUT",
+                                    "precision": "9",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "4"
+                                },
+                                {
+                                    "dataType": "decimal",
+                                    "name": "AMOUNT_CONVERTED",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "ROUND(AMOUNT * FX_RATE, 2)",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "OUTPUT",
+                                    "precision": "18",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "2"
+                                }
+                            ],
+                            "tableAttributeFields": [],
+                            "groups": [],
+                            "metadataExtensions": [],
+                            "fieldDependencies": [],
+                            "sourceFields": []
+                        }
+                    ],
+                    "instances": [
+                        {
+                            "description": "",
+                            "name": "STG_L_SYN_ORDERS",
+                            "reusable": "",
+                            "transformationName": "STG_L_SYN_ORDERS",
+                            "transformationType": "Source Definition",
+                            "tType": "SOURCE",
+                            "tableAttributeFields": []
+                        },
+                        {
+                            "description": "",
+                            "name": "LKP_SYN_CURRENCY",
+                            "reusable": "NO",
+                            "transformationName": "LKP_SYN_CURRENCY",
+                            "transformationType": "Lookup Procedure",
+                            "tType": "TRANSFORMATION",
+                            "tableAttributeFields": []
+                        },
+                        {
+                            "description": "",
+                            "name": "EXP_SYN_ORDERS_CONVERT",
+                            "reusable": "NO",
+                            "transformationName": "EXP_SYN_ORDERS_CONVERT",
+                            "transformationType": "Expression",
+                            "tType": "TRANSFORMATION",
+                            "tableAttributeFields": []
+                        },
+                        {
+                            "description": "",
+                            "name": "ODS_SYN_ORDERS",
+                            "reusable": "",
+                            "transformationName": "ODS_SYN_ORDERS",
+                            "transformationType": "Target Definition",
+                            "tType": "TARGET",
+                            "tableAttributeFields": []
+                        }
+                    ],
+                    "connectors": [
+                        {
+                            "fromField": "ORDER_ID",
+                            "fromInstance": "STG_L_SYN_ORDERS",
+                            "fromInstanceType": "Source Definition",
+                            "toField": "ORDER_ID",
+                            "toInstance": "EXP_SYN_ORDERS_CONVERT",
+                            "toInstanceType": "Expression"
+                        },
+                        {
+                            "fromField": "CUSTOMER_ID",
+                            "fromInstance": "STG_L_SYN_ORDERS",
+                            "fromInstanceType": "Source Definition",
+                            "toField": "CUSTOMER_ID",
+                            "toInstance": "EXP_SYN_ORDERS_CONVERT",
+                            "toInstanceType": "Expression"
+                        },
+                        {
+                            "fromField": "AMOUNT",
+                            "fromInstance": "STG_L_SYN_ORDERS",
+                            "fromInstanceType": "Source Definition",
+                            "toField": "AMOUNT",
+                            "toInstance": "EXP_SYN_ORDERS_CONVERT",
+                            "toInstanceType": "Expression"
+                        },
+                        {
+                            "fromField": "CURRENCY_CODE",
+                            "fromInstance": "STG_L_SYN_ORDERS",
+                            "fromInstanceType": "Source Definition",
+                            "toField": "in_CURRENCY_CODE",
+                            "toInstance": "LKP_SYN_CURRENCY",
+                            "toInstanceType": "Lookup Procedure"
+                        },
+                        {
+                            "fromField": "FX_RATE",
+                            "fromInstance": "LKP_SYN_CURRENCY",
+                            "fromInstanceType": "Lookup Procedure",
+                            "toField": "FX_RATE",
+                            "toInstance": "EXP_SYN_ORDERS_CONVERT",
+                            "toInstanceType": "Expression"
+                        },
+                        {
+                            "fromField": "ORDER_ID",
+                            "fromInstance": "EXP_SYN_ORDERS_CONVERT",
+                            "fromInstanceType": "Expression",
+                            "toField": "ORDER_ID",
+                            "toInstance": "ODS_SYN_ORDERS",
+                            "toInstanceType": "Target Definition"
+                        },
+                        {
+                            "fromField": "CUSTOMER_ID",
+                            "fromInstance": "EXP_SYN_ORDERS_CONVERT",
+                            "fromInstanceType": "Expression",
+                            "toField": "CUSTOMER_ID",
+                            "toInstance": "ODS_SYN_ORDERS",
+                            "toInstanceType": "Target Definition"
+                        },
+                        {
+                            "fromField": "AMOUNT_CONVERTED",
+                            "fromInstance": "EXP_SYN_ORDERS_CONVERT",
+                            "fromInstanceType": "Expression",
+                            "toField": "AMOUNT",
+                            "toInstance": "ODS_SYN_ORDERS",
+                            "toInstanceType": "Target Definition"
+                        }
+                    ],
+                    "targetLoader": [
+                        {
+                            "order": "1",
+                            "targetInstance": "ODS_SYN_ORDERS"
+                        }
+                    ],
+                    "mappingVariables": []
+                }
+            ]
+        }
+    }
+}

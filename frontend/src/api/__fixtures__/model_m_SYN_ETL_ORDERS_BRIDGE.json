@@ -1,0 +1,421 @@
+{
+    "creationDate": "01/07/2026 00:00:00",
+    "repositoryVersion": "188.97",
+    "repository": {
+        "name": "REP_SYN",
+        "version": "188",
+        "codepage": "MS1252",
+        "databaseType": "Oracle",
+        "folder": {
+            "name": "SYN_ORDERS",
+            "group": "",
+            "owner": "syn",
+            "shared": "NOTSHARED",
+            "description": "Synthetic scenario family",
+            "permissions": "rwx------",
+            "uuid": "00000000-0000-0000-0000-000000000409",
+            "sources": [
+                {
+                    "name": "ODS_SYN_ORDERS",
+                    "businessname": "",
+                    "databasetype": "Oracle",
+                    "dbdname": "SYNDB",
+                    "description": "",
+                    "objectversion": "",
+                    "ownername": "SYN",
+                    "versionnumber": "",
+                    "sourceFields": [
+                        {
+                            "businessname": "",
+                            "dataType": "string",
+                            "description": "",
+                            "fieldnumber": "1",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "ORDER_ID",
+                            "nullable": "NOTNULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "20",
+                            "scale": "0",
+                            "usageflags": "",
+                            "nestedFields": []
+                        },
+                        {
+                            "businessname": "",
+                            "dataType": "string",
+                            "description": "",
+                            "fieldnumber": "2",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "CUSTOMER_ID",
+                            "nullable": "NOTNULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "20",
+                            "scale": "0",
+                            "usageflags": "",
+                            "nestedFields": []
+                        },
+                        {
+                            "businessname": "",
+                            "dataType": "number",
+                            "description": "",
+                            "fieldnumber": "3",
+                            "fieldproperty": "",
+                            "fieldType": "",
+                            "hidden": "",
+                            "keyType": "",
+                            "length": "",
+                            "level": "",
+                            "name": "AMOUNT",
+                            "nullable": "NULL",
+                            "occurs": "",
+                            "offset": "",
+                            "physicallength": "",
+                            "physicaloffset": "",
+                            "picturetext": "",
+                            "precision": "18",
+                            "scale": "2",
+                            "usageflags": "",
+                            "nestedFields": []
+                        }
+                    ],
+                    "metadataExtensions": []
+                }
+            ],
+            "targets": [
+                {
+                    "businessName": "",
+                    "constraint": "",
+                    "databaseType": "Oracle",
+                    "description": "",
+                    "name": "ETL_SYN_ORDERS_BRIDGE",
+                    "objectVersion": "",
+                    "tableOptions": "",
+                    "versionNumber": "",
+                    "targetFields": [
+                        {
+                            "businessName": "",
+                            "dataType": "varchar2",
+                            "description": "",
+                            "fieldNumber": 1,
+                            "keyType": "",
+                            "name": "ORDER_ID_PADDED",
+                            "nullable": "NOTNULL",
+                            "pictureText": "",
+                            "precision": "20",
+                            "scale": "0"
+                        },
+                        {
+                            "businessName": "",
+                            "dataType": "varchar2",
+                            "description": "",
+                            "fieldNumber": 2,
+                            "keyType": "",
+                            "name": "CUSTOMER_ID",
+                            "nullable": "NOTNULL",
+                            "pictureText": "",
+                            "precision": "20",
+                            "scale": "0"
+                        },
+                        {
+                            "businessName": "",
+                            "dataType": "number",
+                            "description": "",
+                            "fieldNumber": 3,
+                            "keyType": "",
+                            "name": "AMOUNT",
+                            "nullable": "NULL",
+                            "pictureText": "",
+                            "precision": "18",
+                            "scale": "2"
+                        }
+                    ]
+                },
+                {
+                    "businessName": "",
+                    "constraint": "",
+                    "databaseType": "Oracle",
+                    "description": "",
+                    "name": "ETL_SYN_ORDERS_AUDIT",
+                    "objectVersion": "",
+                    "tableOptions": "",
+                    "versionNumber": "",
+                    "targetFields": [
+                        {
+                            "businessName": "",
+                            "dataType": "varchar2",
+                            "description": "",
+                            "fieldNumber": 1,
+                            "keyType": "",
+                            "name": "ORDER_ID_PADDED",
+                            "nullable": "NOTNULL",
+                            "pictureText": "",
+                            "precision": "20",
+                            "scale": "0"
+                        },
+                        {
+                            "businessName": "",
+                            "dataType": "varchar2",
+                            "description": "",
+                            "fieldNumber": 2,
+                            "keyType": "",
+                            "name": "CUSTOMER_ID",
+                            "nullable": "NOTNULL",
+                            "pictureText": "",
+                            "precision": "20",
+                            "scale": "0"
+                        },
+                        {
+                            "businessName": "",
+                            "dataType": "number",
+                            "description": "",
+                            "fieldNumber": 3,
+                            "keyType": "",
+                            "name": "AMOUNT",
+                            "nullable": "NULL",
+                            "pictureText": "",
+                            "precision": "18",
+                            "scale": "2"
+                        }
+                    ]
+                }
+            ],
+            "transformations": [],
+            "mapplets": [],
+            "mappings": [
+                {
+                    "description": "Synthetic ETL orders bridge (dual target)",
+                    "isValid": "YES",
+                    "name": "m_SYN_ETL_ORDERS_BRIDGE",
+                    "objectVersion": "1",
+                    "versionNumber": "1",
+                    "transformations": [
+                        {
+                            "description": "",
+                            "name": "EXP_SYN_ORDERS_BRIDGE",
+                            "objectVersion": "1",
+                            "reusable": "NO",
+                            "typ": "Expression",
+                            "templateName": "",
+                            "versionNumber": "1",
+                            "transformFields": [
+                                {
+                                    "dataType": "string",
+                                    "name": "ORDER_ID",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "INPUT",
+                                    "precision": "20",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "0"
+                                },
+                                {
+                                    "dataType": "string",
+                                    "name": "CUSTOMER_ID",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "INPUT/OUTPUT",
+                                    "precision": "20",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "0"
+                                },
+                                {
+                                    "dataType": "decimal",
+                                    "name": "AMOUNT",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "INPUT/OUTPUT",
+                                    "precision": "18",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "2"
+                                },
+                                {
+                                    "dataType": "string",
+                                    "name": "ORDER_ID_PADDED",
+                                    "defaultValue": "",
+                                    "description": "",
+                                    "group": "",
+                                    "expression": "LPAD(ORDER_ID, 20, '0')",
+                                    "expressionType": "",
+                                    "mappletGroup": "",
+                                    "pictureText": "",
+                                    "portType": "OUTPUT",
+                                    "precision": "20",
+                                    "refField": "",
+                                    "refInstanceType": "",
+                                    "refSourceField": "",
+                                    "scale": "0"
+                                }
+                            ],
+                            "tableAttributeFields": [],
+                            "groups": [],
+                            "metadataExtensions": [],
+                            "fieldDependencies": [],
+                            "sourceFields": []
+                        }
+                    ],
+                    "instances": [
+                        {
+                            "description": "",
+                            "name": "ODS_SYN_ORDERS",
+                            "reusable": "",
+                            "transformationName": "ODS_SYN_ORDERS",
+                            "transformationType": "Source Definition",
+                            "tType": "SOURCE",
+                            "tableAttributeFields": []
+                        },
+                        {
+                            "description": "",
+                            "name": "EXP_SYN_ORDERS_BRIDGE",
+                            "reusable": "NO",
+                            "transformationName": "EXP_SYN_ORDERS_BRIDGE",
+                            "transformationType": "Expression",
+                            "tType": "TRANSFORMATION",
+                            "tableAttributeFields": []
+                        },
+                        {
+                            "description": "",
+                            "name": "ETL_SYN_ORDERS_BRIDGE",
+                            "reusable": "",
+                            "transformationName": "ETL_SYN_ORDERS_BRIDGE",
+                            "transformationType": "Target Definition",
+                            "tType": "TARGET",
+                            "tableAttributeFields": []
+                        },
+                        {
+                            "description": "",
+                            "name": "ETL_SYN_ORDERS_AUDIT",
+                            "reusable": "",
+                            "transformationName": "ETL_SYN_ORDERS_AUDIT",
+                            "transformationType": "Target Definition",
+                            "tType": "TARGET",
+                            "tableAttributeFields": []
+                        }
+                    ],
+                    "connectors": [
+                        {
+                            "fromField": "ORDER_ID",
+                            "fromInstance": "ODS_SYN_ORDERS",
+                            "fromInstanceType": "Source Definition",
+                            "toField": "ORDER_ID",
+                            "toInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "toInstanceType": "Expression"
+                        },
+                        {
+                            "fromField": "CUSTOMER_ID",
+                            "fromInstance": "ODS_SYN_ORDERS",
+                            "fromInstanceType": "Source Definition",
+                            "toField": "CUSTOMER_ID",
+                            "toInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "toInstanceType": "Expression"
+                        },
+                        {
+                            "fromField": "AMOUNT",
+                            "fromInstance": "ODS_SYN_ORDERS",
+                            "fromInstanceType": "Source Definition",
+                            "toField": "AMOUNT",
+                            "toInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "toInstanceType": "Expression"
+                        },
+                        {
+                            "fromField": "ORDER_ID_PADDED",
+                            "fromInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "fromInstanceType": "Expression",
+                            "toField": "ORDER_ID_PADDED",
+                            "toInstance": "ETL_SYN_ORDERS_BRIDGE",
+                            "toInstanceType": "Target Definition"
+                        },
+                        {
+                            "fromField": "CUSTOMER_ID",
+                            "fromInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "fromInstanceType": "Expression",
+                            "toField": "CUSTOMER_ID",
+                            "toInstance": "ETL_SYN_ORDERS_BRIDGE",
+                            "toInstanceType": "Target Definition"
+                        },
+                        {
+                            "fromField": "AMOUNT",
+                            "fromInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "fromInstanceType": "Expression",
+                            "toField": "AMOUNT",
+                            "toInstance": "ETL_SYN_ORDERS_BRIDGE",
+                            "toInstanceType": "Target Definition"
+                        },
+                        {
+                            "fromField": "ORDER_ID_PADDED",
+                            "fromInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "fromInstanceType": "Expression",
+                            "toField": "ORDER_ID_PADDED",
+                            "toInstance": "ETL_SYN_ORDERS_AUDIT",
+                            "toInstanceType": "Target Definition"
+                        },
+                        {
+                            "fromField": "CUSTOMER_ID",
+                            "fromInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "fromInstanceType": "Expression",
+                            "toField": "CUSTOMER_ID",
+                            "toInstance": "ETL_SYN_ORDERS_AUDIT",
+                            "toInstanceType": "Target Definition"
+                        },
+                        {
+                            "fromField": "AMOUNT",
+                            "fromInstance": "EXP_SYN_ORDERS_BRIDGE",
+                            "fromInstanceType": "Expression",
+                            "toField": "AMOUNT",
+                            "toInstance": "ETL_SYN_ORDERS_AUDIT",
+                            "toInstanceType": "Target Definition"
+                        }
+                    ],
+                    "targetLoader": [
+                        {
+                            "order": "1",
+                            "targetInstance": "ETL_SYN_ORDERS_BRIDGE"
+                        },
+                        {
+                            "order": "2",
+                            "targetInstance": "ETL_SYN_ORDERS_AUDIT"
+                        }
+                    ],
+                    "mappingVariables": []
+                }
+            ]
+        }
+    }
+}

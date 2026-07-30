@@ -42,7 +42,7 @@ export function toCanvas(model: MappingModel, mappingPath: string): CanvasGraph
 // ETLNode/Connection/Port/NodeType — import type from '../types'
 ```
 
-- [ ] **Step 1: Capture fixtures.** Boot the backend (install-then-run pattern), then:
+- [x] **Step 1: Capture fixtures.** Boot the backend (install-then-run pattern), then:
 
 ```bash
 for m in "DWH/m_SYN_DWH_ORDERS_FACT" "ODS/m_SYN_ODS_ORDERS" "ETL/m_SYN_ETL_ORDERS_BRIDGE" "CDM/m_DM_INFOHUB_BIZLINK"; do
@@ -52,7 +52,7 @@ done
 ```
 Kill the backend (verify dead). Fixtures are anonymized/SYN already — committable.
 
-- [ ] **Step 2: Write the failing test** (`mappingAdapter.test.ts`):
+- [x] **Step 2: Write the failing test** (`mappingAdapter.test.ts`):
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -115,9 +115,9 @@ describe('toCanvas — nodes, kinds, ports', () => {
 })
 ```
 
-- [ ] **Step 3: Run to verify failure** — `cd frontend && pnpm test` — FAIL, module missing.
+- [x] **Step 3: Run to verify failure** — `cd frontend && pnpm test` — FAIL, module missing.
 
-- [ ] **Step 4: Implement `mappingAdapter.ts`.** Rules (all reads null-safe — every DTO field is optional):
+- [x] **Step 4: Implement `mappingAdapter.ts`.** Rules (all reads null-safe — every DTO field is optional):
 
 ```ts
 import type { components } from './types.gen'
@@ -139,8 +139,8 @@ export type MappingModelT = components['schemas']['MappingModelDto']
 4. **Connections** — `mapping.connectors ?? []` → `{fromNode: fromInstance, fromPort: fromField, toNode: toInstance, toPort: toField}`, dropping (with a dev-console-free silent skip) any connector whose endpoints reference instances that don't exist.
 5. x/y: Task 2 (this task sets `x: 0, y: 0`).
 
-- [ ] **Step 5: PASS + tsc** — `pnpm test && npx tsc --noEmit`.
-- [ ] **Step 6: Commit**
+- [x] **Step 5: PASS + tsc** — `pnpm test && npx tsc --noEmit`.
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/api/__fixtures__ frontend/src/api/mappingAdapter.ts frontend/src/api/mappingAdapter.test.ts docs/superpowers/plans/2026-07-30-ipc-etl-viewer.md
