@@ -215,14 +215,14 @@ export function fieldsOf(t: RecipeTargetJson | undefined): RecipeFieldJson[]   /
 export function recipeToCanvas(recipe: RecipeJson, recipePath: string): CanvasGraph
 ```
 
-- [ ] **Step 1: Capture fixtures** (corpus files ARE the payload — no backend boot; anonymized, committable):
+- [x] **Step 1: Capture fixtures** (corpus files ARE the payload — no backend boot; anonymized, committable):
 
 ```bash
 cp parser/src/main/resources/xmltobq/CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json frontend/src/api/__fixtures__/recipe_m_DM_INFOHUB_BIZLINK.json
 cp parser/src/main/resources/xmltobq/ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json frontend/src/api/__fixtures__/recipe_m_SYN_ODS_ORDERS.json
 ```
 
-- [ ] **Step 2: Failing test:**
+- [x] **Step 2: Failing test:**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -280,12 +280,12 @@ describe('recipeToCanvas — nodes, kinds, ports', () => {
 })
 ```
 
-- [ ] **Step 3: RED** (module missing) **→ Step 4: implement.** Rules (all reads null-safe):
+- [x] **Step 3: RED** (module missing) **→ Step 4: implement.** Rules (all reads null-safe):
   1. **Kind map** `RECIPE_KIND: Record<string, NodeType>` = `sourceQualifier→sq`, `filter→filter`, `aggregator→aggregator`, `router→router`, `joinerInput→joiner`, `joiner→joiner`. **Fixed labels** (binding spec §5 values — NOT derived): `unionInput/union→'UNI'`, `normalizer→'NRM'`, `java→'JAV'`, `storedProcedure→'STO'`, intermediate `table→'TBL'` — all `type: 'expression'`. Anything else (corrupted values like `BERYLFALLS`) → `type: 'expression'`, label = `typ.replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()` (mirrors `mappingAdapter.ts:52-54`).
   2. **Target vs intermediate (explicit spec rule):** step target `type === 'table'` AND `name ∈ table.targetTableNames` ⇒ kind `target` (ports direction `IN`); `table`-typed but not listed ⇒ intermediate `expression`/`TBL`. All non-target steps get ports direction `IN/OUT` from `fieldsOf(target)`; `dataType` = field `dataType ?? ''`.
   3. **Nodes:** one per unique `step.target.name`; PLUS one kind-`source` node per unique `sources[].name` of `type === 'table'` **that doesn't already have a step-target node** (id = name; ids must stay unique — sweep enforces). Source OUT ports = union of `F` over every dot-ref `T.F` in the whole recipe whose `T` resolves to that node (exact, else case-insensitive — the `FF_BIZLINK`→`ff_BIZLINK` rescue). Ref collection walks every field `transformation` recursively: `{source}` collects; `{parameters}` recurses; a Field-shaped parameter (`{transformation}` present) recurses into its `.transformation` (module-private `collectRefs(recipe): {table: string, field: string, toStep: string, toField: string}[]` — Task 5 reuses it for edges).
   4. `id`/`name` = recipe names verbatim; `properties` = flat non-blank scalars of the target/source object (type, name, plus e.g. `sourceFilter`); `file` = recipePath basename; `x: 0, y: 0` (layout in Task 5); `connections: []` for now; `mappingNames: [basename]`, `renderedMapping: basename`.
-- [ ] **Step 5: GREEN + tsc → Step 6: Commit**
+- [x] **Step 5: GREEN + tsc → Step 6: Commit**
 
 ```bash
 git add frontend/src/api/__fixtures__/recipe_m_DM_INFOHUB_BIZLINK.json \
