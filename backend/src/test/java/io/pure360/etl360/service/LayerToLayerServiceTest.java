@@ -33,7 +33,7 @@ class LayerToLayerServiceTest {
     @Test
     void parsesRowsSkipsMalformedIgnoresNonLayerDirs() {
         LayerToLayerService s = service();
-        assertThat(s.entries()).hasSize(2);            // 3 rows - 1 malformed; ARCHIVE ignored
+        assertThat(s.entries()).hasSize(3);            // 4 rows - 1 malformed; ARCHIVE ignored
         assertThat(s.skippedRows()).isEqualTo(1);
         LayerToLayerEntryDto full = s.entries().get(0);
         assertThat(full.layer()).isEqualTo("ODS");
@@ -80,7 +80,7 @@ class LayerToLayerServiceTest {
             .isInstanceOf(RuntimeException.class);
         // ...but the service catches it per-row and merely counts it, never propagating.
         LayerToLayerService s = service();
-        assertThat(s.entries()).hasSize(2);
+        assertThat(s.entries()).hasSize(3);
         assertThat(s.skippedRows()).isEqualTo(1);
     }
 

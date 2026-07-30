@@ -531,9 +531,11 @@ public record RelationshipsDto(List<NodeDto> nodes, List<EdgeDto> edges, MetaDto
 
 Build rules: per entry → recipe node `id="recipe:"+recipe` (`layer`, `workflow`, `executionOrder`, `mappingPath` = corpus-relative path minus extension when the recipe exists in `allRecipePaths()` — derive from the recipe path's parent dir — `hasRecipe` accordingly); table node `id="table:"+NAME` for target, each source table, each lookup (`kind:"table"`, `layer` = the entry's layer for its target, sources keep the layer of the entry that WRITES them if seen, else the referencing entry's layer). Edges: source table→recipe (`source`), lookup table→recipe (`lookup`), recipe→target table (`writes`; `writeMode`/`partitionType` land on the TARGET table node from `targets_write_mode`/`target_partition` matching rows). Nodes deduped by id (first-writer wins for metadata); edges deduped exactly. `meta.layers` = distinct entry layers, sorted.
 
-- [ ] **Step 1: Failing test** — service built on the Task 4 fixture roots + real `CorpusService` over the fixture corpus; assert: node/edge counts for the 2-entry fixture, every edge endpoint exists in nodes, the recipe referencing a fixture-corpus recipe has `hasRecipe=true` + correct `mappingPath`, meta.skippedRows==1.
-- [ ] **Step 2: Verify failure → Step 3: Implement → Step 4: PASS + full suite.**
-- [ ] **Step 5: Commit** — `git commit -m "feat(backend): relationship graph service — tables+recipes nodes, source/lookup/writes edges"` (stage the three files + plan).
+- [x] **Step 1: Failing test** — service built on the Task 4 fixture roots + real `CorpusService` over the fixture corpus; assert: node/edge counts for the 2-entry fixture, every edge endpoint exists in nodes, the recipe referencing a fixture-corpus recipe has `hasRecipe=true` + correct `mappingPath`, meta.skippedRows==1. (Fixture was extended to a 3-entry case — see note below.)
+- [x] **Step 2: Verify failure → Step 3: Implement → Step 4: PASS + full suite.**
+- [x] **Step 5: Commit** — `git commit -m "feat(backend): relationship graph service — tables+recipes nodes, source/lookup/writes edges"` (stage the three files + plan).
+
+Note: the Task 4 fixture (`fixture-mock/DWH_CONTROL/LAYER_TO_LAYER/ODS/statements.sql`) had no row whose recipe matched a fixture-corpus recipe, so a third valid row (`_ETL_m_FIXTURE.json` → `TGT_FIXTURE`, matching `fixture-corpus/CDM/m_FIXTURE/_ETL_m_FIXTURE.json`) was added to exercise the `hasRecipe=true` path. `LayerToLayerServiceTest` entry-count assertions were updated from 2→3 accordingly (skipped-row count unchanged at 1).
 
 ---
 
