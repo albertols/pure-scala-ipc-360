@@ -155,13 +155,58 @@ export function Sidebar({
   onSelectFile,
   filesystem,
   extraContent,
+  collapsed = false,
+  onToggleCollapse,
 }: {
   searchQuery: string
   selectedPath: string | null
   onSelectFile: (f: FSFile) => void
   filesystem: FSDir
   extraContent?: React.ReactNode
+  collapsed?: boolean
+  onToggleCollapse?: () => void
 }) {
+  if (collapsed) {
+    return (
+      <div style={{
+        width: 28,
+        flexShrink: 0,
+        background: 'var(--surface)',
+        borderRight: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        overflow: 'hidden',
+      }}>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ marginTop: 10 }}>
+          <rect x="1" y="1" width="11" height="11" rx="2" stroke="#4a5570" strokeWidth="1.2" fill="none" />
+          <line x1="1" y1="5" x2="12" y2="5" stroke="#4a5570" strokeWidth="1.2" />
+          <line x1="5" y1="5" x2="5" y2="12" stroke="#4a5570" strokeWidth="1.2" />
+        </svg>
+        {onToggleCollapse && (
+          <button
+            aria-label="Expand explorer"
+            onClick={onToggleCollapse}
+            style={{
+              marginTop: 10,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M3 1l4 4-4 4" stroke="#7b88aa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div style={{
       width: 240,
@@ -188,6 +233,26 @@ export function Sidebar({
         <span style={{ fontSize: 10, fontWeight: 600, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           Explorer
         </span>
+        {onToggleCollapse && (
+          <button
+            aria-label="Collapse explorer"
+            onClick={onToggleCollapse}
+            style={{
+              marginLeft: 'auto',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M7 1L3 5l4 4" stroke="#7b88aa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* tree */}

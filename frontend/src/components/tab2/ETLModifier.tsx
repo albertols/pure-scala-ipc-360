@@ -331,6 +331,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   )
   const [originalRecipes] = useState<Record<string, ETLRecipe>>(ETL_RECIPES)
   const [saved, setSaved] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { fs, loading, error } = useFilesystem()
 
   const recipe = activeRecipeId ? recipes[activeRecipeId] : null
@@ -379,6 +380,8 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
         selectedPath={selectedPath}
         onSelectFile={handleSelectFile}
         filesystem={fs ?? EMPTY_FS}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(c => !c)}
         extraContent={
           loading ? (
             <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 12 }}>Loading corpus…</div>

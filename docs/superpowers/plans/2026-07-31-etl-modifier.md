@@ -139,7 +139,7 @@ export function Sidebar(props: {
 
 Collapsed: outer div `width: 28` (rail), `background: 'var(--surface)'`, `borderRight: '1px solid var(--border)'`; contents = ONLY the existing 13×13 EXPLORER glyph svg (Sidebar.tsx:183-187, centered, marginTop 10) and below it a chevron `<button aria-label="Expand explorer">` (transparent bg, `color: '#7b88aa'`, the existing `path d='M3 1l4 4-4 4'` chevron). Expanded: today's header row gains one right-aligned chevron `<button aria-label="Collapse explorer">` (`d='M7 1L3 5l4 4'`), everything else pixel-stable.
 
-- [ ] **Step 1: Failing test** (`Sidebar.test.tsx` — `afterEach(() => cleanup())` per Global Constraints):
+- [x] **Step 1: Failing test** (`Sidebar.test.tsx` — `afterEach(() => cleanup())` per Global Constraints):
 
 ```ts
 import { describe, expect, it, afterEach } from 'vitest'
@@ -173,8 +173,8 @@ describe('Sidebar — collapse rail', () => {
 })
 ```
 
-- [ ] **Step 2: RED** (`pnpm test` — no chevron exists) **→ Step 3: implement** per interface; wire both tab components with `const [sidebarCollapsed, setSidebarCollapsed] = useState(false)` passing `collapsed`/`onToggleCollapse`.
-- [ ] **Step 4: GREEN + tsc → Step 5: Commit**
+- [x] **Step 2: RED** (`pnpm test` — no chevron exists) **→ Step 3: implement** per interface; wire both tab components with `const [sidebarCollapsed, setSidebarCollapsed] = useState(false)` passing `collapsed`/`onToggleCollapse`.
+- [x] **Step 4: GREEN + tsc → Step 5: Commit**
 
 ```bash
 git add frontend/src/components/shared/Sidebar.tsx frontend/src/components/shared/Sidebar.test.tsx \

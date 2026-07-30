@@ -28,6 +28,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [mappingPath, setMappingPath] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { fs, loading, error } = useFilesystem()
   const model = useMappingModel(mappingPath ?? '')
   const dom = useMappingDom(mappingPath ?? '')
@@ -96,6 +97,8 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
         onSelectFile={handleSelectFile}
         filesystem={fs ?? EMPTY_FS}
         extraContent={sidebarExtra}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(c => !c)}
       />
 
       {!mappingPath ? (
@@ -133,7 +136,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
 
       {/* status bar */}
       <div style={{
-        position: 'absolute', bottom: 0, left: 240, right: selectedNode ? 310 : 0,
+        position: 'absolute', bottom: 0, left: sidebarCollapsed ? 28 : 240, right: selectedNode ? 310 : 0,
         height: 24, display: 'flex', alignItems: 'center', gap: 12, padding: '0 14px',
         background: 'var(--surface)', borderTop: '1px solid var(--border)', pointerEvents: 'none',
       }}>
