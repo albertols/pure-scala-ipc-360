@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import type { ETLNode, Connection, FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useMappingModel } from '../../api/queries'
+import { useMappingDom, useMappingModel } from '../../api/queries'
 import { toCanvas } from '../../api/mappingAdapter'
+import { findElementForNode } from '../../api/domSlice'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
 import { NodeBox, getNodeHeight, getPortY, buildPath, NODE_WIDTH, NODE_STYLES } from './NodeBox'
@@ -155,6 +156,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const { fs, loading, error } = useFilesystem()
   const model = useMappingModel(mappingPath ?? '')
+  const dom = useMappingDom(mappingPath ?? '')
   const modelError = model.error as ApiError | null
 
   const graph = useMemo(
@@ -163,6 +165,11 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   )
 
   const selectedNode = graph?.nodes.find(n => n.id === selectedNodeId) ?? null
+
+  const domElement = useMemo(
+    () => (selectedNode && dom.data ? findElementForNode(dom.data, selectedNode.name, selectedNode.type) : null),
+    [selectedNode, dom.data],
+  )
 
   const handleSelectFile = (f: FSFile) => {
     setSelectedPath(f.path)
@@ -234,7 +241,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
       ) : null}
 
       {selectedNode && (
-        <DetailPanel node={selectedNode} onClose={() => setSelectedNodeId(null)} />
+        <DetailPanel node={selectedNode} domElement={domElement} onClose={() => setSelectedNodeId(null)} />
       )}
 
       {/* status bar */}

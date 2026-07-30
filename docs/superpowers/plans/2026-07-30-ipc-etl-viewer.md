@@ -253,7 +253,7 @@ domSlice test: build a small XmlNode literal (folder with SOURCE/TRANSFORMATION/
 
 ETLViewer wiring: `const dom = useMappingDom(mappingPath ?? '')` (add `enabled: !!path` to `useMappingDom` too — same sanctioned data-layer tweak); `const domElement = useMemo(() => selectedNode && dom.data ? findElementForNode(dom.data, selectedNode.name, selectedNode.type) : null, [selectedNode, dom.data])`; pass `domElement` to DetailPanel.
 
-- [ ] **Step 1: failing domSlice test → Step 2: red → Step 3: implement locator + panel prop + wiring → Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): lossless DOM detail panel — every IPC attribute, copy-everywhere"` (explicit paths + plan).
+- [x] **Step 1: failing domSlice test → Step 2: red → Step 3: implement locator + panel prop + wiring → Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): lossless DOM detail panel — every IPC attribute, copy-everywhere"` (explicit paths + plan).
 
 ---
 

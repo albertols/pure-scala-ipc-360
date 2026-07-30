@@ -1,13 +1,25 @@
 import type { ETLNode } from '../../types'
+import type { XmlNode } from '../../api/queries'
 import { NODE_STYLES } from './NodeBox'
 import { PortTable } from './PortTable'
 import { CopyButton } from '../shared/CopyButton'
 
-export function DetailPanel({ node, onClose }: { node: ETLNode; onClose: () => void }) {
+export function DetailPanel({
+  node,
+  domElement,
+  onClose,
+}: {
+  node: ETLNode
+  domElement?: XmlNode | null
+  onClose: () => void
+}) {
   const style = NODE_STYLES[node.type] ?? NODE_STYLES.source
   const inPorts = node.ports.filter(p => p.direction === 'IN' || p.direction === 'IN/OUT')
   const outPorts = node.ports.filter(p => p.direction === 'OUT' || p.direction === 'IN/OUT')
   const exprPorts = node.ports.filter(p => p.expression)
+  // DOM-fed when the lossless element resolved; falls back to the adapter's
+  // quick properties (e.g. while the DOM fetch is still loading).
+  const properties = domElement ? (domElement.attributes ?? {}) : node.properties
 
   return (
     <div style={{
@@ -69,8 +81,13 @@ export function DetailPanel({ node, onClose }: { node: ETLNode; onClose: () => v
         {/* Properties */}
         <section>
           <SectionLabel>Properties</SectionLabel>
+          {domElement && (
+            <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>
+              Fields ({domElement.children?.length ?? 0})
+            </div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {Object.entries(node.properties).map(([k, v]) => (
+            {Object.entries(properties).map(([k, v]) => (
               <div key={k}>
                 <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 2 }}>{k}</div>
                 <div style={{

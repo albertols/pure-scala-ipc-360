@@ -60,6 +60,59 @@ const MODEL = {
   },
 }
 
+// Lossless DOM counterpart of MODEL's folder subtree — same three instances,
+// enough attributes/children to prove the panel is DOM-fed (not the
+// adapter's quick `properties`).
+const DOM = {
+  name: 'POWERMART',
+  attributes: { CREATION_DATE: '01/07/2026 00:00:00' },
+  children: [
+    {
+      name: 'REPOSITORY',
+      attributes: { NAME: 'REP_FIX' },
+      children: [
+        {
+          name: 'FOLDER',
+          attributes: { NAME: 'CDM' },
+          children: [
+            {
+              name: 'SOURCE',
+              attributes: { NAME: 'SRC_FIX', DBDNAME: 'FIXDB', DATABASETYPE: 'Oracle' },
+              children: [
+                { name: 'SOURCEFIELD', attributes: { NAME: 'ID' }, children: [] },
+                { name: 'SOURCEFIELD', attributes: { NAME: 'EXTRA' }, children: [] },
+              ],
+            },
+            {
+              name: 'TARGET',
+              attributes: { NAME: 'TGT_FIX', DATABASETYPE: 'Oracle' },
+              children: [
+                { name: 'TARGETFIELD', attributes: { NAME: 'ID' }, children: [] },
+              ],
+            },
+            {
+              name: 'TRANSFORMATION',
+              attributes: { NAME: 'EXP_FIX', TYPE: 'Expression' },
+              children: [
+                { name: 'TRANSFORMFIELD', attributes: { NAME: 'ID' }, children: [] },
+              ],
+            },
+            {
+              name: 'MAPPING',
+              attributes: { NAME: 'm_FIX' },
+              children: [
+                { name: 'INSTANCE', attributes: { NAME: 'SRC_FIX', TRANSFORMATION_NAME: 'SRC_FIX', TYPE: 'SOURCE' }, children: [] },
+                { name: 'INSTANCE', attributes: { NAME: 'EXP_FIX', TRANSFORMATION_NAME: 'EXP_FIX', TYPE: 'TRANSFORMATION' }, children: [] },
+                { name: 'INSTANCE', attributes: { NAME: 'TGT_FIX', TRANSFORMATION_NAME: 'TGT_FIX', TYPE: 'TARGET' }, children: [] },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 const TREE = {
   name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
   children: [
@@ -75,6 +128,7 @@ const TREE = {
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
   http.get('/api/mappings/model/CDM/m_FIX', () => HttpResponse.json(MODEL)),
+  http.get('/api/mappings/dom/CDM/m_FIX', () => HttpResponse.json(DOM)),
 )
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())
@@ -106,5 +160,15 @@ describe('ETLViewer — real canvas', () => {
     await waitFor(() => {
       expect(screen.queryByText('Select an .xml mapping to view')).not.toBeInTheDocument()
     })
+
+    // Select the source node: opens the detail panel, DOM-fed once /mappings/dom
+    // resolves — Properties shows every DOM attribute (including ones absent
+    // from the adapter's quick `properties` bag) plus the Fields(n) count line.
+    fireEvent.click(sourceName)
+
+    expect(await screen.findByText('DBDNAME')).toBeInTheDocument()
+    expect(screen.getByText('FIXDB')).toBeInTheDocument()
+    expect(screen.getByText('DATABASETYPE')).toBeInTheDocument()
+    expect(screen.getByText('Fields (2)')).toBeInTheDocument()
   })
 })
