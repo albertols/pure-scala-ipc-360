@@ -4,6 +4,8 @@ import io.pure360.etl360.api.dto.LayerToLayerEntryDto;
 import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.config.Etl360Properties;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,6 +16,16 @@ class LayerToLayerServiceTest {
         Path mockRoot = Path.of("src/test/resources/fixture-mock").toAbsolutePath();
         var props = new Etl360Properties("unused", mockRoot.resolve("DWH_CONTROL").toString(),
             mockRoot.toString(), "unused-composer",
+            new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
+        return new LayerToLayerService(new DataRoots(props));
+    }
+
+    /** Wires a LayerToLayerService against a scratch DWH_CONTROL/LAYER_TO_LAYER/ODS/statements.sql
+     * whose content is fully controlled by the test, for scanner-recovery scenarios that don't
+     * belong in the committed fixture. */
+    private LayerToLayerService serviceOver(Path dwhControlDir) {
+        var props = new Etl360Properties("unused", dwhControlDir.toString(),
+            dwhControlDir.resolve("unused-mock").toString(), "unused-composer",
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
         return new LayerToLayerService(new DataRoots(props));
     }
@@ -87,5 +99,43 @@ class LayerToLayerServiceTest {
         assertThat(bodies).hasSize(1);
         LayerToLayerEntryDto dto = LayerToLayerService.parseRow(bodies.get(0));
         assertThat(dto.sources().get(0).table()).isEqualTo("A, B");
+    }
+
+    // --- Fix-round regression: an unbalanced-paren statement must not swallow later,
+    // well-formed statements in the same file. Before the fix, statements() `break`s the outer
+    // scan on an unbalanced row, so everything after it in the file is silently lost — never
+    // parsed, never counted as skipped. ---
+
+    @Test
+    void unbalancedStatementFollowedByValidOneInSameFileStillYieldsTheValidEntry(@TempDir Path tmp) throws Exception {
+        Path dir = Files.createDirectories(tmp.resolve("DWH_CONTROL/LAYER_TO_LAYER/ODS"));
+        // First statement's VALUES(...) paren is never closed (no trailing ')'), so the
+        // balanced-paren scan runs all the way to EOF — swallowing the second, valid statement's
+        // text too — unless the scanner re-anchors after giving up on the unbalanced one.
+        Files.writeString(dir.resolve("statements.sql"),
+            "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES ('ODS', 'BROKEN_NO_CLOSE'\n"
+                + "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES ('ODS', 'd', 'r.json', 'wf', 't', 1, [], [], [], [])");
+
+        LayerToLayerService s = serviceOver(dir.getParent().getParent());
+        assertThat(s.entries()).hasSize(1);
+        assertThat(s.entries().get(0).recipe()).isEqualTo("r.json");
+        assertThat(s.skippedRows()).isEqualTo(1);
+    }
+
+    @Test
+    void balancedButMalformedStatementFollowedByValidOneInSameFileStillYieldsTheValidEntry(@TempDir Path tmp) throws Exception {
+        Path dir = Files.createDirectories(tmp.resolve("DWH_CONTROL/LAYER_TO_LAYER/ODS"));
+        // First statement's parens balance fine, but its layer field is unquoted — parseRow
+        // throws for a different reason than unbalanced parens. Guards that the per-statement
+        // try/catch in load() keeps going to the next statement regardless of which failure mode
+        // tripped it.
+        Files.writeString(dir.resolve("statements.sql"),
+            "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES (ODS_NOQUOTE, 'd', 'r1.json', 'wf', 't', 1, [], [], [], [])\n"
+                + "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES ('ODS', 'd', 'r2.json', 'wf', 't', 1, [], [], [], [])");
+
+        LayerToLayerService s = serviceOver(dir.getParent().getParent());
+        assertThat(s.entries()).hasSize(1);
+        assertThat(s.entries().get(0).recipe()).isEqualTo("r2.json");
+        assertThat(s.skippedRows()).isEqualTo(1);
     }
 }

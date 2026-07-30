@@ -62,7 +62,7 @@ public class LayerToLayerService {
                 else if (c == '(') depth++;
                 else if (c == ')' && --depth == 0) break;
             }
-            if (depth != 0) { result.add(content.substring(open + 1)); break; } // unbalanced → parseRow fails it
+            if (depth != 0) { result.add(content.substring(open + 1)); idx = open + 1; continue; } // unbalanced → parseRow fails it; keep scanning for later statements
             result.add(content.substring(open + 1, i));
             idx = i;
         }
