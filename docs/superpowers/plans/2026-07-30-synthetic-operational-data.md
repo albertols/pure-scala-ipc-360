@@ -672,7 +672,7 @@ git commit -m "feat(mock): deterministic b15 generator + 14-day committed operat
 
 **Interfaces:** consumes everything; this is the spec §8.1 gate.
 
-- [ ] **Step 1: Write both tests** (`@SpringBootTest @AutoConfigureMockMvc`, CorpusContractTest pattern):
+- [x] **Step 1: Write both tests** (`@SpringBootTest @AutoConfigureMockMvc`, CorpusContractTest pattern):
 
 `LayerToLayerContractTest`:
 ```java
@@ -723,8 +723,8 @@ git commit -m "feat(mock): deterministic b15 generator + 14-day committed operat
     assertThat(g.nodes().stream().filter(n -> n.kind().equals("recipe")).count()).isGreaterThanOrEqualTo(18);
 }
 ```
-- [ ] **Step 2: Run** — `mvn -q -pl backend test -Dtest='LayerToLayerContractTest,OperationalContractTest'` — Expected: PASS immediately (integration gate, not red/green). Any failure = real data/service bug: fix the service or the mock data (generator rerun), never weaken the test.
-- [ ] **Step 3: Full suite + commit** — `git commit -m "test(backend): LayerToLayer + Operational contract gates over committed mock data"` (stage the two tests + plan).
+- [x] **Step 2: Run** — `mvn -q -pl backend test -Dtest='LayerToLayerContractTest,OperationalContractTest'` — Expected: PASS immediately (integration gate, not red/green). Any failure = real data/service bug: fix the service or the mock data (generator rerun), never weaken the test.
+- [x] **Step 3: Full suite + commit** — `git commit -m "test(backend): LayerToLayer + Operational contract gates over committed mock data"` (stage the two tests + plan).
 
 ---
 
