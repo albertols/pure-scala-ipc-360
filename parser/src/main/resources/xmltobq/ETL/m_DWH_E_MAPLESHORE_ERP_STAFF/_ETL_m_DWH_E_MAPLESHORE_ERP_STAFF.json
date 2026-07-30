@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_MAPLESHORE_ERP_STAFF",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",
@@ -392,7 +392,7 @@
         "name" : "SQ_STG_MAPLESHORE_ERP_STAFF",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FCH_OAKBARN",
             "dataType" : "String",

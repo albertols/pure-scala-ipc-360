@@ -4,7 +4,7 @@
       "target" : {
         "name" : "OAKCOMBE3_CLEARTOWER_GREENYARD",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_TIMESPAN",
             "dataType" : "BigDecimal",
@@ -67,7 +67,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "LOAD_DATA",
             "dataType" : "String",
@@ -471,7 +471,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "BigDecimal",
@@ -605,7 +605,7 @@
         "name" : "SQ_DWH_MAPLESHORE_HOLDS",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "BigDecimal",

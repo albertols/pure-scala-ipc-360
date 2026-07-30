@@ -4,7 +4,7 @@
       "target" : {
         "name" : "STG_LKP_MEMBER_CALLHUB",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "Long",
@@ -452,7 +452,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "HAZELTHORP",
             "dataType" : "String",
@@ -5614,7 +5614,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "DWH_MAPLESHORE_MAPLEBARN_MEMBERS.FCH_MAPLELANE IS NULL AND DWH_MAPLESHORE_MAPLEBARN_MEMBERS.FCH_SOUTHPOND IS NULL AND DWH_MAPLESHORE_MAPLEBARN_MEMBERS.ID_KIND_PARTYPROFILE IS NOT NULL",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "BigDecimal",

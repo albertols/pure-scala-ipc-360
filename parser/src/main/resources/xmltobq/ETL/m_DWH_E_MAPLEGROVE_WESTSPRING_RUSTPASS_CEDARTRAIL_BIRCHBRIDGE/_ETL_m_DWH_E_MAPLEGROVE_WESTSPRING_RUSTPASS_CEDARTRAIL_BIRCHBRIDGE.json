@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_MAPLEGROVE_WESTSPRING_RUSTPASS_CEDARTRAIL_BIRCHBRIDGE",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PHASE_REG_BIRCHBRIDGE",
             "dataType" : "Long",
@@ -314,7 +314,7 @@
         "name" : "SQ_ODS_ROWANSTEAD22",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

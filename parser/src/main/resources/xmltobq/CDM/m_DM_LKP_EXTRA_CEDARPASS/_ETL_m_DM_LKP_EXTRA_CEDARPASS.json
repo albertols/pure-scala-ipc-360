@@ -10,7 +10,7 @@
           "ID_NUM_CEDARPASS",
           "FCH_OAKBARN"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "Long",
@@ -134,7 +134,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "DWH_MAPLESHORE_EXTRA_CEDARPASS.ID_MEMBER NOT IN (SELECT DISTINCT ID_MEMBER FROM DWH_MAPLEGROVE_PINEWARD_EASTBLUFF_STILLWICK)",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "BigDecimal",

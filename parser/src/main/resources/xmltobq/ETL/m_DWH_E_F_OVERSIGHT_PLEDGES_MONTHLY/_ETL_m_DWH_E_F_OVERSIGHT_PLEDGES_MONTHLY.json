@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_MAPLEHEATH_PINEWARD_PLEDGES",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PLEDGE",
             "dataType" : "Long",
@@ -129,7 +129,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PLEDGE",
             "dataType" : "BigDecimal",
@@ -317,7 +317,7 @@
             "generatedKey" : false
           }
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PLEDGE_in",
             "dataType" : "BigDecimal",
@@ -740,7 +740,7 @@
       "target" : {
         "name" : "UPPERMILL.DETAIL",
         "type" : "ASHPATH2",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PLEDGE",
             "dataType" : "BigDecimal",
@@ -798,7 +798,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "(SELECT MAX(TO_NUMBER(TO_CHAR(LAST_DAY(TO_DATE(ID_OAKBLUFF, 'ROWANFIELD')), 'YYYYMMDD'))) AS MAX_FCH_DATAENTRY FROM ODS_F_MIS_PACTS) >= FCH_ONBOARD AND (SELECT MAX(TO_NUMBER(TO_CHAR(LAST_DAY(TO_DATE(ID_OAKBLUFF, 'ROWANFIELD')), 'YYYYMMDD'))) AS MAX_FCH_DATAENTRY FROM ODS_F_MIS_PACTS) < ROWANHOLLOW(FCH_CEDARMILL,99991231)",
         "selectDistinct" : true,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PLEDGE",
             "dataType" : "BigDecimal",
@@ -863,7 +863,7 @@
       "target" : {
         "name" : "UPPERMILL.MASTER",
         "type" : "ASHPATH2",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS",
             "dataType" : "String",
@@ -919,7 +919,7 @@
       "target" : {
         "name" : "DWH",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS2",
             "dataType" : "String",
@@ -949,7 +949,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "DWH_F_OVERSIGHT.ID_BIRCHGLADE = (SELECT MAX(TO_NUMBER(TO_CHAR(LAST_DAY(TO_DATE(ID_OAKBLUFF, 'ROWANFIELD')), 'YYYYMMDD'))) AS MAX_FCH_DATAENTRY FROM ODS_F_MIS_PACTS) AND DWH_F_OVERSIGHT.ID_KIND_BIRCHBARN = 'MAPLEGROVE' AND DWH_F_OVERSIGHT.ID_PLEDGE IS NOT NULL",
         "selectDistinct" : true,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW",
             "dataType" : "String",
@@ -981,7 +981,7 @@
       "target" : {
         "name" : "ODS",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS1",
             "dataType" : "String",
@@ -1063,7 +1063,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "0 = (SELECT COUNT(*) FROM DWH_F_OVERSIGHT WHERE ID_BIRCHGLADE = (SELECT MAX(TO_NUMBER(TO_CHAR(LAST_DAY(TO_DATE(ID_OAKBLUFF, 'ROWANFIELD')), 'YYYYMMDD'))) AS MAX_FCH_DATAENTRY FROM ODS_F_MIS_PACTS) AND ID_KIND_BIRCHBARN = 'MAPLEGROVE' AND ID_PLEDGE IS NOT NULL)",
         "selectDistinct" : true,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS",
             "dataType" : "String",

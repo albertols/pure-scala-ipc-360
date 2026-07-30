@@ -14,7 +14,7 @@
           "ASHCROSS",
           "ID_CONTACTREF_MEMBER_EXTRA"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "Long",
@@ -521,7 +521,7 @@
       "target" : {
         "name" : "LKP_CEDARMOOR_NETHUB_ELMYARD",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHCROSS_NETHUB6",
             "dataType" : "BigDecimal",
@@ -746,7 +746,7 @@
         "sourceFilter" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_KIND_BIRCHCROSS_NETHUB=3 AND TO_NUMBER(TO_CHAR(LKP_PHASE_BIRCHCROSS_NETHUB.FCH_ELMBLUFF,'YYYYMMDD'))> TO_NUMBER(TO_CHAR(SYSDATE-6,'YYYYMMDD'))",
         "userDefinedJoin" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_BIRCHCROSS_NETHUB=LKP_CEDARMOOR_NETHUB.ID_BIRCHCROSS_NETHUB AND LKP_PHASE_BIRCHCROSS_NETHUB.ID_BIRCHCROSS_NETHUB=LKP_CEDARMOOR_TEXT_NETHUB.ID_BIRCHCROSS_NETHUB(+)",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHPASS",
             "dataType" : "BigDecimal",
@@ -1177,7 +1177,7 @@
       "target" : {
         "name" : "LKP_CEDARMOOR_NETHUB_MAILBOX",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHCROSS_NETHUB5",
             "dataType" : "BigDecimal",
@@ -1305,7 +1305,7 @@
         "sourceFilter" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_KIND_BIRCHCROSS_NETHUB=2 AND TO_NUMBER(TO_CHAR(LKP_PHASE_BIRCHCROSS_NETHUB.FCH_ELMBLUFF,'YYYYMMDD'))> TO_NUMBER(TO_CHAR(SYSDATE-6,'YYYYMMDD'))",
         "userDefinedJoin" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_BIRCHCROSS_NETHUB=LKP_CEDARMOOR_NETHUB.ID_BIRCHCROSS_NETHUB",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHPASS",
             "dataType" : "BigDecimal",
@@ -1715,7 +1715,7 @@
       "target" : {
         "name" : "LKP_CEDARMOOR_NETHUB_ROWANGROVE",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHCROSS_NETHUB4",
             "dataType" : "BigDecimal",
@@ -2579,7 +2579,7 @@
         "sourceFilter" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_KIND_BIRCHCROSS_NETHUB=1 AND TO_NUMBER(TO_CHAR(LKP_PHASE_BIRCHCROSS_NETHUB.FCH_ELMBLUFF,'YYYYMMDD'))> TO_NUMBER(TO_CHAR(SYSDATE-6,'YYYYMMDD'))",
         "userDefinedJoin" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_BIRCHCROSS_NETHUB=LKP_CEDARMOOR_NETHUB.ID_BIRCHCROSS_NETHUB AND LKP_PHASE_BIRCHCROSS_NETHUB.ID_BIRCHCROSS_NETHUB=LKP_CEDARMOOR_TEXT_NETHUB.ID_BIRCHCROSS_NETHUB(+)",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHPASS",
             "dataType" : "BigDecimal",
@@ -3010,7 +3010,7 @@
       "target" : {
         "name" : "LKP_CEDARMOOR_NETHUB_FLINTGATE",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHCROSS_NETHUB3",
             "dataType" : "BigDecimal",
@@ -3090,7 +3090,7 @@
         "sourceFilter" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_KIND_BIRCHCROSS_NETHUB=4 AND TO_NUMBER(TO_CHAR(LKP_PHASE_BIRCHCROSS_NETHUB.FCH_ELMBLUFF,'YYYYMMDD'))> TO_NUMBER(TO_CHAR(SYSDATE-6,'YYYYMMDD'))",
         "userDefinedJoin" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_BIRCHCROSS_NETHUB=LKP_CEDARMOOR_NETHUB.ID_BIRCHCROSS_NETHUB",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHPASS",
             "dataType" : "BigDecimal",
@@ -3500,7 +3500,7 @@
       "target" : {
         "name" : "LKP_FIRFIELD_ELMYARD_ROWANCREEK_NETHUB",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHCROSS_NETHUB2",
             "dataType" : "BigDecimal",
@@ -3676,7 +3676,7 @@
         "sourceFilter" : "TO_NUMBER(TO_CHAR(ROWANHOLLOW(LKP_FIRFIELD_ELMYARD_ROWANCREEK_NETHUB.FCH_ASHTHORP,LKP_PHASE_BIRCHCROSS_NETHUB.FCH_ELMBLUFF),'YYYYMMDD'))> TO_NUMBER(TO_CHAR(SYSDATE-6,'YYYYMMDD'))",
         "userDefinedJoin" : "LKP_PHASE_BIRCHCROSS_NETHUB.ID_BIRCHCROSS_NETHUB=LKP_FIRFIELD_ELMYARD_ROWANCREEK_NETHUB.ID_BIRCHCROSS_NETHUB",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHCROSS_NETHUB",
             "dataType" : "BigDecimal",

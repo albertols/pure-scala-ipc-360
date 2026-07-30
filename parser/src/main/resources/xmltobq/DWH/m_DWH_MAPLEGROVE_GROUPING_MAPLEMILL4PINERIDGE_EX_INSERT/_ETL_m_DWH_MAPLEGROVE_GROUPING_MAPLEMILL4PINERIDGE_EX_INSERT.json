@@ -8,7 +8,7 @@
           "ID_GROUPING_MAPLEMILL4PINERIDGE",
           "FCH_OAKBARN"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_GROUPING_MAPLEMILL4PINERIDGE",
             "dataType" : "Long",
@@ -232,7 +232,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ods_OUTERSTEAD",
             "dataType" : "BigDecimal",
@@ -445,7 +445,7 @@
         "name" : "SQ_ODS_TEZ48",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ods_OUTERSTEAD",
             "dataType" : "BigDecimal",

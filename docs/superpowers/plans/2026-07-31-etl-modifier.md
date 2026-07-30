@@ -34,21 +34,21 @@ Tick checkboxes per task, commit this file with each task. Resume = `git log --o
 
 Ground truth (verified): 64 of 74 recipes carry the anonymizer-corrupted key; in JSON files the token appears ONLY in key position, always as `"weststone" : [` (Jackson pretty-print spacing). XML files legitimately contain `WESTSTONE` as anonymized *names* — the rename is scoped to `_ETL_*.json` strictly.
 
-- [ ] **Step 1: Pre-flight proof.**
+- [x] **Step 1: Pre-flight proof.**
 
 ```bash
 grep -rl '"weststone"' parser/src/main/resources/xmltobq --include='_ETL_*.json' | wc -l   # expect 64
 grep -rl '"weststone"' parser/src/main/resources/xmltobq --include='*.json' | grep -v '_ETL_' | wc -l  # expect 0
 ```
 
-- [ ] **Step 2: Mechanical rename** (key position only, whitespace-tolerant, no other bytes):
+- [x] **Step 2: Mechanical rename** (key position only, whitespace-tolerant, no other bytes):
 
 ```bash
 grep -rl '"weststone"' parser/src/main/resources/xmltobq --include='_ETL_*.json' \
   | xargs perl -pi -e 's/"weststone"(\s*:)/"fields"$1/g'
 ```
 
-- [ ] **Step 3: Grep-proof zero remaining + diff-shape proof.**
+- [x] **Step 3: Grep-proof zero remaining + diff-shape proof.**
 
 ```bash
 grep -rn '"weststone"' parser/src/main/resources/xmltobq --include='*.json' | wc -l        # 0
@@ -57,9 +57,9 @@ git diff -U0 parser/src/main/resources/xmltobq | grep '^[+-]' | grep -v '^[+-][+
   | grep -vE '"(weststone|fields)" :' | wc -l                                              # 0 — nothing else touched
 ```
 
-- [ ] **Step 4: Backend contract still green** — `mvn -q -am -pl backend test` (CorpusContractTest `everyRecipeServes` ≥74 — the DTO is a raw JsonNode passthrough, so nothing else can break; a failure here means the rename script damaged JSON).
-- [ ] **Step 5: CLAUDE.md caveat line** — append to `## Corpus caveats`: `- The anonymizer had also renamed the recipe structural key "fields" to "weststone" in 64 recipes; repaired 2026-07-31 (key rename only, byte-diff limited to the key token). The frontend recipe adapter still tolerates both spellings defensively.`
-- [ ] **Step 6: Commit**
+- [x] **Step 4: Backend contract still green** — `mvn -q -am -pl backend test` (CorpusContractTest `everyRecipeServes` ≥74 — the DTO is a raw JsonNode passthrough, so nothing else can break; a failure here means the rename script damaged JSON).
+- [x] **Step 5: CLAUDE.md caveat line** — append to `## Corpus caveats`: `- The anonymizer had also renamed the recipe structural key "fields" to "weststone" in 64 recipes; repaired 2026-07-31 (key rename only, byte-diff limited to the key token). The frontend recipe adapter still tolerates both spellings defensively.`
+- [x] **Step 6: Commit**
 
 ```bash
 git add parser/src/main/resources/xmltobq CLAUDE.md docs/superpowers/plans/2026-07-31-etl-modifier.md

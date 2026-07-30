@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_MAPLEGROVE_PACTS_PEARLWARD",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "Long",
@@ -481,7 +481,7 @@
         "name" : "SQ_ODS_PACT_PEARLWARD",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

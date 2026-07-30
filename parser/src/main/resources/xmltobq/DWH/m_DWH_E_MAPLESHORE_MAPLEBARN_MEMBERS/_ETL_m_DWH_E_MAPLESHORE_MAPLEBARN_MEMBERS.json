@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_MAPLESHORE_MAPLEBARN_MEMBERS",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "Long",
@@ -3619,7 +3619,7 @@
         "name" : "SQ_ODS_F_MAPLEBARN_MEMBERS",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

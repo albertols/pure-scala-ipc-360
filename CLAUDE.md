@@ -101,6 +101,9 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
 - `parser/src/main/resources/DWH_CONTROL/` is intentionally untracked (git-ignored,
   history rewritten); never commit it. The committed mock mirror lives at
   `backend/src/main/resources/mock/DWH_CONTROL/` instead.
+- The anonymizer had also renamed the recipe structural key "fields" to "weststone" in
+  64 recipes; repaired 2026-07-31 (key rename only, byte-diff limited to the key
+  token). The frontend recipe adapter still tolerates both spellings defensively.
 
 ## More
 

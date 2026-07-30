@@ -4,7 +4,7 @@
       "target" : {
         "name" : "LKP_ACT_MAPLEDELL_CEDARFORGE",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "Long",
@@ -356,7 +356,7 @@
         "filterCondition" : {
           "value" : "not isnull(ID_MEMBER_HAZELPEAK)"
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -951,7 +951,7 @@
             "generatedKey" : true
           }
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE_in",
             "dataType" : "BigDecimal",
@@ -1246,7 +1246,7 @@
         "name" : "SQ_STG_ACT_MAPLEDELL_CEDARFORGE",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",

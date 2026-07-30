@@ -4,7 +4,7 @@
       "target" : {
         "name" : "OAKCOMBE3_CLEARTOWER_GREENYARD",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_TIMESPAN",
             "dataType" : "BigDecimal",
@@ -67,7 +67,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "LOAD_DATA",
             "dataType" : "String",
@@ -1257,7 +1257,7 @@
         "name" : "SQ_ODS_TEZ52",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

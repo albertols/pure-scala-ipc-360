@@ -8,7 +8,7 @@
           "GUIDE_ID",
           "OPALFORK_AWAY_DATE"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",
@@ -113,7 +113,7 @@
         "name" : "SQ_STG_ACT_GUIDE_AWAY_DAYS",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "GUIDE_ID",
             "dataType" : "String",

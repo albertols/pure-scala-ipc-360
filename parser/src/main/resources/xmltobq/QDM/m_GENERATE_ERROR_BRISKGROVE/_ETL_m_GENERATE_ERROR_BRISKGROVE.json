@@ -4,7 +4,7 @@
       "target" : {
         "name" : "FF_NAVYGLADE",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "PROCESS",
             "dataType" : "String",
@@ -57,7 +57,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "RETURN_VALUE",
             "dataType" : "BigDecimal",
@@ -80,7 +80,7 @@
         "type" : "CEDARWICK2",
         "procedureName" : "SWIFTVALE_BIRCHMILL_OAKFORD.P_MAIN",
         "returnField" : "RETURN_VALUE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "P_ID_TIMESPAN",
             "dataType" : "BigDecimal",
@@ -110,7 +110,7 @@
         "type" : "BERYLFALLS",
         "sqlQuery" : "$$broadridge",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_NAVYGLADE",
             "dataType" : "BigDecimal",

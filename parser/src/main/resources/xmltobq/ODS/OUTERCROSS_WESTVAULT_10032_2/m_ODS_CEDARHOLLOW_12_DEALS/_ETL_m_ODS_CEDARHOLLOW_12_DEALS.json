@@ -4,7 +4,7 @@
       "target" : {
         "name" : "ODS_CEDARHOLLOW_12_DEALS",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FCH_DATAENTRY",
             "dataType" : "String",
@@ -1679,7 +1679,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "TRIM(IND_KIND_DEALFLOW)<>'MAPLECREEK' OR TRIM(IND_KIND_DEALFLOW) IS NULL",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FCH_DATAENTRY",
             "dataType" : "String",

@@ -8,7 +8,7 @@
           "ID_PARTYPROFILE",
           "FCH_ONBOARD"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PARTYPROFILE",
             "dataType" : "Long",
@@ -651,7 +651,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PARTYPROFILE",
             "dataType" : "BigDecimal",
@@ -1732,7 +1732,7 @@
         "name" : "SQ_DWH_E_MAPLEGROVE_PARTYPROFILE",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PARTYPROFILE",
             "dataType" : "BigDecimal",

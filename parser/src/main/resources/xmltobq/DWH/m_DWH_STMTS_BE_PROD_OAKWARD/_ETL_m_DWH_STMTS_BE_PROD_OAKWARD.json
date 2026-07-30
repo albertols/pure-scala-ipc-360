@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_STMTS_BE_PROD_OAKWARD",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FIRGROVE_ID",
             "dataType" : "String",
@@ -1482,7 +1482,7 @@
         "type" : "BERYLFALLS",
         "sqlQuery" : "WITH DATA AS (SELECT FIRGROVE_ID, PROD_ID, BIRCHTRACK, INNERBEND, ROWANHOLLOW(BIRCHFORD, '*') AS BIRCHFORD, ROWANHOLLOW(CEDARPATH, '*') AS CEDARPATH, ROWANHOLLOW(CEDARPATH_PINEBLUFF, '*') AS CEDARPATH_PINEBLUFF, ROWANHOLLOW(CEDARPIER, '*') AS CEDARPIER, ROWANHOLLOW(BIRCHRIVER_HAZELRIDGE, '*') AS BIRCHRIVER_HAZELRIDGE FROM ODS_STMTS_BE_PROD_OAKWARD) SELECT DATA.FIRGROVE_ID, DATA.PROD_ID, DATA.BIRCHTRACK, DATA.INNERBEND, REPLACE(trim(a.COLUMN_VALUE), '*', '') as BIRCHFORD, REPLACE(trim(cedardell.COLUMN_VALUE), '*', '') as CEDARPATH, REPLACE(trim(pineridge.COLUMN_VALUE), '*', '') as CEDARPATH_PINEBLUFF, REPLACE(trim(maplegrove.COLUMN_VALUE), '*', '') as CEDARPIER, REPLACE(trim(e.COLUMN_VALUE), '*', '') as BIRCHRIVER_HAZELRIDGE, null as BIRCHRIVER_INNERPIER, null as LOWERTRAIL, null as LOWERFORGE, null as LOWERVAULT, null as SOUTHPATH FROM DATA, tealpath(('\"' || REPLACE(birchford, ',', '\",\"') || '\"')) a, tealpath(('\"' || REPLACE(cedarpath, ',', '\",\"') || '\"')) cedardell, tealpath(('\"' || REPLACE(cedarpath_pinebluff, ',', '\",\"') || '\"')) pineridge, tealpath(('\"' || REPLACE(cedarpier, ',', '\",\"') || '\"')) maplegrove, tealpath(('\"' || REPLACE(birchriver_hazelridge, ',', '\",\"') || '\"')) e",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FIRGROVE_ID",
             "dataType" : "String",

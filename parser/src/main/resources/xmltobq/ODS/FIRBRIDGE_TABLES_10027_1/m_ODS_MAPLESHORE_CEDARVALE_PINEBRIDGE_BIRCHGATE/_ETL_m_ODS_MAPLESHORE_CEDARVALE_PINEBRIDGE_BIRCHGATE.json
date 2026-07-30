@@ -4,7 +4,7 @@
       "target" : {
         "name" : "ODS_MAPLESHORE_CEDARVALE_PINEBRIDGE_BIRCHGATE",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",
@@ -62,7 +62,7 @@
         "name" : "SQ_STG_MAPLESHORE_CEDARVALE_PINEBRIDGE_BIRCHGATE",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PINEBRIDGE_BIRCHGATE",
             "dataType" : "String",

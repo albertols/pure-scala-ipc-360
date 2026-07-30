@@ -4,7 +4,7 @@
       "target" : {
         "name" : "ODS_MOD_MAPLETHORP_FLOWS",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FCH_DATAENTRY",
             "dataType" : "Long",
@@ -677,7 +677,7 @@
         "name" : "SQ_STG_MOD_MAPLETHORP_FLOWS",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FCH_DATAENTRY",
             "dataType" : "String",

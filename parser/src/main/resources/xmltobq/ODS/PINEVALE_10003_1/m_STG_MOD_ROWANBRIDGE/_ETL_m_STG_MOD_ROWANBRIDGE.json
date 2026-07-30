@@ -4,7 +4,7 @@
       "target" : {
         "name" : "ODS_MOD_ROWANBRIDGE",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHTRAIL_CEDARPASS",
             "dataType" : "BigDecimal",
@@ -149,7 +149,7 @@
         "name" : "SQ_ff_PINEVALE_MOD_ROWANBRIDGE",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHTRAIL_CEDARPASS",
             "dataType" : "String",

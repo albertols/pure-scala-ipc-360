@@ -4,7 +4,7 @@
       "target" : {
         "name" : "BIZLINK",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_OAKBLUFF",
             "dataType" : "Long",
@@ -563,7 +563,7 @@
         "type" : "BERYLFALLS",
         "sqlQuery" : "SELECT * FROM ff_BIZLINK WHERE DATE(FCH_TIMESTAMP) = (SELECT MAX(DATE(FCH_TIMESTAMP)) FROM ff_BIZLINK)",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FCH_DATAENTRY",
             "dataType" : "String",

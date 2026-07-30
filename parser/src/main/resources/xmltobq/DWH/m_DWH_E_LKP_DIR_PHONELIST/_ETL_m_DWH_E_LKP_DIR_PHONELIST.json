@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_LKP_DIR_PHONELIST",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_LOCATION",
             "dataType" : "BigDecimal",
@@ -195,7 +195,7 @@
       "target" : {
         "name" : "MAPLEROAD100MAPLEHEATH",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_LOCATION2",
             "dataType" : "BigDecimal",
@@ -300,7 +300,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_LOCATION",
             "dataType" : "BigDecimal",
@@ -585,7 +585,7 @@
             "generatedKey" : false
           }
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER_in",
             "dataType" : "BigDecimal",
@@ -712,7 +712,7 @@
         "name" : "SQ_ODS_F_MAPLEBARN_MEMBERS",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",
@@ -1342,7 +1342,7 @@
       "target" : {
         "name" : "MAPLEROAD301MAPLEHEATH",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_LOCATION1",
             "dataType" : "BigDecimal",
@@ -1481,7 +1481,7 @@
         "name" : "SQ_ODS_AMBERHOLLOW301MAPLEHEATH_DIR_PHONELIST",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

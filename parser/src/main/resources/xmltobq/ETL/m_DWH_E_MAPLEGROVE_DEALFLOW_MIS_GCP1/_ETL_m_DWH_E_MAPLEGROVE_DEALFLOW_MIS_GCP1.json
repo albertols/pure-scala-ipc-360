@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_MAPLEGROVE_DEALFLOW",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW",
             "dataType" : "String",
@@ -7020,7 +7020,7 @@
       "target" : {
         "name" : "EASTCOMBE13",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW14",
             "dataType" : "String",
@@ -9068,7 +9068,7 @@
       "target" : {
         "name" : "EASTCOMBE12",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW13",
             "dataType" : "String",
@@ -9901,7 +9901,7 @@
       "target" : {
         "name" : "EASTCOMBE11",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW12",
             "dataType" : "String",
@@ -11152,7 +11152,7 @@
       "target" : {
         "name" : "EASTCOMBE10",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW11",
             "dataType" : "String",
@@ -12033,7 +12033,7 @@
       "target" : {
         "name" : "EASTCOMBE9",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW10",
             "dataType" : "String",
@@ -13259,7 +13259,7 @@
       "target" : {
         "name" : "EASTCOMBE8",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW9",
             "dataType" : "String",
@@ -14172,7 +14172,7 @@
       "target" : {
         "name" : "EASTCOMBE7",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW8",
             "dataType" : "String",
@@ -15634,7 +15634,7 @@
       "target" : {
         "name" : "EASTCOMBE6",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW7",
             "dataType" : "String",
@@ -16598,7 +16598,7 @@
       "target" : {
         "name" : "EASTCOMBE5",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW6",
             "dataType" : "String",
@@ -17479,7 +17479,7 @@
       "target" : {
         "name" : "EASTCOMBE4",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW5",
             "dataType" : "String",
@@ -18705,7 +18705,7 @@
       "target" : {
         "name" : "EASTCOMBE3",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW4",
             "dataType" : "String",
@@ -19963,7 +19963,7 @@
       "target" : {
         "name" : "EASTCOMBE2",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW3",
             "dataType" : "String",
@@ -21473,7 +21473,7 @@
       "target" : {
         "name" : "EASTCOMBE1",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW2",
             "dataType" : "String",
@@ -22762,7 +22762,7 @@
       "target" : {
         "name" : "EASTCOMBE",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW1",
             "dataType" : "String",
@@ -24215,7 +24215,7 @@
             "name" : "MAPLEGLADE",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='MAPLEGLADE'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW1",
                 "dataType" : "String",
@@ -24508,7 +24508,7 @@
           {
             "name" : "DEFAULT1",
             "default" : true,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW2",
                 "dataType" : "String",
@@ -24802,7 +24802,7 @@
             "name" : "ASHPATH",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='ASHPATH'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW3",
                 "dataType" : "String",
@@ -25096,7 +25096,7 @@
             "name" : "ASHBRIDGE",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='ASHBRIDGE'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW4",
                 "dataType" : "String",
@@ -25390,7 +25390,7 @@
             "name" : "MAPLETOWER",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='MAPLETOWER'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW5",
                 "dataType" : "String",
@@ -25684,7 +25684,7 @@
             "name" : "MAPLEPEAK",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='MAPLEPEAK'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW6",
                 "dataType" : "String",
@@ -25978,7 +25978,7 @@
             "name" : "BIRCHBRIDGE",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='BIRCHBRIDGE'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW7",
                 "dataType" : "String",
@@ -26272,7 +26272,7 @@
             "name" : "BIRCHDELL",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='BIRCHDELL'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW8",
                 "dataType" : "String",
@@ -26566,7 +26566,7 @@
             "name" : "PM",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='PM'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW9",
                 "dataType" : "String",
@@ -26860,7 +26860,7 @@
             "name" : "ELMVAULT",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='ELMVAULT'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW10",
                 "dataType" : "String",
@@ -27154,7 +27154,7 @@
             "name" : "TS",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='TS'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW11",
                 "dataType" : "String",
@@ -27448,7 +27448,7 @@
             "name" : "AMBERCROSS_CORALWARD",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='AMBERCROSS' OR ID_CIPHERKEY_OFFERING='CORALWARD'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW12",
                 "dataType" : "String",
@@ -27742,7 +27742,7 @@
             "name" : "ELMHOLM",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='ELMHOLM'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW13",
                 "dataType" : "String",
@@ -28036,7 +28036,7 @@
             "name" : "MAPLEPOND",
             "filterCondition" : "ID_CIPHERKEY_OFFERING='MAPLEPOND'",
             "default" : false,
-            "weststone" : [
+            "fields" : [
               {
                 "name" : "ID_DEALFLOW14",
                 "dataType" : "String",
@@ -28327,7 +28327,7 @@
             ]
           }
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW",
             "dataType" : "String",
@@ -28642,7 +28642,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_DEALFLOW",
             "dataType" : "String",
@@ -31999,7 +31999,7 @@
         "sourceFilter" : "ODS_F_MIS_CEDARBEND_58.ID_CIPHERKEY_OFFERING IS NOT NULL",
         "sqlQuery" : "SELECT DISTINCT ODS_F_MIS_CEDARBEND_58.PK_PACT, ODS_F_MIS_CEDARBEND_58.ID_ENTITYREF, ODS_F_MIS_CEDARBEND_58.ID_BRANCHREF, ODS_F_MIS_CEDARBEND_58.ID_ITEMREF, ODS_F_MIS_CEDARBEND_58.ID_PACT, ODS_F_MIS_CEDARBEND_58.ID_DEALFLOW, ODS_F_MIS_CEDARBEND_58.ID_CIPHERKEY_OFFERING, ODS_F_MIS_CEDARBEND_58.FCH_HAZELBRIDGE, ODS_F_MIS_CEDARBEND_58.FCH_ELMPATH, ODS_F_MIS_CEDARBEND_58.ID_PHASE_PINEMOOR_N, ODS_F_MIS_CEDARBEND_58.ID_PHASE_PACT_X, ODS_F_MIS_CEDARBEND_58.ID_PHASE_PACT_N, ODS_F_MIS_CEDARBEND_58.FCH_MAPLELAKE, ODS_F_MIS_CEDARBEND_58.FCH_MAPLEMARSH_CEDARGLADE, ODS_F_MIS_CEDARBEND_58.FCH_MAPLEMARSH_RECAP, ODS_F_MIS_CEDARBEND_58.IMP_KIND_BIRCHVALE, ODS_F_MIS_CEDARBEND_58.IMP_KIND_OAKMARSH, ODS_F_MIS_CEDARBEND_58.IMP_KIND_OAKSPRING_HAZELTRAIL, ODS_F_MIS_CEDARBEND_58.IMP_KIND_OAKSPRING_OAKMARSH, ODS_F_MIS_CEDARBEND_58.ID_KIND_CEDARSHORE, ODS_F_MIS_CEDARBEND_58.ID_COD_KIND_CEDARSHORE, ODS_F_MIS_CEDARBEND_58.ID_MOD_HAZELLANE, ODS_F_MIS_CEDARBEND_58.NUM_ASHRIDGE_CEDARGLADE, ODS_F_MIS_CEDARBEND_58.NUM_ASHRIDGE_RECAP_KIND, ODS_F_MIS_PACTS.ID_MAPLEHOLLOW FROM ODS_F_MIS_CEDARBEND_58, (SELECT DISTINCT F.PK_PACT, P.ID_MAPLEHOLLOW FROM ODS_F_MIS_PACTS F, DWH_MAPLESHORE_MAPLEHOLLOW_HAZELWICK P WHERE F.ID_MAPLEHOLLOW = P.ID_MAPLEHOLLOW (+)) ODS_F_MIS_PACTS WHERE ODS_F_MIS_CEDARBEND_58.ID_CIPHERKEY_OFFERING IS NOT NULL AND ODS_F_MIS_CEDARBEND_58.PK_PACT = ODS_F_MIS_PACTS.PK_PACT(+)",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

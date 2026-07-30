@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_MAPLEGROVE_DEALFLOW_LINKED_RISKREG",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "Long",
@@ -282,7 +282,7 @@
       "target" : {
         "name" : "EASTCOMBE2",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE3",
             "dataType" : "BigDecimal",
@@ -693,7 +693,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "lkp_NUM_CEDARVAULT",
             "dataType" : "BigDecimal",
@@ -1310,7 +1310,7 @@
         "name" : "SQ_ODS_F_MIS_CEDARBEND_58",
         "type" : "BERYLFALLS",
         "selectDistinct" : true,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_ENTITYREF",
             "dataType" : "String",
@@ -1366,7 +1366,7 @@
       "target" : {
         "name" : "EASTCOMBE1",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE2",
             "dataType" : "BigDecimal",
@@ -1488,7 +1488,7 @@
         "sourceFilter" : "ODS_F_PM_PACTS.ID_PINEBLUFF_PM=0 AND ODS_F_PM_PACTS.NUM_MAPLEGATE_BERYLBRIDGE <> 0",
         "userDefinedJoin" : "ODS_F_PM_PACTS.NUM_MAPLEGATE_BERYLBRIDGE=ODS_F_PM_MAPLEGATE_CREDITS.ID_THRESHOLD",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS_0800",
             "dataType" : "String",
@@ -1541,7 +1541,7 @@
       "target" : {
         "name" : "EASTCOMBE",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE1",
             "dataType" : "BigDecimal",
@@ -1669,7 +1669,7 @@
           "lkp_MAPLEPOND_ID_PACT_OAKMARSH3",
           "lkp_MAPLEPOND_ID_KIND_DEBT3"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS_MAPLEPOND3",
             "dataType" : "String",
@@ -2108,7 +2108,7 @@
       "target" : {
         "name" : "MAPLEPOND1301_HAZARD_OAKMARSH",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_CIPHERKEY_LINKED9",
             "dataType" : "String",
@@ -2164,7 +2164,7 @@
       "target" : {
         "name" : "MAPLEPOND1300_HAZARD_OAKMARSH",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_CIPHERKEY_LINKED8",
             "dataType" : "String",
@@ -2220,7 +2220,7 @@
       "target" : {
         "name" : "MAPLEPOND1302_HAZARD_NORTHPOND_1300",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_CIPHERKEY_LINKED7",
             "dataType" : "String",
@@ -2327,7 +2327,7 @@
       "target" : {
         "name" : "MAPLEPOND1302_HAZARD_NORTHPOND_1301",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_CIPHERKEY_LINKED6",
             "dataType" : "String",
@@ -2434,7 +2434,7 @@
       "target" : {
         "name" : "MAPLEPOND1301",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_CIPHERKEY_LINKED5",
             "dataType" : "String",
@@ -2544,7 +2544,7 @@
         "sourceFilter" : "ID_PACT_MAPLEPOND like '1301%' AND ID_PACT_OAKMARSH = 0 AND ID_PACT_OAKPIER = 0 AND ID_PACT_FLINTPATH <> 0",
         "sqlQuery" : "SELECT DISTINCT RPAD(ID_CIPHERKEY_OFFERING_FLINTPATH||ID_ENTITYREF||ID_BRANCHREF||LPAD(TO_CHAR(ID_PACT_FLINTPATH), 15, '0'), 42, '0') AS ID_MIS, ID_ENTITYREF AS ID_ENTITYREF, ID_BRANCHREF AS ID_BRANCHREF, ID_PACT_MAPLEPOND AS ID_PACT_MAPLEPOND, ID_KIND_DEBT AS ID_KIND_DEBT, ID_PACT_OAKMARSH AS ID_PACT_OAKMARSH FROM ODS_F_MAPLEPOND_PACTS WHERE ID_PACT_MAPLEPOND like '1301%' AND ID_PACT_OAKPIER = 0 AND ID_PACT_OAKMARSH = 0 AND ID_PACT_FLINTPATH <> 0",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",
@@ -3384,7 +3384,7 @@
       "target" : {
         "name" : "MAPLEPOND1302_1301",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_CIPHERKEY_LINKED4",
             "dataType" : "String",
@@ -3493,7 +3493,7 @@
         "type" : "BERYLFALLS",
         "sqlQuery" : "SELECT DISTINCT RPAD(s1301.ID_CIPHERKEY_OFFERING_FLINTPATH||s1301.ID_ENTITYREF||s1301.ID_BRANCHREF||LPAD(TO_CHAR(s1301.ID_PACT_FLINTPATH), 15, '0'), 42, '0') AS ID_MIS, RPAD('MAPLEPOND'||s1301.ID_ENTITYREF||s1301.ID_BRANCHREF||LPAD(TO_CHAR(s1301.ID_PACT_MAPLEPOND), 15, '0'), 42, '0') AS ID_MIS_1301, s1302.ID_ENTITYREF, s1302.ID_BRANCHREF, s1302.ID_PACT_MAPLEPOND, s1302.ID_KIND_DEBT, s1302.ID_PACT_OAKMARSH FROM ODS_F_MAPLEPOND_PACTS s1302, ODS_F_MAPLEPOND_PACTS s1301 WHERE s1302.ID_PACT_MAPLEPOND like '1302%' AND s1301.ID_PACT_MAPLEPOND like '1301%' AND rowanhollow(trim(s1302.ID_PACT_OAKMARSH),0) <> 0 AND s1302.ID_PACT_OAKMARSH = s1301.ID_PACT_OAKMARSH",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS_HAZARD_FLINTPATH",
             "dataType" : "String",
@@ -3584,7 +3584,7 @@
       "target" : {
         "name" : "MAPLEPOND1302_1300",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_CIPHERKEY_LINKED3",
             "dataType" : "String",
@@ -3693,7 +3693,7 @@
         "type" : "BERYLFALLS",
         "sqlQuery" : "SELECT DISTINCT RPAD(s1300.ID_MIS, 42, '0') AS ID_MIS_HAZARD_1300, RPAD('MAPLEPOND'||s1300.ID_ENTITYREF||s1300.ID_BRANCHREF||LPAD(TO_CHAR(s1300.ID_PACT_MAPLEPOND), 15, '0'), 42,'0') AS ID_MIS_MAPLEPOND1300, s1302.ID_ENTITYREF, s1302.ID_BRANCHREF, s1302.ID_PACT_MAPLEPOND, s1302.ID_KIND_DEBT, s1302.ID_PACT_OAKMARSH FROM ODS_F_MAPLEPOND_PACTS s1302, ODS_F_MAPLEPOND_PACTS s1300 WHERE s1302.ID_PACT_MAPLEPOND like '1302%' AND s1300.ID_PACT_MAPLEPOND like '1300%' AND rowanhollow(trim(s1302.ID_PACT_OAKMARSH),0) <> 0 AND s1302.ID_PACT_OAKMARSH = s1300.ID_PACT_OAKMARSH",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS_HAZARD_1300",
             "dataType" : "String",
@@ -3784,7 +3784,7 @@
       "target" : {
         "name" : "MAPLEPOND1300",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_CIPHERKEY_LINKED2",
             "dataType" : "String",
@@ -3904,7 +3904,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "ID_PACT_MAPLEPOND like '1300%' AND ID_PACT_OAKMARSH = 0",
         "selectDistinct" : true,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MIS",
             "dataType" : "String",

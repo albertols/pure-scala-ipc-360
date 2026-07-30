@@ -4,7 +4,7 @@
       "target" : {
         "name" : "DWH_E_F_OVERSIGHT",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "Long",
@@ -570,7 +570,7 @@
       "target" : {
         "name" : "DWH_LAST_DAY",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE2",
             "dataType" : "BigDecimal",
@@ -838,7 +838,7 @@
         "type" : "BERYLFALLS",
         "userDefinedJoin" : "DWH_F_OVERSIGHT.ID_KIND_BIRCHBARN = 'MAPLEGROVE' AND DWH_F_OVERSIGHT.ID_IMP_JOURNAL IN (80001, 80002, 80037, 80038) AND DWH_F_OVERSIGHT.ID_BIRCHGLADE=(SELECT TO_NUMBER(TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(GREENCROSS||OAKBLUFF, 'ROWANFIELD'), -1)), 'YYYYMMDD')) FROM DWH_MAPLEGROVE_TIMESPAN WHERE PHASE = 1)",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_KIND_BIRCHBARN",
             "dataType" : "String",
@@ -1104,7 +1104,7 @@
       "target" : {
         "name" : "ETL",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE1",
             "dataType" : "BigDecimal",
@@ -7641,7 +7641,7 @@
       "target" : {
         "name" : "PLEDGES",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "GRAYBLUFF1",
             "dataType" : "BigDecimal",
@@ -8586,7 +8586,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "ID_KIND_BIRCHBARN='MAPLEGROVE' OR (ID_KIND_BIRCHBARN='M' AND FCH_DATAENTRY=(SELECT TO_NUMBER(TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(GREENCROSS||OAKBLUFF, 'ROWANFIELD'), -1)), 'YYYYMMDD')) FROM DWH_MAPLEGROVE_TIMESPAN WHERE PHASE = 1))",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_PLEDGE",
             "dataType" : "BigDecimal",
@@ -8674,7 +8674,7 @@
       "target" : {
         "name" : "MIS_RISKREG",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE6",
             "dataType" : "BigDecimal",
@@ -8936,7 +8936,7 @@
         "filterCondition" : {
           "value" : "TRUE"
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -9163,7 +9163,7 @@
           "ID_KIND_BIRCHBARN",
           "ID_ENTITYREF_NUCLEUS_ASHHEATH"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -9776,7 +9776,7 @@
       "target" : {
         "name" : "CEDARPIER",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE5",
             "dataType" : "BigDecimal",
@@ -9994,7 +9994,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -69851,7 +69851,7 @@
       "target" : {
         "name" : "BIRCHRIVER",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE4",
             "dataType" : "BigDecimal",
@@ -70069,7 +70069,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -75697,7 +75697,7 @@
       "target" : {
         "name" : "CORALDOCK",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE3",
             "dataType" : "BigDecimal",
@@ -75915,7 +75915,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -81179,7 +81179,7 @@
       "target" : {
         "name" : "CEDARPATH",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE2",
             "dataType" : "BigDecimal",
@@ -81397,7 +81397,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -135584,7 +135584,7 @@
       "target" : {
         "name" : "BIRCHFORD",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE1",
             "dataType" : "BigDecimal",
@@ -135802,7 +135802,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -141430,7 +141430,7 @@
       "target" : {
         "name" : "NORTHHEATH",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE5",
             "dataType" : "BigDecimal",
@@ -142771,7 +142771,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "ID_KIND_BIRCHBARN='MAPLEGROVE' OR (ID_KIND_BIRCHBARN='M' AND FCH_DATAENTRY= (SELECT TO_NUMBER(TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(GREENCROSS||OAKBLUFF, 'ROWANFIELD'), -1)), 'YYYYMMDD')) FROM DWH_MAPLEGROVE_TIMESPAN WHERE PHASE = 1))",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "NUM_PACT",
             "dataType" : "BigDecimal",
@@ -142873,7 +142873,7 @@
       "target" : {
         "name" : "RISKREG_MONTHLY",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE4",
             "dataType" : "BigDecimal",
@@ -144036,7 +144036,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "FCH_DATAENTRY=(SELECT TO_NUMBER(TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(GREENCROSS||OAKBLUFF, 'ROWANFIELD'), -1)), 'YYYYMMDD')) FROM DWH_MAPLEGROVE_TIMESPAN WHERE PHASE = 1)",
         "selectDistinct" : true,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "NUM_PACT",
             "dataType" : "BigDecimal",
@@ -144131,7 +144131,7 @@
       "target" : {
         "name" : "RISKREG_CEDARLANE",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE3",
             "dataType" : "BigDecimal",
@@ -145004,7 +145004,7 @@
         "name" : "SQ_DWH_E_MAPLEHEATH_PINEWARD_RISKREG_CEDARLANE",
         "type" : "BERYLFALLS",
         "selectDistinct" : true,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "NUM_PACT",
             "dataType" : "BigDecimal",
@@ -145102,7 +145102,7 @@
       "target" : {
         "name" : "MIS",
         "type" : "EARLYGLADE",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE2",
             "dataType" : "BigDecimal",
@@ -145375,7 +145375,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -146103,7 +146103,7 @@
           "ID_ITEMREF_DF",
           "ID_TYPE_OF_ELMVALE_DF"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_BIRCHGLADE",
             "dataType" : "BigDecimal",
@@ -152566,7 +152566,7 @@
         "type" : "BERYLFALLS",
         "sourceFilter" : "ID_OAKBLUFF = (SELECT TO_NUMBER(TO_CHAR(ADD_MONTHS(TO_DATE(GREENCROSS||OAKBLUFF, 'ROWANFIELD'), -1),'ROWANFIELD')) FROM DWH_MAPLEGROVE_TIMESPAN WHERE PHASE = 1)",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_OAKBLUFF",
             "dataType" : "BigDecimal",

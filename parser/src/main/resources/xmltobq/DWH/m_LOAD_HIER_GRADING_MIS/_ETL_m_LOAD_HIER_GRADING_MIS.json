@@ -4,7 +4,7 @@
       "target" : {
         "name" : "HIER_GRADING_MIS",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_GRADING_MIS",
             "dataType" : "Long",
@@ -84,7 +84,7 @@
         "groupByFields" : [
           "ID_NUM_GRADING"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",
@@ -181,7 +181,7 @@
         "name" : "SQ_LOAD_HIER_GRADING_MIS",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

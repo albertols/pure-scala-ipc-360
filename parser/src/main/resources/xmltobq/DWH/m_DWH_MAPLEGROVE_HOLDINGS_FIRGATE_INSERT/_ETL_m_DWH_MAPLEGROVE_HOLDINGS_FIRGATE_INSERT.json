@@ -9,7 +9,7 @@
           "ID_HOLDINGS_FIRGATE",
           "FCH_DATAENTRY"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_ENTITYREF_FIRGATE",
             "dataType" : "String",
@@ -289,7 +289,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ELMWICK3FLINTGROVE",
             "dataType" : "String",
@@ -777,7 +777,7 @@
         "sourceFilter" : "SUBSTR(ODS_MAPLEBARN_ELMTRACK800MAPLEHEATH.PINECROFT_GRAYWICK_KEY,-2) <>'MAPLEGLADE'",
         "userDefinedJoin" : "SUBSTR(ODS_FIRGATE3.ELMWICK3AMBERCROSS,1,4) = ODS_MAPLEBARN_ELMTRACK800MAPLEHEATH.ROWANSTONE_ID (+) AND SUBSTR(ODS_FIRGATE3.ELMWICK3AMBERCROSS,5,4) = ODS_MAPLEBARN_ELMTRACK800MAPLEHEATH.CORALRIDGE_NO_MAIN (+) AND TO_NUMBER(SUBSTR(ODS_FIRGATE3.ELMWICK3AMBERCROSS,11,10)) = ODS_MAPLEBARN_ELMTRACK800MAPLEHEATH.FLINTSPRING_NUMBER (+)",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

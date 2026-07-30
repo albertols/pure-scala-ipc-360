@@ -4,7 +4,7 @@
       "target" : {
         "name" : "LKP_MEMBER_SEGMENTED_RULESET",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "Long",
@@ -152,7 +152,7 @@
             }
           ]
         },
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_MEMBER",
             "dataType" : "BigDecimal",
@@ -383,7 +383,7 @@
           "ID_OAKCLIFF_UPPERHOLLOW_FLINTLANE",
           "ID_OAKCLIFF_UPPERDELL_AGATEYARD"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",
@@ -870,7 +870,7 @@
         "name" : "SQ_STG_LKP_MEMBERS_RULESET1",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",

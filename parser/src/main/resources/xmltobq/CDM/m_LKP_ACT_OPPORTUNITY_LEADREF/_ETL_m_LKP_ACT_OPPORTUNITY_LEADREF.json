@@ -7,7 +7,7 @@
         "primaryKeys" : [
           "ID_LEADREF"
         ],
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_LEADREF",
             "dataType" : "String",
@@ -250,7 +250,7 @@
         "name" : "SQ_ff_LKP_ACT_OPPORTUNITY_LEADREF",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_LEADREF",
             "dataType" : "String",

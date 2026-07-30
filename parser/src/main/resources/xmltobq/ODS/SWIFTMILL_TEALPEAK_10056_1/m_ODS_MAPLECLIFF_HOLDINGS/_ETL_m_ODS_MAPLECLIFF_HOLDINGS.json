@@ -4,7 +4,7 @@
       "target" : {
         "name" : "ODS_MAPLECLIFF_HOLDINGS",
         "type" : "table",
-        "weststone" : [
+        "fields" : [
           {
             "name" : "ID_RECORD",
             "dataType" : "BigDecimal",
@@ -1627,7 +1627,7 @@
         "name" : "SQ_STG_MAPLECLIFF_HOLDINGS",
         "type" : "BERYLFALLS",
         "selectDistinct" : false,
-        "weststone" : [
+        "fields" : [
           {
             "name" : "FCH_DATAENTRY",
             "dataType" : "String",
