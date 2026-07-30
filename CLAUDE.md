@@ -9,7 +9,8 @@ platform-agnostic. A multi-module Maven repo:
   tool, unchanged in behavior. Produces `_ETL_<mapping>.json` recipes, `<TABLE>.json`
   BigQuery DDL, and `_sqlTranslations_ETL_<mapping>.json` Oracle→BigQuery SQL.
 - `backend/` — Spring Boot 3.3 / Java 17 read-only REST API that calls the parser
-  in-JVM and serves the corpus (tree, DOM, semantic model, recipes, DDL, expressions).
+  in-JVM and serves the corpus (tree, DOM, semantic model, recipes, DDL, expressions,
+  table relationships, mock operational job history).
 - `frontend/` — React 19 / Vite / Tailwind v4 GUI (Figma Make prototype), being wired
   to `backend/` tab by tab; still mostly mock-data-driven.
 - `docs/` — ADRs, `architecture.md`, and `superpowers/{specs,plans}/` design artifacts.
@@ -70,14 +71,20 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
 
 - `make test` = `mvn -am -pl backend test` + `cd frontend && pnpm test`.
 - **Corpus contract test** (`backend/.../CorpusContractTest`, JUnit): every XML in the
-  corpus serves `/api/mappings/dom` and `/model` with 200 (≥59 mappings — 46 lowercase
-  `.xml` + 13 uppercase `.XML`); every `_ETL_*.json` recipe serves via `/api/recipes`
-  (≥64). This replaces the old manual "regenerate and eyeball" smoke check.
+  corpus serves `/api/mappings/dom` and `/model` with 200 (≥69 mappings — 55 lowercase
+  `.xml` + 14 uppercase `.XML`, real corpus + the synthetic `SYN` family); every
+  `_ETL_*.json` recipe serves via `/api/recipes` (≥74). This replaces the old manual
+  "regenerate and eyeball" smoke check.
 - Parser regression is verified once at the module move (Task 1: pre/post-move
   byte-diff of full corpus regeneration) plus the ongoing corpus contract test above —
   there is no standing JUnit regen-diff harness.
 - `make check` adds `tsc --noEmit` + `pnpm format --check` (frontend format backlog
   documented in root `README.md`; it doesn't fail the target while that backlog exists).
+- `make validate-loop` (`scripts/validate_loop.sh`) is the frontend→middleware→backend
+  gate: boots the backend, curls `/api/health`, `/api/relationships`,
+  `/api/operational/dates`/`{date}` over the committed synthetic mock operational data
+  (`SYN`-marked mappings, mock `LayerToLayerConfig`, 14-day b15 job history), then runs
+  the frontend hook tests — see `docs/adr/0006-synthetic-operational-data.md`.
 
 ## Corpus caveats
 
@@ -97,9 +104,11 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
 ## More
 
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0005`
+- Design rationale: `docs/adr/0001`–`0006`
 - Current spec/plan: `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
-  `docs/superpowers/plans/2026-07-29-etl360-foundation.md`
+  `docs/superpowers/plans/2026-07-29-etl360-foundation.md`,
+  `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,
+  `docs/superpowers/plans/2026-07-30-synthetic-operational-data.md`
 - Parser deep-dive: `parser/src/main/scala/io/pure360/ipc/xmltojson/README.md`,
   `_DWH_Transformations_and_XML_Parsing.md`
 - Dev harness, prerequisites, `.env.example` reference: root `README.md`

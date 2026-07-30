@@ -776,7 +776,7 @@ export const useOperational = (date: string) =>
 
 **Interfaces:** consumes everything.
 
-- [ ] **Step 1: `scripts/validate_loop.sh`**
+- [x] **Step 1: `scripts/validate_loop.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -807,10 +807,10 @@ validate-loop:  ## end-to-end frontend→middleware→backend gate over the mock
 	bash scripts/validate_loop.sh
 ```
 (The `real|mock` tolerance is deliberate: on the reference machine the git-ignored real `DWH_CONTROL` dir exists, so its mode reads `"real"`; fresh checkouts read `"mock"`. Either proves the loop; only `"absent"` fails.)
-- [ ] **Step 2: Run `make validate-loop`** — Expected: PASS end-to-end, teardown clean (no listener on 8080 after).
-- [ ] **Step 3: Write ADR-0006 + doc updates** (counts sweep: CLAUDE.md testing section, architecture.md endpoint table + b15/generator paragraph, README generator usage; every quoted command must actually run).
-- [ ] **Step 4: `make check`** — green (docs tasks must not break it).
-- [ ] **Step 5: Commit** — `git commit -m "feat(harness): make validate-loop gate + ADR-0006 + docs for operational mock data"` (stage `scripts/validate_loop.sh Makefile .claude/skills docs CLAUDE.md README.md` + plan).
+- [x] **Step 2: Run `make validate-loop`** — Expected: PASS end-to-end, teardown clean (no listener on 8080 after).
+- [x] **Step 3: Write ADR-0006 + doc updates** (counts sweep: CLAUDE.md testing section, architecture.md endpoint table + b15/generator paragraph, README generator usage; every quoted command must actually run).
+- [x] **Step 4: `make check`** — green (docs tasks must not break it).
+- [x] **Step 5: Commit** — `git commit -m "feat(harness): make validate-loop gate + ADR-0006 + docs for operational mock data"` (stage `scripts/validate_loop.sh Makefile .claude/skills docs CLAUDE.md README.md` + plan).
 
 ---
 
