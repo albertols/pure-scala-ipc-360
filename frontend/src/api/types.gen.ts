@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/relationships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["relationships"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/recipes/{*path}": {
         parameters: {
             query?: never;
@@ -28,6 +44,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["recipe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operational/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["snapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operational/dates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dates"];
         put?: never;
         post?: never;
         delete?: never;
@@ -149,6 +197,36 @@ export interface components {
             hasDdl?: boolean;
             children?: components["schemas"]["TreeNodeDto"][];
         };
+        EdgeDto: {
+            from?: string;
+            to?: string;
+            kind?: string;
+        };
+        MetaDto: {
+            /** Format: int32 */
+            entryCount?: number;
+            /** Format: int32 */
+            skippedRows?: number;
+            layers?: string[];
+        };
+        NodeDto: {
+            id?: string;
+            kind?: string;
+            name?: string;
+            layer?: string;
+            mappingPath?: string;
+            hasRecipe?: boolean;
+            workflow?: string;
+            /** Format: int32 */
+            executionOrder?: number;
+            writeMode?: string;
+            partitionType?: string;
+        };
+        RelationshipsDto: {
+            nodes?: components["schemas"]["NodeDto"][];
+            edges?: components["schemas"]["EdgeDto"][];
+            meta?: components["schemas"]["MetaDto"];
+        };
         JsonNode: Record<string, never>;
         RecipeDto: {
             path?: string;
@@ -157,6 +235,23 @@ export interface components {
             sizeBytes?: number;
             modifiedAt?: string;
             content?: components["schemas"]["JsonNode"];
+        };
+        B15RowDto: {
+            clusterName?: string;
+            recipeFilename?: string;
+            jobId?: string;
+            appStartIso?: string;
+            avgJobDurationInMinsSec?: string;
+            status?: string;
+            message?: string;
+        };
+        OperationalSnapshotDto: {
+            date?: string;
+            rows?: components["schemas"]["B15RowDto"][];
+        };
+        OperationalDatesDto: {
+            dates?: string[];
+            mode?: string;
         };
         ConnectorDto: {
             fromField?: string;
@@ -414,6 +509,26 @@ export interface operations {
             };
         };
     };
+    relationships: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RelationshipsDto"];
+                };
+            };
+        };
+    };
     recipe: {
         parameters: {
             query?: never;
@@ -432,6 +547,48 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RecipeDto"];
+                };
+            };
+        };
+    };
+    snapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OperationalSnapshotDto"];
+                };
+            };
+        };
+    };
+    dates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OperationalDatesDto"];
                 };
             };
         };

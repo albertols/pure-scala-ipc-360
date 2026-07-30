@@ -739,8 +739,8 @@ git commit -m "feat(mock): deterministic b15 generator + 14-day committed operat
 - Consumes: running backend (type regen), `apiGet`.
 - Produces: `useRelationships()`, `useOperationalDates()`, `useOperational(date)` hooks; aliases `RelationshipGraph`, `OperationalSnapshot`, `B15Row`, `OperationalDates`.
 
-- [ ] **Step 1: Regenerate types** — boot backend (install-then-run pattern), `cd frontend && pnpm generate:api`, kill backend (verify dead). Confirm `types.gen.ts` contains `RelationshipsDto`, `OperationalSnapshotDto`, `B15RowDto`.
-- [ ] **Step 2: Hooks** (append to `queries.ts`, existing conventions):
+- [x] **Step 1: Regenerate types** — boot backend (install-then-run pattern), `cd frontend && pnpm generate:api`, kill backend (verify dead). Confirm `types.gen.ts` contains `RelationshipsDto`, `OperationalSnapshotDto`, `B15RowDto`.
+- [x] **Step 2: Hooks** (append to `queries.ts`, existing conventions):
 
 ```ts
 export type RelationshipGraph = components['schemas']['RelationshipsDto']
@@ -758,10 +758,10 @@ export const useOperational = (date: string) =>
   useQuery({ queryKey: ['operational', date], queryFn: () => apiGet<OperationalSnapshot>(`/operational/${date}`), staleTime: STALE_MS, enabled: !!date })
 ```
 
-- [ ] **Step 3: MSW test** — `operational.test.tsx` per the Task 11 (Foundation) pattern: handler for `/api/operational/dates` returning `{dates: ['2026-07-29'], mode: 'mock'}` + `/api/operational/2026-07-29` returning one row; assert `useOperationalDates` then `useOperational` resolve with the row's `recipeFilename`.
-- [ ] **Step 4: Sidebar color** — add `OUTPUT: '#a78bfa',` (or another EXISTING `:root` token value from `frontend/src/index.css` — verify the hex exists there first; pick the violet/purple token) to `LAYER_COLORS`. Nothing else in the file.
-- [ ] **Step 5: Verify** — `cd frontend && pnpm test && npx tsc --noEmit` — all green.
-- [ ] **Step 6: Commit** — `git commit -m "feat(frontend): relationships + operational hooks, OUTPUT layer color"` (stage `frontend` + plan).
+- [x] **Step 3: MSW test** — `operational.test.tsx` per the Task 11 (Foundation) pattern: handler for `/api/operational/dates` returning `{dates: ['2026-07-29'], mode: 'mock'}` + `/api/operational/2026-07-29` returning one row; assert `useOperationalDates` then `useOperational` resolve with the row's `recipeFilename`.
+- [x] **Step 4: Sidebar color** — add `OUTPUT: '#a78bfa',` (or another EXISTING `:root` token value from `frontend/src/index.css` — verify the hex exists there first; pick the violet/purple token) to `LAYER_COLORS`. Nothing else in the file.
+- [x] **Step 5: Verify** — `cd frontend && pnpm test && npx tsc --noEmit` — all green.
+- [x] **Step 6: Commit** — `git commit -m "feat(frontend): relationships + operational hooks, OUTPUT layer color"` (stage `frontend` + plan).
 
 ---
 

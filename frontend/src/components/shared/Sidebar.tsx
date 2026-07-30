@@ -12,6 +12,7 @@ const LAYER_COLORS: Record<string, string> = {
   QDM: '#f472b6',  // --pink
   RDM: '#67e8f9',  // --cyan
   STG: '#22d3ee',  // --teal
+  OUTPUT: '#a78bfa',  // --purple
 }
 
 function FileIcon({ type }: { type: 'json' | 'xml' }) {

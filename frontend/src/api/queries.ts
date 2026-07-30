@@ -31,3 +31,17 @@ export const useExpressions = () =>
 
 export const useAppConfig = () =>
   useQuery({ queryKey: ['config'], queryFn: () => apiGet<AppConfig>('/config'), staleTime: Infinity })
+
+export type RelationshipGraph = components['schemas']['RelationshipsDto']
+export type OperationalSnapshot = components['schemas']['OperationalSnapshotDto']
+export type B15Row = components['schemas']['B15RowDto']
+export type OperationalDates = components['schemas']['OperationalDatesDto']
+
+export const useRelationships = () =>
+  useQuery({ queryKey: ['relationships'], queryFn: () => apiGet<RelationshipGraph>('/relationships'), staleTime: STALE_MS })
+
+export const useOperationalDates = () =>
+  useQuery({ queryKey: ['operationalDates'], queryFn: () => apiGet<OperationalDates>('/operational/dates'), staleTime: STALE_MS })
+
+export const useOperational = (date: string) =>
+  useQuery({ queryKey: ['operational', date], queryFn: () => apiGet<OperationalSnapshot>(`/operational/${date}`), staleTime: STALE_MS, enabled: !!date })
