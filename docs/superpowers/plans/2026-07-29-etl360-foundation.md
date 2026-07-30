@@ -1861,4 +1861,4 @@ once `pnpm format --check` is clean on its own.
 
 - [x] **Step 2: Fix anything red, re-run, then commit** — `git commit -m "chore: Foundation acceptance sweep — spec §11 criteria verified" --allow-empty` (allow-empty when no fixes were needed; the message carries the PASS record).
 
-- [ ] **Step 3: Close out** — tick the last checkboxes here, commit this plan file, and use superpowers:finishing-a-development-branch to decide merge/PR for `feat/etl360-foundation`.
+- [x] **Step 3: Close out** — tick the last checkboxes here, commit this plan file, and use superpowers:finishing-a-development-branch to decide merge/PR for `feat/etl360-foundation`.
