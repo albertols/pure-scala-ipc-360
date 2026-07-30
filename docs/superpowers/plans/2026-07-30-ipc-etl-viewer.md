@@ -163,7 +163,7 @@ const HEADER_H = 44, PORT_H = 22, PAD = 10
 const nodeHeight = (n: { ports: unknown[] }) => HEADER_H + n.ports.length * PORT_H + PAD
 ```
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```ts
 describe('toCanvas — layout', () => {
@@ -203,8 +203,8 @@ describe('toCanvas — layout', () => {
 })
 ```
 
-- [ ] **Step 2: red → Step 3: implement.** Longest-path layering over the connection graph (adjacency by node id, unique edges): `layer(n) = 0` for nodes with no incoming connections OR kind `source`; else `1 + max(layer(pred))`, memoized DFS with an in-progress set (cycle ⇒ treat back-edge as absent). Targets clamp to `maxLayer` (all targets share the final column). `x = X0 + layer*COL_PITCH`. Within a column, order nodes by (average predecessor y, then name) and stack: first at `Y0`, next at `prevY + nodeHeight(prev) + V_GAP`.
-- [ ] **Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): layered auto-layout — longest-path columns, stacked rows, cycle-safe"` (same explicit paths + plan).
+- [x] **Step 2: red → Step 3: implement.** Longest-path layering over the connection graph (adjacency by node id, unique edges): `layer(n) = 0` for nodes with no incoming connections OR kind `source`; else `1 + max(layer(pred))`, memoized DFS with an in-progress set (cycle ⇒ treat back-edge as absent). Targets clamp to `maxLayer` (all targets share the final column). `x = X0 + layer*COL_PITCH`. Within a column, order nodes by (average predecessor y, then name) and stack: first at `Y0`, next at `prevY + nodeHeight(prev) + V_GAP`.
+- [x] **Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): layered auto-layout — longest-path columns, stacked rows, cycle-safe"` (same explicit paths + plan).
 
 ---
 

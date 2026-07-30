@@ -56,3 +56,39 @@ describe('toCanvas — nodes, kinds, ports', () => {
       .toEqual(['ETL_SYN_ORDERS_AUDIT', 'ETL_SYN_ORDERS_BRIDGE'])
   })
 })
+
+describe('toCanvas — layout', () => {
+  it('layers left-to-right: sources col 0, targets last, x = X0 + layer*230', () => {
+    const g = toCanvas(diamond as MappingModel, 'DWH/m_SYN_DWH_ORDERS_FACT')
+    const byName = new Map(g.nodes.map(n => [n.name, n]))
+    expect(byName.get('ODS_SYN_ORDERS')!.x).toBe(40)
+    expect(byName.get('ODS_SYN_CUSTOMERS')!.x).toBe(40)
+    const tgt = byName.get('DWH_SYN_ORDERS_FACT')!
+    expect(tgt.x).toBeGreaterThan(40)
+    expect((tgt.x - 40) % 230).toBe(0)
+    for (const n of g.nodes) expect(Math.max(...g.nodes.map(m => m.x))).toBeGreaterThanOrEqual(n.x)
+  })
+
+  it('two nodes in one column stack with V_GAP, no overlap', () => {
+    const g = toCanvas(diamond as MappingModel, 'DWH/m_SYN_DWH_ORDERS_FACT')
+    const cols = new Map<number, { y: number; h: number }[]>()
+    for (const n of g.nodes) {
+      const arr = cols.get(n.x) ?? []
+      arr.push({ y: n.y, h: 44 + n.ports.length * 22 + 10 })
+      cols.set(n.x, arr)
+    }
+    for (const arr of cols.values()) {
+      arr.sort((a, b) => a.y - b.y)
+      for (let i = 1; i < arr.length; i++) expect(arr[i].y).toBeGreaterThanOrEqual(arr[i-1].y + arr[i-1].h + 40)
+    }
+  })
+
+  it('cycle-safe: connector loop does not hang', () => {
+    const cyclic = structuredClone(diamond) as MappingModel
+    const m = cyclic.repository!.folder!.mappings![0]
+    const [a, b] = m.instances!.map(i => i.name!)
+    m.connectors!.push({ fromInstance: b, fromField: 'X', toInstance: a, toField: 'X' })
+    const g = toCanvas(cyclic, 'DWH/m_SYN_DWH_ORDERS_FACT')
+    expect(g.nodes.length).toBeGreaterThan(0)
+  })
+})
