@@ -38,7 +38,7 @@ The riskiest assumption first: a hand-authored minimal Powermart XML must yield 
 **Interfaces:**
 - Produces: the validated XML template every Task 2 mapping copies; the `STG/` corpus layer (new — the real corpus has CDM/DWH/ETL/ODS/QDM/RDM only).
 
-- [ ] **Step 1: Study the smallest real corpus XML for required structure**
+- [x] **Step 1: Study the smallest real corpus XML for required structure**
 
 ```bash
 cd parser/src/main/resources/xmltobq
@@ -46,7 +46,7 @@ ls -S ODS/*.xml CDM/*.xml | tail -3   # smallest real XMLs
 ```
 Read the smallest one end-to-end. Note which elements beyond `SOURCE/TARGET/TRANSFORMATION/MAPPING` exist (e.g. `INSTANCE`, `CONNECTOR`, `TARGETLOADORDER`, session/config blocks) and which attributes the `MAPPING` block's instances carry. The template below is the starting point — extend it with whatever the real file shows is structurally required, keeping SYN names.
 
-- [ ] **Step 2: Author the template XML**
+- [x] **Step 2: Author the template XML**
 
 `parser/src/main/resources/xmltobq/STG/m_SYN_STG_L_ORDERS_LOAD.xml` — starting point (adjust per Step 1 findings):
 
@@ -84,7 +84,7 @@ Read the smallest one end-to-end. Note which elements beyond `SOURCE/TARGET/TRAN
 </POWERMART>
 ```
 
-- [ ] **Step 3: Generate over a temp copy**
+- [x] **Step 3: Generate over a temp copy**
 
 ```bash
 TMP=$(mktemp -d)
@@ -95,16 +95,16 @@ find "$TMP/xmltobq/STG" -name '*.json'
 ```
 Expected: `$TMP/xmltobq/STG/m_SYN_STG_L_ORDERS_LOAD/_ETL_m_SYN_STG_L_ORDERS_LOAD.json` plus DDL JSON(s), exit 0. If generation fails or produces no recipe: iterate the template guided by Step 1's real-XML structure (add `INSTANCE`/`TARGETLOADORDER` blocks etc.). If three iterations don't converge, STOP and report BLOCKED with the parser log.
 
-- [ ] **Step 4: Inspect the generated recipe** — confirm it names `SYN_FF_ORDERS`, `STG_L_SYN_ORDERS`, contains the `TO_DECIMAL` expression, and source refs use `SOURCE_NAME.FIELD_NAME` dot notation. Copy outputs back:
+- [x] **Step 4: Inspect the generated recipe** — confirm it names `SYN_FF_ORDERS`, `STG_L_SYN_ORDERS`, contains the `TO_DECIMAL` expression, and source refs use `SOURCE_NAME.FIELD_NAME` dot notation. Copy outputs back:
 
 ```bash
 cp -R "$TMP/xmltobq/STG/m_SYN_STG_L_ORDERS_LOAD" parser/src/main/resources/xmltobq/STG/
 ```
 
-- [ ] **Step 5: Backend still green** — Run: `mvn -q -am -pl backend test`
+- [x] **Step 5: Backend still green** — Run: `mvn -q -am -pl backend test`
 Expected: PASS (floors are ≥, one extra mapping is fine; the corpus contract test now also serves the new XML's dom+model).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add parser/src/main/resources/xmltobq/STG docs/superpowers/plans/2026-07-30-synthetic-operational-data.md

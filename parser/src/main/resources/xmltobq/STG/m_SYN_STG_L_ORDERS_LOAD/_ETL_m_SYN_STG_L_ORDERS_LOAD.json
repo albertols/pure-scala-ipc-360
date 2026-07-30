@@ -1,0 +1,57 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "STG_L_SYN_ORDERS",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SYN_FF_ORDERS.ORDER_ID"
+            }
+          },
+          {
+            "name" : "CUSTOMER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SYN_FF_ORDERS.CUSTOMER_ID"
+            }
+          },
+          {
+            "name" : "AMOUNT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_TRIM",
+                  "parameters" : [
+                    {
+                      "source" : "SYN_FF_ORDERS.AMOUNT_RAW"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SYN_FF_ORDERS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "STG_L_SYN_ORDERS"
+    ],
+    "sourceTableNames" : [
+      "SYN_FF_ORDERS"
+    ]
+  }
+}
