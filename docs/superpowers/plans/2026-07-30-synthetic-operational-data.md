@@ -226,9 +226,9 @@ public record LayerToLayerEntryDto(String layer, String mappingXmlDir, String re
 }
 ```
 
-- [ ] **Step 1: Fixture files** — `fixture-mock/.../ODS/statements.sql` with 3 rows: one full row (all arrays populated, incl. a quoted string containing a comma inside `('a, b')`), one row with empty arrays `[], [], []`-style, one deliberately malformed row (`VALUES ('ODS', broken`). `ARCHIVE/statements.sql`: one valid row (must be ignored).
+- [x] **Step 1: Fixture files** — `fixture-mock/.../ODS/statements.sql` with 3 rows: one full row (all arrays populated, incl. a quoted string containing a comma inside `('a, b')`), one row with empty arrays `[], [], []`-style, one deliberately malformed row (`VALUES ('ODS', broken`). `ARCHIVE/statements.sql`: one valid row (must be ignored).
 
-- [ ] **Step 2: Failing test**
+- [x] **Step 2: Failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -264,9 +264,9 @@ class LayerToLayerServiceTest {
 ```
 (Adjust the `Etl360Properties` construction so `DataRoots` resolves the fixture `DWH_CONTROL` as the real tier — absolute-path the strings if `resolveAgainstRepoRoot` interferes; the existing `DataRootsTest` shows the working pattern.)
 
-- [ ] **Step 3: Run to verify failure** — `mvn -q -pl backend test -Dtest=LayerToLayerServiceTest` — compile error.
+- [x] **Step 3: Run to verify failure** — `mvn -q -pl backend test -Dtest=LayerToLayerServiceTest` — compile error.
 
-- [ ] **Step 4: Implement.** Service reads the eight fixed dir names only; per file, extract statements with a regex anchor and parse the parenthesized values with a cursor-based tokenizer:
+- [x] **Step 4: Implement.** Service reads the eight fixed dir names only; per file, extract statements with a regex anchor and parse the parenthesized values with a cursor-based tokenizer:
 
 ```java
 package io.pure360.etl360.service;
@@ -398,8 +398,8 @@ public class LayerToLayerService {
 }
 ```
 
-- [ ] **Step 5: Run the test** — `mvn -q -pl backend test -Dtest=LayerToLayerServiceTest` — Expected: PASS. Add tokenizer edge tests in the same class: quoted comma survives, `''` escape, empty arrays, malformed row counted not thrown.
-- [ ] **Step 6: Full suite + commit**
+- [x] **Step 5: Run the test** — `mvn -q -pl backend test -Dtest=LayerToLayerServiceTest` — Expected: PASS. Add tokenizer edge tests in the same class: quoted comma survives, `''` escape, empty arrays, malformed row counted not thrown.
+- [x] **Step 6: Full suite + commit**
 
 ```bash
 mvn -q -am -pl backend test
