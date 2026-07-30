@@ -818,7 +818,7 @@ validate-loop:  ## end-to-end frontend→middleware→backend gate over the mock
 
 **Files:** none new — verification + fixes only.
 
-- [ ] **Step 1: Walk the seven criteria** from spec §11, recording PASS/FAIL each (commands + outputs in the report):
+- [x] **Step 1: Walk the seven criteria** from spec §11, recording PASS/FAIL each (commands + outputs in the report):
 1. `make test` green, floors ≥69/≥74.
 2. `make validate-loop` green from the current checkout.
 3. `/api/relationships` contains the full SYN chain reachable (STG→ODS→DWH→CDM→RDM/QDM + ETL/OUTPUT hops, diamond, shared lookup) — verify by walking edges from `table:SYN_FF_ORDERS`.
@@ -826,4 +826,4 @@ validate-loop:  ## end-to-end frontend→middleware→backend gate over the mock
 5. `python3 scripts/gen_b15_history.py` rerun ⇒ `git status` clean (byte-identical).
 6. Decoy exclusion test present and green.
 7. Docs match reality (ADR-0006, architecture.md rows, README generator section, skills file ≤25 lines).
-- [ ] **Step 2: Fix anything red, re-run, commit** — `git commit --allow-empty -m "chore: sub-project 4 acceptance sweep — spec §11 criteria verified"` (message carries the record; tick this plan's last checkboxes and include it).
+- [x] **Step 2: Fix anything red, re-run, commit** — `git commit --allow-empty -m "chore: sub-project 4 acceptance sweep — spec §11 criteria verified"` (message carries the record; tick this plan's last checkboxes and include it).
