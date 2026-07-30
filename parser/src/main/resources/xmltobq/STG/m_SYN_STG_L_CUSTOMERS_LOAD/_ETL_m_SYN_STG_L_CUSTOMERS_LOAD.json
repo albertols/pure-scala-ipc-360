@@ -1,0 +1,57 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "STG_L_SYN_CUSTOMERS",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "CUSTOMER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SYN_FF_CUSTOMERS.CUSTOMER_ID"
+            }
+          },
+          {
+            "name" : "CUSTOMER_STATUS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "SYN_FF_CUSTOMERS.CUSTOMER_STATUS"
+            }
+          },
+          {
+            "name" : "CUSTOMER_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_UPPER",
+              "parameters" : [
+                {
+                  "name" : "EXP_TRIM",
+                  "parameters" : [
+                    {
+                      "source" : "SYN_FF_CUSTOMERS.CUSTOMER_NAME"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "SYN_FF_CUSTOMERS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "STG_L_SYN_CUSTOMERS"
+    ],
+    "sourceTableNames" : [
+      "SYN_FF_CUSTOMERS"
+    ]
+  }
+}

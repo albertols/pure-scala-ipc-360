@@ -1,0 +1,20 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "CUSTOMER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CUSTOMER_STATUS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CUSTOMER_NAME",
+  "type": "STRING",
+  "description": ""
+  }
+]

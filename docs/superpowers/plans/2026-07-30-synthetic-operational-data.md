@@ -139,12 +139,12 @@ Per-mapping data (each: template copy, sources/lookups become extra `SOURCE` blo
 
 Lookup representation: a second `SOURCE` block named as the lookup table plus a `TRANSFORMATION TYPE="Lookup Procedure" NAME="LKP_SYN_CURRENCY"` wired via connectors (mirrors how real corpus XMLs carry lookups — check one real example in `CDM/` and copy its shape).
 
-- [ ] **Step 1: Author the 9 XMLs** per the table (SYN names throughout, folder `SYN_ORDERS`, one non-identity expression each — they feed `/api/expressions`).
-- [ ] **Step 2: Generate all over a temp copy** (same rsync/exec pattern as Task 1 Step 3 but copying the 9 new XMLs; `--include='*.XML'` matters for #8). Copy the 9 output dirs back next to their XMLs.
-- [ ] **Step 3: Raise the floors** — in `CorpusContractTest.java`: `hasSizeGreaterThanOrEqualTo(59)` → `69`, `hasSizeGreaterThanOrEqualTo(64)` → `74`.
-- [ ] **Step 4: Full backend suite** — Run: `mvn -q -am -pl backend test`
+- [x] **Step 1: Author the 9 XMLs** per the table (SYN names throughout, folder `SYN_ORDERS`, one non-identity expression each — they feed `/api/expressions`).
+- [x] **Step 2: Generate all over a temp copy** (same rsync/exec pattern as Task 1 Step 3 but copying the 9 new XMLs; `--include='*.XML'` matters for #8). Copy the 9 output dirs back next to their XMLs.
+- [x] **Step 3: Raise the floors** — in `CorpusContractTest.java`: `hasSizeGreaterThanOrEqualTo(59)` → `69`, `hasSizeGreaterThanOrEqualTo(64)` → `74`.
+- [x] **Step 4: Full backend suite** — Run: `mvn -q -am -pl backend test`
 Expected: PASS — contract test now serves 69 mappings incl. all SYN dom+model and 74 recipes.
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add parser/src/main/resources/xmltobq backend/src/test/java/io/pure360/etl360/CorpusContractTest.java docs/superpowers/plans/2026-07-30-synthetic-operational-data.md

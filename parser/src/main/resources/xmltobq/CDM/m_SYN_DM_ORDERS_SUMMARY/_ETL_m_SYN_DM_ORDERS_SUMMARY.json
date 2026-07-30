@@ -1,0 +1,115 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DM_SYN_ORDERS_SUMMARY",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "DWH_SYN_ORDERS_FACT.ORDER_ID"
+            }
+          },
+          {
+            "name" : "CUSTOMER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "DWH_SYN_ORDERS_FACT.CUSTOMER_ID"
+            }
+          },
+          {
+            "name" : "CUSTOMER_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "DWH_SYN_ORDERS_FACT.CUSTOMER_NAME"
+            }
+          },
+          {
+            "name" : "LOAD_DATE_KEY",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "DWH_SYN_ORDERS_FACT.LOAD_DATE_KEY"
+            }
+          },
+          {
+            "name" : "AMOUNT_LOCAL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "Undefined",
+              "parameters" : [
+                {
+                  "name" : "EXP_ARITHMETIC",
+                  "parameters" : [
+                    {
+                      "source" : "DWH_SYN_ORDERS_FACT.AMOUNT"
+                    },
+                    {
+                      "value" : "*"
+                    },
+                    {
+                      "name" : "LKP_SYN_CURRENCY",
+                      "outputField" : "FX_RATE",
+                      "table" : "SYN_LKP_CURRENCY",
+                      "condition" : "CURRENCY_CODE = in_CURRENCY_CODE",
+                      "matchPolicy" : "First",
+                      "parameters" : [
+                        {
+                          "name" : "in_CURRENCY_CODE",
+                          "dataType" : "String",
+                          "transformation" : {
+                            "source" : "DWH_SYN_ORDERS_FACT.CURRENCY_CODE"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "COUNT_BAND_FLAG",
+            "dataType" : "Long",
+            "transformation" : {
+              "name" : "EXP_DECODE",
+              "parameters" : [
+                {
+                  "source" : "DWH_SYN_ORDERS_FACT.COUNT_BAND"
+                },
+                {
+                  "value" : "'HIGH'"
+                },
+                {
+                  "value" : "1"
+                },
+                {
+                  "value" : "0"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "DWH_SYN_ORDERS_FACT",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DM_SYN_ORDERS_SUMMARY"
+    ],
+    "sourceTableNames" : [
+      "DWH_SYN_ORDERS_FACT",
+      "SYN_LKP_CURRENCY"
+    ]
+  }
+}

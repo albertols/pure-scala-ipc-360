@@ -1,0 +1,105 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ETL_SYN_ORDERS_AUDIT",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID_PADDED",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "source" : "ODS_SYN_ORDERS.ORDER_ID"
+                },
+                {
+                  "value" : "20"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CUSTOMER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_SYN_ORDERS.CUSTOMER_ID"
+            }
+          },
+          {
+            "name" : "AMOUNT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_SYN_ORDERS.AMOUNT"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_SYN_ORDERS",
+          "type" : "table"
+        }
+      ]
+    },
+    {
+      "target" : {
+        "name" : "ETL_SYN_ORDERS_BRIDGE",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID_PADDED",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_LPAD",
+              "parameters" : [
+                {
+                  "source" : "ODS_SYN_ORDERS.ORDER_ID"
+                },
+                {
+                  "value" : "20"
+                },
+                {
+                  "value" : "'0'"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "CUSTOMER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_SYN_ORDERS.CUSTOMER_ID"
+            }
+          },
+          {
+            "name" : "AMOUNT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_SYN_ORDERS.AMOUNT"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_SYN_ORDERS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ETL_SYN_ORDERS_BRIDGE",
+      "ETL_SYN_ORDERS_AUDIT"
+    ],
+    "sourceTableNames" : [
+      "ODS_SYN_ORDERS"
+    ]
+  }
+}

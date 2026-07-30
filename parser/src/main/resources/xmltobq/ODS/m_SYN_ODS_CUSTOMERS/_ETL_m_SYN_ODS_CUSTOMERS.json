@@ -1,0 +1,63 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_SYN_CUSTOMERS",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "CUSTOMER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_L_SYN_CUSTOMERS.CUSTOMER_ID"
+            }
+          },
+          {
+            "name" : "CUSTOMER_STATUS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_L_SYN_CUSTOMERS.CUSTOMER_STATUS"
+            }
+          },
+          {
+            "name" : "CUSTOMER_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_ISNULL",
+                  "parameters" : [
+                    {
+                      "source" : "STG_L_SYN_CUSTOMERS.CUSTOMER_NAME"
+                    }
+                  ]
+                },
+                {
+                  "value" : "'UNKNOWN'"
+                },
+                {
+                  "source" : "STG_L_SYN_CUSTOMERS.CUSTOMER_NAME"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_L_SYN_CUSTOMERS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_SYN_CUSTOMERS"
+    ],
+    "sourceTableNames" : [
+      "STG_L_SYN_CUSTOMERS"
+    ]
+  }
+}

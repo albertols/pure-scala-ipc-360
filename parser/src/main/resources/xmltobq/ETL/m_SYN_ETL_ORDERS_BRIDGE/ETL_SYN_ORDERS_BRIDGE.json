@@ -1,0 +1,20 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ORDER_ID_PADDED",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CUSTOMER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "AMOUNT",
+  "type": "NUMERIC",
+  "description": ""
+  }
+]

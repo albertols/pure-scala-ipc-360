@@ -1,0 +1,32 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ORDER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CUSTOMER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "AMOUNT",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CUSTOMER_NAME",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "LOAD_DATE_KEY",
+  "type": "STRING",
+  "description": ""
+  }
+]

@@ -1,0 +1,64 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "OUT_SYN_ORDERS_FEED",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "RDM_SYN_ORDERS_EXPORT.ORDER_ID"
+            }
+          },
+          {
+            "name" : "FEED_KEY",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_CONCAT",
+              "parameters" : [
+                {
+                  "source" : "RDM_SYN_ORDERS_EXPORT.ORDER_ID"
+                },
+                {
+                  "name" : "EXP_CONCAT",
+                  "parameters" : [
+                    {
+                      "value" : "'-'"
+                    },
+                    {
+                      "name" : "EXP_TO_CHAR",
+                      "parameters" : [
+                        {
+                          "source" : "RDM_SYN_ORDERS_EXPORT.LOAD_DATE"
+                        },
+                        {
+                          "value" : "'YYYY'"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "RDM_SYN_ORDERS_EXPORT",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "OUT_SYN_ORDERS_FEED"
+    ],
+    "sourceTableNames" : [
+      "RDM_SYN_ORDERS_EXPORT"
+    ]
+  }
+}

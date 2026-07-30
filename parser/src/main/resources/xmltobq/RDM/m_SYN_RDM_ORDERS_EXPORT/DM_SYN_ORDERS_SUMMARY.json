@@ -1,0 +1,26 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ORDER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CUSTOMER_NAME",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "AMOUNT_LOCAL",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "REPORT_KEY",
+  "type": "STRING",
+  "description": ""
+  }
+]

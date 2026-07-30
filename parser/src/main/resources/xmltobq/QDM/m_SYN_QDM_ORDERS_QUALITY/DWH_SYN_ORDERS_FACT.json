@@ -1,0 +1,14 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ORDER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "TOTAL_ROWS",
+  "type": "INT64",
+  "description": ""
+  }
+]

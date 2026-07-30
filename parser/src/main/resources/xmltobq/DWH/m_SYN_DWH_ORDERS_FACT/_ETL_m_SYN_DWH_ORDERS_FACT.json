@@ -1,0 +1,74 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "DWH_SYN_ORDERS_FACT",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_SYN_ORDERS.ORDER_ID"
+            }
+          },
+          {
+            "name" : "CUSTOMER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_SYN_ORDERS.CUSTOMER_ID"
+            }
+          },
+          {
+            "name" : "AMOUNT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "ODS_SYN_ORDERS.AMOUNT"
+            }
+          },
+          {
+            "name" : "CUSTOMER_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "ODS_SYN_CUSTOMERS.CUSTOMER_NAME"
+            }
+          },
+          {
+            "name" : "LOAD_DATE_KEY",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_TO_CHAR",
+              "parameters" : [
+                {
+                  "source" : "ODS_SYN_ORDERS.LOAD_DATE"
+                },
+                {
+                  "value" : "'YYYYMMDD'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "ODS_SYN_ORDERS",
+          "type" : "table"
+        },
+        {
+          "name" : "ODS_SYN_CUSTOMERS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "DWH_SYN_ORDERS_FACT"
+    ],
+    "sourceTableNames" : [
+      "ODS_SYN_ORDERS",
+      "ODS_SYN_CUSTOMERS"
+    ]
+  }
+}

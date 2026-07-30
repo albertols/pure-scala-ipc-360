@@ -1,0 +1,26 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "ORDER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CUSTOMER_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "AMOUNT",
+  "type": "NUMERIC",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "CURRENCY_CODE",
+  "type": "STRING",
+  "description": ""
+  }
+]

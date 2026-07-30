@@ -21,8 +21,8 @@ class CorpusContractTest {
     @Test
     void everyMappingServesDomAndModel() throws Exception {
         List<String> mappings = corpus.allXmlPaths();
-        // 46 lowercase .xml + 13 uppercase .XML — see CLAUDE.md corpus caveats.
-        assertThat(mappings).hasSizeGreaterThanOrEqualTo(59);
+        // 55 lowercase .xml + 14 uppercase .XML (real corpus + SYN family) — see CLAUDE.md corpus caveats.
+        assertThat(mappings).hasSizeGreaterThanOrEqualTo(69);
         for (String m : mappings) {
             mvc.perform(get("/api/mappings/dom/" + m)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").exists());
@@ -34,7 +34,7 @@ class CorpusContractTest {
     @Test
     void everyRecipeServes() throws Exception {
         List<String> recipes = corpus.allRecipePaths();
-        assertThat(recipes).hasSizeGreaterThanOrEqualTo(64);
+        assertThat(recipes).hasSizeGreaterThanOrEqualTo(74);
         for (String r : recipes) {
             mvc.perform(get("/api/recipes/" + r)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").exists());

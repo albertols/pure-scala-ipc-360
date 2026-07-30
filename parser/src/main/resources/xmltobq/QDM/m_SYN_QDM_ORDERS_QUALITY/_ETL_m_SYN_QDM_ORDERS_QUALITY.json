@@ -1,0 +1,62 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "QDM_SYN_ORDERS_QUALITY",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "DWH_SYN_ORDERS_FACT.ORDER_ID"
+            }
+          },
+          {
+            "name" : "QUALITY_FLAG",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_IIF",
+              "parameters" : [
+                {
+                  "name" : "EXP_COMPARISON",
+                  "parameters" : [
+                    {
+                      "source" : "DWH_SYN_ORDERS_FACT.TOTAL_ROWS"
+                    },
+                    {
+                      "value" : "="
+                    },
+                    {
+                      "value" : "0"
+                    }
+                  ]
+                },
+                {
+                  "value" : "'KO'"
+                },
+                {
+                  "value" : "'OK'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "DWH_SYN_ORDERS_FACT",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "QDM_SYN_ORDERS_QUALITY"
+    ],
+    "sourceTableNames" : [
+      "DWH_SYN_ORDERS_FACT"
+    ]
+  }
+}

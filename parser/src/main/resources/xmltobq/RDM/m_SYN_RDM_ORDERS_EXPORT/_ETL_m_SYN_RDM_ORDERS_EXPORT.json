@@ -1,0 +1,65 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "RDM_SYN_ORDERS_EXPORT",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "DM_SYN_ORDERS_SUMMARY.ORDER_ID"
+            }
+          },
+          {
+            "name" : "CUSTOMER_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "DM_SYN_ORDERS_SUMMARY.CUSTOMER_NAME"
+            }
+          },
+          {
+            "name" : "AMOUNT_LOCAL",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "source" : "DM_SYN_ORDERS_SUMMARY.AMOUNT_LOCAL"
+            }
+          },
+          {
+            "name" : "REPORT_KEY",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_SUBSTR",
+              "parameters" : [
+                {
+                  "source" : "DM_SYN_ORDERS_SUMMARY.REPORT_KEY"
+                },
+                {
+                  "value" : "1"
+                },
+                {
+                  "value" : "8"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "DM_SYN_ORDERS_SUMMARY",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "RDM_SYN_ORDERS_EXPORT"
+    ],
+    "sourceTableNames" : [
+      "DM_SYN_ORDERS_SUMMARY"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "CURRENCY_CODE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "FX_RATE",
+  "type": "NUMERIC",
+  "description": ""
+  }
+]
