@@ -100,17 +100,20 @@ Each data root can be in one of a few modes, reported by `GET /api/config` and
 ├── backend/                    # Spring Boot 3 / Java 17 REST API over the corpus + parser
 ├── frontend/                   # React 19 / Vite / TanStack Query UI
 └── docs/
+    ├── adr/                      # Architecture Decision Records (MADR-lite, 0000 template + 0001-0005)
+    ├── architecture.md           # system diagram, endpoint table, config reference
     └── superpowers/
         ├── specs/               # approved design specs
         └── plans/                # implementation plans (checkbox-tracked progress)
 ```
 
-`docs/architecture.md` and `docs/adr/*` (system diagram, endpoint table, and the
-Architecture Decision Records behind the multi-module split, DOM+semantic overlay,
-mock-mirror fallback, etc.) land in a later docs-restructure pass; until then, see
+`docs/architecture.md` (system diagram, sequence diagram, endpoint table, config
+reference) and `docs/adr/*` (the Architecture Decision Records behind the
+multi-module split, DOM+semantic overlay, mock-mirror fallback, OpenAPI-generated
+types, and the Figma visual contract) are the reference docs for this repo's shape.
+For the original design rationale and the task-by-task build log behind them, see
 `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md` and
-`docs/superpowers/plans/2026-07-29-etl360-foundation.md` for the design and the
-task-by-task build log.
+`docs/superpowers/plans/2026-07-29-etl360-foundation.md`.
 
 ## Corpus caveats
 
