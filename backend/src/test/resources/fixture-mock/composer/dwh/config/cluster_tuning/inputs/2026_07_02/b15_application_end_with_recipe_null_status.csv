@@ -1,0 +1,2 @@
+cluster_name,recipe_filename,job_id,app_start_iso,avg_job_duration_in_mins_sec,status,message
+cluster-wf-syn-orders-01,_ETL_m_SYN_ODS_ORDERS.json,application_1774840000002_0001,2026-07-02T04:10:00.000Z,10m 00sec,SUCCESS,

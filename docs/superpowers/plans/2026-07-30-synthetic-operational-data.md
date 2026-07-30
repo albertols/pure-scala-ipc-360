@@ -454,7 +454,7 @@ public record OperationalSnapshotDto(String date, java.util.List<B15RowDto> rows
 
 `InvalidDateException`: message-only constructor in `service.support` (same shape as `NotFoundException`).
 
-- [ ] **Step 1: Fixtures** — two dated dirs. `2026_07_01` CSV (header + 3 rows: one SUCCESS, one FAILED with a quoted message containing a comma, one with empty status/message):
+- [x] **Step 1: Fixtures** — two dated dirs. `2026_07_01` CSV (header + 3 rows: one SUCCESS, one FAILED with a quoted message containing a comma, one with empty status/message):
 
 ```csv
 cluster_name,recipe_filename,job_id,app_start_iso,avg_job_duration_in_mins_sec,status,message
@@ -464,7 +464,7 @@ cluster-wf-syn-orders-02,_ETL_m_SYN_DM_ORDERS_SUMMARY.json,application_177484000
 ```
 `2026_07_02`: header + 1 SUCCESS row.
 
-- [ ] **Step 2: Failing test**
+- [x] **Step 2: Failing test**
 
 ```java
 class OperationalServiceTest {
@@ -497,8 +497,8 @@ class OperationalServiceTest {
 }
 ```
 
-- [ ] **Step 3: Verify failure**, **Step 4: Implement** — `dates()`: scan `<composer>/dwh/config/cluster_tuning/inputs` for `\d{4}_\d{2}_\d{2}` dirs containing the b15 filename, map `_`→`-`, sort. `snapshot()`: validate with `java.time.LocalDate.parse` (catch → `InvalidDateException("Invalid date '" + input + "' — expected YYYY-MM-DD")`); resolve dir (ISO → underscores); absent ⇒ `NotFoundException("No operational snapshot for <date> — b15 CSV not present under inputs/<YYYY_MM_DD>/. Nearest available: <nearest or 'none'>")`; parse via `CsvMapper`/`CsvSchema.emptySchema().withHeader()` into `B15RowDto` (null-safe: absent cells → empty string). Composer absent entirely ⇒ `dates()` returns `[]`, `snapshot` throws the same NotFoundException with `Nearest available: none`.
-- [ ] **Step 5: PASS + full suite + commit**
+- [x] **Step 3: Verify failure**, **Step 4: Implement** — `dates()`: scan `<composer>/dwh/config/cluster_tuning/inputs` for `\d{4}_\d{2}_\d{2}` dirs containing the b15 filename, map `_`→`-`, sort. `snapshot()`: validate with `java.time.LocalDate.parse` (catch → `InvalidDateException("Invalid date '" + input + "' — expected YYYY-MM-DD")`); resolve dir (ISO → underscores); absent ⇒ `NotFoundException("No operational snapshot for <date> — b15 CSV not present under inputs/<YYYY_MM_DD>/. Nearest available: <nearest or 'none'>")`; parse via `CsvMapper`/`CsvSchema.emptySchema().withHeader()` into `B15RowDto` (null-safe: absent cells → empty string). Composer absent entirely ⇒ `dates()` returns `[]`, `snapshot` throws the same NotFoundException with `Nearest available: none`.
+- [x] **Step 5: PASS + full suite + commit**
 
 ```bash
 git add backend/pom.xml backend/src/main/java/io/pure360/etl360 backend/src/test/java/io/pure360/etl360/service/OperationalServiceTest.java backend/src/test/resources/fixture-mock/composer docs/superpowers/plans/2026-07-30-synthetic-operational-data.md

@@ -1,0 +1,4 @@
+cluster_name,recipe_filename,job_id,app_start_iso,avg_job_duration_in_mins_sec,status,message
+cluster-wf-syn-orders-01,_ETL_m_SYN_ODS_ORDERS.json,application_1774840000001_0001,2026-07-01T04:12:22.644Z,14m 05sec,SUCCESS,
+cluster-wf-syn-orders-01,_ETL_m_SYN_DWH_ORDERS_FACT.json,application_1774840000001_0002,2026-07-01T05:02:10.100Z,74m 40sec,FAILED,"Stage 4 failed, executor lost"
+cluster-wf-syn-orders-02,_ETL_m_SYN_DM_ORDERS_SUMMARY.json,application_1774840000001_0003,2026-07-01T06:00:00.000Z,3m 12sec,,
