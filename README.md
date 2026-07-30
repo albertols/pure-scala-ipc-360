@@ -56,12 +56,13 @@ and fails). Building once up front and then running `spring-boot:run` scoped to
 | `make regen-corpus` | Regenerates recipes/DDL over a **temp copy** of the XML corpus and diffs vs. the committed output — never writes back into the repo. See `scripts/regen_corpus.sh`. |
 | `make generate-api` | Refreshes `frontend/src/api/types.gen.ts` from a **running** backend (`http://localhost:8080/v3/api-docs`) via `openapi-typescript`. |
 
-`make check`'s `pnpm format --check` clause is not wrapped in `|| true` in principle —
 oxfmt 0.2.x does support `--check`, and `pnpm format --check` reaches it correctly
 without needing a `--` separator (pnpm forwards trailing flags straight through to the
-underlying script). The Makefile still guards the overall `check` recipe line with
-`|| true` because the repo's formatting isn't fully clean yet; remove the guard once
-`pnpm format --check` is green.
+underlying script). The `check` target scopes its `|| true` to the `pnpm format --check`
+clause only — `(pnpm format --check || true)` — so a real `tsc --noEmit` type error
+still fails `make check`; only the format check is guarded. That guard is there
+because the repo's formatting isn't fully clean yet (27 files as of this writing);
+remove it once `cd frontend && pnpm format --check` exits 0 on its own.
 
 ## Configuration
 

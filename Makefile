@@ -12,7 +12,7 @@ test-frontend:
 	cd frontend && pnpm test
 
 check: test
-	cd frontend && npx tsc --noEmit && pnpm format --check || true
+	cd frontend && npx tsc --noEmit && (pnpm format --check || true)
 	@echo "check done"
 
 build:
