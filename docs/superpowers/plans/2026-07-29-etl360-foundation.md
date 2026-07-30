@@ -1722,7 +1722,7 @@ In `ETLViewer.tsx` and `ETLModifier.tsx`: call the hook, pass `filesystem={fs ??
 - Consumes: everything runnable so far.
 - Produces: `make dev|test|test-backend|test-frontend|check|build|regen-corpus|generate-api`.
 
-- [ ] **Step 1: Write the Makefile**
+- [x] **Step 1: Write the Makefile**
 
 ```makefile
 .PHONY: dev test test-backend test-frontend check build regen-corpus generate-api
@@ -1754,7 +1754,7 @@ generate-api:   ## refresh frontend/src/api/types.gen.ts from a running backend
 ```
 (`pnpm format --check`: oxfmt supports `--check`; if the local version doesn't, drop that clause and record it in the README. The `|| true` guards the first run; remove it once format is clean.)
 
-- [ ] **Step 2: Write `scripts/dev.sh`**
+- [x] **Step 2: Write `scripts/dev.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -1766,7 +1766,7 @@ trap 'kill 0 2>/dev/null' INT TERM EXIT
 wait
 ```
 
-- [ ] **Step 3: Write `scripts/regen_corpus.sh`**
+- [x] **Step 3: Write `scripts/regen_corpus.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -1783,12 +1783,12 @@ echo "--- regenerated into $TMP/xmltobq (left in place for inspection) ---"
 
 `chmod +x scripts/*.sh`.
 
-- [ ] **Step 4: Write root README.md** — sections: what the suite is (2 paragraphs), prerequisites (JDK 17, Maven 3.9+, Node 20+, pnpm), quick start (`make dev` → http://localhost:5173), the make-target table, configuration (`.env.example`, `ETL360_*` vars, real-vs-mock data modes), repo layout tree, links to `docs/architecture.md`, ADRs, specs/plans, and the corpus caveats pointer to CLAUDE.md.
+- [x] **Step 4: Write root README.md** — sections: what the suite is (2 paragraphs), prerequisites (JDK 17, Maven 3.9+, Node 20+, pnpm), quick start (`make dev` → http://localhost:5173), the make-target table, configuration (`.env.example`, `ETL360_*` vars, real-vs-mock data modes), repo layout tree, links to `docs/architecture.md`, ADRs, specs/plans, and the corpus caveats pointer to CLAUDE.md.
 
-- [ ] **Step 5: Verify the harness end-to-end** — Run: `make test`, then `make dev` (confirm both prefixes stream, app loads, Ctrl-C kills both), then `make regen-corpus` (diff report prints).
+- [x] **Step 5: Verify the harness end-to-end** — Run: `make test`, then `make dev` (confirm both prefixes stream, app loads, Ctrl-C kills both), then `make regen-corpus` (diff report prints).
 Expected: all green / behave as described.
 
-- [ ] **Step 6: Commit** — `git add -A && git commit -m "chore: dev harness — Makefile, dev/regen scripts, root README"`
+- [x] **Step 6: Commit** — `git add -A && git commit -m "chore: dev harness — Makefile, dev/regen scripts, root README"`
 
 ---
 
