@@ -1850,7 +1850,7 @@ once `pnpm format --check` is clean on its own.
 
 **Files:** none new — verification + fixes only.
 
-- [ ] **Step 1: Walk the acceptance criteria** — for each of the 7 criteria in spec §11, run the check and record PASS/FAIL in the task commit message:
+- [x] **Step 1: Walk the acceptance criteria** — for each of the 7 criteria in spec §11, run the check and record PASS/FAIL in the task commit message:
 1. `make dev` boots both; GUI visually identical to prototype.
 2. Sidebar = real tree, search works, prototype behavior.
 3. All 8 endpoints curl-clean; corpus contract test green (46/46 dom+model, 64/64 recipes).
@@ -1859,6 +1859,6 @@ once `pnpm format --check` is clean on its own.
 6. CLAUDE.md/README/ADRs×5/architecture.md exist and match reality; frontend/AGENTS.md rewritten.
 7. Side-by-side vs `main`: all four tabs + top bar render identically (tabs still mock-fed).
 
-- [ ] **Step 2: Fix anything red, re-run, then commit** — `git commit -m "chore: Foundation acceptance sweep — spec §11 criteria verified" --allow-empty` (allow-empty when no fixes were needed; the message carries the PASS record).
+- [x] **Step 2: Fix anything red, re-run, then commit** — `git commit -m "chore: Foundation acceptance sweep — spec §11 criteria verified" --allow-empty` (allow-empty when no fixes were needed; the message carries the PASS record).
 
 - [ ] **Step 3: Close out** — tick the last checkboxes here, commit this plan file, and use superpowers:finishing-a-development-branch to decide merge/PR for `feat/etl360-foundation`.
