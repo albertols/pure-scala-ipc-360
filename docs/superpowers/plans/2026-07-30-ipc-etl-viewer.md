@@ -332,7 +332,7 @@ echo "[validate-loop] viewer sweep…"
 node --experimental-strip-types scripts/viewer_sweep.mts || fail "viewer sweep"
 ```
 
-- [ ] **Step 1: write script + wire → Step 2: run `make validate-loop` end-to-end — expect `viewer_sweep: 69/69 mappings render` (any FAIL line names the mapping: fix the ADAPTER, never skip a mapping) → Step 3: Commit** — `git commit -m "feat(viewer): 69/69 viewer_sweep gate in validate-loop"` (stage `scripts/viewer_sweep.mts scripts/validate_loop.sh` by exact path + Makefile if touched + plan).
+- [x] **Step 1: write script + wire → Step 2: run `make validate-loop` end-to-end — expect `viewer_sweep: 69/69 mappings render` (any FAIL line names the mapping: fix the ADAPTER, never skip a mapping) → Step 3: Commit** — `git commit -m "feat(viewer): 69/69 viewer_sweep gate in validate-loop"` (stage `scripts/viewer_sweep.mts scripts/validate_loop.sh` by exact path + Makefile if touched + plan).
 
 ---
 
