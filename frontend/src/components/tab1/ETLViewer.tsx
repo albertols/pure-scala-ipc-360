@@ -167,8 +167,10 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   const selectedNode = graph?.nodes.find(n => n.id === selectedNodeId) ?? null
 
   const domElement = useMemo(
-    () => (selectedNode && dom.data ? findElementForNode(dom.data, selectedNode.name, selectedNode.type) : null),
-    [selectedNode, dom.data],
+    () => (selectedNode && dom.data && graph
+      ? findElementForNode(dom.data, selectedNode.name, selectedNode.type, graph.renderedMapping)
+      : null),
+    [selectedNode, dom.data, graph],
   )
 
   const handleSelectFile = (f: FSFile) => {

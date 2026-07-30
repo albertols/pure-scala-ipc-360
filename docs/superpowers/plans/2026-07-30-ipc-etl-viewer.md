@@ -255,6 +255,8 @@ ETLViewer wiring: `const dom = useMappingDom(mappingPath ?? '')` (add `enabled: 
 
 - [x] **Step 1: failing domSlice test → Step 2: red → Step 3: implement locator + panel prop + wiring → Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): lossless DOM detail panel — every IPC attribute, copy-everywhere"` (explicit paths + plan).
 
+**Amendment (post-review, human-approved deviation from the interfaces above):** `Fields (n)` counts only `SOURCEFIELD`/`TARGETFIELD`/`TRANSFORMFIELD` children, not raw `children.length` (corpus has `TABLEATTRIBUTE`/`FIELDDEPENDENCY`/`METADATAEXTENSION`/etc. siblings that inflated the count); `findElementForNode` gained a `mappingName: string` 4th parameter so the INSTANCE fallback is scoped to the rendered `<MAPPING>` subtree (folder-wide fallback if that mapping isn't found), preventing a same-named INSTANCE in a sibling mapping from resolving to the wrong element.
+
 ---
 
 ### Task 5: Search highlight + jump (global search reuse — spec §3.4 deviation)

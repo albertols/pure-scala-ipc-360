@@ -81,6 +81,10 @@ const DOM = {
               children: [
                 { name: 'SOURCEFIELD', attributes: { NAME: 'ID' }, children: [] },
                 { name: 'SOURCEFIELD', attributes: { NAME: 'EXTRA' }, children: [] },
+                // Non-field sibling — proves Fields(n) counts only *FIELD tags,
+                // not every child (corpus-verified: TABLEATTRIBUTE/METADATAEXTENSION
+                // routinely sit alongside SOURCEFIELD/TARGETFIELD/TRANSFORMFIELD).
+                { name: 'TABLEATTRIBUTE', attributes: { NAME: 'Owner Name', VALUE: 'FIX' }, children: [] },
               ],
             },
             {
@@ -169,6 +173,8 @@ describe('ETLViewer — real canvas', () => {
     expect(await screen.findByText('DBDNAME')).toBeInTheDocument()
     expect(screen.getByText('FIXDB')).toBeInTheDocument()
     expect(screen.getByText('DATABASETYPE')).toBeInTheDocument()
+    // SOURCE has 3 children (2 SOURCEFIELD + 1 non-field TABLEATTRIBUTE) —
+    // Fields(n) must count only the SOURCEFIELD ones.
     expect(screen.getByText('Fields (2)')).toBeInTheDocument()
   })
 })

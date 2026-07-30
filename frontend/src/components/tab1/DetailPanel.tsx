@@ -4,6 +4,11 @@ import { NODE_STYLES } from './NodeBox'
 import { PortTable } from './PortTable'
 import { CopyButton } from '../shared/CopyButton'
 
+// The element's `children` also carry non-field siblings (TABLEATTRIBUTE,
+// FIELDDEPENDENCY, METADATAEXTENSION, GROUP, INITPROP, FLATFILE, …) —
+// Fields(n) counts only the actual field elements.
+const FIELD_TAGS = new Set(['SOURCEFIELD', 'TARGETFIELD', 'TRANSFORMFIELD'])
+
 export function DetailPanel({
   node,
   domElement,
@@ -20,6 +25,7 @@ export function DetailPanel({
   // DOM-fed when the lossless element resolved; falls back to the adapter's
   // quick properties (e.g. while the DOM fetch is still loading).
   const properties = domElement ? (domElement.attributes ?? {}) : node.properties
+  const fieldCount = (domElement?.children ?? []).filter(c => FIELD_TAGS.has(c.name ?? '')).length
 
   return (
     <div style={{
@@ -83,7 +89,7 @@ export function DetailPanel({
           <SectionLabel>Properties</SectionLabel>
           {domElement && (
             <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>
-              Fields ({domElement.children?.length ?? 0})
+              Fields ({fieldCount})
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
