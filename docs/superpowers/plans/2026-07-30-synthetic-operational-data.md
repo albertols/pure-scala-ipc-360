@@ -551,13 +551,13 @@ Note: the Task 4 fixture (`fixture-mock/DWH_CONTROL/LAYER_TO_LAYER/ODS/statement
 
 Controllers are thin pass-throughs (constructor-injected services, no logic), same shape as `TreeController`. Note: `{date}` is a single segment — plain `@PathVariable("date")`, no `{*path}` needed.
 
-- [ ] **Step 1: Failing MockMvc test** — `@SpringBootTest @AutoConfigureMockMvc` (this boots against the REAL mock data — by test time Tasks 3 exists; b15 dirs arrive in Task 9, so operational endpoints here assert only shape/error paths):
+- [x] **Step 1: Failing MockMvc test** — `@SpringBootTest @AutoConfigureMockMvc` (this boots against the REAL mock data — by test time Tasks 3 exists; b15 dirs arrive in Task 9, so operational endpoints here assert only shape/error paths):
   - `/api/relationships` → 200, `$.nodes` non-empty, `$.meta.entryCount ≥ 18`, `$.meta.skippedRows == 0`.
   - `/api/operational/dates` → 200, `$.mode` in `mock|absent`, `$.dates` is an array.
   - `/api/operational/not-a-date` → 400, `$.title == "Invalid date"`, content-type `application/problem+json`.
   - `/api/operational/2001-01-01` → 404, `$.detail` contains `"b15 CSV not present under inputs/2001_01_01"`.
-- [ ] **Step 2: Verify failure → Step 3: Implement → Step 4: Full suite PASS.**
-- [ ] **Step 5: Commit** — `git commit -m "feat(backend): /api/relationships and /api/operational endpoints, Invalid date 400"` (stage the four files + plan).
+- [x] **Step 2: Verify failure → Step 3: Implement → Step 4: Full suite PASS.**
+- [x] **Step 5: Commit** — `git commit -m "feat(backend): /api/relationships and /api/operational endpoints, Invalid date 400"` (stage the four files + plan).
 
 ---
 

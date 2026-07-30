@@ -1,6 +1,7 @@
 package io.pure360.etl360.api;
 
 import io.pure360.etl360.service.support.InvalidCorpusPathException;
+import io.pure360.etl360.service.support.InvalidDateException;
 import io.pure360.etl360.service.support.NotFoundException;
 import io.pure360.etl360.service.support.UnreadableFileException;
 import io.pure360.etl360.service.support.XmlUnparsableException;
@@ -28,6 +29,13 @@ public class ApiExceptionHandler {
     ProblemDetail badPath(InvalidCorpusPathException e) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
         pd.setTitle("Invalid path");
+        return pd;
+    }
+
+    @ExceptionHandler(InvalidDateException.class)
+    ProblemDetail invalidDate(InvalidDateException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        pd.setTitle("Invalid date");
         return pd;
     }
 
