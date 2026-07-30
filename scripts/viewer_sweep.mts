@@ -16,10 +16,13 @@ if (paths.length < 69) { console.error(`viewer_sweep: only ${paths.length} mappi
 let failed = 0
 for (const p of paths.sort()) {
   try {
-    const model = await (await fetch(`${BASE}/api/mappings/model/${p}`)).json()
+    const res = await fetch(`${BASE}/api/mappings/model/${p}`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const model = await res.json()
     const g = toCanvas(model, p)
     if (!g.nodes.length) throw new Error('empty canvas')
     const ids = new Set(g.nodes.map(n => n.id))
+    if (ids.size !== g.nodes.length) throw new Error('duplicate node ids')
     for (const c of g.connections) if (!ids.has(c.fromNode) || !ids.has(c.toNode)) throw new Error(`dangling edge ${c.fromNode}->${c.toNode}`)
     for (const n of g.nodes) if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) throw new Error(`no layout for ${n.name}`)
   } catch (e) { failed++; console.error(`viewer_sweep FAIL ${p}: ${(e as Error).message}`) }

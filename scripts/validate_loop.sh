@@ -25,6 +25,7 @@ echo "$DATES" | grep -q '2026-07-29' || fail "anchor date missing"
 curl -sf localhost:8080/api/operational/2026-07-29 | grep -q '"rows"' || fail "snapshot"
 curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/operational/2001-01-01 | grep -q 404 || fail "missing-date 404"
 echo "[validate-loop] viewer sweep…"
+# node >= 22.6 is required for --experimental-strip-types to run the .mts sweep directly.
 node --experimental-strip-types scripts/viewer_sweep.mts || fail "viewer sweep"
 echo "[validate-loop] backend loop OK — running frontend hook tests…"
 ( cd frontend && pnpm test )

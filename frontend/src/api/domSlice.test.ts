@@ -94,6 +94,45 @@ const TWO_MAPPING_DOM: XmlNode = {
   ],
 }
 
+// Folder-level reusable TRANSFORMATION and a mapping-nested (non-reusable)
+// TRANSFORMATION sharing the same NAME but a distinguishable REUSABLE
+// attribute — proves the direct lookup prefers the mapping-nested one for
+// the rendered mapping, matching mappingAdapter.ts's "nested wins" rule.
+const SHADOW_DOM: XmlNode = {
+  name: 'POWERMART',
+  attributes: {},
+  children: [
+    {
+      name: 'REPOSITORY',
+      attributes: { NAME: 'REP_SHADOW' },
+      children: [
+        {
+          name: 'FOLDER',
+          attributes: { NAME: 'CDM' },
+          children: [
+            {
+              name: 'TRANSFORMATION',
+              attributes: { NAME: 'EXP_SHARED', TYPE: 'Expression', REUSABLE: 'YES' },
+              children: [],
+            },
+            {
+              name: 'MAPPING',
+              attributes: { NAME: 'm_SHADOW' },
+              children: [
+                {
+                  name: 'TRANSFORMATION',
+                  attributes: { NAME: 'EXP_SHARED', TYPE: 'Expression', REUSABLE: 'NO' },
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 describe('findElementForNode', () => {
   it('matches a SOURCE directly by attributes.NAME', () => {
     const el = findElementForNode(DOM, 'SRC_FIX', 'source', 'm_FIX')
@@ -134,5 +173,14 @@ describe('findElementForNode', () => {
     const el = findElementForNode(TWO_MAPPING_DOM, 'SHARED_INST', 'expression', 'm_MISSING')
     expect(el).not.toBeNull()
     expect(['EXP_ONE', 'EXP_TWO']).toContain(el?.attributes?.NAME)
+  })
+
+  it('prefers a mapping-nested TRANSFORMATION over a same-named folder-level one', () => {
+    // Both are named EXP_SHARED; only the mapping-nested one is REUSABLE=NO.
+    // Document-order DFS from the root would hit the folder-level one first
+    // (it appears before the MAPPING in the DOM) — the fix must search the
+    // mapping subtree before the whole DOM to get the nested one.
+    const el = findElementForNode(SHADOW_DOM, 'EXP_SHARED', 'expression', 'm_SHADOW')
+    expect(el?.attributes?.REUSABLE).toBe('NO')
   })
 })
