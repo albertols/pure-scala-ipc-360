@@ -8,7 +8,7 @@ import java.util.Optional;
 
 /**
  * Resolves the corpus/DWH_CONTROL/composer data roots with a real-dir/mock-mirror/absent
- * fallback for DWH_CONTROL, and a real/absent (no mock tier) fallback for composer.
+ * fallback for both DWH_CONTROL and composer.
  *
  * Every method here is computed on demand (no caching) so that a directory created after
  * application boot — e.g. someone drops DWH_CONTROL/ in place while the server is running —
