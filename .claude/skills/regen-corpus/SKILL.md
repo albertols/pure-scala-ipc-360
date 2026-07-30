@@ -19,4 +19,4 @@ Copies XMLs (not generated JSON) to a temp dir, runs the parser CLI there with `
 - **Expected noise:** committed recipe JSONs were anonymized *after* generation, including some JSON key names — regenerated output legitimately differs there.
 - **Expected noise:** `CalciteSqlTranslator - Exception during SQL parsing` log lines are fallback noise on untranslatable Oracle SQL, not failures.
 - **Real signal:** a missing/extra file or a structural JSON diff outside renamed keys — treat as a parser bug; check root `CLAUDE.md` corpus caveats first.
-- Full corpus = 46 XMLs → ≥46 recipes/models; the automated version of this check is `CorpusContractTest` (`make test-backend`).
+- Full corpus = 59 XMLs (46 lowercase `.xml` + 13 uppercase `.XML`) → ≥59 models/DOMs, ≥64 recipes; the automated version of this check is `CorpusContractTest` (`make test-backend`).

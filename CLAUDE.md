@@ -70,9 +70,9 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
 
 - `make test` = `mvn -am -pl backend test` + `cd frontend && pnpm test`.
 - **Corpus contract test** (`backend/.../CorpusContractTest`, JUnit): every XML in the
-  corpus serves `/api/mappings/dom` and `/model` with 200 (≥46 mappings); every
-  `_ETL_*.json` recipe serves via `/api/recipes` (≥64). This replaces the old manual
-  "regenerate and eyeball" smoke check.
+  corpus serves `/api/mappings/dom` and `/model` with 200 (≥59 mappings — 46 lowercase
+  `.xml` + 13 uppercase `.XML`); every `_ETL_*.json` recipe serves via `/api/recipes`
+  (≥64). This replaces the old manual "regenerate and eyeball" smoke check.
 - Parser regression is verified once at the module move (Task 1: pre/post-move
   byte-diff of full corpus regeneration) plus the ongoing corpus contract test above —
   there is no standing JUnit regen-diff harness.

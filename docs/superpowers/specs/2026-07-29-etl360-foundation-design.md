@@ -244,9 +244,22 @@ the implementation plan's task structure.
   guarantee" above is realized as a one-time pre/post-move byte-diff (Task 1: full
   corpus regenerated into a temp dir before the `parser/` move, regenerated again
   after, `diff -r` confirmed identical) plus the ongoing corpus contract test
-  (`CorpusContractTest`, ≥46 mappings serving DOM+model, ≥64 recipes serving — see §4
+  (`CorpusContractTest`, ≥59 mappings serving DOM+model, ≥64 recipes serving — see §4
   table). There is no permanent "regenerate and diff on every CI run" JUnit wrapper;
   the module-move risk it guarded against is a one-time event, already proven safe.
+- **Corpus is 59 XMLs, not 46 (final-review correction).** The plan's "46 XMLs"
+  premise (and this spec's own count callouts above and in §11) assumed every corpus
+  mapping XML has a lowercase `.xml` extension. The real corpus is 46 `.xml` + 13
+  `.XML` (case-insensitive filesystem search: `find … -iname '*.xml'` → 59; the Scala
+  parser already treats the extension case-insensitively by design,
+  `ScalaFileUtils.getAllFilesWithExtension`). The plan's `CorpusService` code snippet
+  (and the shipped implementation, pre-fix) matched `.xml` case-sensitively —
+  `name.endsWith(".xml")` — silently dropping the 13 `.XML` mappings from `/api/tree`,
+  `/api/health`'s `xmlCount`, and the expressions archive, and undercounting the corpus
+  contract test's floor at 46/59. Corrected post-final-review: `CorpusService` and
+  `PathResolver` now match/resolve `.xml`/`.XML` case-insensitively (two-candidate
+  check in `PathResolver`, so it holds on case-sensitive filesystems too), and the
+  corpus contract test's floor is ≥59.
 
 ## 8. Dev harness
 

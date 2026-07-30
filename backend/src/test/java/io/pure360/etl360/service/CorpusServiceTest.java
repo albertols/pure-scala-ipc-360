@@ -32,9 +32,23 @@ class CorpusServiceTest {
 
     @Test
     void countsMatchFixture() {
-        assertThat(service.xmlCount()).isEqualTo(1);
-        assertThat(service.recipeCount()).isEqualTo(1);
-        assertThat(service.allXmlPaths()).containsExactly("CDM/m_FIXTURE");
-        assertThat(service.allRecipePaths()).containsExactly("CDM/m_FIXTURE/_ETL_m_FIXTURE.json");
+        // Fixture carries both a lowercase-.xml mapping (m_FIXTURE) and an uppercase-.XML
+        // one (m_UPPER), mirroring the real corpus's 46 .xml + 13 .XML split.
+        assertThat(service.xmlCount()).isEqualTo(2);
+        assertThat(service.recipeCount()).isEqualTo(2);
+        assertThat(service.allXmlPaths()).containsExactly("CDM/m_FIXTURE", "CDM/m_UPPER");
+        assertThat(service.allRecipePaths()).containsExactly(
+            "CDM/m_FIXTURE/_ETL_m_FIXTURE.json", "CDM/m_UPPER/_ETL_m_UPPER.json");
+    }
+
+    @Test
+    void uppercaseXmlExtensionIsRecognized() {
+        TreeNodeDto root = service.tree();
+        TreeNodeDto cdm = root.children().get(0);
+        TreeNodeDto upper = cdm.children().stream()
+            .filter(n -> n.name().equals("m_UPPER.XML")).findFirst().orElseThrow();
+        assertThat(upper.kind()).isEqualTo("xml");
+        assertThat(upper.mappingPath()).isEqualTo("CDM/m_UPPER");
+        assertThat(service.allXmlPaths()).contains("CDM/m_UPPER");
     }
 }

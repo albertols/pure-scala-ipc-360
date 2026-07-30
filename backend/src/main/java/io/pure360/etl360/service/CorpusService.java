@@ -33,7 +33,7 @@ public class CorpusService {
                 String name = p.getFileName().toString();
                 if (Files.isDirectory(p)) {
                     children.add(dirNode(p, null));
-                } else if (name.endsWith(".xml")) {
+                } else if (hasXmlExtension(name)) {
                     children.add(xmlNode(p));
                 } else if (name.endsWith(".json")) {
                     children.add(leaf(p, "json"));
@@ -48,8 +48,8 @@ public class CorpusService {
 
     private TreeNodeDto xmlNode(Path p) {
         String rel = relative(p);
-        String mappingPath = rel.substring(0, rel.length() - ".xml".length());
-        Path outDir = p.resolveSibling(p.getFileName().toString().replaceFirst("\\.xml$", ""));
+        String mappingPath = stripXmlExtension(rel);
+        Path outDir = p.resolveSibling(stripXmlExtension(p.getFileName().toString()));
         boolean hasRecipe = false, hasDdl = false;
         if (Files.isDirectory(outDir)) {
             try (Stream<Path> out = Files.list(outDir)) {
@@ -79,7 +79,19 @@ public class CorpusService {
     }
 
     private boolean isOutputDir(Path dir) {
-        return Files.exists(dir.resolveSibling(dir.getFileName().toString() + ".xml"));
+        String name = dir.getFileName().toString();
+        return Files.exists(dir.resolveSibling(name + ".xml")) || Files.exists(dir.resolveSibling(name + ".XML"));
+    }
+
+    /** Case-insensitive: the corpus mixes lowercase {@code .xml} (46 files) and uppercase
+     * {@code .XML} (13 files) — see CLAUDE.md corpus caveats. */
+    private static boolean hasXmlExtension(String name) {
+        return name.length() > 4 && name.regionMatches(true, name.length() - 4, ".xml", 0, 4);
+    }
+
+    /** Strips whichever-case {@code .xml}/{@code .XML} suffix {@link #hasXmlExtension} matched. */
+    private static String stripXmlExtension(String name) {
+        return name.substring(0, name.length() - 4);
     }
 
     private String relative(Path p) { return root.relativize(p).toString().replace('\\', '/'); }
@@ -94,8 +106,12 @@ public class CorpusService {
     public int recipeCount() { return allRecipePaths().size(); }
 
     public List<String> allXmlPaths() {
-        return collect(".xml").stream()
-            .map(r -> r.substring(0, r.length() - ".xml".length())).toList();
+        try (Stream<Path> walk = Files.walk(root)) {
+            return walk.filter(Files::isRegularFile)
+                .filter(p -> hasXmlExtension(p.getFileName().toString()))
+                .map(this::relative).sorted()
+                .map(CorpusService::stripXmlExtension).toList();
+        } catch (IOException e) { throw new UncheckedIOException(e); }
     }
 
     public List<String> allRecipePaths() {

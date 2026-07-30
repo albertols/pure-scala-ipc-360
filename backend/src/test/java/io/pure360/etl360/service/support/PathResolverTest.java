@@ -17,4 +17,9 @@ class PathResolverTest {
     void resolvesExistingXml() {
         assertThat(resolver.xmlFile("CDM/m_FIXTURE")).exists();
     }
+
+    @Test
+    void resolvesUppercaseXmlExtension() {
+        assertThat(resolver.xmlFile("CDM/m_UPPER")).exists();
+    }
 }

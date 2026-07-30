@@ -13,7 +13,7 @@ flowchart LR
         BE -- in-JVM calls --> P
     end
     subgraph FS[Filesystem]
-        C[(parser/src/main/resources/xmltobq\n46 XMLs · 64 recipes · DDLs)]
+        C[(parser/src/main/resources/xmltobq\n59 XMLs · 64 recipes · DDLs)]
         M[(backend/src/main/resources/mock/DWH_CONTROL\ncommitted mock mirror)]
         R[(real DWH_CONTROL\noptional, git-ignored)]
     end
