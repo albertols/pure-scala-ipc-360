@@ -14,7 +14,7 @@
 - **Parser behavior unchanged:** recipe regeneration output must be byte-identical before/after the module move (Task 1 proves it).
 - **Corpus safety:** never run generation against `parser/src/main/resources/xmltobq` in place — temp copies only. Never commit `DWH_CONTROL/`.
 - **Branch:** all work on `feat/etl360-foundation`.
-- **Versions:** Java 17 (backend), Scala 2.12.18 / target 11 (parser), Spring Boot 3.3.4, springdoc 2.6.0, TanStack Query ^5, openapi-typescript ^7, Vitest ^3, MSW ^2.
+- **Versions:** Java 17 (backend), Scala 2.12.18 / target 11 (parser), Spring Boot 3.3.4, springdoc 2.6.0, TanStack Query ^5, openapi-typescript ^7, Vitest ^3, MSW ^2. **Implementation deviation (Task 11, human-ruled):** Vitest shipped at ^4.1.x, not ^3 — Vitest 3's types target Vite ≤7, and this project pulls Vite 8.0.3 (Figma Make baseline); the `tsc --noEmit` gate in `make check` covers `vite.config.ts`, so a Vite/Vitest type mismatch there fails the build. MSW stayed at ^2.
 - **Package roots:** backend Java code under `io.pure360.etl360`; parser stays `io.pure360.ipc`.
 - **API path convention:** Spring path patterns only allow `{*var}` as the last segment, so multi-segment endpoints put the verb first: `/api/mappings/dom/{*path}`, `/api/mappings/model/{*path}`, `/api/recipes/{*path}`, `/api/ddl/{*path}`. `mappingPath` = corpus-relative XML path **without** `.xml`. (Deviation from spec §4 table noted; docs task records it.)
 - **Expressions origin:** Foundation extracts expressions from XML DOM only (`origin: "xml"`); recipe-side extraction is deferred because the committed recipes have anonymized key names (spec's corpus caveat). The DTO keeps the `origin` field.
@@ -1200,6 +1200,15 @@ class RecipeServiceTest {
 
 - [x] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): recipe and DDL endpoints"`
 
+**Implementation deviation (controller-ruled, commit `ca8e6d9`):** the DDL exclusion
+rule above (`excluding _ETL_* and _sqlTranslations*`) was widened post-hoc to exclude
+**all** filenames starting with `_`. A literal `_sqlTranslations` prefix check missed
+anonymizer-mangled translation files (e.g. `_WESTPOND_ETL_*`) that leaked as spurious
+DDL keys across 18 mappings in the real corpus — the fixture corpus in Step 1 didn't
+exercise this case. Real DDL files are always `TABLE_NAME.json` and never start with
+`_`, so the wider rule has no false negatives. See `docs/architecture.md` and spec §4
+"Implementation deviations".
+
 ---
 
 ### Task 7: Expressions archive — `/api/expressions`
@@ -1316,6 +1325,14 @@ class DataRootsTest {
 - [x] **Step 4: Run all backend tests** — `mvn -q -am -pl backend test` — Expected: PASS.
 
 - [x] **Step 5: Commit** — `git add -A && git commit -m "feat(backend): data-root fallback (real/mock/absent) and /api/config"`
+
+**Implementation deviation (controller-ruled, commit `ac3bf73`):** spec §4 "Behavior"
+already promised `dwhControlMode`/`composerMode` surfaced in **both** `/api/config`
+and `/api/health`, but Task 2/3's health shape (`{status, corpusRoot, corpusPresent,
+xmlCount, recipeCount}`) omitted the two mode fields. Fixed here in the same pass as
+`/api/config`, one task later than the spec's health shape implied — `HealthController`
+now takes a `DataRoots` dependency and includes `dwhControlMode`/`composerMode`
+alongside the existing fields.
 
 ---
 
@@ -1790,6 +1807,16 @@ Expected: all green / behave as described.
 
 - [x] **Step 6: Commit** — `git add -A && git commit -m "chore: dev harness — Makefile, dev/regen scripts, root README"`
 
+**Implementation deviation (controller-ruled plan-gap, commit `05eddf1`):** Step 1's
+Makefile snippet wrote `npx tsc --noEmit && pnpm format --check || true`. Bash operator
+precedence makes that `(tsc --noEmit && pnpm format --check) || true` — the trailing
+`|| true` swallows a **real `tsc` type error**, not just a format-check failure, so
+`make check` could pass despite broken types. Fixed by scoping the guard:
+`npx tsc --noEmit && (pnpm format --check || true)` — only the format clause is
+guarded; a `tsc` failure now fails the target. The frontend format backlog (27 files
+as of this writing) is documented in root `README.md`; the guard should be dropped
+once `pnpm format --check` is clean on its own.
+
 ---
 
 ### Task 14: Docs restructure — CLAUDE.md, ADRs, architecture.md, frontend docs
@@ -1801,21 +1828,21 @@ Expected: all green / behave as described.
 - Modify: `frontend/AGENTS.md` (rewrite), `frontend/CLAUDE.md` (keep as `@AGENTS.md` include)
 - Modify: `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md` (two deviation footnotes)
 
-- [ ] **Step 1: Rewrite root CLAUDE.md** — keep every still-true rule from the current file (corpus caveats verbatim, SQL-derived-artifacts rule, DWH_CONTROL rule), update all paths to `parser/…`, and add: repo layout table (parser/backend/frontend/docs), build & run matrix (`make dev`, per-module commands), the API endpoint table from `docs/architecture.md` by reference, hard rules incl. **Figma visual contract** and **plans/specs live in docs/superpowers/ and progress is tracked by checkboxes committed with each task**, testing commands (`make test`, corpus contract test explanation), and pointers to ADRs. Target ≤ 120 lines — it's an index, not a manual.
+- [x] **Step 1: Rewrite root CLAUDE.md** — keep every still-true rule from the current file (corpus caveats verbatim, SQL-derived-artifacts rule, DWH_CONTROL rule), update all paths to `parser/…`, and add: repo layout table (parser/backend/frontend/docs), build & run matrix (`make dev`, per-module commands), the API endpoint table from `docs/architecture.md` by reference, hard rules incl. **Figma visual contract** and **plans/specs live in docs/superpowers/ and progress is tracked by checkboxes committed with each task**, testing commands (`make test`, corpus contract test explanation), and pointers to ADRs. Target ≤ 120 lines — it's an index, not a manual.
 
-- [ ] **Step 2: Write the ADRs** — MADR-lite template (`Status / Context / Decision / Consequences / Alternatives considered`), each ADR ≤ 30 lines, content = the corresponding "Decisions already made" bullet of spec §3 expanded with the rejected options and one-line rationales. ADR-0002 additionally records: mixed-content ordering not preserved in DOM JSON (Powermart has none), semantic DTOs mirror parser case classes field-for-field. ADR-0003 additionally records: composer CSVs have no mock tier in Foundation (mode `real|absent`).
+- [x] **Step 2: Write the ADRs** — MADR-lite template (`Status / Context / Decision / Consequences / Alternatives considered`), each ADR ≤ 30 lines, content = the corresponding "Decisions already made" bullet of spec §3 expanded with the rejected options and one-line rationales. ADR-0002 additionally records: mixed-content ordering not preserved in DOM JSON (Powermart has none), semantic DTOs mirror parser case classes field-for-field. ADR-0003 additionally records: composer CSVs have no mock tier in Foundation (mode `real|absent`).
 
-- [ ] **Step 3: Write docs/architecture.md** — copy the mermaid diagram from spec §3 (updating the mock-mirror node label to the final path), the final endpoint table (with the `dom/{*path}` segment-order deviation noted), the config reference (`application.yml` keys + `ETL360_*` envs), and a request-flow mermaid sequence diagram (browser → Vite proxy → controller → service → filesystem/parser → cache).
+- [x] **Step 3: Write docs/architecture.md** — copy the mermaid diagram from spec §3 (updating the mock-mirror node label to the final path), the final endpoint table (with the `dom/{*path}` segment-order deviation noted), the config reference (`application.yml` keys + `ETL360_*` envs), and a request-flow mermaid sequence diagram (browser → Vite proxy → controller → service → filesystem/parser → cache).
 
-- [ ] **Step 4: Rewrite frontend/AGENTS.md** — React 19 + Vite + Tailwind v4; run via `make dev` (or `pnpm dev` + backend separately); test via `pnpm test`; **visual contract paragraph** (tokens in `src/index.css`, never restyle while rewiring; `mockData.ts` is legacy being retired tab-by-tab); API layer pointer (`src/api/`, regenerate types with `make generate-api`). Keep `frontend/CLAUDE.md` as the one-line `@AGENTS.md` include it already is.
+- [x] **Step 4: Rewrite frontend/AGENTS.md** — React 19 + Vite + Tailwind v4; run via `make dev` (or `pnpm dev` + backend separately); test via `pnpm test`; **visual contract paragraph** (tokens in `src/index.css`, never restyle while rewiring; `mockData.ts` is legacy being retired tab-by-tab); API layer pointer (`src/api/`, regenerate types with `make generate-api`). Keep `frontend/CLAUDE.md` as the one-line `@AGENTS.md` include it already is.
 
-- [ ] **Step 5: Add spec footnotes** — in spec §4: (a) endpoint segment order changed to `/api/mappings/dom/{*path}` (Spring `{*var}` must be trailing); (b) `/api/expressions` ships `origin:"xml"` only in Foundation (anonymized recipe keys make recipe-side extraction unreliable; revisit in sub-project 3); and in spec §7: (c) parser regression realized as the one-time pre/post-move byte-diff (Task 1) plus the ongoing corpus contract test — not a permanent JUnit regen harness. Mark all three as "Implementation deviations".
+- [x] **Step 5: Add spec footnotes** — in spec §4: (a) endpoint segment order changed to `/api/mappings/dom/{*path}` (Spring `{*var}` must be trailing); (b) `/api/expressions` ships `origin:"xml"` only in Foundation (anonymized recipe keys make recipe-side extraction unreliable; revisit in sub-project 3); and in spec §7: (c) parser regression realized as the one-time pre/post-move byte-diff (Task 1) plus the ongoing corpus contract test — not a permanent JUnit regen harness. Mark all three as "Implementation deviations".
 
-- [ ] **Step 5b: Project skills (spec §9)** — create `.claude/skills/run-app/SKILL.md` ("how to run/verify the suite: `make dev`, ports, health-check curl, where logs go") and `.claude/skills/regen-corpus/SKILL.md` ("safe regeneration: always `make regen-corpus`, never in-place; how to read the diff given anonymized-key noise"). Each ≤ 25 lines, frontmatter `name` + `description`, body = thin wrapper over the Makefile target it fronts.
+- [x] **Step 5b: Project skills (spec §9)** — create `.claude/skills/run-app/SKILL.md` ("how to run/verify the suite: `make dev`, ports, health-check curl, where logs go") and `.claude/skills/regen-corpus/SKILL.md` ("safe regeneration: always `make regen-corpus`, never in-place; how to read the diff given anonymized-key noise"). Each ≤ 25 lines, frontmatter `name` + `description`, body = thin wrapper over the Makefile target it fronts.
 
-- [ ] **Step 6: Verify docs match reality** — every command quoted in CLAUDE.md/README/architecture.md actually runs; every path exists (`grep -o` spot checks). Run `make check` one more time.
+- [x] **Step 6: Verify docs match reality** — every command quoted in CLAUDE.md/README/architecture.md actually runs; every path exists (`grep -o` spot checks). Run `make check` one more time.
 
-- [ ] **Step 7: Commit** — `git add -A && git commit -m "docs: CLAUDE.md rewrite, ADRs 0000-0005, architecture.md, frontend agent docs"`
+- [x] **Step 7: Commit** — `git add -A && git commit -m "docs: CLAUDE.md rewrite, ADRs 0000-0005, architecture.md, frontend agent docs"` (staged explicit paths, not `-A`, to keep the stray untracked `first_prompt.md` out of version control — see commit protocol).
 
 ---
 

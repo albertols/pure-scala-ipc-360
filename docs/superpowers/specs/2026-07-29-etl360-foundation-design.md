@@ -163,6 +163,31 @@ Every value overridable by `ETL360_*` env vars; a committed `.env.example` docum
 them. The frontend receives only what `/api/config` exposes — no GCP values are
 hardcoded client-side.
 
+### Implementation deviations
+
+- **Endpoint segment order.** The mapping endpoints ship as
+  `/api/mappings/dom/{*path}` and `/api/mappings/model/{*path}` — verb before the path
+  variable — not `/api/mappings/{**path}/dom` as sketched in the table above. Spring
+  MVC only allows `{*var}`-style path variables as the trailing segment of a mapping
+  pattern, so a fixed verb can't follow one.
+- **`/api/expressions` origin.** Foundation ships `origin: "xml"` entries only —
+  extracted from XML DOMs, one per non-identity `TRANSFORMFIELD` expression. Recipe-side
+  extraction (`origin: "recipe"`) is deferred: the committed recipe JSONs have
+  anonymizer-renamed keys (see root `CLAUDE.md` corpus caveats), which makes
+  recipe-side expression extraction unreliable without further normalization work.
+  Revisit in sub-project 3 (ETL Modifier). The DTO already carries the `origin` field.
+- **DDL exclusion widened.** `/api/ddl/{*path}` was specified to exclude `_ETL_*` and
+  `_sqlTranslations*` files from the DDL map. Implementation widened this to excluding
+  **all** filenames starting with `_` — a literal `_sqlTranslations` prefix check
+  missed anonymizer-mangled translation files (e.g. `_WESTPOND_ETL_*`) that leaked as
+  spurious DDL keys across 18 mappings. Real DDL files are always `TABLE_NAME.json`
+  and never start with `_`, so the wider rule has no false negatives.
+- **Health/config surfacing landed one task later than planned.** `dwhControlMode`
+  and `composerMode` in `GET /api/health` (this section already promised them) were
+  added in the same commit as `/api/config`, one task after the initial health
+  endpoint shipped with placeholder zero counts — see
+  `docs/superpowers/plans/2026-07-29-etl360-foundation.md` Tasks 2 and 8.
+
 ## 5. Frontend data layer
 
 - `frontend/src/api/`:
@@ -212,6 +237,16 @@ hardcoded client-side.
 
 TDD applies to all new backend/frontend code: red → green → refactor, enforced through
 the implementation plan's task structure.
+
+### Implementation deviations
+
+- **Parser regression is not a standing JUnit harness.** The "behavior-unchanged
+  guarantee" above is realized as a one-time pre/post-move byte-diff (Task 1: full
+  corpus regenerated into a temp dir before the `parser/` move, regenerated again
+  after, `diff -r` confirmed identical) plus the ongoing corpus contract test
+  (`CorpusContractTest`, ≥46 mappings serving DOM+model, ≥64 recipes serving — see §4
+  table). There is no permanent "regenerate and diff on every CI run" JUnit wrapper;
+  the module-move risk it guarded against is a one-time event, already proven safe.
 
 ## 8. Dev harness
 
