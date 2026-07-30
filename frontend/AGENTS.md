@@ -39,10 +39,11 @@ explicit ask. New UI states (loading, error, empty) reuse existing tokens
 (`--text-dim`, `--red`, etc.) rather than introducing new ones.
 
 `src/mockData.ts` is **legacy, being retired tab-by-tab** (see its header comment).
-The sidebar tree is already real (`src/api/filesystemAdapter.ts` + `useFilesystem`);
-the four tab bodies (Viewer, Modifier, Operational, DAG) still render from
-`mockData.ts` until their own sub-project rewires them — don't remove mock imports
-you haven't actually replaced.
+The sidebar tree and Tab 1 (IPC ETL Viewer) are already real (`src/api/filesystemAdapter.ts`
++ `useFilesystem`; `src/api/mappingAdapter.ts` + `useMappingModel`/`useMappingDom`); the
+`MAPPINGS` mock export Tab 1 used to consume is gone. The remaining three tab bodies
+(Modifier, Operational, DAG) still render from `mockData.ts` until their own
+sub-project rewires them — don't remove mock imports you haven't actually replaced.
 
 ## API layer
 

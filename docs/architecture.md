@@ -79,6 +79,10 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 | `GET /api/config` | Sanitized runtime config: GCP project/region, Dataproc/Logging URL templates, `dwhControlMode`/`composerMode` |
 | `GET /api/health` | Liveness + corpus stats: XML/recipe counts, corpus root, `dwhControlMode`, `composerMode` |
 
+Tab 1 (IPC ETL Viewer) is the first frontend consumer of the mapping endpoints: the
+canvas renders from `/api/mappings/model/{*path}` (via `mappingAdapter.ts`'s
+`toCanvas`), the detail panel from `/api/mappings/dom/{*path}` (lossless attributes).
+
 **Deviation from spec §4 table:** the mapping endpoints are `/api/mappings/dom/{*path}`
 and `/api/mappings/model/{*path}` — verb before the path variable — not
 `/api/mappings/{**path}/dom` as originally sketched. Spring MVC's `{*var}` ant-style

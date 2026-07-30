@@ -128,3 +128,27 @@ unknown-type fallback); RTL component test for the click→canvas→panel flow o
    Tabs 2–4 untouched (still mock-fed).
 7. Docs: spec/plan committed; CLAUDE.md/architecture.md one-line updates (Tab 1 real);
    ADR only if an architectural decision emerges during implementation.
+
+### Implementation deviations
+
+- **§3.4 canvas search reuses the global TopBar search, no new toolbar input.** The
+  spec assumed a canvas toolbar slot to host a node-finder input (§3.4). Tab 1 has no
+  such toolbar — verified during Task 5. Ruled deviation: reuse the already-threaded
+  global `searchQuery` prop (`App.tsx` TopBar → `ETLViewer.searchQuery`), computing
+  `matchIds` in `ETLViewer` and passing a `highlightIds` prop into `Canvas`, which pans
+  to the first match and applies the existing selected-node stroke treatment to the
+  rest. Zero new chrome; no toolbar was added anywhere on Tab 1.
+- **Detail panel `Fields (n)` counts field elements only, not every DOM child
+  (Task 4, human-approved correction).** §3.3 originally implied the count sourced
+  `children.length` on the located DOM element. The real corpus routinely nests
+  non-field siblings under `SOURCE`/`TARGET`/`TRANSFORMATION` —
+  `TABLEATTRIBUTE`/`FIELDDEPENDENCY`/`METADATAEXTENSION`/etc. — which inflated the
+  raw count. `Fields (n)` now counts only `SOURCEFIELD`/`TARGETFIELD`/`TRANSFORMFIELD`
+  children.
+- **Detail panel's `INSTANCE` fallback lookup is mapping-scoped, not folder-wide
+  (Task 4, human-approved correction).** §3.3's `findElementForNode` locator gained a
+  4th parameter, `mappingName: string`, so the `INSTANCE`-indirection fallback (when no
+  direct `SOURCE`/`TARGET`/`TRANSFORMATION` match exists) searches only the rendered
+  `<MAPPING>` subtree first, falling back to a folder-wide search if that mapping isn't
+  found. Without this scoping, a same-named `INSTANCE` in a sibling mapping within the
+  same folder could resolve to the wrong element.

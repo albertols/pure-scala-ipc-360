@@ -343,7 +343,7 @@ node --experimental-strip-types scripts/viewer_sweep.mts || fail "viewer sweep"
 - Modify: root `CLAUDE.md` (frontend line: Tab 1 real), `docs/architecture.md` (one line: Viewer consumes model+dom), `frontend/AGENTS.md` (mockData ledger: Tab 1 retired)
 - Verification + fixes only otherwise.
 
-- [ ] **Step 1: Walk spec §7's seven criteria**, recording PASS/FAIL each with evidence (boot backend once for the manual criterion-1 curls/checks; the visual half of criterion 6 is deferred to human sign-off per the standing Task-12 ruling — record it as such):
+- [x] **Step 1: Walk spec §7's seven criteria**, recording PASS/FAIL each with evidence (boot backend once for the manual criterion-1 curls/checks; the visual half of criterion 6 is deferred to human sign-off per the standing Task-12 ruling — record it as such):
 1. ≥5 hand-picked mappings render (incl. `QDM/m_SYN_QDM_ORDERS_QUALITY` [.XML], a huge CDM one, a multi-mapping file if one exists in the corpus — find via the sweep output, else record "none in corpus").
 2. Panel spot-check vs raw XML attributes; copy buttons work (RTL-level evidence).
 3. Search highlight/jump test green; pills below 0.65 test green.
@@ -351,4 +351,4 @@ node --experimental-strip-types scripts/viewer_sweep.mts || fail "viewer sweep"
 5. `pnpm test`, `tsc`, `make test`, `make check` all green.
 6. Tab label "IPC ETL Viewer"; Tabs 2–4 untouched (`git diff --stat` proof); visual side-by-side deferred to human.
 7. Docs updated (this task's own edits verified).
-- [ ] **Step 2: Fix small reds, re-run, commit** — `git commit -m "chore: IPC ETL Viewer acceptance sweep — spec criteria verified"` (message carries the record; `--allow-empty` if clean; tick final checkboxes; explicit staging).
+- [x] **Step 2: Fix small reds, re-run, commit** — `git commit -m "chore: IPC ETL Viewer acceptance sweep — spec criteria verified"` (message carries the record; `--allow-empty` if clean; tick final checkboxes; explicit staging).
