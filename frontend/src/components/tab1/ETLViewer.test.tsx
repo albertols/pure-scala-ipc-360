@@ -210,5 +210,29 @@ describe('ETLViewer — real canvas', () => {
     await waitFor(() => {
       expect(container.querySelectorAll('rect[stroke-width="2"]')).toHaveLength(0)
     })
+
+    // Task 6: zoom below 0.65 collapses full-detail nodes into compact pills.
+    // The "−" button steps 0.2 per click: 1.0 → 0.8 → 0.6, crossing the 0.65
+    // threshold on the second click.
+    const zoomOut = screen.getByText('−')
+    fireEvent.click(zoomOut)
+    fireEvent.click(zoomOut)
+
+    await waitFor(() => {
+      // Port rows (each node has one field named "ID") are not rendered compact.
+      expect(screen.queryByText('ID', { selector: 'text' })).not.toBeInTheDocument()
+    })
+    // One pill per node (source, expression, target) — rx=16 per the spec.
+    expect(container.querySelectorAll('rect[rx="16"]')).toHaveLength(3)
+
+    // Zoom back in past the threshold: full-detail rendering (and its ports) return.
+    const zoomIn = screen.getByText('+')
+    fireEvent.click(zoomIn)
+    fireEvent.click(zoomIn)
+
+    await waitFor(() => {
+      expect(screen.getAllByText('ID', { selector: 'text' })).toHaveLength(3)
+    })
+    expect(container.querySelectorAll('rect[rx="16"]')).toHaveLength(0)
   })
 })

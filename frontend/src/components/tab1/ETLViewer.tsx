@@ -50,8 +50,12 @@ function Canvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightIds.join(',')])
 
+  // Zoom-collapse pills (Task 6): below 0.65, nodes render as compact pills
+  // (getNodeHeight(n, true) === 26) instead of full detail boxes.
+  const compact = zoom < 0.65
+
   const canvasW = Math.max(...nodes.map(n => n.x + NODE_WIDTH), 400) + 100
-  const canvasH = Math.max(...nodes.map(n => n.y + getNodeHeight(n)), 300) + 100
+  const canvasH = Math.max(...nodes.map(n => n.y + getNodeHeight(n, compact)), 300) + 100
 
   const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]))
 
@@ -112,9 +116,11 @@ function Canvas({
           const fi = fn.ports.findIndex(p => p.name === conn.fromPort && (p.direction === 'OUT' || p.direction === 'IN/OUT'))
           const ti = tn.ports.findIndex(p => p.name === conn.toPort && (p.direction === 'IN' || p.direction === 'IN/OUT'))
           const x1 = fn.x + NODE_WIDTH
-          const y1 = fi >= 0 ? getPortY(fn, fi) : fn.y + getNodeHeight(fn) / 2
+          // Port rows aren't rendered compact — fall back to the node-center
+          // anchor (same fallback already used when a port row isn't found).
+          const y1 = fi >= 0 && !compact ? getPortY(fn, fi) : fn.y + getNodeHeight(fn, compact) / 2
           const x2 = tn.x
-          const y2 = ti >= 0 ? getPortY(tn, ti) : tn.y + getNodeHeight(tn) / 2
+          const y2 = ti >= 0 && !compact ? getPortY(tn, ti) : tn.y + getNodeHeight(tn, compact) / 2
           const hi = selectedNode === conn.fromNode || selectedNode === conn.toNode
           return (
             <path key={i}
@@ -134,6 +140,7 @@ function Canvas({
             node={n}
             isSelected={selectedNode === n.id || highlightIds.includes(n.id)}
             onClick={() => onSelectNode(n.id)}
+            compact={compact}
           />
         ))}
       </svg>

@@ -287,7 +287,7 @@ Pill spec (SVG mirror of `OperationalCard.tsx:54-77`'s values — same visual la
 
 Test: render viewer, zoom out via the existing `−` button clicks (0.2 step from 1.0 → below 0.65 needs 2 clicks to 0.6), assert port texts disappear and the pill rect (rx=16) exists; zoom back in restores ports.
 
-- [ ] **Step 1: failing test → Step 2: red → Step 3: implement → Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): zoom-collapse pills below 65% — Operational idiom on the SVG canvas"` (explicit paths + plan).
+- [x] **Step 1: failing test → Step 2: red → Step 3: implement → Step 4: green + tsc → Step 5: Commit** — `git commit -m "feat(viewer): zoom-collapse pills below 65% — Operational idiom on the SVG canvas"` (explicit paths + plan).
 
 ---
 

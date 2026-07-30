@@ -16,8 +16,8 @@ export const NODE_STYLES: Record<string, { color: string; bg: string; border: st
   target:     { color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.3)', abbr: 'TGT' },
 }
 
-export function getNodeHeight(node: ETLNode) {
-  return NODE_HEADER_H + node.ports.length * NODE_PORT_H + 10
+export function getNodeHeight(node: ETLNode, compact = false) {
+  return compact ? 26 : NODE_HEADER_H + node.ports.length * NODE_PORT_H + 10
 }
 
 export function getPortY(node: ETLNode, portIndex: number) {
@@ -33,13 +33,41 @@ export function NodeBox({
   node,
   isSelected,
   onClick,
+  compact = false,
 }: {
   node: ETLNode
   isSelected: boolean
   onClick: () => void
+  compact?: boolean
 }) {
   const style = NODE_STYLES[node.type] ?? NODE_STYLES.source
-  const h = getNodeHeight(node)
+  const h = getNodeHeight(node, compact)
+
+  // Zoom-collapse pill (Task 6): below zoom 0.65 the caller passes
+  // compact=true. Mirrors OperationalCard.tsx's compact pill VALUES (rx,
+  // height, dot size, tail-truncated mono name) as a sanctioned SVG copy —
+  // ports/connector circles/ƒ badges are dropped; edges fall back to the
+  // node-center anchor already used when a port row can't be found.
+  if (compact) {
+    const w = Math.min(200, Math.max(90, 24 + node.name.length * 6))
+    return (
+      <g onClick={onClick} style={{ cursor: 'pointer' }}>
+        <rect
+          x={node.x} y={node.y}
+          width={w} height={h} rx={16}
+          fill={style.bg}
+          stroke={isSelected ? style.color : style.border}
+          strokeWidth={isSelected ? 2 : 1}
+        />
+        <rect x={node.x + 10} y={node.y + h / 2 - 3} width={6} height={6} rx={3} fill={style.color} />
+        <text x={node.x + 22} y={node.y + h / 2 + 3.5} fill="#c8d3e8"
+          style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10 }}>
+          <title>{node.name}</title>
+          {node.name.length > 22 ? '…' + node.name.slice(-20) : node.name}
+        </text>
+      </g>
+    )
+  }
 
   return (
     <g onClick={onClick} style={{ cursor: 'pointer' }}>
