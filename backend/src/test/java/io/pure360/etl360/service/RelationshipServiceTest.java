@@ -145,4 +145,45 @@ class RelationshipServiceTest {
             new RelationshipsDto.EdgeDto("recipe:r1.json", "table:SHARED", "writes"),
             new RelationshipsDto.EdgeDto("recipe:r2.json", "table:SHARED", "writes"));
     }
+
+    @Test
+    void writerMetadataAndLayerSurviveEntryOrderAcrossLayersAndMetaLayersSort(@TempDir Path tmp) throws Exception {
+        // ODS is processed before DWH (LayerToLayerService.LAYER_DIRS order), so the ODS entry
+        // below — which only SOURCES TABLE_X — creates the table:TABLE_X node first, with no
+        // write-mode/partition info of its own. The DWH entry, processed after, is the one that
+        // actually TARGETS TABLE_X with a write mode and partition. Before the fix, the node's
+        // writeMode/partitionType (and layer) would stay whatever the ODS-sourcing branch set —
+        // i.e. null/null and layer "ODS" — because dedup is first-writer-wins per id. The table's
+        // metadata must instead reflect the actual writer (DWH) regardless of processing order.
+        Path odsDir = Files.createDirectories(tmp.resolve("DWH_CONTROL/LAYER_TO_LAYER/ODS"));
+        Path dwhDir = Files.createDirectories(tmp.resolve("DWH_CONTROL/LAYER_TO_LAYER/DWH"));
+        Files.writeString(odsDir.resolve("statements.sql"),
+            "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES "
+                + "('ODS', 'dir', 'r_ods.json', 'wf_ods', 'ODS_OTHER_TARGET', 1, "
+                + "[STRUCT('TABLE_X', true, 0)], [], [], [])");
+        Files.writeString(dwhDir.resolve("statements.sql"),
+            "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES "
+                + "('DWH', 'dir', 'r_dwh.json', 'wf_dwh', 'TABLE_X', 2, [], [], "
+                + "[STRUCT('TABLE_X', 'APPEND')], [STRUCT('TABLE_X', 'DAILY', 'LOAD_DATE', 'NONE')])");
+
+        var props = new Etl360Properties("unused", tmp.resolve("DWH_CONTROL").toString(),
+            tmp.resolve("unused-mock").toString(), "unused-composer",
+            new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
+        LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props));
+        CorpusService emptyCorpus = new CorpusService(Files.createDirectories(tmp.resolve("empty-corpus")));
+        RelationshipService svc = new RelationshipService(l2l, emptyCorpus);
+
+        assertThat(l2l.entries()).extracting(e -> e.layer()).containsExactly("ODS", "DWH"); // processing order
+
+        RelationshipsDto graph = svc.graph();
+        RelationshipsDto.NodeDto tableX = graph.nodes().stream()
+            .filter(n -> n.id().equals("table:TABLE_X")).findFirst().orElseThrow();
+        assertThat(tableX.layer()).isEqualTo("DWH");
+        assertThat(tableX.writeMode()).isEqualTo("APPEND");
+        assertThat(tableX.partitionType()).isEqualTo("DAILY");
+
+        // Distinct layers come back sorted (DWH < ODS alphabetically), not in encounter order
+        // (ODS was encountered first).
+        assertThat(graph.meta().layers()).containsExactly("DWH", "ODS");
+    }
 }
