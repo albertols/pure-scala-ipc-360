@@ -57,7 +57,7 @@ export function DetailPanel({
           fontWeight: 700,
           flexShrink: 0,
           marginTop: 1,
-        }}>{style.abbr}</div>
+        }}>{node.label && node.label !== style.abbr ? node.label : style.abbr}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>

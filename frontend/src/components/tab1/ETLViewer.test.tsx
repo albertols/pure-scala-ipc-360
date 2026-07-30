@@ -225,6 +225,29 @@ describe('ETLViewer — real canvas', () => {
     // One pill per node (source, expression, target) — rx=16 per the spec.
     expect(container.querySelectorAll('rect[rx="16"]')).toHaveLength(3)
 
+    // Human-sanctioned 2026-07-30: compact pills adopt the selected/highlight
+    // stroke too, so search highlight stays visible below the 0.65 zoom
+    // threshold. Reuse the same "ID" query (matches every port in this
+    // fixture) while nodes render as pills.
+    rerender(
+      <QueryClientProvider client={client}>
+        <ETLViewer searchQuery="  ID  " />
+      </QueryClientProvider>,
+    )
+    await waitFor(() => {
+      expect(container.querySelectorAll('rect[rx="16"][stroke-width="2"]')).toHaveLength(3)
+    })
+
+    // Clearing the query drops the pills back to the default stroke-width.
+    rerender(
+      <QueryClientProvider client={client}>
+        <ETLViewer searchQuery="" />
+      </QueryClientProvider>,
+    )
+    await waitFor(() => {
+      expect(container.querySelectorAll('rect[rx="16"][stroke-width="2"]')).toHaveLength(0)
+    })
+
     // Zoom back in past the threshold: full-detail rendering (and its ports) return.
     const zoomIn = screen.getByText('+')
     fireEvent.click(zoomIn)
