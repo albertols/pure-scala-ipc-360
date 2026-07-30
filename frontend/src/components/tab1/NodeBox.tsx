@@ -48,6 +48,9 @@ export function NodeBox({
   // height, dot size, tail-truncated mono name) as a sanctioned SVG copy —
   // ports/connector circles/ƒ badges are dropped; edges fall back to the
   // node-center anchor already used when a port row can't be found.
+  // Per the brief's exhaustive element list, the pill is visually inert to
+  // selection (mirrors OperationalCard's compact branch, which takes but
+  // never reads a `selected` prop) — no isSelected stroke swap here.
   if (compact) {
     const w = Math.min(200, Math.max(90, 24 + node.name.length * 6))
     return (
@@ -56,8 +59,8 @@ export function NodeBox({
           x={node.x} y={node.y}
           width={w} height={h} rx={16}
           fill={style.bg}
-          stroke={isSelected ? style.color : style.border}
-          strokeWidth={isSelected ? 2 : 1}
+          stroke={style.border}
+          strokeWidth={1}
         />
         <rect x={node.x + 10} y={node.y + h / 2 - 3} width={6} height={6} rx={3} fill={style.color} />
         <text x={node.x + 22} y={node.y + h / 2 + 3.5} fill="#c8d3e8"
