@@ -1,6 +1,8 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import type { ETLNode, Connection, FSFile, FSDir } from '../../types'
-import { MAPPINGS } from '../../mockData'
+import type { ApiError } from '../../api/client'
+import { useMappingModel } from '../../api/queries'
+import { toCanvas } from '../../api/mappingAdapter'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
 import { NodeBox, getNodeHeight, getPortY, buildPath, NODE_WIDTH, NODE_STYLES } from './NodeBox'
@@ -149,17 +151,25 @@ function Canvas({
 
 export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const [activeMapping, setActiveMapping] = useState('m_DM_DWHES_TABLA_COUNT_REPORT')
+  const [mappingPath, setMappingPath] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const { fs, loading, error } = useFilesystem()
+  const model = useMappingModel(mappingPath ?? '')
+  const modelError = model.error as ApiError | null
 
-  const mapping = MAPPINGS[activeMapping] ?? Object.values(MAPPINGS)[0]
-  const selectedNode = mapping.nodes.find(n => n.id === selectedNodeId) ?? null
+  const graph = useMemo(
+    () => (model.data ? toCanvas(model.data, mappingPath!) : null),
+    [model.data, mappingPath],
+  )
+
+  const selectedNode = graph?.nodes.find(n => n.id === selectedNodeId) ?? null
 
   const handleSelectFile = (f: FSFile) => {
     setSelectedPath(f.path)
-    setSelectedNodeId(null)
-    if (f.mapping && MAPPINGS[f.mapping]) setActiveMapping(f.mapping)
+    if (f.type === 'xml' && f.mapping) {
+      setMappingPath(f.mapping)
+      setSelectedNodeId(null)
+    }
   }
 
   const sidebarExtra = loading ? (
@@ -169,25 +179,21 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
       <div>{error.title}</div>
       {error.detail && <div>{error.detail}</div>}
     </div>
-  ) : (
+  ) : mappingPath ? (
     <div style={{ borderTop: '1px solid var(--border)', padding: '10px 12px', background: 'var(--surface-2)' }}>
       <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6 }}>Active Mapping</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {Object.keys(MAPPINGS).map(key => (
-          <button key={key} onClick={() => { setActiveMapping(key); setSelectedNodeId(null) }}
-            style={{
-              padding: '4px 8px', borderRadius: 4, textAlign: 'left',
-              background: activeMapping === key ? 'var(--surface-3)' : 'transparent',
-              border: `1px solid ${activeMapping === key ? 'var(--border)' : 'transparent'}`,
-              color: activeMapping === key ? '#e2e8f8' : '#4a5570',
-              fontSize: 10, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}
-          >{key}</button>
-        ))}
+      <div style={{
+        padding: '4px 8px', borderRadius: 4, textAlign: 'left',
+        background: 'var(--surface-3)',
+        border: '1px solid var(--border)',
+        color: '#e2e8f8',
+        fontSize: 10, fontFamily: 'JetBrains Mono, monospace',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }}>
+        {mappingPath.split('/').pop()}
       </div>
     </div>
-  )
+  ) : null
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -199,12 +205,33 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
         extraContent={sidebarExtra}
       />
 
-      <Canvas
-        nodes={mapping.nodes}
-        connections={mapping.connections}
-        selectedNode={selectedNodeId}
-        onSelectNode={id => setSelectedNodeId(id === selectedNodeId ? null : id)}
-      />
+      {!mappingPath ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="8" y="4" width="24" height="32" rx="3" stroke="#2a3050" strokeWidth="1.5" fill="none" />
+            <line x1="13" y1="12" x2="27" y2="12" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="13" y1="18" x2="27" y2="18" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontSize: 12 }}>Select an .xml mapping to view</span>
+        </div>
+      ) : model.isLoading ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
+          Loading mapping…
+        </div>
+      ) : modelError ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
+          <div>{modelError.title}</div>
+          {modelError.detail && <div>{modelError.detail}</div>}
+        </div>
+      ) : graph ? (
+        <Canvas
+          nodes={graph.nodes}
+          connections={graph.connections}
+          selectedNode={selectedNodeId}
+          onSelectNode={id => setSelectedNodeId(id === selectedNodeId ? null : id)}
+        />
+      ) : null}
 
       {selectedNode && (
         <DetailPanel node={selectedNode} onClose={() => setSelectedNodeId(null)} />
@@ -227,7 +254,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
         })}
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: 9, color: '#2a3050', fontFamily: 'JetBrains Mono, monospace' }}>
-          {mapping.nodes.length} nodes · {mapping.connections.length} connections · Informatica PowerCenter
+          {graph && `${graph.nodes.length} nodes · ${graph.connections.length} connections · Informatica PowerCenter${graph.mappingNames.length > 1 ? ` · mapping 1 of ${graph.mappingNames.length}: ${graph.renderedMapping}` : ''}`}
         </span>
       </div>
     </div>

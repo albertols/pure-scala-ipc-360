@@ -233,7 +233,7 @@ Behavior spec (exact):
 
 RTL+MSW test (`ETLViewer.test.tsx`): MSW handlers for `/api/tree` (mini tree with one xml file, mappingPath `CDM/m_FIX`) and `/api/mappings/model/CDM/m_FIX` (inline mini model JSON: 1 source + 1 expression + 1 target + 2 connectors — reuse the fixture-shape from Task 1's SYN files, trimmed). Test: render `<ETLViewer searchQuery="" />` in a QueryClientProvider, click the tree file, `await findByText` of the source card name (SVG text), assert the empty-hint disappears.
 
-- [ ] **Step 1: failing RTL test → Step 2: red → Step 3: implement per behavior spec → Step 4: `pnpm test && npx tsc --noEmit` green → Step 5: Commit** — `git commit -m "feat(viewer): real mapping canvas from semantic model — IPC ETL Viewer"` (stage the five files + plan).
+- [x] **Step 1: failing RTL test → Step 2: red → Step 3: implement per behavior spec → Step 4: `pnpm test && npx tsc --noEmit` green → Step 5: Commit** — `git commit -m "feat(viewer): real mapping canvas from semantic model — IPC ETL Viewer"` (stage the five files + plan).
 
 ---
 

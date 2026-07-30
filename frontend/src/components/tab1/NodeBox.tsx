@@ -62,7 +62,7 @@ export function NodeBox({
       <rect x={node.x + 8} y={node.y + 11} width={32} height={18} rx={4} fill={`${style.color}22`} stroke={style.border} strokeWidth={1} />
       <text x={node.x + 24} y={node.y + 23} textAnchor="middle" fill={style.color}
         style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8.5, fontWeight: 700 }}>
-        {style.abbr}
+        {node.label && node.label !== style.abbr ? node.label : style.abbr}
       </text>
 
       {/* name */}

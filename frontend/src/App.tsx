@@ -17,7 +17,7 @@ const TABS: {
 }[] = [
   {
     id: 'viewer',
-    label: 'ETL Viewer',
+    label: 'IPC ETL Viewer',
     accent: '#34d399',
     description: 'Visualize Informatica PowerCenter XML mappings with an interactive node canvas. Click nodes to inspect ports, expressions, and properties.',
     icon: (
