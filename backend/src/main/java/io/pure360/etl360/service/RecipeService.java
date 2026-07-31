@@ -41,6 +41,12 @@ public class RecipeService {
     private final PathResolver paths;
     private final ObjectMapper mapper = new ObjectMapper();
 
+    // Single coarse monitor guarding save/rollback's check-then-act (staleness check + archive +
+    // write must be atomic per JVM, not just per file operation) — fine for a local single-user
+    // tool; see RULED FIX in the Task 7 review (unsynchronized save/rollback could silently lose
+    // a concurrent writer's update, and same-millisecond archives could collide).
+    private final Object writeLock = new Object();
+
     public RecipeService(PathResolver paths) { this.paths = paths; }
 
     public RecipeDto recipe(String relJsonPath) {
@@ -85,18 +91,20 @@ public class RecipeService {
      * the file's current {@code modifiedAt} — someone else saved first.
      */
     public RecipeDto save(String relJsonPath, RecipeSaveRequestDto request) {
-        Path file = writableRecipeFile(relJsonPath);
-        if (!Files.isRegularFile(file)) {
-            throw new NotFoundException("No recipe file at " + relJsonPath);
+        synchronized (writeLock) {
+            Path file = writableRecipeFile(relJsonPath);
+            if (!Files.isRegularFile(file)) {
+                throw new NotFoundException("No recipe file at " + relJsonPath);
+            }
+            String currentModified = modifiedAt(file);
+            if (!currentModified.equals(request.baseModified())) {
+                throw new StaleRecipeException("Recipe " + relJsonPath + " was modified since it was loaded "
+                    + "(expected baseModified=" + request.baseModified() + ", current=" + currentModified + ")");
+            }
+            archive(file);
+            writeAtomic(file, request.content());
+            return recipe(relJsonPath);
         }
-        String currentModified = modifiedAt(file);
-        if (!currentModified.equals(request.baseModified())) {
-            throw new StaleRecipeException("Recipe " + relJsonPath + " was modified since it was loaded "
-                + "(expected baseModified=" + request.baseModified() + ", current=" + currentModified + ")");
-        }
-        archive(file);
-        writeAtomic(file, request.content());
-        return recipe(relJsonPath);
     }
 
     /** Sorted newest-first: {@code [{version, timestamp, sizeBytes}]} from the {@code _history/} sidecar. */
@@ -130,17 +138,19 @@ public class RecipeService {
 
     /** Archives the current file, restores the archived {@code version} over it, returns a fresh {@link RecipeDto}. */
     public RecipeDto rollback(String relJsonPath, String version) {
-        Path file = writableRecipeFile(relJsonPath);
-        if (!Files.isRegularFile(file)) {
-            throw new NotFoundException("No recipe file at " + relJsonPath);
+        synchronized (writeLock) {
+            Path file = writableRecipeFile(relJsonPath);
+            if (!Files.isRegularFile(file)) {
+                throw new NotFoundException("No recipe file at " + relJsonPath);
+            }
+            Path archived = historyFile(file, version);
+            if (!Files.isRegularFile(archived)) {
+                throw new NotFoundException("No archived version " + version + " for " + relJsonPath);
+            }
+            archive(file);
+            restoreAtomic(file, archived);
+            return recipe(relJsonPath);
         }
-        Path archived = historyFile(file, version);
-        if (!Files.isRegularFile(archived)) {
-            throw new NotFoundException("No archived version " + version + " for " + relJsonPath);
-        }
-        archive(file);
-        restoreAtomic(file, archived);
-        return recipe(relJsonPath);
     }
 
     /**
@@ -221,15 +231,31 @@ public class RecipeService {
         return file;
     }
 
+    /** Archives under a caller-held {@link #writeLock}, so this alone doesn't need its own
+     * synchronization — but the naming is still collision-proof in its own right (defense in
+     * depth: {@link HistorySidecar#newVersion()} is millisecond-precision, and a caller-held
+     * lock only guarantees serialization within this JVM, not against a stray external write). */
     private void archive(Path file) {
         try {
             Path historyDir = Files.createDirectories(file.resolveSibling(HistorySidecar.DIR));
-            Path archived = historyDir.resolve(stripJsonExt(file.getFileName().toString())
-                + "." + HistorySidecar.newVersion() + JSON_EXT);
-            Files.copy(file, archived, StandardCopyOption.REPLACE_EXISTING);
+            String stem = stripJsonExt(file.getFileName().toString());
+            Path archived = uniqueArchivePath(historyDir, stem, HistorySidecar.newVersion());
+            // No REPLACE_EXISTING: uniqueArchivePath already guarantees `archived` doesn't
+            // exist, so a collision can never silently overwrite a prior archive entry.
+            Files.copy(file, archived);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /** Same-millisecond archives get a {@code -1}, {@code -2}, ... suffix instead of colliding
+     * on {@code <stem>.<version>.json}. */
+    private static Path uniqueArchivePath(Path historyDir, String stem, String version) {
+        Path candidate = historyDir.resolve(stem + "." + version + JSON_EXT);
+        for (int suffix = 1; Files.exists(candidate); suffix++) {
+            candidate = historyDir.resolve(stem + "." + version + "-" + suffix + JSON_EXT);
+        }
+        return candidate;
     }
 
     private void writeAtomic(Path file, JsonNode content) {

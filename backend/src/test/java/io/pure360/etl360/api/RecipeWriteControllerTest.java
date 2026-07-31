@@ -3,10 +3,13 @@ package io.pure360.etl360.api;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.pure360.etl360.service.CorpusService;
+import io.pure360.etl360.service.support.HistorySidecar;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -149,5 +152,57 @@ class RecipeWriteControllerTest {
         assertThat(treeBody).doesNotContain("_history");
 
         assertThat(corpusService.allRecipePaths()).hasSize(1);
+    }
+
+    /**
+     * Task 7 review finding: save/rollback's archive step used {@code Files.copy(...,
+     * REPLACE_EXISTING)} into a millisecond-timestamped filename — two saves landing in the
+     * same millisecond would silently clobber one archive entry (lost history, not lost data:
+     * the live file itself was still written correctly, but only via a check-then-act with no
+     * synchronization, which is the bigger defect this same fix addresses).
+     * <p>
+     * Forces the collision deterministically (no timing-dependent flakiness) by stubbing
+     * {@link HistorySidecar#newVersion()} to return a fixed timestamp for both saves in this
+     * test, then asserts two distinct archive files exist afterward — proving the {@code -1}
+     * suffix collision handling actually fires end-to-end through {@code save()}, not just in
+     * isolation.
+     */
+    @Test
+    @Order(6)
+    void sameMillisecondSavesProduceDistinctHistoryEntries() throws Exception {
+        String recipePath = "/api/recipes/CDM/m_FIX/_ETL_m_FIX.json";
+        Path historyDir = corpus.resolve("CDM/m_FIX/_history");
+        long before = countFiles(historyDir);
+        String fixedVersion = "20991231-235959-999"; // won't collide with any real archive above
+
+        try (MockedStatic<HistorySidecar> mocked =
+                 Mockito.mockStatic(HistorySidecar.class, Mockito.CALLS_REAL_METHODS)) {
+            mocked.when(HistorySidecar::newVersion).thenReturn(fixedVersion);
+
+            for (int i = 0; i < 2; i++) {
+                String base = om.readTree(mvc.perform(get(recipePath)).andReturn().getResponse().getContentAsString())
+                    .get("modifiedAt").asText();
+                String body = "{\"baseModified\":\"" + base
+                    + "\",\"content\":{\"steps\":[],\"table\":{\"targetTableNames\":[],\"sourceTableNames\":[]}}}";
+                mvc.perform(put(recipePath).contentType("application/json").content(body))
+                   .andExpect(status().isOk());
+            }
+        }
+
+        assertThat(countFiles(historyDir) - before).isEqualTo(2); // no entry silently overwritten
+        try (var s = Files.list(historyDir)) {
+            var names = s.map(p -> p.getFileName().toString())
+                .filter(n -> n.contains(fixedVersion)).toList();
+            assertThat(names).containsExactlyInAnyOrder(
+                "_ETL_m_FIX." + fixedVersion + ".json",
+                "_ETL_m_FIX." + fixedVersion + "-1.json");
+        }
+    }
+
+    private static long countFiles(Path dir) throws IOException {
+        if (!Files.isDirectory(dir)) return 0;
+        try (var s = Files.list(dir)) {
+            return s.count();
+        }
     }
 }
