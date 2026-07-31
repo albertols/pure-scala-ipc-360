@@ -1,21 +1,23 @@
-import { useState, useCallback } from 'react'
-import type { FSFile, FSDir, ETLRecipe, RecipeTransformation } from '../../types'
-import { ETL_RECIPES, DDL_SCHEMAS } from '../../mockData'
+import { useMemo, useState } from 'react'
+import type { FSFile, FSDir } from '../../types'
+import type { ApiError } from '../../api/client'
+import { useRecipe, useDdl } from '../../api/queries'
+import { recipeToCanvas } from '../../api/recipeAdapter'
+import type { RecipeJson } from '../../api/recipeAdapter'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
+import { EtlCanvas } from '../shared/EtlCanvas'
 import { CopyButton } from '../shared/CopyButton'
-import { InfoTooltip } from '../shared/InfoTooltip'
 import { GCPIcon } from '../shared/GCPIcon'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
-const TYPE_COLORS: Record<string, string> = {
-  EXPRESSION: '#818cf8',
-  LOOKUP: '#a78bfa',
-  AGGREGATOR: '#fb923c',
-  JOINER: '#fbbf24',
-  ROUTER: '#f472b6',
-  FILTER: '#67e8f9',
+/** Real DDL JSON shape (parser `<TABLE>.json` output) — BigQuery field list. */
+interface DdlColumnJson {
+  name?: string
+  type?: string
+  mode?: string
+  description?: string
 }
 
 // ─── Save Bar ─────────────────────────────────────────────────────────────────
@@ -66,15 +68,11 @@ function EditableField({
   value,
   onChange,
   mono = false,
-  multiline = false,
-  placeholder = '',
 }: {
   label: string
   value: string
   onChange: (v: string) => void
   mono?: boolean
-  multiline?: boolean
-  placeholder?: string
 }) {
   const sharedStyle: React.CSSProperties = {
     width: '100%',
@@ -86,163 +84,29 @@ function EditableField({
     padding: '5px 8px',
     fontFamily: mono ? 'JetBrains Mono, monospace' : 'Inter, sans-serif',
     outline: 'none',
-    resize: multiline ? 'vertical' : 'none',
   }
 
   return (
     <div>
       <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 3 }}>{label}</div>
       <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
-        {multiline
-          ? <textarea rows={3} value={value} onChange={e => onChange(e.target.value)}
-              placeholder={placeholder} style={{ ...sharedStyle, minHeight: 58 }}
-              onFocus={e => { e.target.style.borderColor = '#4f9cf9' }}
-              onBlur={e => { e.target.style.borderColor = 'var(--border)' }}
-            />
-          : <input value={value} onChange={e => onChange(e.target.value)}
-              placeholder={placeholder} style={sharedStyle}
-              onFocus={e => { e.target.style.borderColor = '#4f9cf9' }}
-              onBlur={e => { e.target.style.borderColor = 'var(--border)' }}
-            />
-        }
+        <input value={value} onChange={e => onChange(e.target.value)}
+          style={sharedStyle}
+          onFocus={e => { e.target.style.borderColor = '#4f9cf9' }}
+          onBlur={e => { e.target.style.borderColor = 'var(--border)' }}
+        />
         <CopyButton value={value} />
       </div>
     </div>
   )
 }
 
-// ─── Transformation Card ──────────────────────────────────────────────────────
-
-function TransformCard({
-  tx,
-  onChange,
-}: {
-  tx: RecipeTransformation
-  onChange: (updated: RecipeTransformation) => void
-}) {
-  const [expanded, setExpanded] = useState(true)
-  const color = TYPE_COLORS[tx.type] ?? '#4a5570'
-
-  const updatePort = (i: number, field: 'name' | 'expression', val: string) => {
-    const ports = [...(tx.ports ?? [])]
-    ports[i] = { ...ports[i], [field]: val }
-    onChange({ ...tx, ports })
-  }
-
-  return (
-    <div style={{
-      border: `1px solid ${color}44`,
-      borderTop: `2px solid ${color}`,
-      borderRadius: 7,
-      background: 'var(--surface)',
-      overflow: 'hidden',
-      minWidth: 260,
-      flexShrink: 0,
-    }}>
-      {/* header */}
-      <div
-        onClick={() => setExpanded(e => !e)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '9px 12px', cursor: 'pointer',
-          background: `${color}0c`,
-        }}
-      >
-        <span style={{
-          fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 3,
-          background: `${color}22`, color, border: `1px solid ${color}44`,
-          fontFamily: 'JetBrains Mono, monospace',
-        }}>{tx.type}</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f8', flex: 1 }}>{tx.name}</span>
-        <span style={{ fontSize: 10, color: '#4a5570' }}>{tx.id}</span>
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d={expanded ? 'M1 3l4 4 4-4' : 'M3 1l4 4-4 4'} stroke="#4a5570" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </div>
-
-      {expanded && (
-        <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <EditableField label="Name" value={tx.name} onChange={v => onChange({ ...tx, name: v })} />
-
-          {tx.lookup_table && (
-            <EditableField label="Lookup Table" value={tx.lookup_table} onChange={v => onChange({ ...tx, lookup_table: v })} mono />
-          )}
-          {tx.lookup_condition && (
-            <EditableField label="Lookup Condition" value={tx.lookup_condition} onChange={v => onChange({ ...tx, lookup_condition: v })} mono multiline />
-          )}
-          {tx.cache_type && (
-            <EditableField label="Cache Type" value={tx.cache_type} onChange={v => onChange({ ...tx, cache_type: v })} />
-          )}
-          {tx.join_type && (
-            <EditableField label="Join Type" value={tx.join_type} onChange={v => onChange({ ...tx, join_type: v })} />
-          )}
-          {tx.join_condition && (
-            <EditableField label="Join Condition" value={tx.join_condition} onChange={v => onChange({ ...tx, join_condition: v })} mono multiline />
-          )}
-          {tx.filter_condition && (
-            <EditableField label="Filter Condition" value={tx.filter_condition} onChange={v => onChange({ ...tx, filter_condition: v })} mono multiline />
-          )}
-          {tx.group_by && (
-            <EditableField label="Group By" value={tx.group_by.join(', ')} onChange={v => onChange({ ...tx, group_by: v.split(',').map(s => s.trim()) })} mono />
-          )}
-
-          {tx.ports && tx.ports.length > 0 && (
-            <div>
-              <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                Ports / Expressions
-                <InfoTooltip text="Edit the transformation formula for each output port. Uses Informatica expression syntax." placement="right" />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {tx.ports.map((p, i) => (
-                  <div key={i} style={{
-                    border: '1px solid var(--border)', borderRadius: 5, overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '4px 8px', background: 'var(--surface-2)',
-                      borderBottom: '1px solid var(--border)',
-                    }}>
-                      <input value={p.name} onChange={e => updatePort(i, 'name', e.target.value)}
-                        style={{
-                          flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                          fontSize: 10, color: '#c8d3e8', fontFamily: 'JetBrains Mono, monospace',
-                        }} />
-                      {p.dataType && (
-                        <span style={{ fontSize: 9, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{p.dataType}</span>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', padding: '5px 8px', gap: 4 }}>
-                      <span style={{ fontSize: 9, color: color, fontFamily: 'JetBrains Mono, monospace', marginTop: 1, flexShrink: 0 }}>ƒ</span>
-                      <textarea
-                        rows={2}
-                        value={p.expression}
-                        onChange={e => updatePort(i, 'expression', e.target.value)}
-                        style={{
-                          flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                          fontSize: 10, color: '#a78bfa', fontFamily: 'JetBrains Mono, monospace',
-                          resize: 'vertical', lineHeight: 1.5,
-                        }}
-                      />
-                      <CopyButton value={p.expression} size={11} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── DDL Viewer ───────────────────────────────────────────────────────────────
 
-function DDLViewer({ recipeId }: { recipeId: string }) {
-  const cols = DDL_SCHEMAS[recipeId] ?? []
-  if (cols.length === 0) return <div style={{ color: '#4a5570', fontSize: 11, padding: '8px 0' }}>No DDL schema found for this recipe.</div>
+function DDLViewer({ cols }: { cols: DdlColumnJson[] }) {
+  if (cols.length === 0) return null
 
-  const modeColor = { REQUIRED: '#34d399', NULLABLE: '#4a5570', REPEATED: '#818cf8' }
+  const modeColor: Record<string, string> = { REQUIRED: '#34d399', NULLABLE: '#4a5570', REPEATED: '#818cf8' }
 
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
@@ -265,58 +129,49 @@ function DDLViewer({ recipeId }: { recipeId: string }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}>{col.name}</span>
-            <CopyButton value={col.name} size={11} />
+            <CopyButton value={col.name ?? ''} size={11} />
           </div>
-          <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#4f9cf9', textAlign: 'right', paddingRight: 12 }}>{col.bq_type}</span>
+          <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#4f9cf9', textAlign: 'right', paddingRight: 12 }}>{col.type}</span>
           <span style={{
             fontSize: 8, fontFamily: 'JetBrains Mono, monospace', textAlign: 'right', paddingRight: 12,
-            color: modeColor[col.mode] ?? '#4a5570',
+            color: modeColor[col.mode ?? ''] ?? '#4a5570',
           }}>{col.mode}</span>
-          <span style={{ fontSize: 10, color: '#4a5570', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{col.description ?? '—'}</span>
+          <span style={{ fontSize: 10, color: '#4a5570', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{col.description || '—'}</span>
         </div>
       ))}
     </div>
   )
 }
 
-// ─── Expression Collector ─────────────────────────────────────────────────────
+// ─── Section Header ───────────────────────────────────────────────────────────
 
-function ExpressionList({ recipe }: { recipe: ETLRecipe }) {
-  const allExprs = recipe.transformations.flatMap(tx =>
-    (tx.ports ?? []).filter(p => p.expression).map(p => ({ tx: tx.name, port: p.name, expr: p.expression, type: tx.type }))
+function SectionHeader({ icon, label, color, extra }: { icon: string; label: string; color: string; extra?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+      <span style={{ fontSize: 14, color, fontFamily: 'JetBrains Mono, monospace' }}>{icon}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8' }}>{label}</span>
+      {extra}
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+    </div>
   )
-  if (allExprs.length === 0) return <div style={{ color: '#4a5570', fontSize: 11 }}>No expressions found in this recipe.</div>
+}
 
+// ─── Table name list (Source / Target cards) ───────────────────────────────────
+
+function TableNameList({ names, emptyLabel }: { names: string[]; emptyLabel: string }) {
+  if (names.length === 0) {
+    return <div style={{ color: '#4a5570', fontSize: 11 }}>{emptyLabel}</div>
+  }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {allExprs.map((e, i) => {
-        const color = TYPE_COLORS[e.type] ?? '#818cf8'
-        return (
-          <div key={i} style={{
-            border: `1px solid ${color}30`,
-            borderLeft: `3px solid ${color}`,
-            borderRadius: 5,
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '5px 10px', background: `${color}08`,
-              borderBottom: `1px solid ${color}20`,
-            }}>
-              <span style={{ fontSize: 9, color, fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>{e.tx}</span>
-              <span style={{ fontSize: 10, color: '#c8d3e8', fontFamily: 'JetBrains Mono, monospace' }}>{e.port}</span>
-              <div style={{ flex: 1 }} />
-              <CopyButton value={e.expr} size={11} />
-            </div>
-            <pre style={{
-              margin: 0, padding: '6px 10px',
-              fontSize: 10, color: '#a78bfa',
-              fontFamily: 'JetBrains Mono, monospace',
-              whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-            }}>{e.expr}</pre>
-          </div>
-        )
-      })}
+      {names.map(name => (
+        <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {name}
+          </span>
+          <CopyButton value={name} size={11} />
+        </div>
+      ))}
     </div>
   )
 }
@@ -325,53 +180,45 @@ function ExpressionList({ recipe }: { recipe: ETLRecipe }) {
 
 export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const [activeRecipeId, setActiveRecipeId] = useState<string | null>(null)
-  const [recipes, setRecipes] = useState<Record<string, ETLRecipe>>(
-    Object.fromEntries(Object.entries(ETL_RECIPES).map(([k, v]) => [k, JSON.parse(JSON.stringify(v))]))
-  )
-  const [originalRecipes] = useState<Record<string, ETLRecipe>>(ETL_RECIPES)
-  const [saved, setSaved] = useState(false)
+  const [recipePath, setRecipePath] = useState<string | null>(null)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [showRaw, setShowRaw] = useState(false)
   const { fs, loading, error } = useFilesystem()
 
-  const recipe = activeRecipeId ? recipes[activeRecipeId] : null
-  const original = activeRecipeId ? originalRecipes[activeRecipeId] : null
+  const rec = useRecipe(recipePath ?? '')
+  const recError = rec.error as ApiError | null
+  const content = rec.data?.content as RecipeJson | undefined
 
-  const changes = recipe && original
-    ? JSON.stringify(recipe) !== JSON.stringify(original) ? 1 : 0
-    : 0
+  const graph = useMemo(
+    () => (rec.data ? recipeToCanvas(rec.data.content as RecipeJson, recipePath!) : null),
+    [rec.data, recipePath],
+  )
+
+  const recipeSlash = recipePath ? recipePath.lastIndexOf('/') : -1
+  const recipeDir = recipeSlash >= 0 ? recipePath!.slice(0, recipeSlash) : ''
+  const ddl = useDdl(recipeDir)
+  const ddlEntries = ddl.data ? Object.entries(ddl.data as Record<string, DdlColumnJson[]>) : []
+
+  const exprPorts = graph?.nodes.flatMap(n => n.ports).filter(p => p.expression) ?? []
 
   const handleSelectFile = (f: FSFile) => {
     setSelectedPath(f.path)
-    if (f.recipe) setActiveRecipeId(f.recipe)
+    if (f.recipe) {
+      setRecipePath(f.recipe)
+      setSelectedNodeId(null)
+      setShowRaw(false)
+    }
   }
 
-  const updateRecipe = useCallback((updater: (r: ETLRecipe) => ETLRecipe) => {
-    if (!activeRecipeId) return
-    setRecipes(prev => ({ ...prev, [activeRecipeId]: updater(prev[activeRecipeId]) }))
-    setSaved(false)
-  }, [activeRecipeId])
-
-  const updateTransformation = (i: number, tx: RecipeTransformation) => {
-    updateRecipe(r => {
-      const txs = [...r.transformations]
-      txs[i] = tx
-      return { ...r, transformations: txs }
-    })
-  }
-
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }
-
-  const handleDiscard = () => {
-    if (!activeRecipeId) return
-    setRecipes(prev => ({
-      ...prev,
-      [activeRecipeId]: JSON.parse(JSON.stringify(originalRecipes[activeRecipeId])),
-    }))
-  }
+  const sidebarExtra = loading ? (
+    <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 12 }}>Loading corpus…</div>
+  ) : error ? (
+    <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
+      <div>{error.title}</div>
+      {error.detail && <div>{error.detail}</div>}
+    </div>
+  ) : null
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -382,34 +229,11 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
         filesystem={fs ?? EMPTY_FS}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(c => !c)}
-        extraContent={
-          loading ? (
-            <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 12 }}>Loading corpus…</div>
-          ) : error ? (
-            <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
-              <div>{error.title}</div>
-              {error.detail && <div>{error.detail}</div>}
-            </div>
-          ) : (
-            <div style={{ borderTop: '1px solid var(--border)', padding: '10px 12px', background: 'var(--surface-2)' }}>
-              <div style={{ fontSize: 9, color: '#4a5570', marginBottom: 4 }}>Select an _ETL_*.json file to edit</div>
-              {Object.keys(ETL_RECIPES).map(id => (
-                <button key={id} onClick={() => setActiveRecipeId(id)}
-                  style={{
-                    display: 'block', width: '100%', padding: '3px 6px',
-                    textAlign: 'left', background: activeRecipeId === id ? 'var(--surface-3)' : 'transparent',
-                    border: 'none', color: activeRecipeId === id ? '#e2e8f8' : '#4a5570',
-                    fontSize: 9, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                    borderRadius: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>{id}</button>
-              ))}
-            </div>
-          )
-        }
+        extraContent={sidebarExtra}
       />
 
       <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-        {!recipe ? (
+        {!recipePath ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
               <rect x="8" y="4" width="24" height="32" rx="3" stroke="#2a3050" strokeWidth="1.5" fill="none" />
@@ -419,7 +243,16 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
             </svg>
             <span style={{ fontSize: 12 }}>Select an _ETL_*.json recipe to edit</span>
           </div>
-        ) : (
+        ) : rec.isLoading ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
+            Loading recipe…
+          </div>
+        ) : recError ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
+            <div>{recError.title}</div>
+            {recError.detail && <div>{recError.detail}</div>}
+          </div>
+        ) : rec.data && graph ? (
           <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* recipe header */}
@@ -429,36 +262,50 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
               background: 'var(--surface)',
               border: '1px solid var(--border)',
               borderRadius: 8,
+              flexDirection: 'column',
             }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#e2e8f8' }}>{recipe.recipe_id}</h2>
-                  <span style={{
-                    fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 600,
-                    background: recipe.layer === 'CDM' ? 'rgba(79,156,249,0.15)' : 'rgba(167,139,250,0.15)',
-                    color: recipe.layer === 'CDM' ? '#4f9cf9' : '#a78bfa',
-                    border: `1px solid ${recipe.layer === 'CDM' ? 'rgba(79,156,249,0.3)' : 'rgba(167,139,250,0.3)'}`,
-                    fontFamily: 'JetBrains Mono, monospace',
-                  }}>{recipe.layer}</span>
-                  {recipe.bpm_id && (
-                    <span style={{ fontSize: 10, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{recipe.bpm_id}</span>
-                  )}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, width: '100%' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#e2e8f8' }}>{rec.data.fileName}</h2>
+                    <span style={{
+                      fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 600,
+                      background: 'rgba(79,156,249,0.15)',
+                      color: '#4f9cf9',
+                      border: '1px solid rgba(79,156,249,0.3)',
+                      fontFamily: 'JetBrains Mono, monospace',
+                    }}>{(rec.data.path ?? '').split('/')[0]}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+                    <EditableField label="Path" value={rec.data.path ?? ''} onChange={() => {}} mono />
+                    <EditableField label="Size bytes" value={String(rec.data.sizeBytes ?? '')} onChange={() => {}} mono />
+                    <EditableField label="Modified" value={rec.data.modifiedAt ?? ''} onChange={() => {}} mono />
+                  </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-                  <EditableField label="Version" value={recipe.metadata.version}
-                    onChange={v => updateRecipe(r => ({ ...r, metadata: { ...r.metadata, version: v } }))} mono />
-                  <EditableField label="Owner" value={recipe.metadata.owner}
-                    onChange={v => updateRecipe(r => ({ ...r, metadata: { ...r.metadata, owner: v } }))} />
-                  <EditableField label="Description" value={recipe.metadata.description ?? ''}
-                    onChange={v => updateRecipe(r => ({ ...r, metadata: { ...r.metadata, description: v } }))} />
-                </div>
+                <button onClick={() => setShowRaw(r => !r)} style={{
+                  padding: '5px 12px', borderRadius: 5,
+                  background: showRaw ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
+                  color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+                  flexShrink: 0,
+                }}>{'{ raw JSON }'}</button>
               </div>
-              {saved && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#34d399', fontSize: 12 }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 7l4 4 6-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  Saved
+
+              {showRaw && (
+                <div style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '5px 10px', background: 'var(--surface-2)',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <span style={{ fontSize: 10, color: '#4a5570', flex: 1 }}>Raw JSON</span>
+                    <CopyButton value={JSON.stringify(rec.data.content, null, 2)} size={11} />
+                  </div>
+                  <pre style={{
+                    margin: 0, padding: '10px 12px', maxHeight: 400, overflow: 'auto',
+                    fontSize: 10, color: '#c8d3e8',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
+                  }}>{JSON.stringify(rec.data.content, null, 2)}</pre>
                 </div>
               )}
             </div>
@@ -467,87 +314,91 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
             <section>
               <SectionHeader icon="→" label="Source" color="#34d399" />
               <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12,
                 padding: '16px', background: 'var(--surface)',
                 border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
               }}>
-                <EditableField label="DB Type" value={recipe.source.type}
-                  onChange={v => updateRecipe(r => ({ ...r, source: { ...r.source, type: v } }))} />
-                <EditableField label="Connection" value={recipe.source.db_connection ?? ''}
-                  onChange={v => updateRecipe(r => ({ ...r, source: { ...r.source, db_connection: v } }))} mono />
-                <EditableField label="Schema" value={recipe.source.schema}
-                  onChange={v => updateRecipe(r => ({ ...r, source: { ...r.source, schema: v } }))} mono />
-                <EditableField label="Table" value={recipe.source.table}
-                  onChange={v => updateRecipe(r => ({ ...r, source: { ...r.source, table: v } }))} mono />
-                <div style={{ gridColumn: '1/-1' }}>
-                  <EditableField label="Filter Condition" value={recipe.source.filter}
-                    onChange={v => updateRecipe(r => ({ ...r, source: { ...r.source, filter: v } }))} mono multiline />
-                </div>
+                <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
               </div>
             </section>
 
-            {/* transformations */}
+            {/* canvas */}
             <section>
-              <SectionHeader icon="⇄" label={`Transformations (${recipe.transformations.length})`} color="#818cf8" />
-              <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
-                {recipe.transformations.map((tx, i) => (
-                  <TransformCard key={tx.id} tx={tx} onChange={updated => updateTransformation(i, updated)} />
-                ))}
+              <SectionHeader icon="⇄" label={`Canvas (${graph.nodes.length} nodes)`} color="#818cf8" />
+              <div style={{ height: 420, border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
+                <EtlCanvas
+                  nodes={graph.nodes}
+                  connections={graph.connections}
+                  selectedNode={selectedNodeId}
+                  onSelectNode={id => setSelectedNodeId(id === selectedNodeId ? null : id)}
+                  highlightIds={[]}
+                />
               </div>
-            </section>
-
-            {/* expressions collector */}
-            <section>
-              <SectionHeader icon="ƒ" label="All Expressions" color="#a78bfa" />
-              <ExpressionList recipe={recipe} />
             </section>
 
             {/* target */}
             <section>
               <SectionHeader icon="⬡" label="Target" color="#f87171" extra={<GCPIcon service="bigquery" size={16} />} />
               <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12,
                 padding: '16px', background: 'var(--surface)',
                 border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7,
               }}>
-                <EditableField label="Dataset" value={recipe.target.dataset}
-                  onChange={v => updateRecipe(r => ({ ...r, target: { ...r.target, dataset: v } }))} mono />
-                <EditableField label="Table" value={recipe.target.table}
-                  onChange={v => updateRecipe(r => ({ ...r, target: { ...r.target, table: v } }))} mono />
-                <EditableField label="Load Type" value={recipe.target.load_type}
-                  onChange={v => updateRecipe(r => ({ ...r, target: { ...r.target, load_type: v } }))} />
-                <EditableField label="Partition Field" value={recipe.target.partition_field}
-                  onChange={v => updateRecipe(r => ({ ...r, target: { ...r.target, partition_field: v } }))} mono />
-                <div style={{ gridColumn: '1/-1' }}>
-                  <EditableField label="Cluster Fields (comma-separated)" value={(recipe.target.cluster_fields ?? []).join(', ')}
-                    onChange={v => updateRecipe(r => ({ ...r, target: { ...r.target, cluster_fields: v.split(',').map(s => s.trim()).filter(Boolean) } }))} mono />
-                </div>
+                <TableNameList names={content?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
               </div>
             </section>
 
-            {/* DDL */}
+            {/* expressions collector (interim until Task 11's registry) */}
             <section>
-              <SectionHeader icon="⬡" label="BigQuery DDL Schema" color="#4f9cf9" extra={<GCPIcon service="bigquery" size={16} />} />
-              <DDLViewer recipeId={activeRecipeId!} />
+              <SectionHeader icon="ƒ" label="All Expressions" color="#a78bfa" />
+              {exprPorts.length === 0 ? (
+                <div style={{ color: '#4a5570', fontSize: 11 }}>No expressions found in this recipe.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {exprPorts.map((p, i) => (
+                    <div key={i} style={{ border: '1px solid rgba(167,139,250,0.2)', borderRadius: 5, overflow: 'hidden' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '5px 10px', background: 'rgba(167,139,250,0.05)',
+                        borderBottom: '1px solid rgba(167,139,250,0.15)',
+                      }}>
+                        <span style={{ fontSize: 10, color: '#c8d3e8', fontFamily: 'JetBrains Mono, monospace', flex: 1 }}>{p.name}</span>
+                        {p.dataType && (
+                          <span style={{ fontSize: 9, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{p.dataType}</span>
+                        )}
+                        <CopyButton value={p.expression!} size={11} />
+                      </div>
+                      <pre style={{
+                        margin: 0, padding: '6px 10px',
+                        fontSize: 10, color: '#a78bfa',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
+                      }}>{p.expression}</pre>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
+
+            {/* DDL — hidden entirely when the map is empty or errored */}
+            {!ddl.error && ddlEntries.length > 0 && (
+              <section>
+                <SectionHeader icon="⬡" label="BigQuery DDL Schema" color="#4f9cf9" extra={<GCPIcon service="bigquery" size={16} />} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {ddlEntries.map(([table, cols]) => (
+                    <div key={table}>
+                      <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>{table}</div>
+                      <DDLViewer cols={cols} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <div style={{ height: 60 }} />
           </div>
-        )}
+        ) : null}
 
-        <SaveBar changes={changes} onSave={handleSave} onDiscard={handleDiscard} />
+        <SaveBar changes={0} onSave={() => {}} onDiscard={() => {}} />
       </div>
-    </div>
-  )
-}
-
-function SectionHeader({ icon, label, color, extra }: { icon: string; label: string; color: string; extra?: React.ReactNode }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-      <span style={{ fontSize: 14, color, fontFamily: 'JetBrains Mono, monospace' }}>{icon}</span>
-      <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8' }}>{label}</span>
-      {extra}
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
     </div>
   )
 }
