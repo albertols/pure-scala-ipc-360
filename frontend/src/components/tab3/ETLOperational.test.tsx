@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
@@ -184,5 +184,40 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     const nameEl = await screen.findByText('_ETL_m_CAS_T.json')
     const cardEl = nameEl.closest('[data-card]') as HTMLElement
     expect(cardEl.querySelectorAll('div[title^="Run "]')).toHaveLength(14)
+  })
+
+  it('zooms out past the compact threshold and collapses real cards into pills (and back)', async () => {
+    renderTab()
+
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    // Full-detail rendering: all 3 real cards (2 tables + 1 recipe) render the
+    // "Last run:" line — `OperationalCard`'s compact branch omits it entirely,
+    // rendering only a status-dot pill with the card's name.
+    expect(screen.getAllByText(/Last run:/)).toHaveLength(3)
+
+    // Tab-1 Task-6 idiom, mirrored for Tab 3's own zoom state: the "−" button
+    // steps 0.15 per click from the 0.85 default — 0.85 → 0.70 → 0.55,
+    // crossing the RelationshipGraph's 0.65 compact threshold on click two.
+    const zoomOut = screen.getByText('−')
+    fireEvent.click(zoomOut)
+    fireEvent.click(zoomOut)
+
+    await waitFor(() => {
+      expect(screen.queryAllByText(/Last run:/)).toHaveLength(0)
+    })
+    // The pill still shows the real recipe's filename — proves compact mode
+    // collapses real fixture data, not a placeholder.
+    expect(screen.getByText('_ETL_m_CAS_T.json')).toBeInTheDocument()
+
+    // Zoom back in past the threshold: full-detail rendering (and its
+    // "Last run:" line, once per card) returns.
+    const zoomIn = screen.getByText('+')
+    fireEvent.click(zoomIn)
+    fireEvent.click(zoomIn)
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Last run:/)).toHaveLength(3)
+    })
   })
 })
