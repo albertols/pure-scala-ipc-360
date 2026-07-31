@@ -1,0 +1,14 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "STATUS_CODE",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "STATUS_DESC",
+  "type": "STRING",
+  "description": ""
+  }
+]

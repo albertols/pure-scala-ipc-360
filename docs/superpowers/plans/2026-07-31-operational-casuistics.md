@@ -182,11 +182,11 @@ echo "cas-gen: recipes regenerated from $TMP into $CORPUS"
 
 Makefile addition: `cas-gen:  ## render CAS XMLs from the manifest and regenerate their recipes via the real parser (temp copy)` → `bash scripts/cas_gen.sh`.
 
-- [ ] **Step 1: RED first** — raise the two `CorpusContractTest` floors (25: `hasSizeGreaterThanOrEqualTo(81)`; 37: `(86)`; update the `// 55 lowercase…` comment to `// 55 lowercase .xml + 14 uppercase .XML + 12 CAS (11 .xml, 1 .XML) — see CLAUDE.md corpus caveats.`) and the `viewer_sweep` floor. Run `mvn -q -am -pl backend test` — expect `CorpusContractTest` FAIL (69 < 81): the gate demands the data.
-- [ ] **Step 2: Generate** — `make cas-gen`. Verify: `find parser/src/main/resources/xmltobq -name 'm_CAS_*.xml' -o -name 'm_CAS_*.XML' | wc -l` → 12; `find parser/src/main/resources/xmltobq -name '_ETL_m_CAS_*.json' | wc -l` → 12; QDM file is `m_CAS_QDM_EVENTS_QUALITY.XML` (uppercase).
-- [ ] **Step 3: GREEN** — `mvn -q -am -pl backend test` (81/86 floors pass). `node --experimental-strip-types scripts/mock_etl_data.mts --check` reports L2L/b15 drift ONLY (expected until Task 3 — confirm XML+recipe checks are clean; if `--check` hard-fails on missing L2L, it must report-not-crash: fix in the generator, that is Task 10's wiring contract).
-- [ ] **Step 4: Cross-gate** — `make validate-loop` end-to-end: expect `viewer_sweep: 81/81 mappings render` (any FAIL names the mapping — fix the RENDERER/template, never skip) and the `2026-07-29` anchor date still green.
-- [ ] **Step 5: Commit**
+- [x] **Step 1: RED first** — raise the two `CorpusContractTest` floors (25: `hasSizeGreaterThanOrEqualTo(81)`; 37: `(86)`; update the `// 55 lowercase…` comment to `// 55 lowercase .xml + 14 uppercase .XML + 12 CAS (11 .xml, 1 .XML) — see CLAUDE.md corpus caveats.`) and the `viewer_sweep` floor. Run `mvn -q -am -pl backend test` — expect `CorpusContractTest` FAIL (69 < 81): the gate demands the data.
+- [x] **Step 2: Generate** — `make cas-gen`. Verify: `find parser/src/main/resources/xmltobq -name 'm_CAS_*.xml' -o -name 'm_CAS_*.XML' | wc -l` → 12; `find parser/src/main/resources/xmltobq -name '_ETL_m_CAS_*.json' | wc -l` → 12; QDM file is `m_CAS_QDM_EVENTS_QUALITY.XML` (uppercase).
+- [x] **Step 3: GREEN** — `mvn -q -am -pl backend test` (81/86 floors pass). `node --experimental-strip-types scripts/mock_etl_data.mts --check` reports L2L/b15 drift ONLY (expected until Task 3 — confirm XML+recipe checks are clean; if `--check` hard-fails on missing L2L, it must report-not-crash: fix in the generator, that is Task 10's wiring contract).
+- [x] **Step 4: Cross-gate** — `make validate-loop` end-to-end: expect `viewer_sweep: 81/81 mappings render` (any FAIL names the mapping — fix the RENDERER/template, never skip) and the `2026-07-29` anchor date still green.
+- [x] **Step 5: Commit**
 
 ```bash
 git add parser/src/main/resources/xmltobq scripts/cas_gen.sh Makefile backend/src/test/java/io/pure360/etl360/CorpusContractTest.java scripts/viewer_sweep.mts docs/superpowers/plans/2026-07-31-operational-casuistics.md

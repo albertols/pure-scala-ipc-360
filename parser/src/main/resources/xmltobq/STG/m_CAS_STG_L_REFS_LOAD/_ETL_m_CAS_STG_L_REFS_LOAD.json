@@ -1,0 +1,50 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "CAS_STG_L_REFS",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "REF_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "CAS_FF_REFS.REF_ID"
+            }
+          },
+          {
+            "name" : "REF_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_UPPER",
+              "parameters" : [
+                {
+                  "name" : "EXP_TRIM",
+                  "parameters" : [
+                    {
+                      "source" : "CAS_FF_REFS.REF_NAME"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "CAS_FF_REFS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "CAS_STG_L_REFS"
+    ],
+    "sourceTableNames" : [
+      "CAS_FF_REFS"
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-.PHONY: dev test test-backend test-frontend check build regen-corpus generate-api validate-loop
+.PHONY: dev test test-backend test-frontend check build regen-corpus cas-gen generate-api validate-loop
 
 dev:            ## run backend + frontend together (Ctrl-C stops both)
 	bash scripts/dev.sh
@@ -21,6 +21,9 @@ build:
 
 regen-corpus:   ## regenerate recipes over a TEMP COPY and diff vs committed corpus
 	bash scripts/regen_corpus.sh
+
+cas-gen:        ## render CAS XMLs from the manifest and regenerate their recipes via the real parser (temp copy)
+	bash scripts/cas_gen.sh
 
 generate-api:   ## refresh frontend/src/api/types.gen.ts from a running backend
 	cd frontend && pnpm generate:api

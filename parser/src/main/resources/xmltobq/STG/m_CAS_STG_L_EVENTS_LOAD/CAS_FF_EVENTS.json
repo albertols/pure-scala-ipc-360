@@ -1,0 +1,26 @@
+[
+  {
+  "mode": "NULLABLE",
+  "name": "EVENT_ID",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "EVENT_TS",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "AMOUNT_RAW",
+  "type": "STRING",
+  "description": ""
+  },
+  {
+  "mode": "NULLABLE",
+  "name": "STATUS_RAW",
+  "type": "STRING",
+  "description": ""
+  }
+]

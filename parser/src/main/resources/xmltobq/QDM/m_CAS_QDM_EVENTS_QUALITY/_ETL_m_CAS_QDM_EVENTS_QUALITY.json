@@ -1,0 +1,73 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "CAS_QDM_EVENTS_QUALITY",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "EVENT_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "CAS_DWH_EVENTS_FACT.EVENT_ID"
+            }
+          },
+          {
+            "name" : "EVENT_TS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "CAS_DWH_EVENTS_FACT.EVENT_TS"
+            }
+          },
+          {
+            "name" : "AMOUNT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TRUNC",
+              "parameters" : [
+                {
+                  "name" : "EXP_ARITHMETIC",
+                  "parameters" : [
+                    {
+                      "source" : "CAS_DWH_EVENTS_FACT.AMOUNT"
+                    },
+                    {
+                      "value" : "*"
+                    },
+                    {
+                      "value" : "1.0"
+                    }
+                  ]
+                },
+                {
+                  "value" : "2"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "STATUS_RAW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "CAS_DWH_EVENTS_FACT.STATUS_RAW"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "CAS_DWH_EVENTS_FACT",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "CAS_QDM_EVENTS_QUALITY"
+    ],
+    "sourceTableNames" : [
+      "CAS_DWH_EVENTS_FACT"
+    ]
+  }
+}

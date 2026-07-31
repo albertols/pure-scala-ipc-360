@@ -1,0 +1,64 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "CAS_STG_L_EVENTS",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "EVENT_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "CAS_FF_EVENTS.EVENT_ID"
+            }
+          },
+          {
+            "name" : "EVENT_TS",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "CAS_FF_EVENTS.EVENT_TS"
+            }
+          },
+          {
+            "name" : "AMOUNT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "EXP_TO_DECIMAL",
+              "parameters" : [
+                {
+                  "name" : "EXP_TRIM",
+                  "parameters" : [
+                    {
+                      "source" : "CAS_FF_EVENTS.AMOUNT_RAW"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "STATUS_RAW",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "CAS_FF_EVENTS.STATUS_RAW"
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "CAS_FF_EVENTS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "CAS_STG_L_EVENTS"
+    ],
+    "sourceTableNames" : [
+      "CAS_FF_EVENTS"
+    ]
+  }
+}
