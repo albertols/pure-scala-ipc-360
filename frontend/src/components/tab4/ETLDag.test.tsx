@@ -94,3 +94,74 @@ describe('ETLDag — real clusters/canvas', () => {
     expect(await screen.findByText('No workflows in the relationships graph')).toBeInTheDocument()
   })
 })
+
+describe('ETLDag — real run selector, per-date coloring, GCP links, replay-mock', () => {
+  it('(a) "Now" resolves to the latest snapshot (2026-07-29): A failed with a red accent, B skipped', async () => {
+    const { container } = renderDag()
+
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+
+    expect(await screen.findByText(/^failed/)).toBeInTheDocument()
+    expect(screen.getByText('skipped')).toBeInTheDocument()
+    expect(container.querySelector('rect[fill="#f87171"]')).not.toBeNull()
+  })
+
+  it('(b) run history renders 2 rows; clicking 2026-07-28 flips A back to success', async () => {
+    const { container } = renderDag()
+
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+    // Select task B (not A) so the panel's own Status meta row can't collide
+    // with A's "failed"/"success" text on the canvas below.
+    fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_B.json', { selector: 'span' }))
+
+    expect(await screen.findByText(/^failed/)).toBeInTheDocument()
+    expect(container.querySelector('rect[fill="#f87171"]')).not.toBeNull()
+
+    const rows = screen.getAllByText(/^2026-07-2[89]$/)
+    expect(rows).toHaveLength(2)
+
+    fireEvent.click(screen.getByText('2026-07-28'))
+
+    expect(await screen.findByText(/^success/)).toBeInTheDocument()
+    expect(container.querySelector('rect[fill="#34d399"]')).not.toBeNull()
+  })
+
+  it('(c) task A panel: Message row + GCP template links with the mock-project fallback', async () => {
+    renderDag()
+
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+    fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
+
+    expect(await screen.findByText('Stage failure (synthetic)')).toBeInTheDocument()
+
+    const clusterLink = (await screen.findByText(/cluster ↗/)) as HTMLAnchorElement
+    expect(clusterLink.getAttribute('href')).toContain('project=mock-project')
+    expect(clusterLink.getAttribute('href')).toContain('cluster-wf-fix-00-1234')
+
+    const logsLink = screen.getByText(/logs ↗/) as HTMLAnchorElement
+    expect(logsLink.getAttribute('href')).toContain('application_1774840360_11000')
+  })
+
+  it('(d) the synthesized Operational State card renders the KO badge and 2 history cells', async () => {
+    renderDag()
+
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+    fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
+
+    expect(await screen.findByText('Operational State')).toBeInTheDocument()
+    expect(screen.getByText('KO')).toBeInTheDocument()
+    expect(screen.getAllByTitle(/^Run \d+:/)).toHaveLength(2)
+  })
+
+  it('(e) replay stays mock: confirming shows the success toast', async () => {
+    renderDag()
+
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+    fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
+
+    fireEvent.click(await screen.findByText('Replay from this task ▶'))
+    fireEvent.click(await screen.findByText('Publish Replay'))
+
+    expect(await screen.findByText(/Replay published for/)).toBeInTheDocument()
+  })
+})
