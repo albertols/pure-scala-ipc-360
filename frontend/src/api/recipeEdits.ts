@@ -76,6 +76,27 @@ function refTableIs(source: string, name: string): boolean {
   return source.slice(0, source.indexOf('.')) === name
 }
 
+/** Every field anywhere in `d` whose transformation tree contains AT LEAST ONE
+ * dot-ref into `name` — field granularity, not occurrence count. A field whose
+ * expression references `name` more than once (e.g. `CONCAT(T.A, T.B)`) still
+ * appears here exactly once, because `deleteNode` clears it with a single
+ * `delete field.transformation` regardless of how many refs it contains. Shared
+ * by `deleteNode` (what to clear) and `refsInto` (how many that is), so the two
+ * can never drift apart. */
+function fieldsReferencing(d: RecipeJson, name: string): RecipeFieldJson[] {
+  const fields: RecipeFieldJson[] = []
+  for (const step of d.steps ?? []) {
+    for (const field of readFields(step.target)) {
+      let referencesName = false
+      walkRefs(field.transformation, source => {
+        if (refTableIs(source, name)) referencesName = true
+      })
+      if (referencesName) fields.push(field)
+    }
+  }
+  return fields
+}
+
 function allNodeNames(d: RecipeJson): Set<string> {
   const names = new Set<string>()
   for (const step of d.steps ?? []) {
@@ -207,23 +228,15 @@ export function addSourceTable(d: RecipeJson, stepName?: string): RecipeJson {
 /** Removes every step-target and sources[] entry named `name`, and every mention
  * of it in the table lists. Before removing anything, CLEARS (deletes) the
  * `.transformation` of every field anywhere in the recipe whose transformation
- * tree contains a dot-ref into `name` — see `refsInto` for the matching count. */
+ * tree contains a dot-ref into `name` (field granularity — a field referencing
+ * `name` more than once is still cleared once) — see `refsInto` for the exact
+ * matching count. */
 export function deleteNode(d: RecipeJson, name: string): RecipeJson {
   const draft = structuredClone(d)
 
   // Collect the fields to clear BEFORE any structural removal, so the ref-scan
   // always walks the full pre-delete tree.
-  const fieldsToClear: RecipeFieldJson[] = []
-  for (const step of draft.steps ?? []) {
-    for (const field of readFields(step.target)) {
-      let referencesName = false
-      walkRefs(field.transformation, source => {
-        if (refTableIs(source, name)) referencesName = true
-      })
-      if (referencesName) fieldsToClear.push(field)
-    }
-  }
-  for (const field of fieldsToClear) delete field.transformation
+  for (const field of fieldsReferencing(draft, name)) delete field.transformation
 
   draft.steps = (draft.steps ?? []).filter(step => step.target?.name !== name)
   for (const step of draft.steps) {
@@ -239,19 +252,14 @@ export function deleteNode(d: RecipeJson, name: string): RecipeJson {
   return draft
 }
 
-/** Count of dot-ref occurrences anywhere in the recipe whose table token is
- * `name` — the number of transformations `deleteNode(d, name)` would clear. Used
+/** Count of distinct FIELDS anywhere in the recipe whose transformation tree
+ * contains at least one dot-ref into `name` — field granularity, exactly the set
+ * `deleteNode(d, name)` would clear (NOT a count of dot-ref occurrences: a field
+ * referencing `name` more than once in one expression still counts once, since
+ * `deleteNode` clears the whole field's transformation in a single step). Used
  * for the delete confirm hint ("this will clear N expressions"). */
 export function refsInto(d: RecipeJson, name: string): number {
-  let count = 0
-  for (const step of d.steps ?? []) {
-    for (const field of readFields(step.target)) {
-      walkRefs(field.transformation, source => {
-        if (refTableIs(source, name)) count += 1
-      })
-    }
-  }
-  return count
+  return fieldsReferencing(d, name).length
 }
 
 /** Clears (deletes) the `.transformation` of a single field — the edge from

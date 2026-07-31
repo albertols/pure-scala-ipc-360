@@ -193,7 +193,7 @@ describe('addSourceTable', () => {
 })
 
 describe('deleteNode / refsInto', () => {
-  it('refsInto counts dot-ref occurrences into the named node', () => {
+  it('refsInto counts distinct FIELDS referencing the named node (field granularity)', () => {
     expect(refsInto(MINI, 'S')).toBe(1)
     expect(refsInto(MINI, 'NOPE')).toBe(0)
   })
@@ -220,6 +220,57 @@ describe('deleteNode / refsInto', () => {
     const out = deleteNode(withTwoSteps, addedName)
     expect(out.steps).toHaveLength(1)
     expect(out.table!.targetTableNames).not.toContain(addedName)
+  })
+
+  // Regression (final review, task-8): the real corpus has 469 fields whose
+  // formula references the same table more than once in one expression tree
+  // (e.g. _ETL_m_ODS_CEDARHOLLOW_12_DEALS.json, target ODS_CEDARHOLLOW_12_DEALS,
+  // field CEDARLAKE references SQ_STG_CEDARHOLLOW_12_DEALS 3x). refsInto must
+  // count that as ONE field, not three occurrences — deleteNode only ever does
+  // one `delete field.transformation` per field, so an occurrence-count would
+  // inflate the Task 9 delete-confirm hint above what actually gets cleared.
+  it('a field referencing the same table twice counts once, matching deleteNode exactly (CEDARHOLLOW-shaped fixture)', () => {
+    const multiRef: RecipeJson = {
+      steps: [
+        {
+          target: {
+            name: 'ODS_CEDARHOLLOW_12_DEALS',
+            type: 'table',
+            fields: [
+              {
+                name: 'CEDARLAKE',
+                dataType: 'String',
+                // Two dot-refs into the SAME table within one expression tree.
+                transformation: {
+                  name: 'CONCAT',
+                  parameters: [
+                    { source: 'SQ_STG_CEDARHOLLOW_12_DEALS.A' },
+                    { source: 'SQ_STG_CEDARHOLLOW_12_DEALS.B' },
+                  ],
+                },
+              },
+              {
+                name: 'OTHER',
+                dataType: 'String',
+                transformation: { source: 'SQ_STG_CEDARHOLLOW_12_DEALS.C' },
+              },
+            ],
+          },
+          sources: [{ name: 'SQ_STG_CEDARHOLLOW_12_DEALS', type: 'sourceQualifier' }],
+        },
+      ],
+      table: { targetTableNames: ['ODS_CEDARHOLLOW_12_DEALS'], sourceTableNames: [] },
+    }
+
+    // 3 dot-ref occurrences across 2 FIELDS -> field-granularity count is 2, not 3.
+    expect(refsInto(multiRef, 'SQ_STG_CEDARHOLLOW_12_DEALS')).toBe(2)
+
+    const out = deleteNode(multiRef, 'SQ_STG_CEDARHOLLOW_12_DEALS')
+    const fields = out.steps![0].target!.fields!
+    expect(fields.find(f => f.name === 'CEDARLAKE')!.transformation).toBeUndefined()
+    expect(fields.find(f => f.name === 'OTHER')!.transformation).toBeUndefined()
+    // The count refsInto reported is exactly the number of fields deleteNode cleared.
+    expect(refsInto(out, 'SQ_STG_CEDARHOLLOW_12_DEALS')).toBe(0)
   })
 })
 
