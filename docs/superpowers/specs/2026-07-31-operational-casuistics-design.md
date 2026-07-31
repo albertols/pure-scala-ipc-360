@@ -163,3 +163,43 @@ existing endpoints.
 - The preview overlay task additionally needs `recipeToCanvas` from Stream A's later
   tasks ⇒ it is the LAST Stream B task, executed after merging the then-current
   Stream A branch state into the worktree branch (or after Stream A lands on `main`).
+
+## 10. Implementation deviations
+
+- **L2L floor 31→33.** §7's "18→31" was explicitly provisional (pinned "by the plan
+  after generation"). Actual: two multi-target mappings (#7 `m_CAS_ETL_EVENTS_SPLIT`,
+  #8 `m_CAS_CDM_EVENTS_MART`) need **two** L2L rows each — the same idiom as
+  `m_SYN_ETL_ORDERS_BRIDGE` — so 12 CAS mappings contribute 14 rows, not 12: 19
+  existing + 14 = **33**, superseding §7's 31 (recorded in the plan's Global
+  Constraints and `LayerToLayerContractTest`).
+- **Derived-field expression: `TRUNC`, not `ROUND`.** The plan's manifest narrative
+  (§3, plan authoring) described downstream mappings' derived field as
+  "`ROUND(AMOUNT * 1.0, 2)`-style"; the shipped manifest
+  (`scripts/mock_etl_data.manifest.json`) uses `TRUNC(AMOUNT * 1.0, 2)` uniformly
+  across all 12 `derived.expr` values. A deliberate quality choice made during Task
+  1/2 authoring (truncation, not rounding, semantics — matches the real Oracle SQL
+  idiom already used elsewhere in the corpus) — not a bug; `ROUND` never shipped.
+  Spec/plan wording superseded by the manifest, the artifact of record.
+- **Task resequencing: Task 10 before Task 9.** Task 9 (preview overlay) needs Stream
+  A's `recipeToCanvas`/`EtlCanvas`, absent from this branch when Tasks 10–11 came due
+  (§9's own gating clause: `test -f frontend/src/api/recipeAdapter.ts` failed).
+  Executed Task 10, then Task 11, first; Task 9 plus a Task-11 criterion-3 addendum
+  land after the Stream A merge, per the plan's resume protocol (plan line 28).
+- **`scripts/gen_b15_history.py` frozen after CAS landed.** Its per-recipe profiles
+  are indexed off `sorted(set(recipe_filenames))` across all 8 layers'
+  `statements.sql` (`recipes()`); adding 12 CAS recipe names shifts every index after
+  the insertion point, so re-running it would silently rewrite the existing SYN/real
+  b15 rows — violating §3's "SYN untouched" contract. CAS b15 rows are owned
+  exclusively by `mock_etl_data.mts --emit b15` (strip-then-append, byte-idempotent).
+  Documented in the `mock-etl-data` skill and root `CLAUDE.md` corpus caveats.
+- **Status-chip swap (sanctioned, plan-level).** Tab 3's Status filter drops the
+  never-occurring `RUNNING` value for `PENDING` — real operational history only ever
+  resolves to `OK`/`KO`/`PENDING` (adapter's `StatusType` union). Already sanctioned
+  in the plan's Global Constraints ("data-completeness precedent, ledger-noted") and
+  implemented in Task 7; reiterated here for the deviations record.
+- **Dashed lookup edges: a new visual, not reused precedent.** §6 described the
+  lookup-edge dashing as "existing visual language"; before Task 7, no
+  `strokeDasharray` usage existed anywhere in `frontend/src/components` — the spec
+  overstated precedent. Recorded as a sanctioned addition (a natural, low-risk
+  extension of the existing SVG edge styling, within the Figma visual contract's
+  "sanctioned additions" carve-out), not literal reuse of an existing pattern.

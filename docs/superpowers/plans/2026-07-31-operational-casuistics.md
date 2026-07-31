@@ -535,16 +535,16 @@ git commit -m "feat(casuistics): relationships_sweep gate — all CAS shape asse
 - Modify: root `CLAUDE.md` — frontend line (Tab 3 real), corpus caveats: CAS family note (12 `m_CAS_*` mappings are generated from `scripts/mock_etl_data.manifest.json` — regen ONLY via `make cas-gen`/`--emit`, floors 81/86/33) + the frozen-`gen_b15_history.py` hazard, testing section: `relationships_sweep` + `--check` in validate-loop
 - Create: `docs/adr/0008-manifest-driven-cas-mock-data.md` (MADR-lite, ≤30 lines: manifest-as-matrix, real-parser recipes, surgical marker/strip-append emission, frozen python generator; numbered 0008 to leave 0007 for Stream A's recipes-as-truth ADR)
 
-- [ ] **Step 1: Walk spec §8's eight criteria**, recording PASS/FAIL each with evidence:
-1. Tab 3 renders the real graph (boot `make dev` once; verify SYN + CAS cards, filters/search/zoom/selection — RTL evidence + manual spot-check; visual side-by-side deferred to human sign-off per the standing Task-12 ruling, record as such).
-2. TimePicker walks the 14 dates; spot-check `_ETL_m_CAS_DWH_EVENTS_FACT.json` KO on 07-18/21/23/29 against the CSVs.
-3. Preview overlay: recipe → canvas + raw JSON; table → writer recipe; Esc closes; `git diff --stat main.. -- frontend/src/components/tab1 frontend/src/components/tab2 frontend/src/components/tab4` shows no Tab-1/2/4 component churn beyond the merge base.
-4. `relationships_sweep` green inside `make validate-loop` (fresh full run).
-5. `viewer_sweep: 81/81` (same run).
-6. Full suite: `pnpm test`, `npx tsc --noEmit`, `make test`, `make check`, `make validate-loop` — all green.
-7. Skill committed; `--check` exit 0; re-run `--emit l2l` + `--emit b15` → `git status` clean (idempotency evidence).
-8. Docs updated (this task's own edits).
-- [ ] **Step 2: Fix small reds, re-run, commit** — the commit body carries the criterion-by-criterion record:
+- [x] **Step 1: Walk spec §8's eight criteria**, recording PASS/FAIL each with evidence:
+1. PASS — Tab 3 renders the real graph (boot `make dev` once; verify SYN + CAS cards, filters/search/zoom/selection — RTL evidence + manual spot-check; visual side-by-side deferred to human sign-off per the standing Task-12 ruling, record as such). **zoom/collapse PASS (RTL pin vs real cards)** — `ETLOperational.test.tsx` clicks the "−" zoom button past the 0.65 compact threshold and asserts `RelationshipGraph`'s compact-pill rendering kicks in on the real fixture cards (and reverts on zoom-in); pixel fidelity remains under the same DEFERRED-human visual label as the rest of criterion 1.
+2. PASS — TimePicker walks the 14 dates; spot-check `_ETL_m_CAS_DWH_EVENTS_FACT.json` KO on 07-18/21/23/29 against the CSVs.
+3. **PENDING** — Preview overlay: recipe → canvas + raw JSON; table → writer recipe; Esc closes; `git diff --stat main.. -- frontend/src/components/tab1 frontend/src/components/tab2 frontend/src/components/tab4` shows no Tab-1/2/4 component churn beyond the merge base. Task 9 resequenced after Task 11 per plan protocol (Stream A's `recipeToCanvas`/`EtlCanvas` not yet merged) — walked in full once Task 9 lands, as a criterion-3 addendum commit.
+4. PASS — `relationships_sweep` green inside `make validate-loop` (fresh full run).
+5. PASS — `viewer_sweep: 81/81` (same run).
+6. PASS — Full suite: `pnpm test`, `npx tsc --noEmit`, `make test`, `make check`, `make validate-loop` — all green.
+7. PASS — Skill committed; `--check` exit 0; re-run `--emit l2l` + `--emit b15` → `git status` clean (idempotency evidence).
+8. PASS — Docs updated (this task's own edits; root `CLAUDE.md` narrowed to the two surgical spots — corpus caveats CAS note + testing-section line — per controller instruction, leaving the frontend "what this is" line to the distribution stream).
+- [x] **Step 2: Fix small reds, re-run, commit** — the commit body carries the criterion-by-criterion record:
 
 ```bash
 git add docs/superpowers/specs/2026-07-31-operational-casuistics-design.md docs/architecture.md frontend/AGENTS.md CLAUDE.md docs/adr/0008-manifest-driven-cas-mock-data.md docs/superpowers/plans/2026-07-31-operational-casuistics.md

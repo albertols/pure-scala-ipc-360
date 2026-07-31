@@ -86,6 +86,13 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   `/api/operational/dates`/`{date}` over the committed synthetic mock operational data
   (`SYN`-marked mappings, mock `LayerToLayerConfig`, 14-day b15 job history), then runs
   the frontend hook tests — see `docs/adr/0006-synthetic-operational-data.md`.
+- `make validate-loop` also runs `node --experimental-strip-types
+  scripts/mock_etl_data.mts --check` (manifest↔corpus↔mock drift over the `m_CAS_*`
+  family) and `scripts/relationships_sweep.mts` (asserts every CAS relationship
+  casuistic — fan-in, 1→N, diamond converge, lookup edge, source-only table,
+  consumer-less recipe, ≥6-hop chain, anchor-date KO — against the live
+  `/api/relationships` + `/api/operational/summary`), both before the frontend hook
+  tests — see `docs/adr/0008-manifest-driven-cas-mock-data.md`.
 
 ## Corpus caveats
 
@@ -104,6 +111,18 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
 - The anonymizer had also renamed the recipe structural key "fields" to "weststone" in
   64 recipes; repaired 2026-07-31 (key rename only, byte-diff limited to the key
   token). The frontend recipe adapter still tolerates both spellings defensively.
+- The 12 `m_CAS_*` mappings (all 8 layers, corpus floors 81 XMLs/86 recipes/33 L2L
+  entries) are **generated**, not hand-authored — every byte derives from
+  `scripts/mock_etl_data.manifest.json` via `scripts/mock_etl_data.mts`. Regenerate
+  ONLY via `make cas-gen` (XML + real-parser recipes, temp-copy idiom) and
+  `--emit l2l`/`--emit b15` (L2L rows / b15 history, marker-delimited strip-then-append
+  — both byte-idempotent). Never hand-edit a `m_CAS_*` XML, recipe, L2L row, or b15
+  CSV row directly; see the `mock-etl-data` skill.
+- `scripts/gen_b15_history.py` is **frozen** as of the CAS family landing: its
+  per-recipe profiles index off `sorted(set(recipe_filenames))` across all layers'
+  `statements.sql`, so adding the 12 CAS recipe names shifts every index after the
+  insertion point — re-running it would silently rewrite the existing SYN/real b15
+  rows. CAS b15 rows are owned exclusively by `mock_etl_data.mts --emit b15`.
 
 ## More
 

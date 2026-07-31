@@ -76,12 +76,17 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 | `GET /api/relationships` | Tables+recipes graph (`RelationshipsDto { nodes, edges, meta }`) built from the mock/real `LayerToLayerConfig` joined with the corpus recipe inventory — node ids `table:<NAME>`/`recipe:<FILE>`, edge kinds `source`\|`lookup`\|`writes` |
 | `GET /api/operational/dates` | Sorted list of available `YYYY-MM-DD` b15 snapshot dates + `mode` (`real`\|`mock`\|`absent`) |
 | `GET /api/operational/{date}` | One dated b15 "application end" snapshot (`OperationalSnapshotDto { date, rows: [B15RowDto] }`); unknown date → 404 with nearest-available hint |
+| `GET /api/operational/summary` | Cross-date rollup (`OperationalSummaryDto { dates, recipes[] }`): per-recipe `layer` (`UNKNOWN` if absent from L2L), 14-entry `history`, `okCount`/`koCount`, nearest-rank `avg`/`p50`/`p95DurationMin`, `lastJobId`/`lastClusterName` — computed in `OperationalService`, joined to `LayerToLayerService` by `recipe_filename` |
 | `GET /api/config` | Sanitized runtime config: GCP project/region, Dataproc/Logging URL templates, `dwhControlMode`/`composerMode` |
 | `GET /api/health` | Liveness + corpus stats: XML/recipe counts, corpus root, `dwhControlMode`, `composerMode` |
 
 Tab 1 (IPC ETL Viewer) is the first frontend consumer of the mapping endpoints: the
 canvas renders from `/api/mappings/model/{*path}` (via `mappingAdapter.ts`'s
 `toCanvas`), the detail panel from `/api/mappings/dom/{*path}` (lossless attributes).
+Tab 3 (ETL Operational Table Relationships) is real too: `relationshipsAdapter.ts`'s
+`toOperationalGraph` combines `/api/relationships` + `/api/operational/summary` at a
+selected TimePicker date into cards/edges/layer columns for the existing
+`OperationalCard` graph — the `OPERATIONAL_CARDS` mock now serves only Tab 4 (DAG).
 
 **Deviation from spec §4 table:** the mapping endpoints are `/api/mappings/dom/{*path}`
 and `/api/mappings/model/{*path}` — verb before the path variable — not
@@ -131,8 +136,11 @@ resolve against the auto-detected repo root (first ancestor with both `pom.xml` 
 
 ## See also
 
-- `docs/adr/0001`–`0006` — the decisions behind this shape, with rejected alternatives.
+- `docs/adr/0001`–`0006`, `0008` — the decisions behind this shape, with rejected
+  alternatives (`0007` reserved for Stream A's recipes-as-truth ADR).
 - `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
-  `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md` — full design specs.
+  `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,
+  `docs/superpowers/specs/2026-07-31-operational-casuistics-design.md` — full design specs.
 - `docs/superpowers/plans/2026-07-29-etl360-foundation.md`,
-  `docs/superpowers/plans/2026-07-30-synthetic-operational-data.md` — task-by-task build logs.
+  `docs/superpowers/plans/2026-07-30-synthetic-operational-data.md`,
+  `docs/superpowers/plans/2026-07-31-operational-casuistics.md` — task-by-task build logs.
