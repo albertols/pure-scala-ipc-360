@@ -33,7 +33,7 @@ class LayerToLayerContractTest {
         List<String> corpusRecipes = corpus.allRecipePaths().stream()
             .map(p -> p.substring(p.lastIndexOf('/') + 1)).toList();
         var entries = layerToLayer.entries();
-        assertThat(entries).hasSizeGreaterThanOrEqualTo(18);
+        assertThat(entries).hasSizeGreaterThanOrEqualTo(33);
         assertThat(layerToLayer.skippedRows()).isZero();
         for (var e : entries) assertThat(corpusRecipes).contains(e.recipe());
     }
@@ -46,6 +46,17 @@ class LayerToLayerContractTest {
                       "_ETL_m_SYN_DWH_ORDERS_FACT.json", "_ETL_m_SYN_DM_ORDERS_SUMMARY.json",
                       "_ETL_m_SYN_RDM_ORDERS_EXPORT.json", "_ETL_m_SYN_QDM_ORDERS_QUALITY.json",
                       "_ETL_m_SYN_ETL_ORDERS_BRIDGE.json", "_ETL_m_SYN_OUT_ORDERS_FEED.json");
+    }
+
+    @Test
+    void casFamilyFullyConfigured() {   // sub-project 4 spec §3: every CAS mapping has L2L row(s)
+        assertThat(layerToLayer.entries()).extracting(LayerToLayerEntryDto::recipe)
+            .contains("_ETL_m_CAS_STG_L_EVENTS_LOAD.json", "_ETL_m_CAS_STG_L_REFS_LOAD.json",
+                      "_ETL_m_CAS_ODS_EVENTS.json", "_ETL_m_CAS_ODS_EVENTS_ENRICH.json",
+                      "_ETL_m_CAS_DWH_EVENTS_FACT.json", "_ETL_m_CAS_ODS_REFS.json",
+                      "_ETL_m_CAS_ETL_EVENTS_SPLIT.json", "_ETL_m_CAS_CDM_EVENTS_MART.json",
+                      "_ETL_m_CAS_RDM_EVENTS_EXPORT.json", "_ETL_m_CAS_QDM_EVENTS_QUALITY.json",
+                      "_ETL_m_CAS_OUT_EVENTS_FEED.json", "_ETL_m_CAS_DWH_ORPHAN_METRICS.json");
     }
 
     @Test

@@ -205,7 +205,7 @@ git commit -m "feat(casuistics): 12 m_CAS_* mappings + parser-generated recipes 
 - Modify: `backend/src/test/java/io/pure360/etl360/LayerToLayerContractTest.java` (floor 18→33 + new `casFamilyFullyConfigured`)
 - Modify: `backend/src/test/java/io/pure360/etl360/OperationalContractTest.java` (recipe-node floor 18→30)
 
-- [ ] **Step 1: RED** — add to `LayerToLayerContractTest`:
+- [x] **Step 1: RED** — add to `LayerToLayerContractTest`:
 
 ```java
 @Test
@@ -221,10 +221,10 @@ void casFamilyFullyConfigured() {   // sub-project 4 spec §3: every CAS mapping
 ```
 
 and change `everyConfiguredRecipeExistsInCorpus` to `hasSizeGreaterThanOrEqualTo(33)`; in `OperationalContractTest.relationshipsGraphConsistent` raise the recipe-node count to `isGreaterThanOrEqualTo(30)`. Run `mvn -q -am -pl backend test` — expect both FAIL (data absent).
-- [ ] **Step 2: Emit** — `node --experimental-strip-types scripts/mock_etl_data.mts --emit l2l && node --experimental-strip-types scripts/mock_etl_data.mts --emit b15`. Spot-check: `grep -c 'INSERT INTO' backend/src/main/resources/mock/DWH_CONTROL/LAYER_TO_LAYER/*/statements.sql` sums to 33 (+1 ARCHIVE decoy, excluded by the service); anchor CSV gained exactly 12 `_ETL_m_CAS_` lines; `git diff` on a CSV shows APPENDED lines only (existing SYN/real bytes untouched — the spec §3 "SYN untouched" proof). Re-run both emits — `git status` clean (idempotency proof).
-- [ ] **Step 3: GREEN** — `mvn -q -am -pl backend test`: new tests pass AND the pre-existing gates prove the join: `everyConfiguredRecipeExistsInCorpus` (every CAS L2L row's recipe exists in corpus), `everyB15RecipeIsConfigured` (every CAS b15 row is L2L-configured), `statusMixPresent`, `decoyDirIsExcluded`, `allFourteenDatesServe`.
-- [ ] **Step 4:** `node --experimental-strip-types scripts/mock_etl_data.mts --check` → exit 0, no drift. `node --experimental-strip-types --test scripts/mock_etl_data.test.mts` still green.
-- [ ] **Step 5: Commit**
+- [x] **Step 2: Emit** — `node --experimental-strip-types scripts/mock_etl_data.mts --emit l2l && node --experimental-strip-types scripts/mock_etl_data.mts --emit b15`. Spot-check: `grep -c 'INSERT INTO' backend/src/main/resources/mock/DWH_CONTROL/LAYER_TO_LAYER/*/statements.sql` sums to 33 (+1 ARCHIVE decoy, excluded by the service); anchor CSV gained exactly 12 `_ETL_m_CAS_` lines; `git diff` on a CSV shows APPENDED lines only (existing SYN/real bytes untouched — the spec §3 "SYN untouched" proof). Re-run both emits — `git status` clean (idempotency proof).
+- [x] **Step 3: GREEN** — `mvn -q -am -pl backend test`: new tests pass AND the pre-existing gates prove the join: `everyConfiguredRecipeExistsInCorpus` (every CAS L2L row's recipe exists in corpus), `everyB15RecipeIsConfigured` (every CAS b15 row is L2L-configured), `statusMixPresent`, `decoyDirIsExcluded`, `allFourteenDatesServe`.
+- [x] **Step 4:** `node --experimental-strip-types scripts/mock_etl_data.mts --check` → exit 0, no drift. `node --experimental-strip-types --test scripts/mock_etl_data.test.mts` still green.
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/resources/mock/DWH_CONTROL/LAYER_TO_LAYER backend/src/main/resources/mock/composer/dwh/config/cluster_tuning/inputs backend/src/test/java/io/pure360/etl360/LayerToLayerContractTest.java backend/src/test/java/io/pure360/etl360/OperationalContractTest.java docs/superpowers/plans/2026-07-31-operational-casuistics.md
