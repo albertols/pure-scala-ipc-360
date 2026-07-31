@@ -39,14 +39,15 @@ explicit ask. New UI states (loading, error, empty) reuse existing tokens
 (`--text-dim`, `--red`, etc.) rather than introducing new ones.
 
 `src/mockData.ts` is **legacy, being retired tab-by-tab** (see its header comment).
-The sidebar tree, Tab 1 (IPC ETL Viewer), and Tab 2 (ETL Modifier) are already real
-(`src/api/filesystemAdapter.ts` + `useFilesystem`; `src/api/mappingAdapter.ts` +
-`useMappingModel`/`useMappingDom`; `src/api/recipeAdapter.ts` + `useRecipe`/`useDdl`).
-The `MAPPINGS` mock export Tab 1 used to consume, and the `ETL_RECIPES`/`DDL_SCHEMAS`
-mock exports Tab 2 used to consume, are gone (zero importers, verified by grep at
-retirement). The remaining two tab bodies (Operational, DAG) still render from
-`mockData.ts` until their own sub-project rewires them — don't remove mock imports you
-haven't actually replaced.
+The sidebar tree, Tab 1 (IPC ETL Viewer), Tab 2 (ETL Modifier), and Tab 4 (ETL DAG) are
+already real (`src/api/filesystemAdapter.ts` + `useFilesystem`; `src/api/mappingAdapter.ts`
++ `useMappingModel`/`useMappingDom`; `src/api/recipeAdapter.ts` + `useRecipe`/`useDdl`;
+`src/api/dagAdapter.ts` + `useRelationships`/`useOperationalSnapshots`). The `MAPPINGS`
+export Tab 1 consumed, the `ETL_RECIPES`/`DDL_SCHEMAS` exports Tab 2 consumed, and the
+`DAG_CLUSTERS`/`DAG_RUNS` exports Tab 4 consumed are all gone (zero importers, verified by
+grep at each retirement). Only Tab 3 (Operational) still renders from `mockData.ts` until
+its own sub-project rewires it — don't remove mock imports you haven't actually replaced.
+Tab 4's Replay button is a client-side mock toast (no Pub/Sub) — labeled in `ETLDag.tsx`.
 
 ## API layer
 

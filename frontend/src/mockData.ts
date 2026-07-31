@@ -1,10 +1,11 @@
 // LEGACY FIGMA MOCK DATA — being retired tab-by-tab per docs/superpowers/specs/2026-07-29-etl360-foundation-design.md.
-// The filesystem tree, the Tab-1 Viewer canvas AND the Tab-2 Modifier canvas/recipe/DDL
-// data are REAL now (ETL_RECIPES/DDL_SCHEMAS retired — see docs/superpowers/plans/2026-07-31-etl-modifier.md
-// Task 6); remaining tabs below still consume mocks until their sub-project lands.
+// The filesystem tree, the Tab-1 Viewer canvas, the Tab-2 Modifier canvas/recipe/DDL
+// data AND the Tab-4 DAG are REAL now (MAPPINGS, ETL_RECIPES/DDL_SCHEMAS, DAG_CLUSTERS/
+// DAG_RUNS all retired — see docs/superpowers/plans/2026-07-31-{etl-modifier,etl360-dag}.md);
+// Tab 3 (Operational) below still consumes mocks until its sub-project lands.
 import type {
   FSDir,
-  OperationalCard, DagCluster, StatusType
+  OperationalCard, StatusType
 } from './types'
 
 // ─── Filesystem ───────────────────────────────────────────────────────────────
@@ -141,61 +142,3 @@ export const OPERATIONAL_CARDS: OperationalCard[] = [
     x: 920, y: 360,
   },
 ]
-
-// ─── DAG Clusters ─────────────────────────────────────────────────────────────
-
-export const DAG_CLUSTERS: DagCluster[] = [
-  {
-    dag_id: 'DAG_CDM_DAILY',
-    schedule: '0 5 * * *',
-    last_run: '2025-12-10T05:00:00Z',
-    status: 'success',
-    tasks: [
-      { task_id: 'wait_source_ready', recipe_id: 'sensor', depends_on: [], last_status: 'success', duration_s: 12, x: 60, y: 80 },
-      { task_id: 'run_cdm_count_report', recipe_id: 'etl_cdm_count_report', depends_on: ['wait_source_ready'], last_status: 'success', duration_s: 142, card_id: 'rec_cdm_count', x: 280, y: 80 },
-      { task_id: 'run_cdm_customer', recipe_id: 'etl_cdm_customer_profile', depends_on: ['wait_source_ready'], last_status: 'success', duration_s: 87, card_id: 'rec_cdm_customer', x: 280, y: 200 },
-      {
-        task_id: 'sub_dag_cdm_validate', recipe_id: 'sub_dag', depends_on: ['run_cdm_count_report', 'run_cdm_customer'], last_status: 'success', duration_s: 34, x: 520, y: 140,
-        sub_dag: {
-          dag_id: 'SUB_DAG_CDM_VALIDATE',
-          schedule: '',
-          last_run: '2025-12-10T06:25:00Z',
-          status: 'success',
-          tasks: [
-            { task_id: 'validate_row_counts', recipe_id: 'validator', depends_on: [], last_status: 'success', duration_s: 18, x: 60, y: 80 },
-            { task_id: 'validate_bq_schema', recipe_id: 'validator', depends_on: ['validate_row_counts'], last_status: 'success', duration_s: 16, x: 280, y: 80 },
-          ],
-        },
-      },
-      { task_id: 'notify_success', recipe_id: 'notifier', depends_on: ['sub_dag_cdm_validate'], last_status: 'success', duration_s: 2, x: 740, y: 140 },
-    ],
-  },
-  {
-    dag_id: 'DAG_ODS_BPM_74674',
-    schedule: '30 4 * * *',
-    last_run: '2025-12-10T04:30:00Z',
-    status: 'failed',
-    tasks: [
-      { task_id: 'wait_crr_extract', recipe_id: 'sensor', depends_on: [], last_status: 'success', duration_s: 8, x: 60, y: 80 },
-      { task_id: 'run_ods_flag_audit', recipe_id: 'etl_ods_flag_audit', depends_on: ['wait_crr_extract'], last_status: 'failed', duration_s: 54, card_id: 'rec_ods_flag', x: 280, y: 80 },
-      { task_id: 'run_ods_payment', recipe_id: 'etl_ods_payment_reconcile', depends_on: ['run_ods_flag_audit'], last_status: 'skipped', duration_s: 0, card_id: 'rec_ods_payment', x: 520, y: 80 },
-      { task_id: 'notify_failure', recipe_id: 'notifier', depends_on: ['run_ods_flag_audit'], last_status: 'success', duration_s: 2, x: 520, y: 200 },
-    ],
-  },
-]
-
-export const DAG_RUNS: Record<string, { run_id: string; status: string; started_at: string; duration_s: number }[]> = {
-  DAG_CDM_DAILY: [
-    { run_id: 'run-2025-12-10-0500', status: 'success', started_at: '2025-12-10T05:00:00Z', duration_s: 280 },
-    { run_id: 'run-2025-12-09-0500', status: 'success', started_at: '2025-12-09T05:00:00Z', duration_s: 262 },
-    { run_id: 'run-2025-12-08-0500', status: 'success', started_at: '2025-12-08T05:00:00Z', duration_s: 301 },
-    { run_id: 'run-2025-12-07-0500', status: 'failed', started_at: '2025-12-07T05:00:00Z', duration_s: 89 },
-    { run_id: 'run-2025-12-06-0500', status: 'success', started_at: '2025-12-06T05:00:00Z', duration_s: 258 },
-  ],
-  DAG_ODS_BPM_74674: [
-    { run_id: 'run-2025-12-10-0430', status: 'failed', started_at: '2025-12-10T04:30:00Z', duration_s: 64 },
-    { run_id: 'run-2025-12-09-0430', status: 'success', started_at: '2025-12-09T04:30:00Z', duration_s: 198 },
-    { run_id: 'run-2025-12-08-0430', status: 'success', started_at: '2025-12-08T04:30:00Z', duration_s: 205 },
-    { run_id: 'run-2025-12-07-0430', status: 'success', started_at: '2025-12-07T04:30:00Z', duration_s: 191 },
-  ],
-}

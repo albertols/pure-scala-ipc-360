@@ -86,6 +86,10 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 Tab 1 (IPC ETL Viewer) is the first frontend consumer of the mapping endpoints: the
 canvas renders from `/api/mappings/model/{*path}` (via `mappingAdapter.ts`'s
 `toCanvas`), the detail panel from `/api/mappings/dom/{*path}` (lossless attributes).
+Tab 4 (ETL DAG) consumes `/api/relationships` (workflow clusters + table-mediated
+recipe edges via `dagAdapter.ts`) and `/api/operational/dates` +
+`/api/operational/{date}` (per-run node coloring, client-side join on
+`recipe_filename`).
 
 Tab 2 (ETL Modifier) is the first consumer of the recipe write API: the canvas renders
 from `/api/recipes/{*path}` (via `recipeAdapter.ts`'s `recipeToCanvas`), edits stage in

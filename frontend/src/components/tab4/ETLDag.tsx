@@ -1,10 +1,14 @@
-import { useState, useRef, useCallback } from 'react'
-import type { DagCluster, DagTask } from '../../types'
-import { DAG_CLUSTERS, DAG_RUNS, OPERATIONAL_CARDS } from '../../mockData'
-import { OperationalCard } from '../shared/OperationalCard'
+import { useState, useRef, useCallback, useMemo } from 'react'
+import type { DagCluster, DagRun, DagTask } from '../../types'
+import type { ApiError } from '../../api/client'
+import { useRelationships, useAppConfig, useOperationalDates } from '../../api/queries'
+import { useOperationalSnapshots } from '../../api/dagQueries'
+import { toDagClusters, clusterRuns, fillGcpUrl, overlayRun, toOperationalCard,
+  DEFAULT_DATAPROC_CLUSTER_URL, DEFAULT_LOGGING_URL } from '../../api/dagAdapter'
 import { TimePicker, type TimeSelection } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
+import { OperationalCard } from '../shared/OperationalCard'
 
 const STATUS_COLOR: Record<string, string> = {
   success: '#34d399',
@@ -356,8 +360,9 @@ function ReplayModal({ dagId, taskId, onClose, onConfirm }: {
 
 // ─── Run History ──────────────────────────────────────────────────────────────
 
-function RunHistory({ dagId }: { dagId: string }) {
-  const runs = DAG_RUNS[dagId] ?? []
+function RunHistory({ runs, selectedDate, onSelectRun }: {
+  runs: DagRun[]; selectedDate: string; onSelectRun: (date: string) => void
+}) {
   const color: Record<string, string> = { success: '#34d399', failed: '#f87171', running: '#fbbf24', skipped: '#4a5570' }
 
   return (
@@ -368,16 +373,24 @@ function RunHistory({ dagId }: { dagId: string }) {
       <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
         {runs.map(r => (
           <div key={r.run_id} title={`${r.run_id} — ${r.status} (${r.duration_s}s)`}
-            style={{ width: 18, height: 28, borderRadius: 3, background: color[r.status] ?? '#4a5570', cursor: 'help', opacity: 0.85 }} />
+            onClick={() => onSelectRun(r.run_id)}
+            style={{
+              width: 18, height: 28, borderRadius: 3, background: color[r.status] ?? '#4a5570',
+              cursor: 'pointer', opacity: 0.85,
+              outline: r.run_id === selectedDate ? '1px solid #4f9cf9' : 'none',
+            }} />
         ))}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {runs.map(r => (
-          <div key={r.run_id} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '4px 8px', background: 'var(--surface-2)', borderRadius: 4,
-            fontSize: 10,
-          }}>
+        {[...runs].reverse().map(r => (
+          <div key={r.run_id}
+            onClick={() => onSelectRun(r.run_id)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '4px 8px', background: 'var(--surface-2)', borderRadius: 4,
+              fontSize: 10, cursor: 'pointer',
+              border: r.run_id === selectedDate ? '1px solid #4f9cf9' : '1px solid transparent',
+            }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: color[r.status], flexShrink: 0 }} />
             <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#7b88aa', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.run_id}</span>
             <span style={{ color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{r.duration_s}s</span>
@@ -402,10 +415,32 @@ export function ETLDag() {
     isNow: true,
   })
 
-  const dag = DAG_CLUSTERS.find(d => d.dag_id === selectedDagId) ?? null
-  const selectedTask = dag?.tasks.find(t => t.task_id === selectedTaskId) ?? null
-  const card = selectedTask?.card_id ? OPERATIONAL_CARDS.find(c => c.id === selectedTask.card_id) : null
+  const rel = useRelationships()
+  const relError = rel.error as ApiError | null
+  const clusters = useMemo(() => (rel.data ? toDagClusters(rel.data) : []), [rel.data])
 
+  const dag = clusters.find(d => d.dag_id === selectedDagId) ?? null
+
+  const datesQ = useOperationalDates()
+  const dates = useMemo(() => [...(datesQ.data?.dates ?? [])].sort(), [datesQ.data])
+  const latest = dates.at(-1) ?? ''
+  const selectedDate = timeVal.isNow ? latest : timeVal.date   // "Now" = latest available snapshot
+  const { rowsByDate } = useOperationalSnapshots(dates)
+  const litDag = useMemo(() => dag ? overlayRun(dag, rowsByDate[selectedDate]) : null,
+    [dag, rowsByDate, selectedDate])
+  const litClusters = useMemo(() => clusters.map(c => overlayRun(c, rowsByDate[selectedDate])),
+    [clusters, rowsByDate, selectedDate])
+  const selectedTask = litDag?.tasks.find(t => t.task_id === selectedTaskId) ?? null
+
+  const config = useAppConfig().data
+  const project = config?.projectId ?? 'mock-project'   // served field is projectId (types.gen.ts:474) — design intent said gcpProjectId; defensive either way
+  const region = config?.region ?? 'europe-southwest1'
+  const selRow = rowsByDate[selectedDate]?.find(r => r.recipeFilename === selectedTask?.task_id)
+  const card = selectedTask ? toOperationalCard(selectedTask, dates, rowsByDate, selectedDate) : null
+
+  // MOCK ONLY (by design — spec §2 non-goals): "Replay" publishes nothing. No Pub/Sub,
+  // no backend call; the toast below is the entire effect. Kept so the prototype
+  // interaction survives the real-data rewiring. Ledger: frontend/AGENTS.md.
   const handleConfirmReplay = () => {
     setReplayModal(null)
     setReplaySuccess(`Replay published for ${replayModal?.taskId} → etl-replay-trigger`)
@@ -445,8 +480,24 @@ export function ETLDag() {
 
       {/* body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      {rel.isLoading ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
+          Loading workflows…
+        </div>
+      ) : relError ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
+          <div>{relError.title}</div>
+          {relError.detail && <div>{relError.detail}</div>}
+        </div>
+      ) : clusters.length === 0 ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
+          <GCPIcon service="airflow" size={36} />
+          <span style={{ fontSize: 12 }}>No workflows in the relationships graph</span>
+        </div>
+      ) : (
+        <>
         <DagExplorer
-          clusters={DAG_CLUSTERS}
+          clusters={litClusters}
           selectedDag={selectedDagId}
           selectedTask={selectedTaskId}
           onSelectDag={id => { setSelectedDagId(id); setSelectedTaskId(null) }}
@@ -454,7 +505,7 @@ export function ETLDag() {
         />
 
         <DagCanvas
-          dag={dag}
+          dag={litDag}
           selectedTask={selectedTaskId}
           onSelectTask={id => setSelectedTaskId(id === selectedTaskId ? null : id)}
         />
@@ -482,18 +533,55 @@ export function ETLDag() {
 
             {/* task meta */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {[
+              {([
                 ['Recipe', selectedTask.recipe_id],
                 ['Status', selectedTask.last_status],
                 ['Duration', selectedTask.duration_s > 0 ? `${selectedTask.duration_s}s` : '—'],
                 ['Depends on', selectedTask.depends_on.join(', ') || 'none'],
-              ].map(([k, v]) => (
+                ...(selRow?.message ? [['Message', selRow.message || '—']] : []),
+              ] as [string, string][]).map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', gap: 8 }}>
                   <span style={{ fontSize: 10, color: '#4a5570', width: 68, flexShrink: 0 }}>{k}</span>
                   <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', wordBreak: 'break-all' }}>{v}</span>
                 </div>
               ))}
             </div>
+
+            {/* GCP links */}
+            {selRow && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <a
+                  href={fillGcpUrl(config?.dataprocClusterUrl, DEFAULT_DATAPROC_CLUSTER_URL,
+                    { clusterName: selRow.clusterName ?? '', project, region })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: 10, color: '#4f9cf9', textDecoration: 'none',
+                    background: 'rgba(79,156,249,0.1)', padding: '2px 7px',
+                    borderRadius: 4, border: '1px solid rgba(79,156,249,0.25)',
+                  }}
+                >
+                  <GCPIcon service="dataproc" size={11} />
+                  cluster ↗
+                </a>
+                <a
+                  href={fillGcpUrl(config?.loggingUrl, DEFAULT_LOGGING_URL,
+                    { jobId: selRow.jobId ?? '', project, region })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: 10, color: '#4f9cf9', textDecoration: 'none',
+                    background: 'rgba(79,156,249,0.1)', padding: '2px 7px',
+                    borderRadius: 4, border: '1px solid rgba(79,156,249,0.25)',
+                  }}
+                >
+                  <GCPIcon service="logging" size={11} />
+                  logs ↗
+                </a>
+              </div>
+            )}
 
             {/* replay controls */}
             {selectedDagId && (
@@ -558,9 +646,17 @@ export function ETLDag() {
             )}
 
             {/* run history */}
-            {selectedDagId && <RunHistory dagId={selectedDagId} />}
+            {selectedDagId && (
+              <RunHistory
+                runs={dag ? clusterRuns(dag, dates, rowsByDate) : []}
+                selectedDate={selectedDate}
+                onSelectRun={d => setTimeVal(v => ({ ...v, date: d, isNow: false }))}
+              />
+            )}
           </div>
         )}
+      </>
+      )}
       </div>
 
       {replayModal && (
