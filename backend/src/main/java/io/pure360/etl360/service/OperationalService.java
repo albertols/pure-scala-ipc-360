@@ -4,7 +4,11 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import io.pure360.etl360.api.dto.B15RowDto;
+import io.pure360.etl360.api.dto.LayerToLayerEntryDto;
 import io.pure360.etl360.api.dto.OperationalSnapshotDto;
+import io.pure360.etl360.api.dto.OperationalSummaryDto;
+import io.pure360.etl360.api.dto.OperationalSummaryDto.HistoryEntryDto;
+import io.pure360.etl360.api.dto.OperationalSummaryDto.RecipeSummaryDto;
 import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.service.support.InvalidDateException;
 import io.pure360.etl360.service.support.NotFoundException;
@@ -20,9 +24,13 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -36,11 +44,17 @@ import java.util.regex.Pattern;
 public class OperationalService {
     private static final String B15_FILENAME = "b15_application_end_with_recipe_null_status.csv";
     private static final Pattern DATE_DIR = Pattern.compile("\\d{4}_\\d{2}_\\d{2}");
+    private static final Pattern DURATION = Pattern.compile("(\\d+)m\\s+(\\d+)sec");
+    private static final String UNKNOWN_LAYER = "UNKNOWN";
 
     private final DataRoots roots;
+    private final LayerToLayerService layerToLayer;
     private final CsvMapper csvMapper = new CsvMapper();
 
-    public OperationalService(DataRoots roots) { this.roots = roots; }
+    public OperationalService(DataRoots roots, LayerToLayerService layerToLayer) {
+        this.roots = roots;
+        this.layerToLayer = layerToLayer;
+    }
 
     public List<String> dates() {
         Optional<Path> inputs = inputsDir();
@@ -75,6 +89,81 @@ public class OperationalService {
                 + nearestAvailable(date));
         }
         return new OperationalSnapshotDto(isoDate, parseCsv(csv));
+    }
+
+    /**
+     * Aggregates the full committed b15 history ({@link #dates()}, mode-aware via the same
+     * {@link DataRoots} resolution as everything else in this service) by recipe. History is one
+     * entry per date the recipe appears, in ascending date order; {@code layer} is resolved from
+     * the first {@link LayerToLayerService} entry matching the recipe filename, or {@code
+     * "UNKNOWN"} when the recipe isn't configured there (e.g. b15 rows that predate/outrun L2L
+     * coverage). Percentile/average stats are computed over parsed, non-null durations only —
+     * an all-null duration set yields null stats rather than a divide-by-zero or a fabricated 0.
+     */
+    public OperationalSummaryDto summary() {
+        List<String> ds = dates();
+        Map<String, List<HistoryEntryDto>> historyByRecipe = new LinkedHashMap<>();
+        Map<String, B15RowDto> latestRowByRecipe = new LinkedHashMap<>();
+        Map<String, String> latestDateByRecipe = new LinkedHashMap<>();
+        for (String date : ds) {
+            for (B15RowDto row : snapshot(date).rows()) {
+                String recipe = row.recipeFilename();
+                historyByRecipe.computeIfAbsent(recipe, k -> new ArrayList<>())
+                    .add(new HistoryEntryDto(date, row.status(), parseDurationMin(row.avgJobDurationInMinsSec())));
+                latestRowByRecipe.put(recipe, row);       // dates() is ascending -> last write wins == max date
+                latestDateByRecipe.put(recipe, date);
+            }
+        }
+
+        Map<String, String> layerByRecipe = new LinkedHashMap<>();
+        for (LayerToLayerEntryDto entry : layerToLayer.entries()) {
+            layerByRecipe.putIfAbsent(entry.recipe(), entry.layer());   // first match wins
+        }
+
+        List<RecipeSummaryDto> recipes = new ArrayList<>();
+        for (var e : historyByRecipe.entrySet()) {
+            String recipe = e.getKey();
+            List<HistoryEntryDto> history = e.getValue();
+            int okCount = 0, koCount = 0;
+            for (HistoryEntryDto h : history) {
+                if ("SUCCESS".equals(h.status())) okCount++;
+                else if ("FAILED".equals(h.status())) koCount++;
+            }
+            List<Double> durations = history.stream().map(HistoryEntryDto::durationMin)
+                .filter(Objects::nonNull).sorted().toList();
+            Double avg = durations.isEmpty() ? null
+                : durations.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+            Double p50 = durations.isEmpty() ? null : nearestRank(durations, 50);
+            Double p95 = durations.isEmpty() ? null : nearestRank(durations, 95);
+            B15RowDto lastRow = latestRowByRecipe.get(recipe);
+            recipes.add(new RecipeSummaryDto(recipe, layerByRecipe.getOrDefault(recipe, UNKNOWN_LAYER),
+                latestDateByRecipe.get(recipe), lastRow.status(), okCount, koCount, history,
+                avg, p50, p95, lastRow.jobId(), lastRow.clusterName()));
+        }
+        recipes.sort(Comparator.comparing(RecipeSummaryDto::recipeFilename));
+        return new OperationalSummaryDto(ds, recipes);
+    }
+
+    /** Parses the b15 "&lt;m&gt;m &lt;ss&gt;sec" duration cell into minutes as a double, e.g.
+     * "43m 31sec" -&gt; 43.51(6). Returns null for null/blank/unrecognized input rather than
+     * throwing — malformed durations should drop out of the average/percentile pool, not fail
+     * the whole summary. */
+    static Double parseDurationMin(String v) {
+        if (v == null) return null;
+        Matcher m = DURATION.matcher(v.trim());
+        if (!m.matches()) return null;
+        int minutes = Integer.parseInt(m.group(1));
+        int seconds = Integer.parseInt(m.group(2));
+        return minutes + seconds / 60.0;
+    }
+
+    /** Nearest-rank percentile: the {@code ceil(pct/100 * n)}-th smallest of {@code sortedAsc}
+     * (1-indexed), clamped to [1, n]. Caller guarantees a non-empty, ascending-sorted list. */
+    static double nearestRank(List<Double> sortedAsc, int pct) {
+        int n = sortedAsc.size();
+        int rank = (int) Math.ceil(pct / 100.0 * n);
+        rank = Math.max(1, Math.min(rank, n));
+        return sortedAsc.get(rank - 1);
     }
 
     private String nearestAvailable(LocalDate date) {

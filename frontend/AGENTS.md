@@ -39,15 +39,20 @@ explicit ask. New UI states (loading, error, empty) reuse existing tokens
 (`--text-dim`, `--red`, etc.) rather than introducing new ones.
 
 `src/mockData.ts` is **legacy, being retired tab-by-tab** (see its header comment).
-The sidebar tree, Tab 1 (IPC ETL Viewer), Tab 2 (ETL Modifier), and Tab 4 (ETL DAG) are
-already real (`src/api/filesystemAdapter.ts` + `useFilesystem`; `src/api/mappingAdapter.ts`
-+ `useMappingModel`/`useMappingDom`; `src/api/recipeAdapter.ts` + `useRecipe`/`useDdl`;
-`src/api/dagAdapter.ts` + `useRelationships`/`useOperationalSnapshots`). The `MAPPINGS`
-export Tab 1 consumed, the `ETL_RECIPES`/`DDL_SCHEMAS` exports Tab 2 consumed, and the
-`DAG_CLUSTERS`/`DAG_RUNS` exports Tab 4 consumed are all gone (zero importers, verified by
-grep at each retirement). Only Tab 3 (Operational) still renders from `mockData.ts` until
-its own sub-project rewires it — don't remove mock imports you haven't actually replaced.
-Tab 4's Replay button is a client-side mock toast (no Pub/Sub) — labeled in `ETLDag.tsx`.
+**All four tab bodies are real now** — `src/mockData.ts` has finished retiring:
+- Tab 1 (IPC ETL Viewer): `src/api/filesystemAdapter.ts` + `useFilesystem`;
+  `src/api/mappingAdapter.ts` + `useMappingModel`/`useMappingDom`.
+- Tab 2 (ETL Modifier): `src/api/recipeAdapter.ts` + `useRecipe`/`useDdl`, editing via
+  `src/api/recipeEdits.ts` against the recipe write API.
+- Tab 3 (ETL Operational): `src/api/relationshipsAdapter.ts`'s `toOperationalGraph` over
+  `useRelationships` + `useOperationalSummary` + `useOperationalDates`.
+- Tab 4 (ETL DAG): `src/api/dagAdapter.ts` + `useRelationships`/`useOperationalSnapshots`.
+
+`MAPPINGS`, `ETL_RECIPES`/`DDL_SCHEMAS` and `DAG_CLUSTERS`/`DAG_RUNS` are gone (zero
+importers, grep-verified at each retirement). `OPERATIONAL_CARDS` still exists but has
+zero importers after the four-stream merge — retire it in the next task that touches
+`mockData.ts`. Tab 4's Replay button is a client-side mock toast (no Pub/Sub) — labeled
+in `ETLDag.tsx`.
 
 ## API layer
 

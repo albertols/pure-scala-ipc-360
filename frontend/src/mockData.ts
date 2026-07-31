@@ -1,8 +1,10 @@
 // LEGACY FIGMA MOCK DATA — being retired tab-by-tab per docs/superpowers/specs/2026-07-29-etl360-foundation-design.md.
-// The filesystem tree, the Tab-1 Viewer canvas, the Tab-2 Modifier canvas/recipe/DDL
-// data AND the Tab-4 DAG are REAL now (MAPPINGS, ETL_RECIPES/DDL_SCHEMAS, DAG_CLUSTERS/
-// DAG_RUNS all retired — see docs/superpowers/plans/2026-07-31-{etl-modifier,etl360-dag}.md);
-// Tab 3 (Operational) below still consumes mocks until its sub-project lands.
+// ALL FOUR TABS ARE REAL NOW — the filesystem tree, Tab-1 Viewer, Tab-2 Modifier,
+// Tab-3 Operational and Tab-4 DAG all consume the live backend. MAPPINGS,
+// ETL_RECIPES/DDL_SCHEMAS and DAG_CLUSTERS/DAG_RUNS were retired with their
+// sub-projects; OPERATIONAL_CARDS below now has ZERO importers (Tab 3 and Tab 4 both
+// left it at the four-stream merge) and is retire-on-sight for the next task that
+// touches this file.
 import type {
   FSDir,
   OperationalCard, StatusType

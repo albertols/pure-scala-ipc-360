@@ -19,7 +19,7 @@ const walk = (n: Tree) => {
   ;(n.children ?? []).forEach(walk)
 }
 walk(await (await fetch(`${BASE}/api/tree`)).json() as Tree)
-if (paths.length < 74) { console.error(`recipe_sweep: only ${paths.length} recipes in tree (expected >= 74)`); process.exit(1) }
+if (paths.length < 86) { console.error(`recipe_sweep: only ${paths.length} recipes in tree (expected >= 86)`); process.exit(1) }
 let failed = 0
 for (const p of paths.sort()) {
   try {

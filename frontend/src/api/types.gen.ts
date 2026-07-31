@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/operational/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/operational/dates": {
         parameters: {
             query?: never;
@@ -314,6 +330,35 @@ export interface components {
         OperationalSnapshotDto: {
             date?: string;
             rows?: components["schemas"]["B15RowDto"][];
+        };
+        HistoryEntryDto: {
+            date?: string;
+            status?: string;
+            /** Format: double */
+            durationMin?: number;
+        };
+        OperationalSummaryDto: {
+            dates?: string[];
+            recipes?: components["schemas"]["RecipeSummaryDto"][];
+        };
+        RecipeSummaryDto: {
+            recipeFilename?: string;
+            layer?: string;
+            latestDate?: string;
+            latestStatus?: string;
+            /** Format: int32 */
+            okCount?: number;
+            /** Format: int32 */
+            koCount?: number;
+            history?: components["schemas"]["HistoryEntryDto"][];
+            /** Format: double */
+            avgDurationMin?: number;
+            /** Format: double */
+            p50DurationMin?: number;
+            /** Format: double */
+            p95DurationMin?: number;
+            lastJobId?: string;
+            lastClusterName?: string;
         };
         OperationalDatesDto: {
             dates?: string[];
@@ -733,6 +778,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["OperationalSnapshotDto"];
+                };
+            };
+        };
+    };
+    summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OperationalSummaryDto"];
                 };
             };
         };

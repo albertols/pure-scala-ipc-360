@@ -1,0 +1,50 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "CAS_DWH_ORPHAN_METRICS",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "REF_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "CAS_STG_UNREFERENCED.REF_ID"
+            }
+          },
+          {
+            "name" : "REF_NAME",
+            "dataType" : "String",
+            "transformation" : {
+              "name" : "EXP_UPPER",
+              "parameters" : [
+                {
+                  "name" : "EXP_TRIM",
+                  "parameters" : [
+                    {
+                      "source" : "CAS_STG_UNREFERENCED.REF_NAME"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "CAS_STG_UNREFERENCED",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "CAS_DWH_ORPHAN_METRICS"
+    ],
+    "sourceTableNames" : [
+      "CAS_STG_UNREFERENCED"
+    ]
+  }
+}

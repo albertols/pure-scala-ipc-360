@@ -47,6 +47,7 @@ export type RelationshipGraph = components['schemas']['RelationshipsDto']
 export type OperationalSnapshot = components['schemas']['OperationalSnapshotDto']
 export type B15Row = components['schemas']['B15RowDto']
 export type OperationalDates = components['schemas']['OperationalDatesDto']
+export type OperationalSummary = components['schemas']['OperationalSummaryDto']
 
 export const useRelationships = () =>
   useQuery({ queryKey: ['relationships'], queryFn: () => apiGet<RelationshipGraph>('/relationships'), staleTime: STALE_MS })
@@ -56,3 +57,6 @@ export const useOperationalDates = () =>
 
 export const useOperational = (date: string) =>
   useQuery({ queryKey: ['operational', date], queryFn: () => apiGet<OperationalSnapshot>(`/operational/${date}`), staleTime: STALE_MS, enabled: !!date })
+
+export const useOperationalSummary = () =>
+  useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS })

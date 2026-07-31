@@ -80,22 +80,28 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 | `GET /api/relationships` | Tables+recipes graph (`RelationshipsDto { nodes, edges, meta }`) built from the mock/real `LayerToLayerConfig` joined with the corpus recipe inventory — node ids `table:<NAME>`/`recipe:<FILE>`, edge kinds `source`\|`lookup`\|`writes` |
 | `GET /api/operational/dates` | Sorted list of available `YYYY-MM-DD` b15 snapshot dates + `mode` (`real`\|`mock`\|`absent`) |
 | `GET /api/operational/{date}` | One dated b15 "application end" snapshot (`OperationalSnapshotDto { date, rows: [B15RowDto] }`); unknown date → 404 with nearest-available hint |
+| `GET /api/operational/summary` | Cross-date rollup (`OperationalSummaryDto { dates, recipes[] }`): per-recipe `layer` (`UNKNOWN` if absent from L2L), 14-entry `history`, `okCount`/`koCount`, nearest-rank `avg`/`p50`/`p95DurationMin`, `lastJobId`/`lastClusterName` — computed in `OperationalService`, joined to `LayerToLayerService` by `recipe_filename` |
 | `GET /api/config` | Sanitized runtime config: GCP project/region, Dataproc/Logging URL templates, `dwhControlMode`/`composerMode` |
 | `GET /api/health` | Liveness + corpus stats: XML/recipe counts, corpus root, `dwhControlMode`, `composerMode` |
 
 Tab 1 (IPC ETL Viewer) is the first frontend consumer of the mapping endpoints: the
 canvas renders from `/api/mappings/model/{*path}` (via `mappingAdapter.ts`'s
 `toCanvas`), the detail panel from `/api/mappings/dom/{*path}` (lossless attributes).
-Tab 4 (ETL DAG) consumes `/api/relationships` (workflow clusters + table-mediated
-recipe edges via `dagAdapter.ts`) and `/api/operational/dates` +
-`/api/operational/{date}` (per-run node coloring, client-side join on
-`recipe_filename`).
-
 Tab 2 (ETL Modifier) is the first consumer of the recipe write API: the canvas renders
 from `/api/recipes/{*path}` (via `recipeAdapter.ts`'s `recipeToCanvas`), edits stage in
 a local draft validated through `POST /api/recipes/validate` before `PUT`, and the
 History drawer / Rollback button drive the `/api/recipes/history` and
 `/api/recipes/rollback` endpoints above.
+
+Tab 3 (ETL Operational Table Relationships): `relationshipsAdapter.ts`'s
+`toOperationalGraph` combines `/api/relationships` + `/api/operational/summary` at a
+selected TimePicker date into cards/edges/layer columns for the existing
+`OperationalCard` graph.
+
+Tab 4 (ETL DAG) consumes `/api/relationships` (workflow clusters + table-mediated
+recipe edges via `dagAdapter.ts`) and `/api/operational/dates` +
+`/api/operational/{date}` (per-run node coloring, client-side join on
+`recipe_filename`).
 
 **`_history/` sidecar.** Every `PUT` and rollback archives the recipe's prior content
 to `<recipeDir>/_history/_ETL_<name>.<yyyyMMdd-HHmmss-SSS>.json` before writing —
@@ -154,8 +160,10 @@ resolve against the auto-detected repo root (first ancestor with both `pom.xml` 
 
 ## See also
 
-- `docs/adr/0001`–`0007` — the decisions behind this shape, with rejected alternatives.
+- `docs/adr/0001`–`0008` — the decisions behind this shape, with rejected alternatives.
 - `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
-  `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md` — full design specs.
+  `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,
+  `docs/superpowers/specs/2026-07-31-operational-casuistics-design.md` — full design specs.
 - `docs/superpowers/plans/2026-07-29-etl360-foundation.md`,
-  `docs/superpowers/plans/2026-07-30-synthetic-operational-data.md` — task-by-task build logs.
+  `docs/superpowers/plans/2026-07-30-synthetic-operational-data.md`,
+  `docs/superpowers/plans/2026-07-31-operational-casuistics.md` — task-by-task build logs.
