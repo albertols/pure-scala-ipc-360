@@ -4,6 +4,54 @@
  */
 
 export interface paths {
+    "/api/recipes/{*path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recipe"];
+        put: operations["save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recipes/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["validate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recipes/rollback/{*path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rollback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tree": {
         parameters: {
             query?: never;
@@ -36,14 +84,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/recipes/{*path}": {
+    "/api/recipes/history/{*path}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["recipe"];
+        get: operations["historyVersion_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -184,6 +232,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        JsonNode: Record<string, never>;
+        RecipeSaveRequestDto: {
+            baseModified?: string;
+            content?: components["schemas"]["JsonNode"];
+        };
+        RecipeDto: {
+            path?: string;
+            fileName?: string;
+            /** Format: int64 */
+            sizeBytes?: number;
+            modifiedAt?: string;
+            content?: components["schemas"]["JsonNode"];
+        };
+        RecipeValidationDto: {
+            valid?: boolean;
+            errors?: components["schemas"]["RecipeValidationErrorDto"][];
+        };
+        RecipeValidationErrorDto: {
+            path?: string;
+            message?: string;
+        };
         TreeNodeDto: {
             name?: string;
             path?: string;
@@ -227,14 +296,11 @@ export interface components {
             edges?: components["schemas"]["EdgeDto"][];
             meta?: components["schemas"]["MetaDto"];
         };
-        JsonNode: Record<string, never>;
-        RecipeDto: {
-            path?: string;
-            fileName?: string;
+        RecipeHistoryEntryDto: {
+            version?: string;
+            timestamp?: string;
             /** Format: int64 */
             sizeBytes?: number;
-            modifiedAt?: string;
-            content?: components["schemas"]["JsonNode"];
         };
         B15RowDto: {
             clusterName?: string;
@@ -489,6 +555,102 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    recipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecipeDto"];
+                };
+            };
+        };
+    };
+    save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecipeSaveRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecipeDto"];
+                };
+            };
+        };
+    };
+    validate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JsonNode"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecipeValidationDto"];
+                };
+            };
+        };
+    };
+    rollback: {
+        parameters: {
+            query: {
+                version: string;
+            };
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecipeDto"];
+                };
+            };
+        };
+    };
     tree: {
         parameters: {
             query?: never;
@@ -529,9 +691,11 @@ export interface operations {
             };
         };
     };
-    recipe: {
+    historyVersion_1: {
         parameters: {
-            query?: never;
+            query: {
+                version: string;
+            };
             header?: never;
             path: {
                 path: string;
@@ -546,7 +710,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["RecipeDto"];
+                    "*/*": components["schemas"]["RecipeHistoryEntryDto"][] | components["schemas"]["RecipeDto"];
                 };
             };
         };

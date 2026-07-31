@@ -1,9 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import type { ETLNode } from '../../types'
 import type { FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
+import { apiSend } from '../../api/client'
 import { useRecipe, useDdl } from '../../api/queries'
-import { recipeToCanvas } from '../../api/recipeAdapter'
-import type { RecipeJson } from '../../api/recipeAdapter'
+import type { RecipeValidation, RecipeValidationError } from '../../api/queries'
+import { recipeToCanvas, renderFormula, fieldsOf } from '../../api/recipeAdapter'
+import type { RecipeJson, RecipeFieldJson } from '../../api/recipeAdapter'
+import { editFieldDataType, parseFormulaText, renameNode, setFieldTransformation } from '../../api/recipeEdits'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
 import { EtlCanvas } from '../shared/EtlCanvas'
@@ -68,11 +73,15 @@ function EditableField({
   value,
   onChange,
   mono = false,
+  onCommit,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
   mono?: boolean
+  /** Fired on blur, after the style reset — Task 8's edit panel commits draft
+   * mutations here rather than per-keystroke. */
+  onCommit?: () => void
 }) {
   const sharedStyle: React.CSSProperties = {
     width: '100%',
@@ -93,7 +102,7 @@ function EditableField({
         <input value={value} onChange={e => onChange(e.target.value)}
           style={sharedStyle}
           onFocus={e => { e.target.style.borderColor = '#4f9cf9' }}
-          onBlur={e => { e.target.style.borderColor = 'var(--border)' }}
+          onBlur={e => { e.target.style.borderColor = 'var(--border)'; onCommit?.() }}
         />
         <CopyButton value={value} />
       </div>
@@ -176,6 +185,106 @@ function TableNameList({ names, emptyLabel }: { names: string[]; emptyLabel: str
   )
 }
 
+// ─── Edit panel (Task 8) ────────────────────────────────────────────────────────
+
+/** One field's editors: dataType + a formula textarea seeded with `renderFormula`
+ * and parsed back via `parseFormulaText` on blur. Local state so keystrokes stay
+ * responsive; commits (draft mutation + dirty count) fire on blur only. */
+function FieldEditor({
+  stepName,
+  field,
+  onDataType,
+  onFormula,
+}: {
+  stepName: string
+  field: RecipeFieldJson
+  onDataType: (stepName: string, fieldName: string, dataType: string) => void
+  onFormula: (stepName: string, fieldName: string, text: string) => void
+}) {
+  const fieldName = field.name ?? ''
+  const originalFormula = renderFormula(field.transformation)
+  const [dataType, setDataType] = useState(field.dataType ?? '')
+  const [formula, setFormula] = useState(originalFormula)
+
+  useEffect(() => {
+    setDataType(field.dataType ?? '')
+    setFormula(originalFormula)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldName, field.dataType, originalFormula])
+
+  return (
+    <div style={{
+      border: '1px solid var(--border-subtle)', borderRadius: 5, padding: 10,
+      display: 'flex', flexDirection: 'column', gap: 8,
+    }}>
+      <div style={{ fontSize: 10, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{fieldName}</div>
+      <EditableField label="Data type" value={dataType} onChange={setDataType} mono
+        onCommit={() => { if (dataType !== (field.dataType ?? '')) onDataType(stepName, fieldName, dataType) }} />
+      <div>
+        <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 3 }}>Formula</div>
+        <textarea
+          value={formula}
+          onChange={e => setFormula(e.target.value)}
+          onBlur={() => { if (formula !== originalFormula) onFormula(stepName, fieldName, formula) }}
+          rows={2}
+          style={{
+            width: '100%', resize: 'vertical',
+            background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4,
+            color: '#c8d3e8', fontSize: 11, padding: '5px 8px',
+            fontFamily: 'JetBrains Mono, monospace', outline: 'none',
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+/** Edit panel for the selected canvas node: rename (any node) plus, for step
+ * nodes (not sources — those have no `step.target.fields` to edit), a
+ * per-field dataType + formula editor. */
+function EditPanel({
+  draft,
+  node,
+  onRename,
+  onFieldDataType,
+  onFieldFormula,
+}: {
+  draft: RecipeJson
+  node: ETLNode
+  onRename: (oldName: string, newName: string) => void
+  onFieldDataType: (stepName: string, fieldName: string, dataType: string) => void
+  onFieldFormula: (stepName: string, fieldName: string, text: string) => void
+}) {
+  const [name, setName] = useState(node.id)
+  useEffect(() => { setName(node.id) }, [node.id])
+
+  const step = draft.steps?.find(s => s.target?.name === node.id)
+  const fields = step ? fieldsOf(step.target) : []
+
+  return (
+    <section>
+      <SectionHeader icon="✎" label={`Edit — ${node.id}`} color="#4f9cf9" />
+      <div style={{
+        padding: 16, background: 'var(--surface)',
+        border: '1px solid var(--border)', borderRadius: 7,
+        display: 'flex', flexDirection: 'column', gap: 16,
+      }}>
+        <EditableField label="Node name" value={name} onChange={setName}
+          onCommit={() => { if (name.trim() !== '' && name !== node.id) onRename(node.id, name) }} />
+
+        {fields.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {fields.map(f => (
+              <FieldEditor key={f.name} stepName={node.id} field={f}
+                onDataType={onFieldDataType} onFormula={onFieldFormula} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function ETLModifier({ searchQuery }: { searchQuery: string }) {
@@ -185,14 +294,32 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
   const { fs, loading, error } = useFilesystem()
+  const queryClient = useQueryClient()
 
   const rec = useRecipe(recipePath ?? '')
   const recError = rec.error as ApiError | null
-  const content = rec.data?.content as RecipeJson | undefined
+
+  // Draft editing state (Task 8): deep-cloned from the loaded recipe whenever a
+  // *different* recipe or a fresh save lands (recipePath + modifiedAt) — not on
+  // every rec.data reference change, so in-progress edits survive re-renders.
+  const [draft, setDraft] = useState<RecipeJson | null>(null)
+  const [dirtyOps, setDirtyOps] = useState(0)
+  const [validationErrors, setValidationErrors] = useState<RecipeValidationError[]>([])
+  const [saveError, setSaveError] = useState<{ title: string; detail?: string } | null>(null)
+
+  useEffect(() => {
+    if (rec.data) {
+      setDraft(structuredClone(rec.data.content as RecipeJson))
+      setDirtyOps(0)
+      setValidationErrors([])
+      setSaveError(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipePath, rec.data?.modifiedAt])
 
   const graph = useMemo(
-    () => (rec.data ? recipeToCanvas(rec.data.content as RecipeJson, recipePath!) : null),
-    [rec.data, recipePath],
+    () => (draft && recipePath ? recipeToCanvas(draft, recipePath) : null),
+    [draft, recipePath],
   )
 
   const recipeSlash = recipePath ? recipePath.lastIndexOf('/') : -1
@@ -201,6 +328,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const ddlEntries = ddl.data ? Object.entries(ddl.data as Record<string, DdlColumnJson[]>) : []
 
   const exprPorts = graph?.nodes.flatMap(n => n.ports).filter(p => p.expression) ?? []
+  const selectedNode = graph?.nodes.find(n => n.id === selectedNodeId) ?? null
 
   const handleSelectFile = (f: FSFile) => {
     setSelectedPath(f.path)
@@ -208,6 +336,50 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
       setRecipePath(f.recipe)
       setSelectedNodeId(null)
       setShowRaw(false)
+    }
+  }
+
+  const applyEdit = (fn: (d: RecipeJson) => RecipeJson) => {
+    setDraft(d => (d ? fn(d) : d))
+    setDirtyOps(n => n + 1)
+  }
+
+  const handleRename = (oldName: string, newName: string) => {
+    applyEdit(d => renameNode(d, oldName, newName))
+    setSelectedNodeId(newName)
+  }
+
+  const handleFieldDataType = (stepName: string, fieldName: string, dataType: string) => {
+    applyEdit(d => editFieldDataType(d, stepName, fieldName, dataType))
+  }
+
+  const handleFieldFormula = (stepName: string, fieldName: string, text: string) => {
+    applyEdit(d => setFieldTransformation(d, stepName, fieldName, parseFormulaText(text)))
+  }
+
+  const handleDiscard = () => {
+    if (rec.data) setDraft(structuredClone(rec.data.content as RecipeJson))
+    setDirtyOps(0)
+    setValidationErrors([])
+    setSaveError(null)
+  }
+
+  const handleSave = async () => {
+    if (!draft || !recipePath || !rec.data) return
+    setValidationErrors([])
+    setSaveError(null)
+    try {
+      const result = await apiSend<RecipeValidation>('POST', '/recipes/validate', draft)
+      if (!result.valid) {
+        setValidationErrors(result.errors ?? [])
+        return
+      }
+      await apiSend('PUT', `/recipes/${recipePath}`, { baseModified: rec.data.modifiedAt, content: draft })
+      await queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
+      setDirtyOps(0)
+    } catch (e) {
+      const err = e as ApiError
+      setSaveError({ title: err.title ?? 'Save failed', detail: err.detail })
     }
   }
 
@@ -298,14 +470,14 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                     borderBottom: '1px solid var(--border)',
                   }}>
                     <span style={{ fontSize: 10, color: '#4a5570', flex: 1 }}>Raw JSON</span>
-                    <CopyButton value={JSON.stringify(rec.data.content, null, 2)} size={11} />
+                    <CopyButton value={JSON.stringify(draft ?? rec.data.content, null, 2)} size={11} />
                   </div>
                   <pre style={{
                     margin: 0, padding: '10px 12px', maxHeight: 400, overflow: 'auto',
                     fontSize: 10, color: '#c8d3e8',
                     fontFamily: 'JetBrains Mono, monospace',
                     whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-                  }}>{JSON.stringify(rec.data.content, null, 2)}</pre>
+                  }}>{JSON.stringify(draft ?? rec.data.content, null, 2)}</pre>
                 </div>
               )}
             </div>
@@ -317,7 +489,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                 padding: '16px', background: 'var(--surface)',
                 border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
               }}>
-                <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
+                <TableNameList names={draft?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
               </div>
             </section>
 
@@ -342,9 +514,20 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                 padding: '16px', background: 'var(--surface)',
                 border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7,
               }}>
-                <TableNameList names={content?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
+                <TableNameList names={draft?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
               </div>
             </section>
+
+            {/* edit panel — shown for whichever canvas node is selected (Task 8) */}
+            {selectedNode && draft && (
+              <EditPanel
+                draft={draft}
+                node={selectedNode}
+                onRename={handleRename}
+                onFieldDataType={handleFieldDataType}
+                onFieldFormula={handleFieldFormula}
+              />
+            )}
 
             {/* expressions collector (interim until Task 11's registry) */}
             <section>
@@ -397,7 +580,28 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
           </div>
         ) : null}
 
-        <SaveBar changes={0} onSave={() => {}} onDiscard={() => {}} />
+        {(validationErrors.length > 0 || saveError) && (
+          <div style={{
+            padding: '10px 16px', background: 'var(--surface)',
+            borderTop: '1px solid var(--red)', color: 'var(--red)', fontSize: 11,
+            display: 'flex', flexDirection: 'column', gap: 4,
+          }}>
+            {validationErrors.map((e, i) => (
+              <div key={i}>
+                {e.path && <div style={{ fontSize: 9, opacity: 0.7 }}>{e.path}</div>}
+                <div>{e.message}</div>
+              </div>
+            ))}
+            {saveError && (
+              <div>
+                <div>{saveError.title}</div>
+                {saveError.detail && <div>{saveError.detail}</div>}
+              </div>
+            )}
+          </div>
+        )}
+
+        <SaveBar changes={dirtyOps} onSave={handleSave} onDiscard={handleDiscard} />
       </div>
     </div>
   )

@@ -6,6 +6,8 @@ export type TreeNode = components['schemas']['TreeNodeDto']
 export type XmlNode = components['schemas']['XmlNodeDto']
 export type MappingModel = components['schemas']['MappingModelDto']
 export type RecipeFile = components['schemas']['RecipeDto']
+export type RecipeValidation = components['schemas']['RecipeValidationDto']
+export type RecipeValidationError = components['schemas']['RecipeValidationErrorDto']
 export type ExpressionEntry = components['schemas']['ExpressionEntryDto']
 export type AppConfig = components['schemas']['AppConfigDto']
 
