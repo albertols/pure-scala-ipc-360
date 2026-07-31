@@ -416,13 +416,15 @@ Behavior spec (exact):
 
 RTL flow: MSW `/api/recipes/ODS/m_CAS_T/_ETL_m_CAS_T.json` returning a minimal recipe (`steps` + `table` per Stream A's fixture shape). Select recipe card → click "Open preview" → `await findByText` of a step/target name inside the overlay canvas AND a raw-JSON substring → `fireEvent.keyDown(document, { key: 'Escape' })` → overlay gone. Second assertion: select the TABLE card → preview resolves the writer recipe (same MSW handler hit).
 
-- [ ] **Step 1: merge gate verified → Step 2: failing test → Step 3: RED → Step 4: implement → Step 5: GREEN + `npx tsc --noEmit`.**
-- [ ] **Step 6: Commit**
+- [x] **Step 1: merge gate verified → Step 2: failing test → Step 3: RED → Step 4: implement → Step 5: GREEN + `npx tsc --noEmit`.**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/tab3/PreviewOverlay.tsx frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/ETLOperational.test.tsx frontend/src/api/queries.ts docs/superpowers/plans/2026-07-31-operational-casuistics.md
 git commit -m "feat(operational): full-window preview overlay — shared EtlCanvas of the recipe + raw JSON, Esc closes"
 ```
+
+Merge-gate note: the gate was already satisfied at task start — `feat/etl360-operational-casuistics` tip `7d0abed` ("Merge main (Streams A + C) into feat/etl360-operational-casuistics") had already merged main, and `frontend/src/api/queries.ts`'s `useRecipe` already carried `enabled: !!path` (Stream A's own commit) — no change needed there for this task; `queries.ts` is unmodified by this commit despite appearing in the `git add` list above (a no-op add on an already-tracked, unchanged file). No resequencing was needed; Task 9 executed in its original plan position.
 
 ---
 

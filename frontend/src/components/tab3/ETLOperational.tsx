@@ -2,11 +2,38 @@ import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import type { OperationalCard as CardData } from '../../types'
 import type { ApiError } from '../../api/client'
 import { useRelationships, useOperationalSummary, useOperationalDates, useAppConfig } from '../../api/queries'
+import type { RelationshipGraph } from '../../api/queries'
 import { toOperationalGraph, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { OperationalCard } from '../shared/OperationalCard'
 import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
+import { PreviewOverlay } from './PreviewOverlay'
+
+type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
+
+/**
+ * Task 9: resolve the recipe/mapping path a card's "Open preview" affordance
+ * should open. Recipe card -> its own node (`mappingPath` = recipe directory,
+ * `name` = recipe filename). Table card -> the FIRST `writes` edge into it
+ * (adapter edge order, i.e. graph order) -> that recipe's node. Both fields
+ * null when unresolvable (e.g. a source-only table, or a recipe absent from
+ * the corpus) — the caller disables the affordance in that case.
+ */
+function resolvePreview(
+  card: CardData,
+  edges: OperationalEdge[],
+  nodeById: Map<string, NodeDto>,
+): { recipePath: string | null; mappingPath: string | null } {
+  const recipeId = card.kind === 'recipe'
+    ? card.id
+    : edges.find(e => e.kind === 'writes' && e.toId === card.id)?.fromId
+  const node = recipeId ? nodeById.get(recipeId) : undefined
+  const mappingPath = node?.mappingPath ?? null
+  const name = node?.name ?? null
+  if (!mappingPath || !name) return { recipePath: null, mappingPath }
+  return { recipePath: `${mappingPath}/${name}`, mappingPath }
+}
 
 function daysBetween(a: string, b: string): number {
   return Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000
@@ -202,11 +229,24 @@ export function ETLOperational() {
   const [kindFilter, setKindFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
+  // Task 9: snapshot the resolved path when "Open preview" is clicked, rather
+  // than re-deriving from `selected` on every render — so the overlay keeps
+  // showing the recipe it was opened for even if the selection changes or
+  // clears underneath it while it's open.
+  const [preview, setPreview] = useState<{ recipePath: string | null; mappingPath: string | null } | null>(null)
 
   const rel = useRelationships()
   const summary = useOperationalSummary()
   const dates = useOperationalDates()
   const cfg = useAppConfig()
+
+  // Raw graph nodes carry `mappingPath` (the recipe directory) — the adapter's
+  // OperationalCard doesn't, so the preview resolver reads it here.
+  const nodeById = useMemo(() => {
+    const m = new Map<string, NodeDto>()
+    for (const n of rel.data?.nodes ?? []) if (n.id) m.set(n.id, n)
+    return m
+  }, [rel.data])
 
   // On first data, default selectedDate to the latest snapshot ("Now").
   // Guarded on selectedDate === null so a later user pick is never clobbered.
@@ -261,6 +301,10 @@ export function ETLOperational() {
   })
 
   const selectedCard = selected ? view.cards.find(c => c.id === selected) : null
+
+  const previewTarget = selectedCard
+    ? resolvePreview(selectedCard, view.edges, nodeById)
+    : { recipePath: null, mappingPath: null }
 
   // GCP quick links: templated from the served config + (for the cluster
   // name) the raw summary entry looked up by name — `lastClusterName` isn't
@@ -385,6 +429,15 @@ export function ETLOperational() {
               </div>
             </div>
 
+            {/* preview overlay affordance (Task 9) */}
+            <div>
+              <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>Preview</div>
+              <PreviewButton
+                enabled={!!previewTarget.recipePath}
+                onClick={() => setPreview(previewTarget)}
+              />
+            </div>
+
             {/* GCP quick links */}
             <div>
               <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>GCP Quick Links</div>
@@ -397,7 +450,43 @@ export function ETLOperational() {
           </div>
         )}
       </div>
+
+      {preview && (
+        <PreviewOverlay
+          recipePath={preview.recipePath}
+          mappingPath={preview.mappingPath}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </div>
+  )
+}
+
+/** Task 9's "Open preview" affordance — same row markup as `GCPLink` below
+ * (no new tokens), a `<button>` in place of an `<a>` since it opens the
+ * overlay rather than navigating. Disabled (dim, non-interactive) when the
+ * selected card's recipe/mapping path can't be resolved. */
+function PreviewButton({ enabled, onClick }: { enabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={enabled ? onClick : undefined}
+      disabled={!enabled}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 7, width: '100%',
+        padding: '6px 10px', borderRadius: 5, textAlign: 'left',
+        background: 'var(--surface-2)', border: '1px solid var(--border)',
+        color: enabled ? '#7b88aa' : '#3a4160', fontSize: 11,
+        cursor: enabled ? 'pointer' : 'default',
+        fontFamily: 'inherit',
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M3 9h18" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+      Open preview
+      <span style={{ marginLeft: 'auto', fontSize: 10 }}>↗</span>
+    </button>
   )
 }
 

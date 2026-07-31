@@ -17,7 +17,9 @@ type AppConfigDto = components['schemas']['AppConfigDto']
 const GRAPH: RelationshipGraph = {
   nodes: [
     { id: 't_src', kind: 'table', name: 'stg_dwhes.CAS_T_SRC', layer: 'STG' },
-    { id: 'r', kind: 'recipe', name: '_ETL_m_CAS_T.json', layer: 'STG' },
+    // mappingPath (Task 9): the recipe's directory — combined with `name`,
+    // resolves to the MSW-served path 'ODS/m_CAS_T/_ETL_m_CAS_T.json' below.
+    { id: 'r', kind: 'recipe', name: '_ETL_m_CAS_T.json', layer: 'STG', mappingPath: 'ODS/m_CAS_T' },
     { id: 't_tgt', kind: 'table', name: 'stg_dwhes.CAS_T_TGT', layer: 'STG' },
   ],
   edges: [
@@ -90,11 +92,33 @@ const CONFIG: AppConfigDto = {
   corpusRoot: '/mock',
 }
 
+// Task 9 preview overlay: minimal recipe literal, Stream A's fixture shape
+// (steps + table — the ETLModifier.test.tsx MINI idiom).
+const PREVIEW_RECIPE = {
+  steps: [
+    {
+      target: {
+        name: 'CAS_ODS_TGT_STEP', type: 'table',
+        fields: [{ name: 'EVENT_ID', dataType: 'String', transformation: { source: 'CAS_STG_SRC_STEP.EVENT_ID' } }],
+      },
+      sources: [{ name: 'CAS_STG_SRC_STEP', type: 'table' }],
+    },
+  ],
+  table: { targetTableNames: ['CAS_ODS_TGT_STEP'], sourceTableNames: ['CAS_STG_SRC_STEP'] },
+}
+
 const server = setupServer(
   http.get('/api/relationships', () => HttpResponse.json(GRAPH)),
   http.get('/api/operational/summary', () => HttpResponse.json(SUMMARY)),
   http.get('/api/operational/dates', () => HttpResponse.json(DATES)),
   http.get('/api/config', () => HttpResponse.json(CONFIG)),
+  http.get('/api/recipes/ODS/m_CAS_T/_ETL_m_CAS_T.json', () => HttpResponse.json({
+    path: 'ODS/m_CAS_T/_ETL_m_CAS_T.json',
+    fileName: '_ETL_m_CAS_T.json',
+    sizeBytes: 210,
+    modifiedAt: '2026-07-31T00:00:00Z',
+    content: PREVIEW_RECIPE,
+  })),
 )
 beforeAll(() => server.listen())
 afterEach(() => {
@@ -219,5 +243,35 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     await waitFor(() => {
       expect(screen.getAllByText(/Last run:/)).toHaveLength(3)
     })
+  })
+
+  it('opens the full-window preview overlay from a recipe card and closes on Escape; a table card resolves its writer recipe', async () => {
+    renderTab()
+
+    // Select the recipe card, then open its preview.
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+    fireEvent.click(await screen.findByText('Open preview'))
+
+    // The overlay hosts the shared EtlCanvas rendering recipeToCanvas(recipe) —
+    // the recipe's target node is visible on the canvas...
+    expect(await screen.findByText('CAS_ODS_TGT_STEP', { selector: 'text' })).toBeInTheDocument()
+    // ...and the raw JSON pane shows the recipe content verbatim.
+    expect(await screen.findByText(/targetTableNames/)).toBeInTheDocument()
+
+    // Esc closes the overlay — fully unmounted (no leaked state).
+    fireEvent.keyDown(document, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByText(/targetTableNames/)).not.toBeInTheDocument()
+    })
+    expect(screen.queryByText('CAS_ODS_TGT_STEP', { selector: 'text' })).not.toBeInTheDocument()
+
+    // Selecting the TABLE card resolves the writer recipe (the `writes` edge
+    // 'r' -> 't_tgt') — same MSW handler, same recipe canvas. The name also
+    // appears in the (still-open) detail panel's Related list, so scope the
+    // click to the canvas card via the `data-card` wrapper (existing idiom).
+    const tgtOnCanvas = screen.getAllByText('stg_dwhes.CAS_T_TGT').find(el => el.closest('[data-card]'))!
+    fireEvent.click(tgtOnCanvas)
+    fireEvent.click(await screen.findByText('Open preview'))
+    expect(await screen.findByText('CAS_ODS_TGT_STEP', { selector: 'text' })).toBeInTheDocument()
   })
 })
