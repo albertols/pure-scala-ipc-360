@@ -178,13 +178,22 @@ export function renameNode(d: RecipeJson, oldName: string, newName: string): Rec
 
 /** Sets a field's dataType on the named step's target. No-op if the step or field
  * doesn't exist (edit, not create — see setFieldTransformation for the creating
- * variant). */
+ * variant).
+ *
+ * Final-review fix: this used to look the field up via the MUTATING
+ * `fieldsArrayFor` — for a target with neither `fields` nor `weststone` at all
+ * (no key present, not even `[]`), that stamped an empty `fields: []` onto the
+ * draft even on the no-op path (field not found), so a genuine no-op didn't
+ * leave the draft untouched. Reading via `readFields` (non-mutating) for the
+ * lookup, and only touching the field object itself once found, means a miss
+ * truly changes nothing. */
 export function editFieldDataType(d: RecipeJson, stepName: string, fieldName: string, dataType: string): RecipeJson {
   const draft = structuredClone(d)
   const step = draft.steps?.find(s => s.target?.name === stepName)
   if (!step?.target) return draft
-  const field = fieldsArrayFor(step.target).find(f => f.name === fieldName)
-  if (field) field.dataType = dataType
+  const field = readFields(step.target).find(f => f.name === fieldName)
+  if (!field) return draft
+  field.dataType = dataType
   return draft
 }
 
@@ -222,6 +231,26 @@ export function addSourceTable(d: RecipeJson, stepName?: string): RecipeJson {
   step.sources = [...(step.sources ?? []), source]
   draft.table = draft.table ?? {}
   draft.table.sourceTableNames = [...(draft.table.sourceTableNames ?? []), name]
+  return draft
+}
+
+/** Appends a new field `{name, dataType: dataType || 'String'}` (no
+ * `transformation`) to the named step's target. Final-review fix: palette-added
+ * nodes (`addStep` creates `fields: []`) had no in-UI way to ever gain a field —
+ * ports derive 1:1 from fields (recipeAdapter's `toStepNode`), so a freshly
+ * added node could never be wired. Writes to whichever of fields/weststone the
+ * target already carries (see `fieldsArrayFor`, creating `fields` only when
+ * neither key is present yet). No-op (unchanged clone) if `stepName` doesn't
+ * resolve to a step target. */
+export function addField(
+  d: RecipeJson,
+  { stepName, fieldName, dataType }: { stepName: string; fieldName: string; dataType?: string },
+): RecipeJson {
+  const draft = structuredClone(d)
+  const step = draft.steps?.find(s => s.target?.name === stepName)
+  if (!step?.target) return draft
+  const fields = fieldsArrayFor(step.target)
+  fields.push({ name: fieldName, dataType: dataType || 'String' })
   return draft
 }
 

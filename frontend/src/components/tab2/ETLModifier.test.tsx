@@ -334,6 +334,95 @@ describe('ETLModifier — palette, click-wire, delete (Task 9)', () => {
   })
 })
 
+// ─── Final-review wave: wire-state clearing + add-field affordance ───────────
+
+describe('ETLModifier — final-review wave', () => {
+  it('deleting the wire-armed node clears wireFrom: the chip disappears and a later IN-port click writes no dangling dot-ref', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          { target: { name: 'S', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+          { target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] }, sources: [] },
+        ],
+        table: { targetTableNames: ['T'], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('S', { selector: 'text' })
+
+    // Arm a wire from S.A.
+    fireEvent.click(screen.getByText('A'))
+    expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
+
+    // Select S and delete it — the armed wire's origin node is gone.
+    fireEvent.click(screen.getByText('S', { selector: 'text' }))
+    fireEvent.click(await screen.findByText('Delete'))
+    fireEvent.click(screen.getByText('Confirm delete'))
+
+    expect(screen.queryByText('S', { selector: 'text' })).not.toBeInTheDocument()
+    // The delete itself is the only dirtying op — the stale wire chip is gone.
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+    expect(screen.queryByText(/wire: S\.A/)).not.toBeInTheDocument()
+
+    // A completion click on T's IN port is now a no-op: no armed wire survives
+    // the delete, so it can't write a dot-ref onto a node that no longer exists.
+    fireEvent.click(screen.getByText('X'))
+    expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(screen.queryByText(/"source": "S\.A"/)).not.toBeInTheDocument()
+  })
+
+  it('palette-add a node, give it a field via "+ field", then click-wire into its new port writes the dot-ref', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          { target: { name: 'S', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+        ],
+        table: { targetTableNames: [], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('S', { selector: 'text' })
+
+    // Palette-add a fresh target table node: inert (fields: [], no ports) until
+    // it gains a field.
+    fireEvent.click(screen.getByText('target table'))
+    const newNode = await screen.findByText('NEW_TABLE_1', { selector: 'text' })
+
+    // Select it and use the "+ field" affordance to give it its first field.
+    // Selecting the node keeps its EditPanel open (its own FieldEditor also
+    // renders the field name "X" as a plain label), so port clicks below use
+    // { selector: 'text' } to target the SVG port text specifically — the same
+    // disambiguation this suite already uses for node-label clicks.
+    fireEvent.click(newNode)
+    fireEvent.change(screen.getByPlaceholderText('field name…'), { target: { value: 'X' } })
+    fireEvent.click(screen.getByText('+ field'))
+
+    // The node now shows a port for the new field.
+    expect(await screen.findByText('X', { selector: 'text' })).toBeInTheDocument()
+
+    // Click-wire: OUT port S.A completes onto the freshly created IN port X.
+    fireEvent.click(screen.getByText('A'))
+    expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('X', { selector: 'text' }))
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
+  })
+})
+
 // ─── Task 10: History drawer + rollback UI ────────────────────────────────────
 
 describe('ETLModifier — history drawer + rollback (Task 10)', () => {

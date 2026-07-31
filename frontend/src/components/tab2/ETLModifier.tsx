@@ -9,6 +9,7 @@ import type { RecipeFile, RecipeValidation, RecipeValidationError, ExpressionEnt
 import { recipeToCanvas, renderFormula, fieldsOf } from '../../api/recipeAdapter'
 import type { RecipeJson, RecipeFieldJson } from '../../api/recipeAdapter'
 import {
+  addField,
   addSourceTable,
   addStep,
   deleteEdge,
@@ -330,9 +331,49 @@ function DeleteNodeControl({ draft, nodeId, onDelete }: { draft: RecipeJson; nod
   )
 }
 
+/** Minimal "+ field" affordance (final-review fix): a palette-added node starts
+ * with `fields: []`, and ports derive 1:1 from fields (recipeAdapter's
+ * `toStepNode`) — with no way to ever add one, a freshly added node could
+ * never be wired, which broke the product intent of building a recipe
+ * interactively. A name input + button, composed from the same input/button
+ * idioms already in this file (`FieldEditor`'s textarea styling, the registry
+ * Insert button's blue token) — no new colors. Field name only; the new
+ * field's dataType always starts at `addField`'s own `'String'` default and is
+ * editable afterward via that field's own `FieldEditor` once it exists. */
+function AddFieldControl({ onAdd }: { onAdd: (fieldName: string) => void }) {
+  const [name, setName] = useState('')
+  const commit = () => {
+    const trimmed = name.trim()
+    if (trimmed === '') return
+    onAdd(trimmed)
+    setName('')
+  }
+  return (
+    <div style={{ display: 'flex', gap: 4 }}>
+      <input
+        value={name}
+        onChange={e => setName(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') commit() }}
+        placeholder="field name…"
+        style={{
+          flex: 1, background: 'var(--surface-2)', border: '1px solid var(--border)',
+          borderRadius: 4, color: '#c8d3e8', fontSize: 11, padding: '5px 8px',
+          fontFamily: 'JetBrains Mono, monospace', outline: 'none',
+        }}
+      />
+      <button onClick={commit} style={{
+        padding: '5px 10px', borderRadius: 4,
+        background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
+        color: '#4f9cf9', fontSize: 11, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
+      }}>+ field</button>
+    </div>
+  )
+}
+
 /** Edit panel for the selected canvas node: rename (any node) plus, for step
  * nodes (not sources — those have no `step.target.fields` to edit), a
- * per-field dataType + formula editor, plus the delete control (any node). */
+ * per-field dataType + formula editor and the "+ field" affordance, plus the
+ * delete control (any node). */
 function EditPanel({
   draft,
   node,
@@ -340,6 +381,7 @@ function EditPanel({
   onFieldDataType,
   onFieldFormula,
   onFocusFormula,
+  onAddField,
   onDelete,
 }: {
   draft: RecipeJson
@@ -348,6 +390,7 @@ function EditPanel({
   onFieldDataType: (stepName: string, fieldName: string, dataType: string) => void
   onFieldFormula: (stepName: string, fieldName: string, text: string) => void
   onFocusFormula: (stepName: string, fieldName: string) => void
+  onAddField: (stepName: string, fieldName: string) => void
   onDelete: (name: string) => void
 }) {
   const [name, setName] = useState(node.id)
@@ -367,12 +410,13 @@ function EditPanel({
         <EditableField label="Node name" value={name} onChange={setName}
           onCommit={() => { if (name.trim() !== '' && name !== node.id) onRename(node.id, name) }} />
 
-        {fields.length > 0 && (
+        {step && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {fields.map(f => (
               <FieldEditor key={f.name} stepName={node.id} field={f}
                 onDataType={onFieldDataType} onFormula={onFieldFormula} onFocusFormula={onFocusFormula} />
             ))}
+            <AddFieldControl onAdd={fieldName => onAddField(node.id, fieldName)} />
           </div>
         )}
 
@@ -599,6 +643,10 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const handleRename = (oldName: string, newName: string) => {
     applyEdit(d => renameNode(d, oldName, newName))
     setSelectedNodeId(newName)
+    // Final-review finding: an armed wire's nodeId/portName refer to the OLD
+    // name; left standing, a completion click after a rename would write a
+    // dot-ref pointing at a node that no longer exists under that name.
+    setWireFrom(null)
   }
 
   const handleFieldDataType = (stepName: string, fieldName: string, dataType: string) => {
@@ -607,6 +655,12 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
 
   const handleFieldFormula = (stepName: string, fieldName: string, text: string) => {
     applyEdit(d => setFieldTransformation(d, stepName, fieldName, parseFormulaText(text)))
+  }
+
+  // Final-review fix: the minimal creation path a palette-added node (fields:
+  // []) needs before it can ever be wired — see AddFieldControl/addField.
+  const handleAddField = (stepName: string, fieldName: string) => {
+    applyEdit(d => addField(d, { stepName, fieldName }))
   }
 
   const handleFocusFormula = (stepName: string, fieldName: string) => {
@@ -669,6 +723,11 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const handleDeleteNode = (name: string) => {
     applyEdit(d => deleteNode(d, name))
     setSelectedNodeId(null)
+    // Final-review finding: a stale wireFrom pointing at the just-deleted node
+    // would otherwise survive, letting a completion click write a dot-ref onto
+    // a node that no longer exists (draft adapter drops it silently, backend
+    // validate then rejects the dangling reference).
+    setWireFrom(null)
   }
 
   const handleDeleteEdge = (conn: Connection) => {
@@ -901,6 +960,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                 onFieldDataType={handleFieldDataType}
                 onFieldFormula={handleFieldFormula}
                 onFocusFormula={handleFocusFormula}
+                onAddField={handleAddField}
                 onDelete={handleDeleteNode}
               />
             )}

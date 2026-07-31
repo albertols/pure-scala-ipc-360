@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  addField,
   addSourceTable,
   addStep,
   deleteEdge,
@@ -42,6 +43,7 @@ describe('recipeEdits — every helper is pure', () => {
       editFieldDataType(MINI, 'T', 'A', 'Long'),
       addStep(MINI, 'table'),
       addSourceTable(MINI, 'T'),
+      addField(MINI, { stepName: 'T', fieldName: 'NEWX' }),
       deleteNode(MINI, 'S'),
       deleteEdge(MINI, 'T', 'B'),
     ]
@@ -136,6 +138,18 @@ describe('editFieldDataType', () => {
     expect(editFieldDataType(MINI, 'NOPE', 'A', 'Long')).toEqual(MINI)
     expect(editFieldDataType(MINI, 'T', 'NOPE', 'Long')).toEqual(MINI)
   })
+
+  // Final-review finding: the no-op path used to call the MUTATING
+  // fieldsArrayFor before checking whether the field existed. That's invisible
+  // on MINI's 'T' (already carries a populated `fields` array — `fieldsArrayFor`
+  // is a no-op there either way), so it needs a target with NEITHER `fields`
+  // nor `weststone` present at all to actually surface the stamped `fields: []`.
+  it('leaves a target with no fields/weststone key untouched when the field name does not exist', () => {
+    const bare: RecipeJson = { steps: [{ target: { name: 'T', type: 'table' }, sources: [] }] }
+    const out = editFieldDataType(bare, 'T', 'GHOST', 'Long')
+    expect(out).toEqual(bare)
+    expect(out.steps![0].target!.fields).toBeUndefined()
+  })
 })
 
 describe('addStep', () => {
@@ -189,6 +203,51 @@ describe('addSourceTable', () => {
     expect(out.steps![0].target!.type).toBe('table')
     expect(out.steps![0].sources).toHaveLength(1)
     expect(out.table!.sourceTableNames).toHaveLength(1)
+  })
+})
+
+// Final-review finding: palette-added nodes (addStep's fields: []) had no
+// in-UI way to ever gain a field — ports derive 1:1 from fields, so a freshly
+// added node could never be wired. addField is the minimal creation path the
+// new EditPanel "+ field" affordance calls.
+describe('addField', () => {
+  it('appends {name, dataType: String} with no transformation when dataType is omitted', () => {
+    const out = addField(MINI, { stepName: 'T', fieldName: 'C' })
+    const added = out.steps![0].target!.fields!.find(f => f.name === 'C')!
+    expect(added).toEqual({ name: 'C', dataType: 'String' })
+    expect(added.transformation).toBeUndefined()
+  })
+
+  it('uses the given dataType when provided', () => {
+    const out = addField(MINI, { stepName: 'T', fieldName: 'C', dataType: 'Long' })
+    expect(out.steps![0].target!.fields!.find(f => f.name === 'C')!.dataType).toBe('Long')
+  })
+
+  it('is pure: returns a new object, never mutates the input', () => {
+    const before = JSON.stringify(MINI)
+    const out = addField(MINI, { stepName: 'T', fieldName: 'C' })
+    expect(out).not.toBe(MINI)
+    expect(JSON.stringify(MINI)).toBe(before)
+  })
+
+  it('on a weststone-keyed clone writes into weststone, not fields', () => {
+    const damaged = JSON.parse(JSON.stringify(MINI).replaceAll('"fields":', '"weststone":')) as RecipeJson & {
+      steps: { target: { weststone: { name?: string; dataType?: string }[]; fields?: unknown } }[]
+    }
+    const out = addField(damaged, { stepName: 'T', fieldName: 'C' }) as typeof damaged
+    expect(out.steps[0].target.fields).toBeUndefined()
+    expect(out.steps[0].target.weststone.find(f => f.name === 'C')).toEqual({ name: 'C', dataType: 'String' })
+  })
+
+  it('no-ops when stepName does not resolve to a step target', () => {
+    expect(addField(MINI, { stepName: 'NOPE', fieldName: 'C' })).toEqual(MINI)
+  })
+
+  it('gives a fresh palette-added step (fields: []) its first field', () => {
+    const fresh = addStep(MINI, 'table')
+    const addedName = fresh.steps![1].target!.name!
+    const out = addField(fresh, { stepName: addedName, fieldName: 'F1' })
+    expect(out.steps![1].target!.fields).toEqual([{ name: 'F1', dataType: 'String' }])
   })
 })
 

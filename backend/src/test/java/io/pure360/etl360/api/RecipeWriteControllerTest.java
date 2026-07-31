@@ -199,6 +199,31 @@ class RecipeWriteControllerTest {
         }
     }
 
+    /**
+     * Final-review finding: {@code history()} listed every regular file in {@code _history/}
+     * and fed each into {@code versionOf}, which assumes the name is exactly
+     * {@code <stem>.<version>.json} — a stray Finder file like {@code .DS_Store} (the sidecar
+     * is committable and Finder-visible) or another recipe's archive threw
+     * {@code StringIndexOutOfBoundsException}, turning into a 500. Asserts the endpoint now
+     * ignores both and still returns only this recipe's own archives.
+     */
+    @Test
+    @Order(7)
+    void historyFiltersStrayAndForeignFilesFromSidecar() throws Exception {
+        String historyPath = "/api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json";
+        Path historyDir = corpus.resolve("CDM/m_FIX/_history");
+
+        int before = om.readTree(mvc.perform(get(historyPath)).andReturn().getResponse().getContentAsString()).size();
+
+        Files.writeString(historyDir.resolve(".DS_Store"), "junk");
+        Files.writeString(historyDir.resolve("_ETL_other.20990101-000000-000.json"), "{}");
+
+        String afterJson = mvc.perform(get(historyPath))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        assertThat(om.readTree(afterJson)).hasSize(before); // stray + foreign files excluded
+    }
+
     private static long countFiles(Path dir) throws IOException {
         if (!Files.isDirectory(dir)) return 0;
         try (var s = Files.list(dir)) {

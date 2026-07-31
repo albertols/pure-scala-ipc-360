@@ -111,7 +111,7 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
 ## More
 
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0006`
+- Design rationale: `docs/adr/0001`–`0007`
 - Current spec/plan: `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
   `docs/superpowers/plans/2026-07-29-etl360-foundation.md`,
   `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,

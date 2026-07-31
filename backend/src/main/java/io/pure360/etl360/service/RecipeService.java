@@ -115,8 +115,16 @@ public class RecipeService {
             return List.of();
         }
         String stem = stripJsonExt(file.getFileName().toString());
+        String ownPrefix = stem + ".";
         try (Stream<Path> list = Files.list(historyDir)) {
             return list.filter(Files::isRegularFile)
+                // _history/ is git-committable and Finder-visible: a stray file (e.g. macOS
+                // .DS_Store) or another recipe's archive must not reach versionOf, which assumes
+                // the name is exactly "<stem>.<version>.json".
+                .filter(p -> {
+                    String name = p.getFileName().toString();
+                    return name.startsWith(ownPrefix) && name.endsWith(JSON_EXT);
+                })
                 .map(p -> new RecipeHistoryEntryDto(versionOf(stem, p), modifiedAt(p), sizeOf(p)))
                 .sorted(Comparator.comparing(RecipeHistoryEntryDto::version).reversed())
                 .toList();
