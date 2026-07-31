@@ -55,17 +55,36 @@ resolve ETL360_GCP_PROJECT gcpProjectId;        SRC_GCP=$RES_SRC
 # Toolchains: config.json OUTRANKS ambient env (machine-global JAVA_HOME/PATH are the
 # usual noise — on this repo's dev machine `java_home -v 17` returns an Azul 11).
 jmajor() { "$1/bin/java" -version 2>&1 | sed -nE 's/.*version "([0-9]+).*/\1/p' | head -1; }
+# A JDK is usable only if it exists AND probes >= 17 — the backend and the Spring Boot
+# maven plugin both refuse anything older. Probing (not trusting) is the whole point:
+# `java_home -v 17` and a machine-global JAVA_HOME both lie on this repo's dev machines.
+ok17() { [ -n "${1:-}" ] && [ -x "$1/bin/java" ] && [ "$(jmajor "$1")" -ge 17 ] 2>/dev/null; }
 JBR="/Applications/IntelliJ IDEA CE.app/Contents/jbr/Contents/Home"
+JAVA_FATAL=""
+ENV_JAVA_NOTE=""
 v="$(cfg javaHome)"
-if [ -n "$v" ]; then export JAVA_HOME="$v"; SRC_JAVA="config.json"
-elif [ -n "${JAVA_HOME:-}" ]; then SRC_JAVA="env"
-elif v="$(/usr/libexec/java_home -v 17 2>/dev/null)" && [ "$(jmajor "$v")" -ge 17 ] 2>/dev/null; then
-  export JAVA_HOME="$v"; SRC_JAVA="auto (java_home)"
-elif [ -d "$JBR" ] && [ "$(jmajor "$JBR")" -ge 17 ] 2>/dev/null; then
-  export JAVA_HOME="$JBR"; SRC_JAVA="auto (IntelliJ JBR)"
-else SRC_JAVA="unset — PATH java"; fi
-if [ -n "${JAVA_HOME:-}" ] && [ "$(jmajor "$JAVA_HOME")" -lt 17 ] 2>/dev/null; then
-  echo "warning: JAVA_HOME is JDK $(jmajor "$JAVA_HOME") — backend needs 17+ (set javaHome in config.json)"
+if [ -n "$v" ]; then
+  # config.json is an explicit instruction: honour it, but never silently accept a
+  # too-old JDK — a wrong value here must fail loudly, not 40 lines into a Maven trace.
+  export JAVA_HOME="$v"; SRC_JAVA="config.json"
+  ok17 "$JAVA_HOME" || JAVA_FATAL="config.json javaHome points at $( [ -x "$v/bin/java" ] && echo "JDK $(jmajor "$v")" || echo 'no JDK' ): $v"
+elif ok17 "${JAVA_HOME:-}"; then
+  SRC_JAVA="env"
+else
+  # An exported-but-too-old JAVA_HOME is the single most common local-machine failure
+  # (e.g. a shell profile pinning JDK 11). Ignore it and keep auto-detecting rather
+  # than warning and marching into a guaranteed build failure.
+  if [ -n "${JAVA_HOME:-}" ]; then
+    ENV_JAVA_NOTE=" — ignored env JDK $(jmajor "${JAVA_HOME}" 2>/dev/null || echo '?'), needs 17+"
+  fi
+  if v="$(/usr/libexec/java_home -v 17 2>/dev/null)" && ok17 "$v"; then
+    export JAVA_HOME="$v"; SRC_JAVA="auto (java_home)${ENV_JAVA_NOTE}"
+  elif ok17 "$JBR"; then
+    export JAVA_HOME="$JBR"; SRC_JAVA="auto (IntelliJ JBR)${ENV_JAVA_NOTE}"
+  else
+    SRC_JAVA="NONE FOUND${ENV_JAVA_NOTE}"
+    JAVA_FATAL="no JDK 17+ found (checked config.json javaHome, \$JAVA_HOME, /usr/libexec/java_home -v 17, IntelliJ JBR)"
+  fi
 fi
 v="$(cfg nodeBin)"
 if [ -n "$v" ]; then export PATH="$v:$PATH"; SRC_NODE="config.json"
@@ -88,7 +107,20 @@ row gcp-project "$GCP"      "$SRC_GCP"
 row JAVA_HOME   "${JAVA_HOME:-—}" "$SRC_JAVA"
 row node        "$(command -v node || echo '—')" "$SRC_NODE"
 
-if [ "${1:-}" = "--check-config" ]; then exit 0; fi
+if [ "${1:-}" = "--check-config" ]; then
+  # Diagnostic mode still exits 0 (its contract) — the JAVA_HOME row above already
+  # shows NONE FOUND / the ignored env JDK, which is the answer the user came for.
+  [ -n "$JAVA_FATAL" ] && echo "  ${DIM}note: $JAVA_FATAL${RST}"
+  exit 0
+fi
+if [ -n "$JAVA_FATAL" ]; then
+  echo "error: $JAVA_FATAL"
+  echo "       The backend (Java 17) and spring-boot-maven-plugin 3.3.4 both require JDK 17+."
+  echo "       Fix: set \"javaHome\" in config.json to a JDK 17+ home, e.g."
+  echo "         \"javaHome\": \"/Applications/IntelliJ IDEA CE.app/Contents/jbr/Contents/Home\""
+  echo "       (find candidates with: /usr/libexec/java_home -V)"
+  exit 1
+fi
 command -v mvn  >/dev/null || { echo "mvn not found — install Maven 3.9+"; exit 1; }
 command -v node >/dev/null || { echo "node not found — set nodeBin in config.json or install Node 22"; exit 1; }
 command -v pnpm >/dev/null || { echo "pnpm not found — corepack enable, or install pnpm 9+"; exit 1; }
