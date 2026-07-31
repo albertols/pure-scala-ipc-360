@@ -222,7 +222,7 @@ git commit -m "feat(dist): config.json entrypoint + dev.sh resolver with staged 
 
 **Interfaces:** `/api/config` responds `{ gcpProjectId, region, dataprocJobUrl, dataprocClusterUrl, loggingUrl, dwhControlMode, composerMode, corpusRoot }` — still exactly 8 fields. `ConfigController.java` needs NO edit (positional record construction, `ConfigController.java:22-30`). Frontend `AppConfig` type gains `gcpProjectId` via regen; streams B/C's `config?.gcpProjectId ?? 'mock-project'` becomes real at merge.
 
-- [ ] **Step 1: RED.** In `ConfigControllerTest.java:29-31` replace `"projectId"` with `"gcpProjectId"` in `EXPECTED_FIELDS`; add the new test class:
+- [x] **Step 1: RED.** In `ConfigControllerTest.java:29-31` replace `"projectId"` with `"gcpProjectId"` in `EXPECTED_FIELDS`; add the new test class:
 
 ```java
 package io.pure360.etl360.api;
@@ -253,10 +253,10 @@ class ConfigGcpProjectOverrideTest {
 ```
 
 Run `mvn -q -am -pl backend test` — expect BOTH config tests failing (field still `projectId`). Capture output.
-- [ ] **Step 2: GREEN.** `AppConfigDto.java:9`: rename the record component `projectId` → `gcpProjectId`; update the javadoc's field mention. Re-run `mvn -q -am -pl backend test` — all green.
-- [ ] **Step 3: regen types.** Boot the backend (`mvn -q -am -pl backend install -DskipTests`, then `cd backend && mvn -q spring-boot:run` in background; wait on `/api/health`), run `make generate-api`, kill the backend (verify port 8080 free). `git diff frontend/src/api/types.gen.ts` must show only `projectId` → `gcpProjectId` in the `AppConfigDto` schema.
-- [ ] **Step 4:** `cd frontend && pnpm test && npx tsc --noEmit` — clean (zero `projectId` consumers on main, grep-verified; re-grep after the parallel-stream rebase in Task 5's gate).
-- [ ] **Step 5: Commit**
+- [x] **Step 2: GREEN.** `AppConfigDto.java:9`: rename the record component `projectId` → `gcpProjectId`; update the javadoc's field mention. Re-run `mvn -q -am -pl backend test` — all green.
+- [x] **Step 3: regen types.** Boot the backend (`mvn -q -am -pl backend install -DskipTests`, then `cd backend && mvn -q spring-boot:run` in background; wait on `/api/health`), run `make generate-api`, kill the backend (verify port 8080 free). `git diff frontend/src/api/types.gen.ts` must show only `projectId` → `gcpProjectId` in the `AppConfigDto` schema.
+- [x] **Step 4:** `cd frontend && pnpm test && npx tsc --noEmit` — clean (zero `projectId` consumers on main, grep-verified; re-grep after the parallel-stream rebase in Task 5's gate).
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/dto/AppConfigDto.java backend/src/test/java/io/pure360/etl360/api/ConfigControllerTest.java backend/src/test/java/io/pure360/etl360/api/ConfigGcpProjectOverrideTest.java frontend/src/api/types.gen.ts docs/superpowers/plans/2026-07-31-etl360-distribution.md
