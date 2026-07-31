@@ -704,7 +704,11 @@ public class IpcCatalog {
     public record IpcRuleMeta(String id, String severity, String statement,
                               String parserRef, String ipcRef, String wikiRef) {}
 
-    public record IpcKeySpec(String key, String parserType, boolean required, String widget) {}
+    /** {@code ruleId} is the {@code IPC-TYP-*} id that fires when a {@code required} key is
+     * missing; blank for optional keys. Carried explicitly rather than derived from array
+     * position, so the JSON and the emitted check ids cannot drift apart. */
+    public record IpcKeySpec(String key, String parserType, boolean required,
+                             String widget, String ruleId) {}
 
     private final Map<String, IpcRuleMeta> byId = new LinkedHashMap<>();
     private final Map<String, List<IpcKeySpec>> keySchema = new LinkedHashMap<>();
@@ -727,7 +731,8 @@ public class IpcCatalog {
                 List<IpcKeySpec> specs = new ArrayList<>();
                 for (JsonNode k : e.getValue()) {
                     specs.add(new IpcKeySpec(k.path("key").asText(), k.path("parserType").asText(),
-                        k.path("required").asBoolean(false), k.path("widget").asText()));
+                        k.path("required").asBoolean(false), k.path("widget").asText(),
+                        k.path("ruleId").asText("")));
                 }
                 keySchema.put(e.getKey(), List.copyOf(specs));
             });
@@ -1162,9 +1167,9 @@ source:java, source:storedProcedure -> (no extra keys)
 ```
 
 Transcribed into `ipc-rules.json`, two kinds look like this — follow the same shape for the
-other eighteen. Note that `name`/`type`/`fields` come first and the kind-specific required
-keys follow in `-001`, `-002`, … order, which is what `TypeShapeRules.checkNode`'s ordinal
-counts against:
+other eighteen. `name`, `type` and `fields` carry no `ruleId` (`IPC-STR-003`/`-004` and the
+field rules already own them); every other required key carries the exact id that fires when
+it is missing, so `TypeShapeRules` reads the id rather than deriving it from array position:
 
 ```json
   "keySchema": {
@@ -1172,7 +1177,8 @@ counts against:
       { "key": "name",            "parserType": "String",         "required": true,  "widget": "text" },
       { "key": "type",            "parserType": "String",         "required": true,  "widget": "text" },
       { "key": "fields",          "parserType": "List[Field]",    "required": true,  "widget": "fieldTable" },
-      { "key": "selectDistinct",  "parserType": "Boolean",        "required": true,  "widget": "toggle" },
+      { "key": "selectDistinct",  "parserType": "Boolean",        "required": true,  "widget": "toggle",
+        "ruleId": "IPC-TYP-SOURCEQUALIFIER-001" },
       { "key": "sourceFilter",    "parserType": "Option[String]", "required": false, "widget": "textarea" },
       { "key": "sqlQuery",        "parserType": "Option[String]", "required": false, "widget": "textarea" },
       { "key": "userDefinedJoin", "parserType": "Option[String]", "required": false, "widget": "textarea" }
@@ -1180,12 +1186,18 @@ counts against:
     "source:joiner": [
       { "key": "name",            "parserType": "String",         "required": true,  "widget": "text" },
       { "key": "type",            "parserType": "String",         "required": true,  "widget": "text" },
-      { "key": "joinerTables",    "parserType": "List[String]",   "required": true,  "widget": "stringList" },
-      { "key": "joinerType",      "parserType": "String",         "required": true,  "widget": "text" },
-      { "key": "joinerCondition", "parserType": "String",         "required": true,  "widget": "textarea" }
+      { "key": "joinerTables",    "parserType": "List[String]",   "required": true,  "widget": "stringList",
+        "ruleId": "IPC-TYP-JOINER-001" },
+      { "key": "joinerType",      "parserType": "String",         "required": true,  "widget": "text",
+        "ruleId": "IPC-TYP-JOINER-001" },
+      { "key": "joinerCondition", "parserType": "String",         "required": true,  "widget": "textarea",
+        "ruleId": "IPC-TYP-JOINER-001" }
     ]
   }
 ```
+
+Several keys may share one `ruleId` (as the three joiner keys do above) when the rule
+statement covers them jointly — the catalogue entry is per rule, not per key.
 
 Append one `IPC-TYP-<KIND>-NNN` rule entry per required key and per structural constraint
 below, each with `severity: "error"`, a `parserRef` pointing at the exact `AbstractTarget.scala`
@@ -1318,15 +1330,11 @@ final class TypeShapeRules {
                                   JsonNode node, String schemaKey, String path) {
         List<IpcCatalog.IpcKeySpec> specs = catalog.keySchema().get(schemaKey);
         if (specs == null) return; // unknown kind — IPC-STR-005 owns that
-        String kind = schemaKey.substring(schemaKey.indexOf(':') + 1).toUpperCase(java.util.Locale.ROOT);
-        int n = 0;
         for (IpcCatalog.IpcKeySpec spec : specs) {
-            if (!spec.required()) continue;
-            n++;
-            if (spec.key().equals("name") || spec.key().equals("type")) continue; // IPC-STR-003/004
+            if (!spec.required() || spec.ruleId().isBlank()) continue; // name/type/fields: other rules own them
             if (!keyOf(node, spec.key()).isMissingNode()) continue;
-            String ruleId = "IPC-TYP-" + kind + "-" + String.format("%03d", n);
-            out.add(IpcCheck.fail(ruleId, catalog.severity(ruleId), path + "." + spec.key(),
+            out.add(IpcCheck.fail(spec.ruleId(), catalog.severity(spec.ruleId()),
+                path + "." + spec.key(),
                 "required key \"" + spec.key() + "\" is missing for kind " + schemaKey));
         }
     }
@@ -1355,11 +1363,9 @@ final class TypeShapeRules {
 }
 ```
 
-> **Implementer note:** `checkNode`'s ordinal (`n`) must line up with the rule ids you wrote
-> into `ipc-rules.json` in Step 3. Order the required entries in each kind's `keySchema` array
-> so that `name`/`type`/`fields` come first and the kind-specific required keys follow in the
-> order their `-001`, `-002`, … ids imply. Task 6's parity test will catch any mismatch, but
-> fixing it here is cheaper.
+> **Implementer note:** every `IPC-TYP-*` id you put in a `ruleId` field must also have a
+> `rules[]` catalogue entry, and vice versa. Task 5's `everyCatalogueRuleIdIsRegistered` checks
+> exactly this, so a typo surfaces there rather than at runtime.
 
 - [ ] **Step 5: Register the family in `IpcRuleEngine`**
 
@@ -1681,14 +1687,27 @@ class IpcRulesContractTest {
 
     @Test
     void everyCatalogueRuleIdIsRegistered() {
-        List<String> registered = engine.ruleIds();
+        java.util.Set<String> implemented = new java.util.HashSet<>(engine.ruleIds());
+        // IPC-TYP-* required-key ids are emitted by the shared IPC-TYP-REQUIRED-KEYS rule via
+        // the key schema's ruleId fields rather than being registered individually, so the
+        // schema's ids count as implemented too.
+        catalog.keySchema().values().forEach(specs -> specs.forEach(s -> {
+            if (!s.ruleId().isBlank()) implemented.add(s.ruleId());
+        }));
         for (IpcCatalog.IpcRuleMeta meta : catalog.rules()) {
-            // IPC-TYP-<KIND>-NNN ids are emitted by the shared required-keys rule, whose own
-            // id is IPC-TYP-REQUIRED-KEYS — accept either an exact registration or that owner.
-            boolean ok = registered.contains(meta.id())
-                || (meta.id().startsWith("IPC-TYP-") && registered.contains("IPC-TYP-REQUIRED-KEYS"));
-            assertThat(ok).as("rule " + meta.id() + " is implemented").isTrue();
+            assertThat(implemented).as("rule " + meta.id() + " is implemented").contains(meta.id());
         }
+    }
+
+    /** The reverse direction: a ruleId in the key schema with no catalogue entry would emit
+     * checks carrying no severity, statement or citation. */
+    @Test
+    void everyKeySchemaRuleIdHasCatalogueMetadata() {
+        catalog.keySchema().forEach((kind, specs) -> specs.forEach(s -> {
+            if (s.ruleId().isBlank()) return;
+            assertThat(catalog.meta(s.ruleId()))
+                .as("catalogue entry for " + kind + "." + s.key() + " -> " + s.ruleId()).isNotNull();
+        }));
     }
 
     @Test
@@ -1818,7 +1837,7 @@ public class IpcController {
             .toList();
         Map<String, List<IpcKeySpecDto>> schema = new LinkedHashMap<>();
         catalog.keySchema().forEach((kind, specs) -> schema.put(kind, specs.stream()
-            .map(s -> new IpcKeySpecDto(s.key(), s.parserType(), s.required(), s.widget()))
+            .map(s -> new IpcKeySpecDto(s.key(), s.parserType(), s.required(), s.widget(), s.ruleId()))
             .toList()));
         return new IpcRulesDto(rules, catalog.typeAliases(), catalog.keyAliases(), schema);
     }
@@ -1827,7 +1846,7 @@ public class IpcController {
 
 Create the three record DTOs (`IpcRuleMetaDto(String id, String severity, String statement,
 String parserRef, String ipcRef, String wikiRef)`, `IpcKeySpecDto(String key, String
-parserType, boolean required, String widget)`, `IpcRulesDto(List<IpcRuleMetaDto> rules,
+parserType, boolean required, String widget, String ruleId)`, `IpcRulesDto(List<IpcRuleMetaDto> rules,
 Map<String,String> typeAliases, Map<String,String> keyAliases,
 Map<String,List<IpcKeySpecDto>> keySchema)`).
 
@@ -1918,15 +1937,26 @@ Append to `IpcRulesContractTest`:
             .as("wiki page for source kind union").isTrue();
     }
 
+    /**
+     * Exact set equality, not just cardinality: a same-count rename in RecipeConstants.scala
+     * would otherwise drift past this test silently. backend does depend on parser
+     * (backend/pom.xml:44), so the Scala object IS on the classpath — the Java copy is kept
+     * deliberately to keep Scala 2.12 collection interop out of the backend, and this test is
+     * what makes the copy safe (human ruling, pre-flight scan 2026-08-01).
+     */
     @Test
     void expressionVocabularyMatchesTheScalaConstants() throws Exception {
         String scala = Files.readString(
             Path.of("../parser/src/main/scala/io/pure360/ipc/xmltojson/recipe/RecipeConstants.scala"));
-        String block = scala.substring(scala.indexOf("PredefinedFunctions"));
-        block = block.substring(0, block.indexOf("final val GlobalTransformationExclusionList"));
-        long scalaCount = block.chars().filter(c -> c == '"').count() / 2;
+        String block = scala.substring(scala.indexOf("PredefinedFunctions"),
+            scala.indexOf("final val GlobalTransformationExclusionList"));
+        java.util.Set<String> fromScala = new java.util.LinkedHashSet<>();
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"([A-Z_0-9]+)\"").matcher(block);
+        while (m.find()) fromScala.add(m.group(1));
+        assertThat(fromScala).as("regex found the function list").hasSizeGreaterThan(30);
         assertThat(ExpressionRules.PREDEFINED_FUNCTIONS)
-            .as("copy of RecipeConstants.scala:48-52 is complete").hasSize((int) scalaCount);
+            .as("Java copy of RecipeConstants.scala:48-52 matches the Scala source exactly")
+            .containsExactlyInAnyOrderElementsOf(fromScala);
     }
 ```
 
@@ -2519,14 +2549,19 @@ vanishing on save."
 
 **Interfaces:**
 - Consumes: `POST /api/recipes/validate` (Task 5), `useIpcRules`, `IpcCanvas`'s `nodeStatus` prop (Task 8).
-- Produces: `localStructuralChecks(recipe: RecipeJson): IpcCheck[]` (the cheap `IPC-STR-*` mirror, spec §6.5), `useValidation(draft: RecipeJson | null)` returning `{ checks, errors, warnings, isValidating }` with a 400 ms debounce, and `nodeStatusFrom(checks: IpcCheck[], graph: CanvasGraph): Record<string, 'ok'|'warn'|'error'>` mapping a check's `$.steps[i]…` path to a node id.
+- Produces: `useValidation(draft: RecipeJson | null)` returning `{ checks, errors, warnings, isValidating }` with a 400 ms debounce, and `nodeStatusFrom(checks: IpcCheck[], graph: CanvasGraph): Record<string, 'ok'|'warn'|'error'>` mapping a check's `$.steps[i]…` path to a node id.
+
+> **Ruled deviation from spec §6.5 (human ruling, pre-flight scan 2026-08-01):** the spec's
+> local TypeScript mirror of the `IPC-STR-*` rules is **dropped**. It would have maintained
+> nine rules twice in two languages with nothing binding the implementations together, for a
+> latency saving that is single-digit milliseconds against a localhost backend. The chip runs
+> solely off the debounced `POST /api/recipes/validate`. Record this in spec §13.
 
 - [ ] **Step 1: Write the failing tests**
 
-`ipcRules.test.ts`: `localStructuralChecks` flags empty steps, a blank target name and a
-duplicate field name with the same rule ids the backend uses (`IPC-STR-001`, `-003`, `-007`);
+`ipcRules.test.ts`: `useValidation` debounces — two rapid draft changes produce one POST;
 `nodeStatusFrom` maps `$.steps[1].target.name` to the second step's target node id and picks
-`error` over `warn` when a node has both.
+`error` over `warn` when a node has both, and returns `{}` for an empty check list.
 `ConformanceChip.test.tsx`: renders green with "0 errors" for a clean validate response; red
 with the error count when validate returns errors; clicking opens a drawer listing rule id,
 path and message; clicking a drawer row calls `onSelectNode` with the resolved node id.
@@ -2560,9 +2595,10 @@ git add frontend/src/api/ipcRules.ts frontend/src/api/ipcRules.test.ts \
         docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md
 git commit -m "feat(modifier): IPC conformance chip, drawer and per-node status dots
 
-Task 13. Cheap IPC-STR-* rules mirror locally for instant feedback; the full catalogue
-runs debounced against POST /api/recipes/validate. Drawer rows select the offending
-node on the canvas."
+Task 13. The full catalogue runs debounced against POST /api/recipes/validate; spec
+§6.5's local TypeScript rule mirror was dropped by ruling (nine rules maintained twice
+across two languages, for a localhost latency saving of single-digit ms). Drawer rows
+select the offending node on the canvas."
 ```
 
 ---

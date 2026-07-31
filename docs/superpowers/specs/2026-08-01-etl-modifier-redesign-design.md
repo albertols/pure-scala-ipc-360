@@ -386,10 +386,10 @@ A chip in the recipe header: green ✓ / amber ⚠ / red ✗ with counts
 (`3 errors · 5 warnings`). Clicking opens a drawer listing every non-passing check with
 its rule id, JSON path, message, and a link to the rule's wiki page.
 
-- The cheap `IPC-STR-*` rules are mirrored as a pure TypeScript function so the chip
-  updates on every keystroke without a round trip.
 - The full catalogue runs against `POST /api/recipes/validate`, debounced 400 ms after
-  the last draft mutation.
+  the last draft mutation. ~~The cheap `IPC-STR-*` rules are mirrored as a pure
+  TypeScript function so the chip updates on every keystroke without a round trip.~~
+  **Dropped** — see §13 deviation 1.
 - Selecting a check in the drawer selects the node its path resolves to on the canvas.
 - Per-node dots (§6.2) are the same check results, grouped by their path's step index.
 
@@ -565,4 +565,9 @@ deviations 6 and 7.
 
 Recorded here at implementation time, each traced to its task and commit.
 
-_(none yet — this section is filled in as the plan executes)_
+1. **§6.5's local TypeScript mirror of the `IPC-STR-*` rules is dropped** (ruled at the
+   plan's pre-flight scan, 2026-08-01, before any task ran; plan Task 13). It would have
+   maintained nine rules twice across two languages with no test binding the two
+   implementations together, buying a latency saving that is single-digit milliseconds
+   against a localhost backend. The conformance chip runs solely off the debounced
+   `POST /api/recipes/validate`.
