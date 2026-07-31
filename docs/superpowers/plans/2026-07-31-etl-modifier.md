@@ -311,7 +311,7 @@ export function renderFormula(t: RecipeTransformationJson | undefined): string
 // {source: "T.F"} => T.F verbatim · {value: "v"} => v · undefined/empty => ''
 ```
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```ts
 describe('recipeToCanvas — edges, formulas, layout', () => {
@@ -354,8 +354,13 @@ describe('recipeToCanvas — edges, formulas, layout', () => {
       "EXP_TO_DECIMAL(EXP_TO_CHAR(EXP_ADD_TO_DATE(EXP_TO_DATE(SQ_ff_BIZLINK.FCH_DATAENTRY, 'YYYYMMDD'), 'MM', -1), 'ROWANFIELD'))")
     expect(tgt.ports.find(p => p.name === 'GREENBLUFF')!.expression).toBeUndefined()
     const s = recipeToCanvas(syn as RecipeJson, 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json')
+    // Corrected during Task 5 implementation: the fixture's "Undefined" node (parser
+    // sentinel for an unclassified function, RecipeConstants.Undefined) genuinely
+    // carries a second parameter ({value:"2"}, recipe_m_SYN_ODS_ORDERS.json:57) — the
+    // documented rule ("NAME(p1, p2, …) recursively", no name-based exception) renders
+    // it too. See task-5-report.md NEEDS_CONTEXT section.
     expect(s.nodes.find(n => n.id === 'ODS_SYN_ORDERS')!.ports.find(p => p.name === 'AMOUNT')!.expression).toBe(
-      'Undefined(EXP_ARITHMETIC(STG_L_SYN_ORDERS.AMOUNT, *, LKP_SYN_CURRENCY(STG_L_SYN_ORDERS.CURRENCY_CODE)))')
+      'Undefined(EXP_ARITHMETIC(STG_L_SYN_ORDERS.AMOUNT, *, LKP_SYN_CURRENCY(STG_L_SYN_ORDERS.CURRENCY_CODE)), 2)')
   })
   it('layout: shared canvasLayout — finite coords, sources col 0, target rightmost', () => {
     const g = recipeToCanvas(bizlink as RecipeJson, BIZ_PATH)
@@ -367,8 +372,8 @@ describe('recipeToCanvas — edges, formulas, layout', () => {
 })
 ```
 
-- [ ] **Step 2: RED → Step 3: implement.** Edge derivation from `collectRefs`: each ref ⇒ `{fromNode: resolve(T), fromPort: F, toNode: toStep, toPort: toField}`; `resolve` = exact node id, else lower-cased match, else DROP (corpus audit: 10 tokens across 8 recipes reference joiner/union constructs that exist only as non-table `sources[]` entries — dropped by design, recorded in Task 13 footnote). Dedupe via the `|`-joined key set. Center edges: for each step, each `sources[]` entry resolving to a node with ZERO field edges into this step ⇒ `{fromNode, fromPort: '', toNode: step.target.name, toPort: ''}` (EtlCanvas already center-anchors missing ports, ETLViewer.tsx old `:121/:123` logic now in EtlCanvas). Set `port.linked` both sides (mirror `mappingAdapter.ts:244-247`). ƒ: `port.expression = renderFormula(f.transformation)` only when the transformation has `name` (call tree). Finish with `layoutNodes(nodes, connections)` from `./canvasLayout.ts`.
-- [ ] **Step 4: GREEN + tsc → Step 5: Commit**
+- [x] **Step 2: RED → Step 3: implement.** Edge derivation from `collectRefs`: each ref ⇒ `{fromNode: resolve(T), fromPort: F, toNode: toStep, toPort: toField}`; `resolve` = exact node id, else lower-cased match, else DROP (corpus audit: 10 tokens across 8 recipes reference joiner/union constructs that exist only as non-table `sources[]` entries — dropped by design, recorded in Task 13 footnote). Dedupe via the `|`-joined key set. Center edges: for each step, each `sources[]` entry resolving to a node with ZERO field edges into this step ⇒ `{fromNode, fromPort: '', toNode: step.target.name, toPort: ''}` (EtlCanvas already center-anchors missing ports, ETLViewer.tsx old `:121/:123` logic now in EtlCanvas). Set `port.linked` both sides (mirror `mappingAdapter.ts:244-247`). ƒ: `port.expression = renderFormula(f.transformation)` only when the transformation has `name` (call tree). Finish with `layoutNodes(nodes, connections)` from `./canvasLayout.ts`.
+- [x] **Step 4: GREEN + tsc → Step 5: Commit**
 
 ```bash
 git add frontend/src/api/recipeAdapter.ts frontend/src/api/recipeAdapter.test.ts \
@@ -659,7 +664,7 @@ public static String render(JsonNode transformation)
 // new ExpressionEntryDto(recipePath, layerOf(recipePath), stepName, fieldName, render(t), "recipe")
 ```
 
-- [ ] **Step 1: Failing backend test:** `all()` contains an entry with `origin() == "recipe"`, `mappingPath() == "ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json"`, `transformation() == "ODS_SYN_ORDERS"`, `port() == "AMOUNT"`, `formula() == "Undefined(EXP_ARITHMETIC(STG_L_SYN_ORDERS.AMOUNT, *, LKP_SYN_CURRENCY(STG_L_SYN_ORDERS.CURRENCY_CODE)))"` (byte-equal to the frontend Task-5 assertion — the cross-language determinism contract); xml-origin entries still present; total ≥ previous count.
+- [ ] **Step 1: Failing backend test:** `all()` contains an entry with `origin() == "recipe"`, `mappingPath() == "ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json"`, `transformation() == "ODS_SYN_ORDERS"`, `port() == "AMOUNT"`, `formula() == "Undefined(EXP_ARITHMETIC(STG_L_SYN_ORDERS.AMOUNT, *, LKP_SYN_CURRENCY(STG_L_SYN_ORDERS.CURRENCY_CODE)), 2)"` (byte-equal to the frontend Task-5 assertion, corrected during Task 5 — the fixture's outer "Undefined" node genuinely has a second `{value:"2"}` parameter, rendered per the no-exceptions rule; see task-5-report.md — the cross-language determinism contract); xml-origin entries still present; total ≥ previous count.
 - [ ] **Step 2: RED → implement → backend GREEN.**
 - [ ] **Step 3: Frontend registry view** — failing MSW test: handler `GET /api/expressions` → two entries (one `origin:'xml'`, one `origin:'recipe'`); the "All Expressions" section (now fed by `useExpressions`, `queries.ts:29-30`) renders both with origin badges (existing chip idiom, `xml` `--cyan`-family / `recipe` `#34d399`-family tokens), a filter input narrows by substring, CopyButton per row, and — when a formula textarea has focus context (state: `focusedFormula: {stepName, fieldName} | null`, set onFocus in the edit panel) — an `Insert` button calls `setFieldTransformation(draft, …, parseFormulaText(entry.formula))`. Test: focus formula textarea → Insert → textarea value equals the inserted formula, SaveBar counts.
 - [ ] **Step 4: GREEN both sides + tsc → Step 5: Commit**

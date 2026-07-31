@@ -164,6 +164,44 @@ function collectRefs(recipe: RecipeJson): RecipeRef[] {
   return refs
 }
 
+// ─── Formula rendering (ƒ rule) ─────────────────────────────────────────────────
+
+/**
+ * Render a transformation tree as a formula string:
+ * - `{name, parameters}` -> `NAME(p1, p2, …)` recursively — a Field-shaped parameter
+ *   (the `{name, dataType, transformation}` bind-var wrapper lookup calls use for their
+ *   arguments) renders its nested `.transformation` rather than itself.
+ * - `{source: "T.F"}` -> `T.F` VERBATIM — dot-refs are sacred, never normalized.
+ * - `{value: "v"}` -> `v` verbatim.
+ * - undefined / no recognized shape -> `''`.
+ * Exported: Task 11's expression registry (backend `FormulaRenderer.java`) and its
+ * frontend registry view depend on this producing byte-identical output.
+ */
+export function renderFormula(t: RecipeTransformationJson | undefined): string {
+  if (!t) return ''
+  if (!isBlank(t.name)) {
+    const params = (t.parameters ?? []).map(renderFormulaParam)
+    return `${t.name}(${params.join(', ')})`
+  }
+  if (!isBlank(t.source)) return t.source!
+  if (!isBlank(t.value)) return t.value!
+  return ''
+}
+
+function renderFormulaParam(param: unknown): string {
+  if (isFieldShaped(param)) return renderFormula(param.transformation)
+  return renderFormula(param as RecipeTransformationJson)
+}
+
+/** ƒ rule: a field's transformation is a call tree (has `name`) -> render its formula
+ * into `port.expression`; a plain `{source}`/`{value}` leaf sets no expression at all. */
+function portFor(field: RecipeFieldJson, direction: Port['direction']): Port {
+  const port: Port = { name: field.name ?? '', dataType: field.dataType ?? '', direction }
+  const t = field.transformation
+  if (t && !isBlank(t.name)) port.expression = renderFormula(t)
+  return port
+}
+
 // ─── Node construction ─────────────────────────────────────────────────────────
 
 function toStepNode(step: RecipeStepJson, isTarget: boolean, file: string): ETLNode {
@@ -175,20 +213,12 @@ function toStepNode(step: RecipeStepJson, isTarget: boolean, file: string): ETLN
 
   const fields = fieldsOf(target)
   if (isTarget) {
-    const ports: Port[] = fields.map(field => ({
-      name: field.name ?? '',
-      dataType: field.dataType ?? '',
-      direction: 'IN' as const,
-    }))
+    const ports: Port[] = fields.map(field => portFor(field, 'IN'))
     return { id, type: 'target', label: ABBR.target, name, x: 0, y: 0, ports, properties, file }
   }
 
   const { type, label } = kindAndLabel(target?.type)
-  const ports: Port[] = fields.map(field => ({
-    name: field.name ?? '',
-    dataType: field.dataType ?? '',
-    direction: 'IN/OUT' as const,
-  }))
+  const ports: Port[] = fields.map(field => portFor(field, 'IN/OUT'))
   return { id, type, label, name, x: 0, y: 0, ports, properties, file }
 }
 
@@ -209,6 +239,77 @@ function toSourceNode(source: RecipeSourceJson, refs: RecipeRef[], file: string)
     direction: 'OUT' as const,
   }))
   return { id, type: 'source', label: ABBR.source, name, x: 0, y: 0, ports, properties, file }
+}
+
+// ─── Edge derivation ────────────────────────────────────────────────────────────
+
+/** Case-insensitive-fallback node-id resolver: exact node id first, else the (first)
+ * node whose id matches case-insensitively; returns undefined — DROP — when neither
+ * resolves (corpus audit: 10 tokens across 8 recipes reference joiner/union constructs
+ * that exist only as non-table `sources[]` entries, never as a step target or table
+ * source; dropped by design). */
+function buildResolver(nodeIds: Set<string>): (table: string) => string | undefined {
+  const lowerToId = new Map<string, string>()
+  for (const id of nodeIds) {
+    const lower = id.toLowerCase()
+    if (!lowerToId.has(lower)) lowerToId.set(lower, id)
+  }
+  return (table: string) => (nodeIds.has(table) ? table : lowerToId.get(table.toLowerCase()))
+}
+
+/** Mirrors mappingAdapter.ts:150-153 — marks the named port `linked` if it exists;
+ * center-anchor edges pass an empty port name, which never matches a real port, so
+ * this is a safe no-op for them (EtlCanvas center-anchors missing ports itself). */
+function markLinked(nodeById: Map<string, ETLNode>, id: string, portName: string): void {
+  const port = nodeById.get(id)?.ports.find(p => p.name === portName)
+  if (port) port.linked = true
+}
+
+/**
+ * Field edges from the collected dot-refs, plus a single node-center edge (empty
+ * `fromPort`/`toPort`) for every `sources[]` entry of a step that has ZERO field-level
+ * edges landing on that step — deduped via the `fromNode|fromPort|toNode|toPort` key
+ * set. Unresolvable ref tables are dropped silently (never a dangling endpoint).
+ */
+function deriveConnections(
+  steps: RecipeStepJson[],
+  refs: RecipeRef[],
+  nodeIds: Set<string>,
+  nodeById: Map<string, ETLNode>,
+): Connection[] {
+  const resolve = buildResolver(nodeIds)
+  const connections: Connection[] = []
+  const keys = new Set<string>()
+
+  const add = (c: Connection): void => {
+    const key = `${c.fromNode}|${c.fromPort}|${c.toNode}|${c.toPort}`
+    if (keys.has(key)) return
+    keys.add(key)
+    connections.push(c)
+    markLinked(nodeById, c.fromNode, c.fromPort)
+    markLinked(nodeById, c.toNode, c.toPort)
+  }
+
+  for (const ref of refs) {
+    if (isBlank(ref.toStep) || !nodeIds.has(ref.toStep)) continue
+    const fromNode = resolve(ref.table)
+    if (!fromNode) continue
+    add({ fromNode, fromPort: ref.field, toNode: ref.toStep, toPort: ref.toField })
+  }
+
+  for (const step of steps) {
+    const toNode = step.target?.name
+    if (isBlank(toNode) || !nodeIds.has(toNode!)) continue
+    for (const source of step.sources ?? []) {
+      if (isBlank(source.name)) continue
+      const fromNode = resolve(source.name!)
+      if (!fromNode) continue
+      const hasFieldEdge = connections.some(c => c.fromNode === fromNode && c.toNode === toNode)
+      if (!hasFieldEdge) add({ fromNode, fromPort: '', toNode: toNode!, toPort: '' })
+    }
+  }
+
+  return connections
 }
 
 // ─── Entry point ────────────────────────────────────────────────────────────────
@@ -242,7 +343,9 @@ export function recipeToCanvas(recipe: RecipeJson, recipePath: string): CanvasGr
     }
   }
 
-  const connections: Connection[] = []
+  const nodeById = new Map(nodes.map(n => [n.id, n]))
+  const connections = deriveConnections(steps, refs, nodeIds, nodeById)
+
   layoutNodes(nodes, connections)
 
   return { nodes, connections, mappingNames: [basename], renderedMapping: basename }
