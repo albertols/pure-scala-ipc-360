@@ -161,12 +161,12 @@
         { "table": "CAS_DWH_EVENTS_FACT", "dbtype": "Oracle",
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4", "REF_NAME:varchar2:60"] },
         { "table": "CAS_ETL_EVENTS_CURR", "dbtype": "Oracle",
-          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4", "CURR_FLAG:varchar2:1"] }
       ],
       "lookup": null,
       "targets": [
         { "table": "CAS_CDM_EVENTS_MART", "writeMode": "APPEND", "partition": "DAILY", "partitionKey": "LOAD_DATE",
-          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] },
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4", "CURR_FLAG:varchar2:1"] },
         { "table": "CAS_CDM_EVENTS_ROLLUP", "writeMode": "TRUNCATE_INSERT", "partition": "MONTHLY", "partitionKey": "LOAD_MONTH",
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
       ],

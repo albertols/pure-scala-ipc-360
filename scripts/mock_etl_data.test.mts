@@ -40,3 +40,16 @@ test('b15 rows: 12 per date, KO pattern per manifest, anchor-date KO for #5', ()
   assert.equal(incident.filter(r => r.includes('FAILED')).length, 12)  // all-KO incident day
   assert.equal(b15CasRows(m, '2026-07-16').join('\n'), b15CasRows(m, '2026-07-16').join('\n'))
 })
+
+test('N->N showcase (#8) wires BOTH sources at the connector level, not just structurally', () => {
+  // Regression guard for the review finding: a second source whose fields are fully
+  // name-subsumed by the first gets zero CONNECTORs (cosmetically present, not wired).
+  // CAS_ETL_EVENTS_CURR carries a field (CURR_FLAG) not present on CAS_DWH_EVENTS_FACT,
+  // so both sources must show up as a FROMINSTANCE in the rendered XML.
+  const mart = m.mappings.find(x => x.name === 'm_CAS_CDM_EVENTS_MART')!
+  const xml = renderMappingXml(m, mart)
+  for (const src of mart.sources) {
+    assert.match(xml, new RegExp(`FROMINSTANCE="${src.table}"[^/]*TOINSTANCETYPE="Expression"`),
+      `expected at least one CONNECTOR wiring source ${src.table} into the Expression transformation`)
+  }
+})
