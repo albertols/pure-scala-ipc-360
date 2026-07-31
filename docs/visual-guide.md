@@ -88,48 +88,80 @@ subagent contract and gate actually check.
 
 ## Screenshots
 
-The seven screenshots below are captured from the running, merged app (this branch's
-gated Task 6, after Tasks 1–5 land) — Chrome at roughly 1440×900, backend and frontend
-both booted via `make dev`. Until Task 6 lands, the links below are scaffolding: the
-images don't exist in `docs/img/` yet.
+**Not yet captured.** Task 6 checked this environment for browser automation
+(Claude-in-Chrome, Playwright, Puppeteer) and found none wired up — reaching each named
+UI state well enough to screenshot it needs GUI interaction no tool here can perform, so
+rather than fake it, this section is an honest checklist for a human with a working
+Chrome to run. The seven `docs/img/*.png` files below don't exist yet; each `![...]`
+link is left in place so dropping a same-named PNG into `docs/img/` later makes it
+render with no further doc edits.
 
-## Screenshot: Tab 1 — IPC ETL Viewer
+### Capture checklist (~5 minutes)
+
+1. `make dev`, open Chrome at `http://localhost:8443`, size the window to roughly
+   1440×900.
+2. For each numbered screenshot below: put the UI in the described state, then run
+   `screencapture -x -o docs/img/<file>.png` and click the target Chrome window when
+   the crosshair cursor appears (`-x` suppresses the shutter sound, `-o` omits the
+   window shadow).
+3. Verify: `file docs/img/*.png` reports "PNG image data" for all 7; combined size
+   under ~3 MB (`du -sh docs/img`). Then `git add docs/img docs/visual-guide.md` and
+   commit.
+
+### 1. Tab 1 — IPC ETL Viewer
+
+State: `CDM/m_DM_INFOHUB_BIZLINK` selected. Save as `docs/img/tab1-viewer.png`.
 
 ![Tab 1 IPC ETL Viewer](img/tab1-viewer.png)
 
 Tab 1, `CDM/m_DM_INFOHUB_BIZLINK` rendered.
 
-## Screenshot: Tab 2 — ETL Modifier
+### 2. Tab 2 — ETL Modifier
+
+State: recipe canvas + designer palette visible. Save as `docs/img/tab2-modifier.png`.
 
 ![Tab 2 ETL Modifier](img/tab2-modifier.png)
 
 Recipe canvas + palette.
 
-## Screenshot: Tab 3 — ETL Operational
+### 3. Tab 3 — ETL Operational
+
+State: default view. Save as `docs/img/tab3-operational.png`.
 
 ![Tab 3 ETL Operational](img/tab3-operational.png)
 
 Tab 3 default view.
 
-## Screenshot: Tab 4 — ETL DAG
+### 4. Tab 4 — ETL DAG
+
+State: default view. Save as `docs/img/tab4-dag.png`.
 
 ![Tab 4 ETL DAG](img/tab4-dag.png)
 
 Tab 4 default view.
 
-## Screenshot: Explorer collapsed
+### 5. Explorer collapsed
+
+State: any tab, Explorer collapsed to the slim rail. Save as
+`docs/img/sidebar-collapsed.png`.
 
 ![Explorer collapsed to the slim rail](img/sidebar-collapsed.png)
 
 Any tab, Explorer collapsed to the slim rail.
 
-## Screenshot: ETL Modifier mid-edit
+### 6. ETL Modifier mid-edit
+
+State: Tab 2 mid-edit — SaveBar counting, formula textarea open. Save as
+`docs/img/modifier-editing.png`.
 
 ![ETL Modifier mid-edit](img/modifier-editing.png)
 
 Tab 2 mid-edit — SaveBar counting, formula textarea open.
 
-## Screenshot: ETL Operational preview overlay
+### 7. ETL Operational preview overlay
+
+State: Tab 3 with the preview overlay open. Save as
+`docs/img/operational-preview-overlay.png`.
 
 ![ETL Operational preview overlay](img/operational-preview-overlay.png)
 
