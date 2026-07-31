@@ -40,7 +40,10 @@ which proxies `/api/*` to the backend. Output from each process is prefixed
 config resolution (`config.json`/`.env`/shell env/auto-detect — see "Run the 360
 suite on your own data" below), backend build, backend boot (waits for
 `/api/health`), then frontend boot. Pass `--check-config` to print the resolved
-config table and exit without building or booting anything — a dry run.
+config table and exit without building or booting anything — a dry run:
+`bash scripts/dev.sh --check-config` (there is no `make` target for this — `make dev`
+doesn't forward extra arguments, and `make dev --check-config` fails with
+`make: unrecognized option`, since `make` parses that flag itself).
 
 For the build step, `scripts/dev.sh` runs `mvn -am -pl backend install -DskipTests`
 and only then `(cd backend && mvn spring-boot:run)`, rather than
@@ -111,7 +114,7 @@ Each data root can be in one of a few modes, reported by `GET /api/config` and
 git pull
 cp config.example.json config.json   # git-ignored — yours to edit
 $EDITOR config.json                  # point the 4 data fields at your exports
-make dev                             # resolved config echoes at [1/4]; --check-config to dry-run
+make dev                             # resolved config echoes at [1/4]; dry-run: bash scripts/dev.sh --check-config
 ```
 
 `config.json` is **optional** — with no file at all, `make dev` boots on the committed
@@ -151,7 +154,8 @@ Expected layouts (layers: `STG ODS DWH CDM RDM QDM ETL OUTPUT`):
 Note: pointing `composerRoot`/`dwhControlRoot` at the committed mock dirs serves the
 same data but reports mode `real` in `/api/config` — an explicitly configured
 directory wins the real tier. Diagrams (architecture, per-tab data flow, config
-resolution): `docs/visual-guide.md` — screenshots of every tab live there too.
+resolution): `docs/visual-guide.md` — screenshots are pending a short human capture
+pass, tracked as a checklist in that same doc.
 
 ## Synthetic operational data & the b15 generator
 
@@ -202,7 +206,7 @@ python3 scripts/gen_b15_history.py --anchor 2026-08-05 --days 21
     ├── adr/                      # Architecture Decision Records (MADR-lite, 0000 template + 0001-0009)
     ├── architecture.md           # system diagram, endpoint table, config reference
     ├── harness.md                # the SDD/TDD harness: skills, agents, gate composition
-    ├── visual-guide.md           # diagrams + screenshots for every tab
+    ├── visual-guide.md           # 4 diagrams (rendered); screenshots pending a human capture pass
     └── superpowers/
         ├── specs/               # approved design specs
         └── plans/                # implementation plans (checkbox-tracked progress)
@@ -214,8 +218,9 @@ multi-module split, DOM+semantic overlay, mock-mirror fallback, OpenAPI-generate
 types, the Figma visual contract, the synthetic operational data mock tiers,
 recipes-as-source-of-truth after a GUI edit, the manifest-driven CAS mock data, and
 the `config.json` entrypoint) are the reference docs for this repo's shape. For the
-SDD/TDD harness these sub-projects are built with, see `docs/harness.md`; for
-diagrams and screenshots of every tab, see `docs/visual-guide.md`. For the original
+SDD/TDD harness these sub-projects are built with, see `docs/harness.md`; for the
+suite diagrams (screenshots pending a human capture pass — see its checklist), see
+`docs/visual-guide.md`. For the original
 design rationale and the task-by-task build logs behind each sub-project, see
 `CLAUDE.md`'s "Current spec/plan" list (grows with every sub-project — not
 duplicated here).

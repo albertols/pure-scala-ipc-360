@@ -13,7 +13,21 @@ step() { echo "${BLD}${CYN}[$1]${RST} $2"; }
 
 step 1/4 "config resolution"
 # .env tier: sourced with allexport so its values count as environment below.
-if [ -f .env ]; then set -a; . ./.env; set +a; fi
+# Precedence per ADR-0009 (docs/adr/0009-config-json-entrypoint.md): application.yml
+# defaults < config.json < .env < shell env — an already-exported shell var must WIN.
+# A plain `. ./.env` would instead overwrite it (last assignment wins), inverting
+# that order, so snapshot pre-existing values for any key .env also defines and
+# restore them after sourcing; keys only present in .env still apply normally.
+if [ -f .env ]; then
+  _dotenv_saved=()
+  while IFS='=' read -r _k _rest; do
+    case "$_k" in ''|'#'*) continue ;; esac
+    if [ -n "${!_k+x}" ]; then _dotenv_saved+=("$_k=${!_k}"); fi
+  done < .env
+  set -a; . ./.env; set +a
+  for _kv in "${_dotenv_saved[@]+"${_dotenv_saved[@]}"}"; do export "$_kv"; done
+  unset _dotenv_saved _k _rest _kv
+fi
 # config.json: validated once, read via python3 (stdlib) — jq is NOT assumed.
 if [ -f config.json ] && ! python3 -m json.tool config.json >/dev/null 2>&1; then
   echo "config.json is not valid JSON — fix it or remove it"; exit 1

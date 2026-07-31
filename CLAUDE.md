@@ -151,7 +151,8 @@ Sub-projects run the SDD/TDD harness: spec → plan → per-task TDD with the
 `implementer`/`task-reviewer` agents → gates → acceptance walk. The loop, the
 common skills (`sdd-cycle`, `tab-rewire`, `mock-etl-data`, `regen-corpus`,
 `run-app`, `validate-loop`), and how the gates compose: `docs/harness.md`.
-Visual overview + screenshots: `docs/visual-guide.md`.
+Visual overview (4 diagrams; screenshots pending a human capture pass — see its
+checklist): `docs/visual-guide.md`.
 
 ## More
 
@@ -173,4 +174,4 @@ Visual overview + screenshots: `docs/visual-guide.md`.
   `_DWH_Transformations_and_XML_Parsing.md`
 - Dev harness, prerequisites, `.env.example` reference: root `README.md`
 - Harness detail (skills, agents, gate composition): `docs/harness.md`
-- Visual overview + screenshots: `docs/visual-guide.md`
+- Visual overview (diagrams; screenshots pending a human capture pass): `docs/visual-guide.md`

@@ -646,6 +646,56 @@ git commit --allow-empty -m "chore: distribution acceptance walk — zero-config
 
 ---
 
+### Task 8: final-review fixes — honest screenshot status, `.env` precedence, literal dry-run, stale comment
+
+Pre-merge review of the acceptance-walked branch surfaced four issues, all fixed in
+one closing commit before merge to `main`:
+
+1. **Screenshot overclaim.** Three spots (README "Run the 360 suite on your own
+   data", its repo-layout tree comment, its doc-list prose) claimed screenshots
+   already "live" in `docs/visual-guide.md`; Task 6 documented they are not yet
+   captured. Reworded all three (plus the same overclaim in `CLAUDE.md`, two spots)
+   to say the 4 mermaid diagrams render and screenshots are pending a human capture
+   pass tracked as a checklist in `visual-guide.md`.
+2. **`.env` precedence bug.** `scripts/dev.sh` sourced `.env` with
+   `set -a; . ./.env; set +a` — a plain assignment that overwrites an
+   already-exported shell var, inverting the documented ADR-0009 order
+   (`application.yml < config.json < .env < shell env`, shell should win). Verified
+   with an isolated repro (`export FOO=shell; . ./.env` where `.env` also sets
+   `FOO` → `.env`'s value won, confirming the bug) before touching code. Fixed by
+   snapshotting pre-existing values for any key `.env` also defines, sourcing, then
+   restoring those snapshots (bash-3.2-safe: no `declare -A`/`mapfile`, and the
+   empty-array/`nounset` expansion uses the `"${arr[@]+"${arr[@]}"}"` idiom since
+   macOS ships bash 3.2). Re-verified against the real script: a shell-exported
+   `ETL360_GCP_PROJECT` now wins over a conflicting `.env` value, while an
+   `.env`-only `ETL360_COMPOSER_ROOT` still applies.
+3. **Missing literal dry-run command.** README described `--check-config` as "a dry
+   run" without ever giving the actual invocation, and its `make dev` snippet
+   implied `make dev --check-config` works — it doesn't (`make` parses that flag
+   itself: `make: unrecognized option`). Added the literal
+   `bash scripts/dev.sh --check-config` invocation and a note on why `make dev
+   --check-config` fails.
+4. **Stale comment.** `frontend/src/components/tab4/ETLDag.tsx` (~line 436) still
+   said the served config field was `projectId (types.gen.ts:474)`; it has been
+   `gcpProjectId` (types.gen.ts:585) since Task 2's DTO rename, and the code already
+   read the right field. Updated the comment.
+
+- [x] **Step 1: verify the `.env` bug in isolation** before changing code — confirmed a shell-exported var loses to a conflicting `.env` value under the old `set -a; . ./.env; set +a` sourcing.
+- [x] **Step 2: fix `scripts/dev.sh`** — snapshot/restore idiom for the `.env` tier, with an ADR-0009-citing comment; bash-3.2-safe (this repo's `/bin/bash` is 3.2.57, no associative arrays/`mapfile`, and the `nounset` + empty-array expansion bug needs the `${arr[@]+"${arr[@]}"}"` guard).
+- [x] **Step 3: reword the screenshot overclaims** in README (3 spots) and CLAUDE.md (2 spots) to match `docs/visual-guide.md`'s actual state.
+- [x] **Step 4: add the literal `--check-config` invocation** to the README and fix the misleading `make dev --check-config` comment.
+- [x] **Step 5: fix the stale `ETLDag.tsx` comment.**
+- [x] **Step 6: verify** — `bash -n scripts/dev.sh` clean; `bash scripts/dev.sh --check-config` exits 0, prints the table, builds/boots nothing; `NO_COLOR=1 bash scripts/dev.sh --check-config | grep -c $'\033'` → 0; re-ran the isolated `.env` precedence test against the real script (shell wins, `.env`-only keys still apply) then deleted the scratch `.env`; `cd frontend && pnpm test` (150/150) and `npx tsc --noEmit` both clean.
+- [x] **Step 7: Commit**
+
+```bash
+git add README.md CLAUDE.md scripts/dev.sh frontend/src/components/tab4/ETLDag.tsx \
+        docs/superpowers/plans/2026-07-31-etl360-distribution.md
+git commit -m "fix(dist): honest screenshot status, .env precedence honors ADR-0009, literal --check-config, stale comment"
+```
+
+---
+
 ### Critical Files for Implementation
 
 - /Users/serna/IdeaProjects/pure-scala-ipc-360/scripts/dev.sh
