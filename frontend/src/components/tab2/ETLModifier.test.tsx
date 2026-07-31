@@ -332,3 +332,65 @@ describe('ETLModifier — palette, click-wire, delete (Task 9)', () => {
     expect(screen.queryByText('S', { selector: 'text' })).not.toBeInTheDocument()
   })
 })
+
+// ─── Task 10: History drawer + rollback UI ────────────────────────────────────
+
+describe('ETLModifier — history drawer + rollback (Task 10)', () => {
+  it('lists versions, views one read-only into the canvas (editing disabled), then restores it', async () => {
+    let capturedRollbackVersion: string | null = null
+    server.use(
+      http.get('/api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json', ({ request }) => {
+        const version = new URL(request.url).searchParams.get('version')
+        if (!version) {
+          return HttpResponse.json([
+            { version: '20260731-120000-000', timestamp: '2026-07-31T12:00:00Z', sizeBytes: 100 },
+          ])
+        }
+        return HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 100,
+          modifiedAt: '2026-07-31T12:00:00Z',
+          content: {
+            steps: [{ target: { name: 'T_OLD', type: 'table', fields: [] }, sources: [] }],
+            table: { targetTableNames: ['T_OLD'], sourceTableNames: [] },
+          },
+        })
+      }),
+      http.post('/api/recipes/rollback/CDM/m_FIX/_ETL_m_FIX.json', ({ request }) => {
+        capturedRollbackVersion = new URL(request.url).searchParams.get('version')
+        return HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 321,
+          modifiedAt: '2026-07-31T13:00:00Z',
+          content: MINI,
+        })
+      }),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    // Open the drawer — the version row is listed (mono timestamp + sizeBytes).
+    fireEvent.click(screen.getByText('{ history }'))
+    expect(await screen.findByText('2026-07-31T12:00:00Z')).toBeInTheDocument()
+    expect(screen.getByText('100 bytes')).toBeInTheDocument()
+
+    // View loads the archived version read-only: banner + T_OLD on the canvas.
+    fireEvent.click(screen.getByText('View'))
+    expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
+    expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
+
+    // Editing affordances are gone while viewing: the palette is hidden, and
+    // the live draft's node ("T") is no longer what the canvas renders.
+    expect(screen.queryByText('target table')).not.toBeInTheDocument()
+    expect(screen.queryByText('T', { selector: 'text' })).not.toBeInTheDocument()
+
+    // Restore -> rollback POST captured with the viewed version; banner clears.
+    fireEvent.click(screen.getByText('Restore this version'))
+    await waitFor(() => expect(capturedRollbackVersion).toBe('20260731-120000-000'))
+    await waitFor(() => expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument())
+  })
+})

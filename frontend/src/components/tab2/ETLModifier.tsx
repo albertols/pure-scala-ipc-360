@@ -3,9 +3,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { ETLNode, Connection, Port } from '../../types'
 import type { FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
-import { apiSend } from '../../api/client'
+import { apiGet, apiSend } from '../../api/client'
 import { useRecipe, useDdl } from '../../api/queries'
-import type { RecipeValidation, RecipeValidationError } from '../../api/queries'
+import type { RecipeFile, RecipeValidation, RecipeValidationError } from '../../api/queries'
 import { recipeToCanvas, renderFormula, fieldsOf } from '../../api/recipeAdapter'
 import type { RecipeJson, RecipeFieldJson } from '../../api/recipeAdapter'
 import {
@@ -25,6 +25,7 @@ import { EtlCanvas } from '../shared/EtlCanvas'
 import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
 import { Palette, SOURCE_TABLE_TYPE } from './Palette'
+import { HistoryDrawer } from './HistoryDrawer'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
@@ -387,6 +388,16 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const { fs, loading, error } = useFilesystem()
   const queryClient = useQueryClient()
 
+  // History drawer + view mode (Task 10): `viewingVersion`/`viewedContent` are
+  // set together (handleViewVersion awaits the archived GET, then sets both in
+  // the same render) — `viewingVersion !== null` is the single "isViewing"
+  // source of truth used to swap the canvas/panels onto the archived content
+  // and to blanket-disable every editing affordance below.
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [viewingVersion, setViewingVersion] = useState<string | null>(null)
+  const [viewedContent, setViewedContent] = useState<RecipeJson | null>(null)
+  const isViewing = viewingVersion !== null
+
   const rec = useRecipe(recipePath ?? '')
   const recError = rec.error as ApiError | null
 
@@ -408,9 +419,13 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipePath, rec.data?.modifiedAt])
 
+  // Canvas + panels derive from whichever content is "current" — the live
+  // draft normally, or the archived version while viewing (spec §6: "canvas +
+  // panels derive from the archived content").
+  const content = isViewing ? viewedContent : draft
   const graph = useMemo(
-    () => (draft && recipePath ? recipeToCanvas(draft, recipePath) : null),
-    [draft, recipePath],
+    () => (content && recipePath ? recipeToCanvas(content, recipePath) : null),
+    [content, recipePath],
   )
 
   const recipeSlash = recipePath ? recipePath.lastIndexOf('/') : -1
@@ -429,6 +444,9 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
       setSelectedEdge(null)
       setWireFrom(null)
       setShowRaw(false)
+      setHistoryOpen(false)
+      setViewingVersion(null)
+      setViewedContent(null)
     }
   }
 
@@ -504,6 +522,46 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     // docstring (review finding, Task 9 fix round).
     applyEdit(d => deleteEdge(d, conn.toNode, conn.toPort, conn.fromNode))
     setSelectedEdge(null)
+  }
+
+  // History drawer (Task 10): the drawer owns the version LIST query and the
+  // RESTORE (rollback) call; loading an individual archived version's content
+  // into the canvas is this component's job (`onView` per the interface docs
+  // — HistoryDrawer only hands back the version string).
+  const handleViewVersion = async (version: string) => {
+    if (!recipePath) return
+    try {
+      const archived = await apiGet<RecipeFile>(`/recipes/history/${recipePath}?version=${version}`)
+      setViewedContent((archived.content ?? {}) as RecipeJson)
+      setViewingVersion(version)
+      setSelectedNodeId(null)
+      setSelectedEdge(null)
+      setWireFrom(null)
+    } catch (e) {
+      const err = e as ApiError
+      setSaveError({ title: err.title ?? 'Failed to load version', detail: err.detail })
+    }
+  }
+
+  const handleRestored = () => {
+    void queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
+    setViewingVersion(null)
+    setViewedContent(null)
+  }
+
+  // Closing the drawer is the only escape hatch out of view mode short of
+  // Restore (spec §6 documents Restore as the exit; this additionally treats
+  // "close the panel" as "go back to the live draft" so viewing a version
+  // never strands the canvas read-only with no way back).
+  const handleToggleHistory = () => {
+    setHistoryOpen(o => {
+      const next = !o
+      if (!next) {
+        setViewingVersion(null)
+        setViewedContent(null)
+      }
+      return next
+    })
   }
 
   const handleDiscard = () => {
@@ -603,12 +661,18 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                     <EditableField label="Modified" value={rec.data.modifiedAt ?? ''} onChange={() => {}} mono />
                   </div>
                 </div>
-                <button onClick={() => setShowRaw(r => !r)} style={{
-                  padding: '5px 12px', borderRadius: 5,
-                  background: showRaw ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
-                  color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                  flexShrink: 0,
-                }}>{'{ raw JSON }'}</button>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <button onClick={handleToggleHistory} style={{
+                    padding: '5px 12px', borderRadius: 5,
+                    background: historyOpen ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
+                    color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+                  }}>{'{ history }'}</button>
+                  <button onClick={() => setShowRaw(r => !r)} style={{
+                    padding: '5px 12px', borderRadius: 5,
+                    background: showRaw ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
+                    color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+                  }}>{'{ raw JSON }'}</button>
+                </div>
               </div>
 
               {showRaw && (
@@ -619,14 +683,14 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                     borderBottom: '1px solid var(--border)',
                   }}>
                     <span style={{ fontSize: 10, color: '#4a5570', flex: 1 }}>Raw JSON</span>
-                    <CopyButton value={JSON.stringify(draft ?? rec.data.content, null, 2)} size={11} />
+                    <CopyButton value={JSON.stringify(content ?? rec.data.content, null, 2)} size={11} />
                   </div>
                   <pre style={{
                     margin: 0, padding: '10px 12px', maxHeight: 400, overflow: 'auto',
                     fontSize: 10, color: '#c8d3e8',
                     fontFamily: 'JetBrains Mono, monospace',
                     whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-                  }}>{JSON.stringify(draft ?? rec.data.content, null, 2)}</pre>
+                  }}>{JSON.stringify(content ?? rec.data.content, null, 2)}</pre>
                 </div>
               )}
             </div>
@@ -638,7 +702,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                 padding: '16px', background: 'var(--surface)',
                 border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
               }}>
-                <TableNameList names={draft?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
+                <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
               </div>
             </section>
 
@@ -652,10 +716,10 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                   selectedNode={selectedNodeId}
                   onSelectNode={handleSelectNode}
                   highlightIds={[]}
-                  onPortClick={handlePortClick}
-                  onSelectEdge={handleSelectEdge}
+                  onPortClick={isViewing ? undefined : handlePortClick}
+                  onSelectEdge={isViewing ? undefined : handleSelectEdge}
                   selectedEdge={selectedEdge}
-                  onDropType={handlePaletteAdd}
+                  onDropType={isViewing ? undefined : handlePaletteAdd}
                 />
               </div>
             </section>
@@ -667,12 +731,14 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                 padding: '16px', background: 'var(--surface)',
                 border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7,
               }}>
-                <TableNameList names={draft?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
+                <TableNameList names={content?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
               </div>
             </section>
 
-            {/* edit panel — shown for whichever canvas node is selected (Task 8/9) */}
-            {selectedNode && draft && (
+            {/* edit panel — shown for whichever canvas node is selected (Task 8/9);
+                hidden entirely while viewing an archived version (Task 10: "all
+                editing affordances disabled while viewing"). */}
+            {selectedNode && draft && !isViewing && (
               <EditPanel
                 draft={draft}
                 node={selectedNode}
@@ -683,8 +749,8 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
               />
             )}
 
-            {/* selected-edge delete control (Task 9) */}
-            {selectedEdge && (
+            {/* selected-edge delete control (Task 9) — also disabled while viewing */}
+            {selectedEdge && !isViewing && (
               <section>
                 <SectionHeader icon="⌫" label="Edge" color="var(--red)" />
                 <div style={{
@@ -772,16 +838,27 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
           </div>
         )}
 
-        <SaveBar
-          changes={dirtyOps}
-          wireFrom={wireFrom}
-          onCancelWire={() => setWireFrom(null)}
-          onSave={handleSave}
-          onDiscard={handleDiscard}
-        />
+        {/* SaveBar is itself an editing affordance (Save/Discard mutate the
+            draft) — hidden while viewing an archived version. */}
+        {!isViewing && (
+          <SaveBar
+            changes={dirtyOps}
+            wireFrom={wireFrom}
+            onCancelWire={() => setWireFrom(null)}
+            onSave={handleSave}
+            onDiscard={handleDiscard}
+          />
+        )}
       </div>
 
-      {draft && <Palette onAdd={handlePaletteAdd} />}
+      {draft && !isViewing && <Palette onAdd={handlePaletteAdd} />}
+      {recipePath && historyOpen && (
+        <HistoryDrawer
+          recipePath={recipePath}
+          onView={handleViewVersion}
+          onRestored={handleRestored}
+        />
+      )}
     </div>
   )
 }

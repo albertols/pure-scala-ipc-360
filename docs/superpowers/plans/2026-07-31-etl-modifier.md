@@ -632,8 +632,8 @@ export function HistoryDrawer(props: {
 
 Drawer = right-side panel in the existing card idiom (list rows: mono timestamp + sizeBytes + View button). View mode renders a banner (`--yellow` tokens): `Viewing archived version <v> — read-only` + `Restore this version` button; canvas + panels derive from the archived content; all editing affordances disabled while viewing.
 
-- [ ] **Step 1: Failing MSW test:** handlers `GET /api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json` (no version → `[{version:'20260731-120000-000', timestamp:'2026-07-31T12:00:00Z', sizeBytes: 100}]`; with `?version=` → RecipeDto-shaped archived payload whose target is named `T_OLD`), `POST /api/recipes/rollback/...?version=...` → fresh DTO. Flow: open History → row listed → View → banner + `T_OLD` on canvas → Restore → rollback request captured + banner gone.
-- [ ] **Step 2: RED → Step 3: implement → Step 4: GREEN + tsc → Step 5: Commit**
+- [x] **Step 1: Failing MSW test:** handlers `GET /api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json` (no version → `[{version:'20260731-120000-000', timestamp:'2026-07-31T12:00:00Z', sizeBytes: 100}]`; with `?version=` → RecipeDto-shaped archived payload whose target is named `T_OLD`), `POST /api/recipes/rollback/...?version=...` → fresh DTO. Flow: open History → row listed → View → banner + `T_OLD` on canvas → Restore → rollback request captured + banner gone.
+- [x] **Step 2: RED → Step 3: implement → Step 4: GREEN + tsc → Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab2/HistoryDrawer.tsx frontend/src/components/tab2/ETLModifier.tsx \

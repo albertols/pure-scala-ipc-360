@@ -8,6 +8,15 @@ export type MappingModel = components['schemas']['MappingModelDto']
 export type RecipeFile = components['schemas']['RecipeDto']
 export type RecipeValidation = components['schemas']['RecipeValidationDto']
 export type RecipeValidationError = components['schemas']['RecipeValidationErrorDto']
+// Hand alias: the `RecipeHistoryEntryDto` schema IS present in the generated
+// components (Task 8's regen captured it), but the two Spring mappings sharing
+// `/api/recipes/history/{*path}` (params=!version vs params=version, Task 7)
+// collapse to a single OpenAPI path item, so only one `operations[...]` entry
+// (`historyVersion_1`, the `?version=` shape) survived codegen — the no-version
+// list shape has no captured operation. `apiGet<T>` doesn't consult `operations`
+// anyway (see `useDdl` above), so aliasing the schema directly is sufficient;
+// no operation lookup needed.
+export type RecipeHistoryEntry = components['schemas']['RecipeHistoryEntryDto']
 export type ExpressionEntry = components['schemas']['ExpressionEntryDto']
 export type AppConfig = components['schemas']['AppConfigDto']
 
