@@ -1,4 +1,4 @@
-import type { ETLNode } from '../../types'
+import type { ETLNode, Port } from '../../types'
 
 export const NODE_WIDTH = 195
 export const NODE_HEADER_H = 44
@@ -34,11 +34,18 @@ export function NodeBox({
   isSelected,
   onClick,
   compact = false,
+  onPortClick,
 }: {
   node: ETLNode
   isSelected: boolean
   onClick: () => void
   compact?: boolean
+  /** Task 9 (ETL Modifier click-wire) — optional, behavior-only: when provided,
+   * each port row gains its own onClick (stopping propagation to the node's own
+   * onClick above) firing `onPortClick(node.id, port)`. Tab 1 (ETLViewer) never
+   * passes this, so its ports stay non-interactive and node.onClick is the only
+   * handler that ever fires there — zero visual or behavioral change. */
+  onPortClick?: (nodeId: string, port: Port) => void
 }) {
   const style = NODE_STYLES[node.type] ?? NODE_STYLES.source
   const h = getNodeHeight(node, compact)
@@ -115,8 +122,11 @@ export function NodeBox({
         const isOut = port.direction === 'OUT' || port.direction === 'IN/OUT'
         const isIn = port.direction === 'IN' || port.direction === 'IN/OUT'
         const hasExpr = Boolean(port.expression)
+        const portClick = onPortClick
+          ? (e: React.MouseEvent) => { e.stopPropagation(); onPortClick(node.id, port) }
+          : undefined
         return (
-          <g key={i}>
+          <g key={i} onClick={portClick} style={portClick ? { cursor: 'pointer' } : undefined}>
             {isIn && (
               <circle cx={node.x} cy={py} r={4} fill={port.linked ? style.color : '#1e2438'} stroke={style.border} strokeWidth={1} />
             )}

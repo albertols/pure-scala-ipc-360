@@ -235,3 +235,61 @@ describe('ETLModifier — editing state (Task 8)', () => {
     expect(screen.getByDisplayValue('T2')).toBeInTheDocument()
   })
 })
+
+// ─── Task 9: Palette + click-wire + delete UI ─────────────────────────────────
+
+describe('ETLModifier — palette, click-wire, delete (Task 9)', () => {
+  it('palette: clicking "target table" adds a NEW_TABLE_1 node and dirties the SaveBar', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('target table'))
+
+    expect(await screen.findByText('NEW_TABLE_1', { selector: 'text' })).toBeInTheDocument()
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+  })
+
+  it('click-wire: OUT port on S then IN port on T writes the dot-ref via setFieldTransformation', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          { target: { name: 'S', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+          { target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] }, sources: [] },
+        ],
+        table: { targetTableNames: ['T'], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('S', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('A'))
+    expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('X'))
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
+  })
+
+  it('delete: selecting node S shows a ref-count confirm hint; confirming removes it from the canvas', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('S', { selector: 'text' }))
+    fireEvent.click(await screen.findByText('Delete'))
+
+    expect(await screen.findByText('Removes S and clears 1 incoming reference(s)')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Confirm delete'))
+
+    expect(screen.queryByText('S', { selector: 'text' })).not.toBeInTheDocument()
+  })
+})

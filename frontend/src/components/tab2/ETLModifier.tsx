@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import type { ETLNode } from '../../types'
+import type { ETLNode, Connection, Port } from '../../types'
 import type { FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
 import { apiSend } from '../../api/client'
@@ -8,12 +8,23 @@ import { useRecipe, useDdl } from '../../api/queries'
 import type { RecipeValidation, RecipeValidationError } from '../../api/queries'
 import { recipeToCanvas, renderFormula, fieldsOf } from '../../api/recipeAdapter'
 import type { RecipeJson, RecipeFieldJson } from '../../api/recipeAdapter'
-import { editFieldDataType, parseFormulaText, renameNode, setFieldTransformation } from '../../api/recipeEdits'
+import {
+  addSourceTable,
+  addStep,
+  deleteEdge,
+  deleteNode,
+  editFieldDataType,
+  parseFormulaText,
+  refsInto,
+  renameNode,
+  setFieldTransformation,
+} from '../../api/recipeEdits'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
 import { EtlCanvas } from '../shared/EtlCanvas'
 import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
+import { Palette, SOURCE_TABLE_TYPE } from './Palette'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
@@ -27,8 +38,37 @@ interface DdlColumnJson {
 
 // ─── Save Bar ─────────────────────────────────────────────────────────────────
 
-function SaveBar({ changes, onSave, onDiscard }: { changes: number; onSave: () => void; onDiscard: () => void }) {
-  if (changes === 0) return null
+/** Delete idiom (Task 9): the SaveBar's existing "Save Changes"/"Discard" button
+ * pair, recomposed with the `--red` token in place of the blue one — no new
+ * tokens introduced. */
+const dangerButtonStyle: React.CSSProperties = {
+  padding: '5px 14px', borderRadius: 5,
+  background: 'rgba(248,113,113,0.15)', border: '1px solid var(--red)',
+  color: 'var(--red)', fontSize: 12, cursor: 'pointer', fontWeight: 600,
+}
+const ghostButtonStyle: React.CSSProperties = {
+  padding: '5px 14px', borderRadius: 5,
+  background: 'transparent', border: '1px solid var(--border)',
+  color: '#7b88aa', fontSize: 12, cursor: 'pointer',
+}
+
+/** Task 9: the wire-mode indicator lives in the same sticky row as the dirty
+ * indicator/Save/Discard controls — the bar now also mounts while a wire is
+ * in progress (dirty count 0), not only while there are unsaved changes. */
+function SaveBar({
+  changes,
+  wireFrom,
+  onCancelWire,
+  onSave,
+  onDiscard,
+}: {
+  changes: number
+  wireFrom: { nodeId: string; portName: string } | null
+  onCancelWire: () => void
+  onSave: () => void
+  onDiscard: () => void
+}) {
+  if (changes === 0 && !wireFrom) return null
   return (
     <div style={{
       position: 'sticky', bottom: 0,
@@ -40,28 +80,43 @@ function SaveBar({ changes, onSave, onDiscard }: { changes: number; onSave: () =
       gap: 12,
       zIndex: 10,
     }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        fontSize: 11, color: '#fbbf24',
-      }}>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <circle cx="6" cy="6" r="5" stroke="#fbbf24" strokeWidth="1.2" />
-          <line x1="6" y1="3.5" x2="6" y2="6.5" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="6" cy="8.5" r="0.8" fill="#fbbf24" />
-        </svg>
-        {changes} unsaved change{changes !== 1 ? 's' : ''}
-      </div>
+      {wireFrom && (
+        <div
+          onClick={onCancelWire}
+          title="Click to cancel"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '3px 10px', borderRadius: 5,
+            background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
+            color: '#4f9cf9', fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
+            cursor: 'pointer',
+          }}
+        >{`wire: ${wireFrom.nodeId}.${wireFrom.portName} → click an IN port`}</div>
+      )}
+      {changes > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          fontSize: 11, color: '#fbbf24',
+        }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="5" stroke="#fbbf24" strokeWidth="1.2" />
+            <line x1="6" y1="3.5" x2="6" y2="6.5" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="6" cy="8.5" r="0.8" fill="#fbbf24" />
+          </svg>
+          {changes} unsaved change{changes !== 1 ? 's' : ''}
+        </div>
+      )}
       <div style={{ flex: 1 }} />
-      <button onClick={onDiscard} style={{
-        padding: '5px 14px', borderRadius: 5,
-        background: 'transparent', border: '1px solid var(--border)',
-        color: '#7b88aa', fontSize: 12, cursor: 'pointer',
-      }}>Discard</button>
-      <button onClick={onSave} style={{
-        padding: '5px 16px', borderRadius: 5,
-        background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-        color: '#4f9cf9', fontSize: 12, cursor: 'pointer', fontWeight: 600,
-      }}>Save Changes</button>
+      {changes > 0 && (
+        <>
+          <button onClick={onDiscard} style={ghostButtonStyle}>Discard</button>
+          <button onClick={onSave} style={{
+            padding: '5px 16px', borderRadius: 5,
+            background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
+            color: '#4f9cf9', fontSize: 12, cursor: 'pointer', fontWeight: 600,
+          }}>Save Changes</button>
+        </>
+      )}
     </div>
   )
 }
@@ -239,21 +294,53 @@ function FieldEditor({
   )
 }
 
+/** Delete affordance for the selected node (Task 9): a `--red`-bordered Delete
+ * button which, on first click, arms a confirm hint quoting the exact field
+ * count `refsInto` would clear (the same helper `deleteNode` itself uses to
+ * decide what to clear, so the hint can never drift from the actual effect) —
+ * a second click (Confirm delete) or Cancel resolves it. Re-arms to the
+ * unconfirmed state whenever the selected node changes. */
+function DeleteNodeControl({ draft, nodeId, onDelete }: { draft: RecipeJson; nodeId: string; onDelete: (name: string) => void }) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => { setArmed(false) }, [nodeId])
+  const refCount = refsInto(draft, nodeId)
+
+  return (
+    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
+      {!armed ? (
+        <button onClick={() => setArmed(true)} style={dangerButtonStyle}>Delete</button>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--red)' }}>
+            {`Removes ${nodeId} and clears ${refCount} incoming reference(s)`}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setArmed(false)} style={ghostButtonStyle}>Cancel</button>
+            <button onClick={() => onDelete(nodeId)} style={dangerButtonStyle}>Confirm delete</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** Edit panel for the selected canvas node: rename (any node) plus, for step
  * nodes (not sources — those have no `step.target.fields` to edit), a
- * per-field dataType + formula editor. */
+ * per-field dataType + formula editor, plus the delete control (any node). */
 function EditPanel({
   draft,
   node,
   onRename,
   onFieldDataType,
   onFieldFormula,
+  onDelete,
 }: {
   draft: RecipeJson
   node: ETLNode
   onRename: (oldName: string, newName: string) => void
   onFieldDataType: (stepName: string, fieldName: string, dataType: string) => void
   onFieldFormula: (stepName: string, fieldName: string, text: string) => void
+  onDelete: (name: string) => void
 }) {
   const [name, setName] = useState(node.id)
   useEffect(() => { setName(node.id) }, [node.id])
@@ -280,6 +367,8 @@ function EditPanel({
             ))}
           </div>
         )}
+
+        <DeleteNodeControl draft={draft} nodeId={node.id} onDelete={onDelete} />
       </div>
     </section>
   )
@@ -291,6 +380,8 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [recipePath, setRecipePath] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [selectedEdge, setSelectedEdge] = useState<Connection | null>(null)
+  const [wireFrom, setWireFrom] = useState<{ nodeId: string; portName: string } | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
   const { fs, loading, error } = useFilesystem()
@@ -335,6 +426,8 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     if (f.recipe) {
       setRecipePath(f.recipe)
       setSelectedNodeId(null)
+      setSelectedEdge(null)
+      setWireFrom(null)
       setShowRaw(false)
     }
   }
@@ -355,6 +448,50 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
 
   const handleFieldFormula = (stepName: string, fieldName: string, text: string) => {
     applyEdit(d => setFieldTransformation(d, stepName, fieldName, parseFormulaText(text)))
+  }
+
+  const handleSelectNode = (id: string) => {
+    setSelectedNodeId(prev => (id === prev ? null : id))
+    setSelectedEdge(null)
+  }
+
+  const handleSelectEdge = (conn: Connection) => {
+    setSelectedEdge(conn)
+    setSelectedNodeId(null)
+  }
+
+  // Click-wire (Task 9): a click on an OUT/IN-OUT port arms `wireFrom`; a
+  // subsequent click on an IN/IN-OUT port completes it via
+  // setFieldTransformation, writing the dot-ref "FROM.FIELD" verbatim into the
+  // clicked port's field (`toField ?? fromPort`, per spec §6 — in practice the
+  // clicked port always carries its own name, since ports are derived 1:1 from
+  // existing recipe fields). Any other OUT/IN-OUT click while armed restarts
+  // the wire from the new port instead.
+  const handlePortClick = (nodeId: string, port: Port) => {
+    const isInEligible = port.direction === 'IN' || port.direction === 'IN/OUT'
+    if (wireFrom && isInEligible) {
+      const { nodeId: fromNode, portName: fromPort } = wireFrom
+      applyEdit(d => setFieldTransformation(d, nodeId, port.name || fromPort, { source: `${fromNode}.${fromPort}` }))
+      setWireFrom(null)
+      return
+    }
+    if (port.direction !== 'IN') {
+      setWireFrom({ nodeId, portName: port.name })
+    }
+  }
+
+  const handlePaletteAdd = (type: string) => {
+    applyEdit(d => (type === SOURCE_TABLE_TYPE ? addSourceTable(d) : addStep(d, type)))
+  }
+
+  const handleDeleteNode = (name: string) => {
+    applyEdit(d => deleteNode(d, name))
+    setSelectedNodeId(null)
+  }
+
+  const handleDeleteEdge = (conn: Connection) => {
+    applyEdit(d => deleteEdge(d, conn.toNode, conn.toPort))
+    setSelectedEdge(null)
   }
 
   const handleDiscard = () => {
@@ -501,8 +638,12 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                   nodes={graph.nodes}
                   connections={graph.connections}
                   selectedNode={selectedNodeId}
-                  onSelectNode={id => setSelectedNodeId(id === selectedNodeId ? null : id)}
+                  onSelectNode={handleSelectNode}
                   highlightIds={[]}
+                  onPortClick={handlePortClick}
+                  onSelectEdge={handleSelectEdge}
+                  selectedEdge={selectedEdge}
+                  onDropType={handlePaletteAdd}
                 />
               </div>
             </section>
@@ -518,7 +659,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
               </div>
             </section>
 
-            {/* edit panel — shown for whichever canvas node is selected (Task 8) */}
+            {/* edit panel — shown for whichever canvas node is selected (Task 8/9) */}
             {selectedNode && draft && (
               <EditPanel
                 draft={draft}
@@ -526,7 +667,25 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                 onRename={handleRename}
                 onFieldDataType={handleFieldDataType}
                 onFieldFormula={handleFieldFormula}
+                onDelete={handleDeleteNode}
               />
+            )}
+
+            {/* selected-edge delete control (Task 9) */}
+            {selectedEdge && (
+              <section>
+                <SectionHeader icon="⌫" label="Edge" color="var(--red)" />
+                <div style={{
+                  padding: 16, background: 'var(--surface)',
+                  border: '1px solid var(--border)', borderRadius: 7,
+                  display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                  <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', flex: 1 }}>
+                    {`${selectedEdge.fromNode}.${selectedEdge.fromPort || '·'} → ${selectedEdge.toNode}.${selectedEdge.toPort || '·'}`}
+                  </span>
+                  <button onClick={() => handleDeleteEdge(selectedEdge)} style={dangerButtonStyle}>Delete</button>
+                </div>
+              </section>
             )}
 
             {/* expressions collector (interim until Task 11's registry) */}
@@ -601,8 +760,16 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
           </div>
         )}
 
-        <SaveBar changes={dirtyOps} onSave={handleSave} onDiscard={handleDiscard} />
+        <SaveBar
+          changes={dirtyOps}
+          wireFrom={wireFrom}
+          onCancelWire={() => setWireFrom(null)}
+          onSave={handleSave}
+          onDiscard={handleDiscard}
+        />
       </div>
+
+      {draft && <Palette onAdd={handlePaletteAdd} />}
     </div>
   )
 }
