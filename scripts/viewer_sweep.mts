@@ -12,7 +12,7 @@ type Tree = { kind?: string; mappingPath?: string; children?: Tree[] }
 const paths: string[] = []
 const walk = (n: Tree) => { if (n.kind === 'xml' && n.mappingPath) paths.push(n.mappingPath); (n.children ?? []).forEach(walk) }
 walk(await (await fetch(`${BASE}/api/tree`)).json() as Tree)
-if (paths.length < 69) { console.error(`viewer_sweep: only ${paths.length} mappings in tree (expected >= 69)`); process.exit(1) }
+if (paths.length < 81) { console.error(`viewer_sweep: only ${paths.length} mappings in tree (expected >= 81)`); process.exit(1) }
 let failed = 0
 for (const p of paths.sort()) {
   try {

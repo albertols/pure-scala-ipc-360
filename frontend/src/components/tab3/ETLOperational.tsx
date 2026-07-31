@@ -1,28 +1,64 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import type { OperationalCard as CardData } from '../../types'
-import { OPERATIONAL_CARDS } from '../../mockData'
+import type { ApiError } from '../../api/client'
+import { useRelationships, useOperationalSummary, useOperationalDates, useAppConfig } from '../../api/queries'
+import type { RelationshipGraph } from '../../api/queries'
+import { toOperationalGraph, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { OperationalCard } from '../shared/OperationalCard'
-import { TimePicker, type TimeSelection } from '../shared/TimePicker'
+import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
+import { PreviewOverlay } from './PreviewOverlay'
 
-const CANVAS_W = 1200
-const CANVAS_H = 700
+type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
 
-function buildEdges(cards: CardData[]): { from: CardData; to: CardData }[] {
-  const byId = Object.fromEntries(cards.map(c => [c.id, c]))
-  const edges: { from: CardData; to: CardData }[] = []
-  const seen = new Set<string>()
-  cards.forEach(c => {
-    c.relations.forEach(rid => {
-      const key = [c.id, rid].sort().join('|')
-      if (!seen.has(key) && byId[rid]) {
-        seen.add(key)
-        edges.push({ from: c, to: byId[rid] })
-      }
-    })
-  })
-  return edges
+/**
+ * Task 9: resolve the recipe/mapping path a card's "Open preview" affordance
+ * should open. Recipe card -> its own node (`mappingPath` = recipe directory,
+ * `name` = recipe filename). Table card -> the FIRST `writes` edge into it
+ * (adapter edge order, i.e. graph order) -> that recipe's node. Both fields
+ * null when unresolvable (e.g. a source-only table, or a recipe absent from
+ * the corpus) — the caller disables the affordance in that case.
+ */
+function resolvePreview(
+  card: CardData,
+  edges: OperationalEdge[],
+  nodeById: Map<string, NodeDto>,
+): { recipePath: string | null; mappingPath: string | null } {
+  const recipeId = card.kind === 'recipe'
+    ? card.id
+    : edges.find(e => e.kind === 'writes' && e.toId === card.id)?.fromId
+  const node = recipeId ? nodeById.get(recipeId) : undefined
+  const mappingPath = node?.mappingPath ?? null
+  const name = node?.name ?? null
+  if (!mappingPath || !name) return { recipePath: null, mappingPath }
+  return { recipePath: `${mappingPath}/${name}`, mappingPath }
+}
+
+function daysBetween(a: string, b: string): number {
+  return Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000
+}
+
+/**
+ * Client-side mirror of the backend's nearest-available-date rule
+ * (`OperationalService#nearestAvailable`): smallest day-distance to `target`.
+ * Ties favor the earlier date — falls out naturally here because `avail` is
+ * ascending (as served by `/api/operational/dates`) and we only replace
+ * `best` on a STRICTLY smaller distance, so the first (earliest) date at the
+ * minimum distance wins, same as the backend's `isBefore` tie-break.
+ */
+function nearestAvailableDate(target: string, avail: string[]): string {
+  if (avail.length === 0) return target
+  let best = avail[0]!
+  let bestDist = daysBetween(target, best)
+  for (const iso of avail) {
+    const dist = daysBetween(target, iso)
+    if (dist < bestDist) {
+      bestDist = dist
+      best = iso
+    }
+  }
+  return best
 }
 
 function StatusSummary({ cards }: { cards: CardData[] }) {
@@ -44,11 +80,13 @@ function StatusSummary({ cards }: { cards: CardData[] }) {
 
 function RelationshipGraph({
   cards,
+  edges,
   selected,
   onSelect,
   zoom,
 }: {
   cards: CardData[]
+  edges: OperationalEdge[]
   selected: string | null
   onSelect: (id: string | null) => void
   zoom: number
@@ -56,7 +94,14 @@ function RelationshipGraph({
   const [pan, setPan] = useState({ x: 40, y: 40 })
   const dragging = useRef(false)
   const lastPan = useRef({ x: 0, y: 0 })
-  const edges = buildEdges(cards)
+
+  const byId = Object.fromEntries(cards.map(c => [c.id, c]))
+  const visibleEdges = edges.filter(e => byId[e.fromId] && byId[e.toId])
+
+  // Computed maxima from card coordinates + margins (was a static 1200x700;
+  // real layouts can exceed that, and floor stays for small/empty graphs).
+  const CANVAS_W = Math.max(1200, ...cards.map(c => (c.x ?? 0) + 280))
+  const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + 220))
 
   const compact = zoom < 0.65
 
@@ -111,12 +156,14 @@ function RelationshipGraph({
               <path d="M0 1 L6 3.5 L0 6 Z" fill="#4f9cf9" />
             </marker>
           </defs>
-          {edges.map((e, i) => {
-            const fx = (e.from.x ?? 0) + 120
-            const fy = (e.from.y ?? 0) + 50
-            const tx = (e.to.x ?? 0)
-            const ty = (e.to.y ?? 0) + 50
-            const hi = selected === e.from.id || selected === e.to.id
+          {visibleEdges.map((e, i) => {
+            const from = byId[e.fromId]!
+            const to = byId[e.toId]!
+            const fx = (from.x ?? 0) + 120
+            const fy = (from.y ?? 0) + 50
+            const tx = (to.x ?? 0)
+            const ty = (to.y ?? 0) + 50
+            const hi = selected === e.fromId || selected === e.toId
             const dx = Math.abs(tx - fx) * 0.45
             return (
               <path key={i}
@@ -124,6 +171,7 @@ function RelationshipGraph({
                 fill="none"
                 stroke={hi ? '#4f9cf9' : '#1e2438'}
                 strokeWidth={hi ? 2 : 1.5}
+                strokeDasharray={e.kind === 'lookup' ? '5 4' : undefined}
                 markerEnd={hi ? 'url(#oa-hi)' : 'url(#oa)'}
               />
             )
@@ -168,8 +216,11 @@ function RelationshipGraph({
 export function ETLOperational() {
   const [selected, setSelected] = useState<string | null>(null)
   const [zoom, setZoom] = useState(0.85)
-  const [timeVal, setTimeVal] = useState<TimeSelection>({
-    date: new Date().toISOString().slice(0, 10),
+  // Date is real state (this task); "Now"/hour/precision stay locally tracked
+  // and are re-merged with `selectedDate` into the TimeSelection the
+  // (unmodified) TimePicker expects.
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [timeMeta, setTimeMeta] = useState<{ hour: number; precision: Precision; isNow: boolean }>({
     hour: new Date().getUTCHours(),
     precision: 'hour',
     isNow: true,
@@ -178,8 +229,70 @@ export function ETLOperational() {
   const [kindFilter, setKindFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
+  // Task 9: snapshot the resolved path when "Open preview" is clicked, rather
+  // than re-deriving from `selected` on every render — so the overlay keeps
+  // showing the recipe it was opened for even if the selection changes or
+  // clears underneath it while it's open.
+  const [preview, setPreview] = useState<{ recipePath: string | null; mappingPath: string | null } | null>(null)
 
-  const cards = OPERATIONAL_CARDS.filter(c => {
+  const rel = useRelationships()
+  const summary = useOperationalSummary()
+  const dates = useOperationalDates()
+  const cfg = useAppConfig()
+
+  // Raw graph nodes carry `mappingPath` (the recipe directory) — the adapter's
+  // OperationalCard doesn't, so the preview resolver reads it here.
+  const nodeById = useMemo(() => {
+    const m = new Map<string, NodeDto>()
+    for (const n of rel.data?.nodes ?? []) if (n.id) m.set(n.id, n)
+    return m
+  }, [rel.data])
+
+  // On first data, default selectedDate to the latest snapshot ("Now").
+  // Guarded on selectedDate === null so a later user pick is never clobbered.
+  useEffect(() => {
+    if (selectedDate === null && dates.data?.dates && dates.data.dates.length > 0) {
+      setSelectedDate(dates.data.dates.at(-1)!)
+    }
+  }, [dates.data, selectedDate])
+
+  const availableDates = dates.data?.dates ?? []
+
+  const timeVal: TimeSelection = {
+    date: selectedDate ?? new Date().toISOString().slice(0, 10),
+    hour: timeMeta.hour,
+    precision: timeMeta.precision,
+    isNow: timeMeta.isNow,
+  }
+  const handleTimeChange = (v: TimeSelection) => {
+    setSelectedDate(availableDates.length > 0 ? nearestAvailableDate(v.date, availableDates) : v.date)
+    setTimeMeta({ hour: v.hour, precision: v.precision, isNow: v.isNow })
+  }
+
+  const view = useMemo(
+    () => (rel.data ? toOperationalGraph(rel.data, summary.data, selectedDate) : null),
+    [rel.data, summary.data, selectedDate],
+  )
+
+  if (rel.isLoading || summary.isLoading) {
+    return <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 16 }}>Loading relationships…</div>
+  }
+
+  const apiError = (rel.error ?? summary.error) as ApiError | null
+  if (apiError) {
+    return (
+      <div style={{ color: 'var(--red)', fontSize: 12, padding: 16 }}>
+        <div>{apiError.title}</div>
+        {apiError.detail && <div>{apiError.detail}</div>}
+      </div>
+    )
+  }
+
+  if (!view || view.cards.length === 0) {
+    return <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 16 }}>No relationship entries</div>
+  }
+
+  const cards = view.cards.filter(c => {
     if (layerFilter !== 'ALL' && c.layer !== layerFilter) return false
     if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
     if (statusFilter !== 'ALL' && c.status !== statusFilter) return false
@@ -187,7 +300,27 @@ export function ETLOperational() {
     return true
   })
 
-  const selectedCard = selected ? OPERATIONAL_CARDS.find(c => c.id === selected) : null
+  const selectedCard = selected ? view.cards.find(c => c.id === selected) : null
+
+  const previewTarget = selectedCard
+    ? resolvePreview(selectedCard, view.edges, nodeById)
+    : { recipePath: null, mappingPath: null }
+
+  // GCP quick links: templated from the served config + (for the cluster
+  // name) the raw summary entry looked up by name — `lastClusterName` isn't
+  // on OperationalCard (keeps that type stable), so it's read here.
+  const projectId = cfg.data?.gcpProjectId ?? 'mock-project'
+  const clusterName = selectedCard
+    ? (summary.data?.recipes?.find(r => r.recipeFilename === selectedCard.name)?.lastClusterName ?? '')
+    : ''
+  const loggingHref = (cfg.data?.loggingUrl ?? '')
+    .replace('{jobId}', selectedCard?.jobId ?? '')
+    .replace('{project}', projectId)
+  const monitoringHref = (cfg.data?.dataprocClusterUrl ?? '')
+    .replace('{clusterName}', clusterName)
+    .replace('{project}', projectId)
+    .replace('{region}', cfg.data?.region ?? '')
+  const bigQueryHref = `https://console.cloud.google.com/bigquery?project=${projectId}`
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
@@ -221,14 +354,16 @@ export function ETLOperational() {
           />
         </div>
 
-        {/* filters */}
-        <FilterChips label="Layer" options={['ALL', 'CDM', 'ODS']} value={layerFilter} onChange={setLayerFilter} />
+        {/* filters — options are data-driven from the real graph */}
+        <FilterChips label="Layer" options={['ALL', ...view.layers]} value={layerFilter} onChange={setLayerFilter} />
         <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter} />
-        <FilterChips label="Status" options={['ALL', 'OK', 'KO', 'RUNNING']} value={statusFilter} onChange={setStatusFilter}
-          colors={{ OK: '#34d399', KO: '#f87171', RUNNING: '#fbbf24' }} />
+        {/* RUNNING isn't a real operational state (mock/real history only ever
+            resolves OK/KO/PENDING) — swapped for PENDING per the plan's ledger note. */}
+        <FilterChips label="Status" options={['ALL', 'OK', 'KO', 'PENDING']} value={statusFilter} onChange={setStatusFilter}
+          colors={{ OK: '#34d399', KO: '#f87171', PENDING: '#4a5570' }} />
 
         <div style={{ flex: 1 }} />
-        <StatusSummary cards={OPERATIONAL_CARDS} />
+        <StatusSummary cards={view.cards} />
 
         {/* zoom */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -242,13 +377,14 @@ export function ETLOperational() {
 
       {/* time picker */}
       <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
-        <TimePicker value={timeVal} onChange={setTimeVal} />
+        <TimePicker value={timeVal} onChange={handleTimeChange} />
       </div>
 
       {/* main area */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <RelationshipGraph
           cards={cards}
+          edges={view.edges}
           selected={selected}
           onSelect={setSelected}
           zoom={zoom}
@@ -282,30 +418,75 @@ export function ETLOperational() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {selectedCard.relations.map(rid => {
-                  const rel = OPERATIONAL_CARDS.find(c => c.id === rid)
-                  if (!rel) return null
+                  const relCard = view.cards.find(c => c.id === rid)
+                  if (!relCard) return null
                   return (
                     <div key={rid} onClick={() => setSelected(rid)} style={{ cursor: 'pointer' }}>
-                      <OperationalCard card={rel} compact />
+                      <OperationalCard card={relCard} compact />
                     </div>
                   )
                 })}
               </div>
             </div>
 
+            {/* preview overlay affordance (Task 9) */}
+            <div>
+              <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>Preview</div>
+              <PreviewButton
+                enabled={!!previewTarget.recipePath}
+                onClick={() => setPreview(previewTarget)}
+              />
+            </div>
+
             {/* GCP quick links */}
             <div>
               <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>GCP Quick Links</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <GCPLink icon="bigquery" label="Open in BigQuery" href={`https://console.cloud.google.com/bigquery?project=my-project`} />
-                <GCPLink icon="monitoring" label="Monitoring Dashboard" href={`https://console.cloud.google.com/monitoring`} />
-                <GCPLink icon="logging" label="Cloud Logging" href={`https://console.cloud.google.com/logs`} />
+                <GCPLink icon="bigquery" label="Open in BigQuery" href={bigQueryHref} />
+                <GCPLink icon="monitoring" label="Monitoring Dashboard" href={monitoringHref} />
+                <GCPLink icon="logging" label="Cloud Logging" href={loggingHref} />
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {preview && (
+        <PreviewOverlay
+          recipePath={preview.recipePath}
+          mappingPath={preview.mappingPath}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </div>
+  )
+}
+
+/** Task 9's "Open preview" affordance — same row markup as `GCPLink` below
+ * (no new tokens), a `<button>` in place of an `<a>` since it opens the
+ * overlay rather than navigating. Disabled (dim, non-interactive) when the
+ * selected card's recipe/mapping path can't be resolved. */
+function PreviewButton({ enabled, onClick }: { enabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={enabled ? onClick : undefined}
+      disabled={!enabled}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 7, width: '100%',
+        padding: '6px 10px', borderRadius: 5, textAlign: 'left',
+        background: 'var(--surface-2)', border: '1px solid var(--border)',
+        color: enabled ? '#7b88aa' : '#3a4160', fontSize: 11,
+        cursor: enabled ? 'pointer' : 'default',
+        fontFamily: 'inherit',
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M3 9h18" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+      Open preview
+      <span style={{ marginLeft: 'auto', fontSize: 10 }}>↗</span>
+    </button>
   )
 }
 

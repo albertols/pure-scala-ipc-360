@@ -88,7 +88,7 @@ Renderer rules (mirror the committed SYN XMLs byte-idiomatically — they are th
 5. `checkAll`: re-render every artifact in memory and byte-compare against disk (XML files, L2L marker blocks, CAS rows per date CSV), plus recipe existence `parser/src/main/resources/xmltobq/<layer>/<name>/_ETL_<name>.json`. Returns human-readable drift strings.
 6. CLI `main` guarded by `process.argv[1]` endsWith check so the test file can import the pure functions.
 
-- [ ] **Step 1: Write the failing tests** (`scripts/mock_etl_data.test.mts`):
+- [x] **Step 1: Write the failing tests** (`scripts/mock_etl_data.test.mts`):
 
 ```ts
 import { test } from 'node:test'
@@ -135,10 +135,10 @@ test('b15 rows: 12 per date, KO pattern per manifest, anchor-date KO for #5', ()
 })
 ```
 
-- [ ] **Step 2: Run to verify failure** — `node --experimental-strip-types --test scripts/mock_etl_data.test.mts` — FAIL (module missing).
-- [ ] **Step 3: Write the manifest + implement** `mock_etl_data.mts` per the Interfaces block. Verify a rendered XML against the real parser BEFORE trusting it (temp copy, Task-1-of-SYN idiom): render #3 to a scratch dir, `mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <scratch> --generateDDLContent --generateRecipe --generateTargetDDL --generateSourceDDL"`, confirm `_ETL_m_CAS_ODS_EVENTS.json` appears. Iterate the renderer if not (≤3 iterations, else STOP and report BLOCKED with the parser log).
-- [ ] **Step 4: GREEN** — all node:test cases pass.
-- [ ] **Step 5: Commit**
+- [x] **Step 2: Run to verify failure** — `node --experimental-strip-types --test scripts/mock_etl_data.test.mts` — FAIL (module missing).
+- [x] **Step 3: Write the manifest + implement** `mock_etl_data.mts` per the Interfaces block. Verify a rendered XML against the real parser BEFORE trusting it (temp copy, Task-1-of-SYN idiom): render #3 to a scratch dir, `mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <scratch> --generateDDLContent --generateRecipe --generateTargetDDL --generateSourceDDL"`, confirm `_ETL_m_CAS_ODS_EVENTS.json` appears. Iterate the renderer if not (≤3 iterations, else STOP and report BLOCKED with the parser log).
+- [x] **Step 4: GREEN** — all node:test cases pass.
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/mock_etl_data.mts scripts/mock_etl_data.manifest.json scripts/mock_etl_data.test.mts docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -182,11 +182,11 @@ echo "cas-gen: recipes regenerated from $TMP into $CORPUS"
 
 Makefile addition: `cas-gen:  ## render CAS XMLs from the manifest and regenerate their recipes via the real parser (temp copy)` → `bash scripts/cas_gen.sh`.
 
-- [ ] **Step 1: RED first** — raise the two `CorpusContractTest` floors (25: `hasSizeGreaterThanOrEqualTo(81)`; 37: `(86)`; update the `// 55 lowercase…` comment to `// 55 lowercase .xml + 14 uppercase .XML + 12 CAS (11 .xml, 1 .XML) — see CLAUDE.md corpus caveats.`) and the `viewer_sweep` floor. Run `mvn -q -am -pl backend test` — expect `CorpusContractTest` FAIL (69 < 81): the gate demands the data.
-- [ ] **Step 2: Generate** — `make cas-gen`. Verify: `find parser/src/main/resources/xmltobq -name 'm_CAS_*.xml' -o -name 'm_CAS_*.XML' | wc -l` → 12; `find parser/src/main/resources/xmltobq -name '_ETL_m_CAS_*.json' | wc -l` → 12; QDM file is `m_CAS_QDM_EVENTS_QUALITY.XML` (uppercase).
-- [ ] **Step 3: GREEN** — `mvn -q -am -pl backend test` (81/86 floors pass). `node --experimental-strip-types scripts/mock_etl_data.mts --check` reports L2L/b15 drift ONLY (expected until Task 3 — confirm XML+recipe checks are clean; if `--check` hard-fails on missing L2L, it must report-not-crash: fix in the generator, that is Task 10's wiring contract).
-- [ ] **Step 4: Cross-gate** — `make validate-loop` end-to-end: expect `viewer_sweep: 81/81 mappings render` (any FAIL names the mapping — fix the RENDERER/template, never skip) and the `2026-07-29` anchor date still green.
-- [ ] **Step 5: Commit**
+- [x] **Step 1: RED first** — raise the two `CorpusContractTest` floors (25: `hasSizeGreaterThanOrEqualTo(81)`; 37: `(86)`; update the `// 55 lowercase…` comment to `// 55 lowercase .xml + 14 uppercase .XML + 12 CAS (11 .xml, 1 .XML) — see CLAUDE.md corpus caveats.`) and the `viewer_sweep` floor. Run `mvn -q -am -pl backend test` — expect `CorpusContractTest` FAIL (69 < 81): the gate demands the data.
+- [x] **Step 2: Generate** — `make cas-gen`. Verify: `find parser/src/main/resources/xmltobq -name 'm_CAS_*.xml' -o -name 'm_CAS_*.XML' | wc -l` → 12; `find parser/src/main/resources/xmltobq -name '_ETL_m_CAS_*.json' | wc -l` → 12; QDM file is `m_CAS_QDM_EVENTS_QUALITY.XML` (uppercase).
+- [x] **Step 3: GREEN** — `mvn -q -am -pl backend test` (81/86 floors pass). `node --experimental-strip-types scripts/mock_etl_data.mts --check` reports L2L/b15 drift ONLY (expected until Task 3 — confirm XML+recipe checks are clean; if `--check` hard-fails on missing L2L, it must report-not-crash: fix in the generator, that is Task 10's wiring contract).
+- [x] **Step 4: Cross-gate** — `make validate-loop` end-to-end: expect `viewer_sweep: 81/81 mappings render` (any FAIL names the mapping — fix the RENDERER/template, never skip) and the `2026-07-29` anchor date still green.
+- [x] **Step 5: Commit**
 
 ```bash
 git add parser/src/main/resources/xmltobq scripts/cas_gen.sh Makefile backend/src/test/java/io/pure360/etl360/CorpusContractTest.java scripts/viewer_sweep.mts docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -205,7 +205,7 @@ git commit -m "feat(casuistics): 12 m_CAS_* mappings + parser-generated recipes 
 - Modify: `backend/src/test/java/io/pure360/etl360/LayerToLayerContractTest.java` (floor 18→33 + new `casFamilyFullyConfigured`)
 - Modify: `backend/src/test/java/io/pure360/etl360/OperationalContractTest.java` (recipe-node floor 18→30)
 
-- [ ] **Step 1: RED** — add to `LayerToLayerContractTest`:
+- [x] **Step 1: RED** — add to `LayerToLayerContractTest`:
 
 ```java
 @Test
@@ -221,10 +221,10 @@ void casFamilyFullyConfigured() {   // sub-project 4 spec §3: every CAS mapping
 ```
 
 and change `everyConfiguredRecipeExistsInCorpus` to `hasSizeGreaterThanOrEqualTo(33)`; in `OperationalContractTest.relationshipsGraphConsistent` raise the recipe-node count to `isGreaterThanOrEqualTo(30)`. Run `mvn -q -am -pl backend test` — expect both FAIL (data absent).
-- [ ] **Step 2: Emit** — `node --experimental-strip-types scripts/mock_etl_data.mts --emit l2l && node --experimental-strip-types scripts/mock_etl_data.mts --emit b15`. Spot-check: `grep -c 'INSERT INTO' backend/src/main/resources/mock/DWH_CONTROL/LAYER_TO_LAYER/*/statements.sql` sums to 33 (+1 ARCHIVE decoy, excluded by the service); anchor CSV gained exactly 12 `_ETL_m_CAS_` lines; `git diff` on a CSV shows APPENDED lines only (existing SYN/real bytes untouched — the spec §3 "SYN untouched" proof). Re-run both emits — `git status` clean (idempotency proof).
-- [ ] **Step 3: GREEN** — `mvn -q -am -pl backend test`: new tests pass AND the pre-existing gates prove the join: `everyConfiguredRecipeExistsInCorpus` (every CAS L2L row's recipe exists in corpus), `everyB15RecipeIsConfigured` (every CAS b15 row is L2L-configured), `statusMixPresent`, `decoyDirIsExcluded`, `allFourteenDatesServe`.
-- [ ] **Step 4:** `node --experimental-strip-types scripts/mock_etl_data.mts --check` → exit 0, no drift. `node --experimental-strip-types --test scripts/mock_etl_data.test.mts` still green.
-- [ ] **Step 5: Commit**
+- [x] **Step 2: Emit** — `node --experimental-strip-types scripts/mock_etl_data.mts --emit l2l && node --experimental-strip-types scripts/mock_etl_data.mts --emit b15`. Spot-check: `grep -c 'INSERT INTO' backend/src/main/resources/mock/DWH_CONTROL/LAYER_TO_LAYER/*/statements.sql` sums to 33 (+1 ARCHIVE decoy, excluded by the service); anchor CSV gained exactly 12 `_ETL_m_CAS_` lines; `git diff` on a CSV shows APPENDED lines only (existing SYN/real bytes untouched — the spec §3 "SYN untouched" proof). Re-run both emits — `git status` clean (idempotency proof).
+- [x] **Step 3: GREEN** — `mvn -q -am -pl backend test`: new tests pass AND the pre-existing gates prove the join: `everyConfiguredRecipeExistsInCorpus` (every CAS L2L row's recipe exists in corpus), `everyB15RecipeIsConfigured` (every CAS b15 row is L2L-configured), `statusMixPresent`, `decoyDirIsExcluded`, `allFourteenDatesServe`.
+- [x] **Step 4:** `node --experimental-strip-types scripts/mock_etl_data.mts --check` → exit 0, no drift. `node --experimental-strip-types --test scripts/mock_etl_data.test.mts` still green.
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/resources/mock/DWH_CONTROL/LAYER_TO_LAYER backend/src/main/resources/mock/composer/dwh/config/cluster_tuning/inputs backend/src/test/java/io/pure360/etl360/LayerToLayerContractTest.java backend/src/test/java/io/pure360/etl360/OperationalContractTest.java docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -245,9 +245,9 @@ Follow superpowers:writing-skills conventions (mirror the committed `regen-corpu
 4. **Corpus-safety rules:** parser never runs in place (`make cas-gen` only); `DWH_CONTROL` mock mirror edits only via `--emit l2l` marker blocks; **never re-run `scripts/gen_b15_history.py` after CAS landed** (index-shift rewrites SYN rows — the frozen-generator rule) — CAS b15 rows are owned by `--emit b15`.
 5. **Extension guide:** add a manifest row (next `n`, unique CAS_* tables, pick shapes), re-run the workflow, bump `CorpusContractTest`/`viewer_sweep`/`LayerToLayerContractTest` floors, extend `relationships_sweep` if a new casuistic class is introduced.
 
-- [ ] **Step 1: Write SKILL.md** per above (≤60 lines, imperative, no narration).
-- [ ] **Step 2: Verify** — `node --experimental-strip-types scripts/mock_etl_data.mts --check` exit 0 (the skill's advertised gate is true at commit time).
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Write SKILL.md** per above (≤60 lines, imperative, no narration).
+- [x] **Step 2: Verify** — `node --experimental-strip-types scripts/mock_etl_data.mts --check` exit 0 (the skill's advertised gate is true at commit time).
+- [x] **Step 3: Commit**
 
 ```bash
 git add .claude/skills/mock-etl-data/SKILL.md docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -287,12 +287,12 @@ static double nearestRank(List<Double> sortedAsc, int pct)  // ceil(pct/100*n)-t
 
 Semantics (exact): iterate `dates()` ascending, group rows by `recipeFilename`; `history` = one entry per date the recipe appears (raw `status` passthrough: `SUCCESS`/`FAILED`/`""` — normalization is the frontend adapter's job); `okCount`/`koCount` count `SUCCESS`/`FAILED` only; `latestDate`/`latestStatus`/`lastJobId`/`lastClusterName` from the last (max-date) row; percentiles/avg over non-null parsed durations (all-null ⇒ the three stats null); `layer` = first L2L entry with `entry.recipe().equals(recipeFilename)`, else `"UNKNOWN"`; recipes sorted by `recipeFilename`. No behavior change to existing endpoints.
 
-- [ ] **Step 1: Fixture prep + failing unit tests.** Append to the 2026_07_02 fixture CSV: `cluster-fix-01,_ETL_m_FIXTURE.json,application_1774840000002_0002,2026-07-02T05:00:00.000Z,20m 00sec,SUCCESS,` (`_ETL_m_FIXTURE.json` IS in the fixture L2L → layer ODS). Update the `service()` helper to `new OperationalService(roots, new LayerToLayerService(roots))` (fixture-mock has a `DWH_CONTROL` tier). New cases — percentile math on known values: `_ETL_m_SYN_ODS_ORDERS.json` → history 2, layer `"UNKNOWN"` (absent from fixture L2L — the UNKNOWN contract), `p50DurationMin` ≈ 10.0, `p95DurationMin` ≈ 14.083 (n=2 nearest-rank: ceil(1)=1st, ceil(1.9)=2nd), `avgDurationMin` within 0.01 of 12.04; `_ETL_m_FIXTURE.json` → layer `"ODS"`, okCount 1, p50==p95==20.0; `_ETL_m_SYN_DM_ORDERS_SUMMARY.json` → latestStatus `""`, okCount 0, koCount 0, durations present.
-- [ ] **Step 2: Failing contract test** (`OperationalSummaryContractTest`, same `@SpringBootTest(properties = "etl360.dwh-control-root=/nonexistent-etl360-test-dwh-control") @AutoConfigureMockMvc` pin as `OperationalContractTest`): `GET /api/operational/summary` → 200; `$.dates.length()` = 14; the `_ETL_m_CAS_DWH_EVENTS_FACT.json` entry has layer `DWH`, history length 14, `okCount` 10, `koCount` 4 (3 koDates + incident day), `latestDate` `2026-07-29`, `latestStatus` `FAILED`, non-empty `lastJobId`/`lastClusterName`, `p95DurationMin >= p50DurationMin`.
-- [ ] **Step 3: RED** — `mvn -q -am -pl backend test` fails on the new tests only. **Step 4: implement** DTO + service + controller mapping per Interfaces. **Step 5: GREEN.**
-- [ ] **Step 6: Regenerate frontend types** (the repo convention needs a running backend): `mvn -q -am -pl backend install -DskipTests && (cd backend && mvn -q spring-boot:run &)`, poll `curl -sf localhost:8080/api/health`, then `make generate-api`, then kill the boot process AND `lsof -ti tcp:8080 | xargs kill -9` (validate_loop.sh teardown idiom); verify `git diff frontend/src/api/types.gen.ts` shows `OperationalSummaryDto`.
-- [ ] **Step 7: Hook.** `queries.ts`: `export type OperationalSummary = components['schemas']['OperationalSummaryDto']` + `export const useOperationalSummary = () => useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS })`. Extend `operational.test.tsx` with a `/api/operational/summary` MSW handler + one resolve case. `cd frontend && pnpm test && npx tsc --noEmit` green.
-- [ ] **Step 8: Commit**
+- [x] **Step 1: Fixture prep + failing unit tests.** Append to the 2026_07_02 fixture CSV: `cluster-fix-01,_ETL_m_FIXTURE.json,application_1774840000002_0002,2026-07-02T05:00:00.000Z,20m 00sec,SUCCESS,` (`_ETL_m_FIXTURE.json` IS in the fixture L2L → layer ODS). Update the `service()` helper to `new OperationalService(roots, new LayerToLayerService(roots))` (fixture-mock has a `DWH_CONTROL` tier). New cases — percentile math on known values: `_ETL_m_SYN_ODS_ORDERS.json` → history 2, layer `"UNKNOWN"` (absent from fixture L2L — the UNKNOWN contract), `p50DurationMin` ≈ 10.0, `p95DurationMin` ≈ 14.083 (n=2 nearest-rank: ceil(1)=1st, ceil(1.9)=2nd), `avgDurationMin` within 0.01 of 12.04; `_ETL_m_FIXTURE.json` → layer `"ODS"`, okCount 1, p50==p95==20.0; `_ETL_m_SYN_DM_ORDERS_SUMMARY.json` → latestStatus `""`, okCount 0, koCount 0, durations present.
+- [x] **Step 2: Failing contract test** (`OperationalSummaryContractTest`, same `@SpringBootTest(properties = "etl360.dwh-control-root=/nonexistent-etl360-test-dwh-control") @AutoConfigureMockMvc` pin as `OperationalContractTest`): `GET /api/operational/summary` → 200; `$.dates.length()` = 14; the `_ETL_m_CAS_DWH_EVENTS_FACT.json` entry has layer `DWH`, history length 14, `okCount` 10, `koCount` 4 (3 koDates + incident day), `latestDate` `2026-07-29`, `latestStatus` `FAILED`, non-empty `lastJobId`/`lastClusterName`, `p95DurationMin >= p50DurationMin`.
+- [x] **Step 3: RED** — `mvn -q -am -pl backend test` fails on the new tests only. **Step 4: implement** DTO + service + controller mapping per Interfaces. **Step 5: GREEN.**
+- [x] **Step 6: Regenerate frontend types** (the repo convention needs a running backend): `mvn -q -am -pl backend install -DskipTests && (cd backend && mvn -q spring-boot:run &)`, poll `curl -sf localhost:8080/api/health`, then `make generate-api`, then kill the boot process AND `lsof -ti tcp:8080 | xargs kill -9` (validate_loop.sh teardown idiom); verify `git diff frontend/src/api/types.gen.ts` shows `OperationalSummaryDto`.
+- [x] **Step 7: Hook.** `queries.ts`: `export type OperationalSummary = components['schemas']['OperationalSummaryDto']` + `export const useOperationalSummary = () => useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS })`. Extend `operational.test.tsx` with a `/api/operational/summary` MSW handler + one resolve case. `cd frontend && pnpm test && npx tsc --noEmit` green.
+- [x] **Step 8: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/dto/OperationalSummaryDto.java backend/src/main/java/io/pure360/etl360/service/OperationalService.java backend/src/main/java/io/pure360/etl360/api/OperationalController.java backend/src/test/java/io/pure360/etl360/service/OperationalServiceTest.java backend/src/test/java/io/pure360/etl360/OperationalSummaryContractTest.java backend/src/test/resources/fixture-mock/composer/dwh/config/cluster_tuning/inputs/2026_07_02/b15_application_end_with_recipe_null_status.csv frontend/src/api/types.gen.ts frontend/src/api/queries.ts frontend/src/api/operational.test.tsx docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -328,9 +328,9 @@ Rules (all null-safe; every DTO field optional):
 6. **Edges**: passthrough `{fromId: e.from, toId: e.to, kind}`, deduped by `from|to|kind`, dropping edges whose endpoint ids don't exist. **`relations`**: per card, sorted unique neighbor ids from edges (both directions).
 7. **Layout** (layer-ordered columns per spec §6; local implementation — `canvasLayout.ts`'s longest-path layering is connection-driven, not layer-driven, so only its stacking discipline is mirrored; note this in a file comment): column index `col = 2*rank + 1` for recipes; tables with an incoming `writes` edge `col = 2*rank + 2`; source-only tables `col = 2*rank`. `x = 40 + col * 320`; within a column order by (average predecessor y, then name), `y = 40 + i * 190`. Rank from `LAYER_RANK` (unknown → 8). This yields strictly left-to-right STG→…→OUTPUT flow incl. the cross-layer skip.
 
-- [ ] **Step 1: Failing tests** — inline fixture: 2 STG head tables, recipes r3/r4 both writing `T_ODS` (fan-in), r5 reading `T_ODS`+`T_REFS` writing `T_FACT` (diamond converge), a lookup table into r3, plus a summary with per-date statuses. Cases: (a) fan-in table KO when one writer KO at date; (b) recipe PENDING when date absent from history; (c) x strictly increases along the chain and `(x-40) % 320 === 0`; (d) p99 === p95 and seconds rounding; (e) edges dedup + relations symmetry; (f) `summary === undefined` ⇒ all PENDING, no throw.
-- [ ] **Step 2: RED → Step 3: implement → Step 4: GREEN + `npx tsc --noEmit`.**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Failing tests** — inline fixture: 2 STG head tables, recipes r3/r4 both writing `T_ODS` (fan-in), r5 reading `T_ODS`+`T_REFS` writing `T_FACT` (diamond converge), a lookup table into r3, plus a summary with per-date statuses. Cases: (a) fan-in table KO when one writer KO at date; (b) recipe PENDING when date absent from history; (c) x strictly increases along the chain and `(x-40) % 320 === 0`; (d) p99 === p95 and seconds rounding; (e) edges dedup + relations symmetry; (f) `summary === undefined` ⇒ all PENDING, no throw.
+- [x] **Step 2: RED → Step 3: implement → Step 4: GREEN + `npx tsc --noEmit`.**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/api/relationshipsAdapter.ts frontend/src/api/relationshipsAdapter.test.ts docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -358,8 +358,8 @@ Behavior spec (exact):
 
 RTL+MSW single-flow test: module-scoped `setupServer` with handlers `/api/relationships` (mini graph: 1 STG table + 1 recipe `_ETL_m_CAS_T.json` + 1 target table, 2 edges), `/api/operational/summary` (dates `['2026-07-28','2026-07-29']`, that recipe OK on 29, KO on 28). Flow: render inside `QueryClientProvider` (retry false) → `await findByText('_ETL_m_CAS_T.json')` → status badge `OK` present → search input narrows to 1 card → layer chip `STG` filters → click card → Details panel shows Related (2) → Clear selection.
 
-- [ ] **Step 1: failing test → Step 2: RED (`pnpm test`) → Step 3: implement per behavior spec → Step 4: GREEN + `npx tsc --noEmit`.**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: failing test → Step 2: RED (`pnpm test`) → Step 3: implement per behavior spec → Step 4: GREEN + `npx tsc --noEmit`.**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/ETLOperational.test.tsx frontend/src/mockData.ts docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -382,8 +382,8 @@ Behavior spec (exact):
 
 RTL additions (same file, same flow style): MSW `/api/operational/dates` (`{dates:['2026-07-28','2026-07-29'], mode:'mock'}`) + `/api/config` handler (URL templates with `{jobId}`/`{project}` placeholders). Assert: date input shows `2026-07-29` initially and card is `OK`; `fireEvent.change` to `2026-07-28` flips the badge to `KO`; select the recipe card and assert the Logging quick-link `href` contains the fixture `lastJobId` and project id; `container.querySelectorAll` on the history strip yields 2 cells (fixture) — plus one summary-fixture card asserting a 14-entry strip renders 14 cells.
 
-- [ ] **Step 1: failing assertions → Step 2: RED → Step 3: implement → Step 4: GREEN + `npx tsc --noEmit`.**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: failing assertions → Step 2: RED → Step 3: implement → Step 4: GREEN + `npx tsc --noEmit`.**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/ETLOperational.test.tsx docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -416,13 +416,15 @@ Behavior spec (exact):
 
 RTL flow: MSW `/api/recipes/ODS/m_CAS_T/_ETL_m_CAS_T.json` returning a minimal recipe (`steps` + `table` per Stream A's fixture shape). Select recipe card → click "Open preview" → `await findByText` of a step/target name inside the overlay canvas AND a raw-JSON substring → `fireEvent.keyDown(document, { key: 'Escape' })` → overlay gone. Second assertion: select the TABLE card → preview resolves the writer recipe (same MSW handler hit).
 
-- [ ] **Step 1: merge gate verified → Step 2: failing test → Step 3: RED → Step 4: implement → Step 5: GREEN + `npx tsc --noEmit`.**
-- [ ] **Step 6: Commit**
+- [x] **Step 1: merge gate verified → Step 2: failing test → Step 3: RED → Step 4: implement → Step 5: GREEN + `npx tsc --noEmit`.**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/tab3/PreviewOverlay.tsx frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/ETLOperational.test.tsx frontend/src/api/queries.ts docs/superpowers/plans/2026-07-31-operational-casuistics.md
 git commit -m "feat(operational): full-window preview overlay — shared EtlCanvas of the recipe + raw JSON, Esc closes"
 ```
+
+Merge-gate note: the gate was already satisfied at task start — `feat/etl360-operational-casuistics` tip `7d0abed` ("Merge main (Streams A + C) into feat/etl360-operational-casuistics") had already merged main, and `frontend/src/api/queries.ts`'s `useRecipe` already carried `enabled: !!path` (Stream A's own commit) — no change needed there for this task; `queries.ts` is unmodified by this commit despite appearing in the `git add` list above (a no-op add on an already-tracked, unchanged file). No resequencing was needed; Task 9 executed in its original plan position.
 
 ---
 
@@ -515,9 +517,9 @@ echo "[validate-loop] relationships sweep…"
 node --experimental-strip-types scripts/relationships_sweep.mts || fail "relationships sweep"
 ```
 
-- [ ] **Step 1: write script + wire the two steps.** Verify the adapter import loads under strip-types (`relationshipsAdapter.ts` must be `import type`-only — it is, by Task 6's contract).
-- [ ] **Step 2: run `make validate-loop` end-to-end** — expect `viewer_sweep: 81/81`, `mock_etl_data --check` clean, `relationships_sweep: PASS` with every `ok` line printed, anchor-date checks green, frontend tests green. Any FAIL names its casuistic: fix data via the SKILL workflow (manifest → emit → floors), never by editing generated blocks.
-- [ ] **Step 3: Commit**
+- [x] **Step 1: write script + wire the two steps.** Verify the adapter import loads under strip-types (`relationshipsAdapter.ts` must be `import type`-only — it is, by Task 6's contract).
+- [x] **Step 2: run `make validate-loop` end-to-end** — expect `viewer_sweep: 81/81`, `mock_etl_data --check` clean, `relationships_sweep: PASS` with every `ok` line printed, anchor-date checks green, frontend tests green. Any FAIL names its casuistic: fix data via the SKILL workflow (manifest → emit → floors), never by editing generated blocks.
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/relationships_sweep.mts scripts/validate_loop.sh docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -535,16 +537,16 @@ git commit -m "feat(casuistics): relationships_sweep gate — all CAS shape asse
 - Modify: root `CLAUDE.md` — frontend line (Tab 3 real), corpus caveats: CAS family note (12 `m_CAS_*` mappings are generated from `scripts/mock_etl_data.manifest.json` — regen ONLY via `make cas-gen`/`--emit`, floors 81/86/33) + the frozen-`gen_b15_history.py` hazard, testing section: `relationships_sweep` + `--check` in validate-loop
 - Create: `docs/adr/0008-manifest-driven-cas-mock-data.md` (MADR-lite, ≤30 lines: manifest-as-matrix, real-parser recipes, surgical marker/strip-append emission, frozen python generator; numbered 0008 to leave 0007 for Stream A's recipes-as-truth ADR)
 
-- [ ] **Step 1: Walk spec §8's eight criteria**, recording PASS/FAIL each with evidence:
-1. Tab 3 renders the real graph (boot `make dev` once; verify SYN + CAS cards, filters/search/zoom/selection — RTL evidence + manual spot-check; visual side-by-side deferred to human sign-off per the standing Task-12 ruling, record as such).
-2. TimePicker walks the 14 dates; spot-check `_ETL_m_CAS_DWH_EVENTS_FACT.json` KO on 07-18/21/23/29 against the CSVs.
-3. Preview overlay: recipe → canvas + raw JSON; table → writer recipe; Esc closes; `git diff --stat main.. -- frontend/src/components/tab1 frontend/src/components/tab2 frontend/src/components/tab4` shows no Tab-1/2/4 component churn beyond the merge base.
-4. `relationships_sweep` green inside `make validate-loop` (fresh full run).
-5. `viewer_sweep: 81/81` (same run).
-6. Full suite: `pnpm test`, `npx tsc --noEmit`, `make test`, `make check`, `make validate-loop` — all green.
-7. Skill committed; `--check` exit 0; re-run `--emit l2l` + `--emit b15` → `git status` clean (idempotency evidence).
-8. Docs updated (this task's own edits).
-- [ ] **Step 2: Fix small reds, re-run, commit** — the commit body carries the criterion-by-criterion record:
+- [x] **Step 1: Walk spec §8's eight criteria**, recording PASS/FAIL each with evidence:
+1. PASS — Tab 3 renders the real graph (boot `make dev` once; verify SYN + CAS cards, filters/search/zoom/selection — RTL evidence + manual spot-check; visual side-by-side deferred to human sign-off per the standing Task-12 ruling, record as such). **zoom/collapse PASS (RTL pin vs real cards)** — `ETLOperational.test.tsx` clicks the "−" zoom button past the 0.65 compact threshold and asserts `RelationshipGraph`'s compact-pill rendering kicks in on the real fixture cards (and reverts on zoom-in); pixel fidelity remains under the same DEFERRED-human visual label as the rest of criterion 1.
+2. PASS — TimePicker walks the 14 dates; spot-check `_ETL_m_CAS_DWH_EVENTS_FACT.json` KO on 07-18/21/23/29 against the CSVs.
+3. **PASS (walked post-merge, 2026-07-31)** — Preview overlay: recipe card → visual canvas + raw JSON; table card → writer recipe; Esc closes; Tab 1/2 untouched — all four clauses evidenced by the RTL flow in `frontend/src/components/tab3/ETLOperational.test.tsx` ("opens the full-window preview overlay from a recipe card and closes on Escape; a table card resolves its writer recipe": select recipe card → "Open preview" → SVG canvas text `CAS_ODS_TGT_STEP` + raw-JSON substring `targetTableNames` both present → `Escape` → both gone → table card → "Open preview" → same recipe canvas renders, proving writer-edge resolution) plus `git show bacbec5 --stat` (Task 9's landed commit touches only `frontend/src/components/tab3/{ETLOperational.tsx,ETLOperational.test.tsx,PreviewOverlay.tsx}` + this plan file — zero tab1/tab2/tab4 component churn). **Pixel/visual fidelity of the overlay is DEFERRED to human sign-off** per the standing Task-12 ruling — not claimed as verified here (headline-level label, not a footnote).
+4. PASS — `relationships_sweep` green inside `make validate-loop` (fresh full run).
+5. PASS — `viewer_sweep: 81/81` (same run).
+6. PASS — Full suite: `pnpm test`, `npx tsc --noEmit`, `make test`, `make check`, `make validate-loop` — all green.
+7. PASS — Skill committed; `--check` exit 0; re-run `--emit l2l` + `--emit b15` → `git status` clean (idempotency evidence).
+8. PASS — Docs updated (this task's own edits; root `CLAUDE.md` narrowed to the two surgical spots — corpus caveats CAS note + testing-section line — per controller instruction, leaving the frontend "what this is" line to the distribution stream).
+- [x] **Step 2: Fix small reds, re-run, commit** — the commit body carries the criterion-by-criterion record:
 
 ```bash
 git add docs/superpowers/specs/2026-07-31-operational-casuistics-design.md docs/architecture.md frontend/AGENTS.md CLAUDE.md docs/adr/0008-manifest-driven-cas-mock-data.md docs/superpowers/plans/2026-07-31-operational-casuistics.md
@@ -552,6 +554,17 @@ git commit -m "chore: Tab 3 operational + CAS casuistics acceptance sweep — sp
 ```
 
 (`--allow-empty` if criteria passed without fixes; tick the final checkboxes; explicit staging only.)
+
+**Criterion 3 closed (2026-07-31, post-Task-9):** Task 9 landed at `bacbec5` (preview
+overlay, review-approved). Criterion 3 re-walked in full per the record above — PASS
+on all four textual clauses, **pixel/visual fidelity DEFERRED to human sign-off**
+(headline-level label, matching the standing Task-12 ruling used for criteria 1/6).
+Full gate re-run once, end-to-end, post-overlay:
+`viewer_sweep: 81/81 mappings render`, `recipe_sweep: 86/86 recipes render+validate`,
+`mock_etl_data --check: clean`, `relationships_sweep: PASS` (all 13 assertions),
+frontend `Test Files 16 passed (16)` / `Tests 141 passed (141)`,
+`[validate-loop] PASS`, exit code 0. Task 11 now stands at 8/8 criteria PASS (7 PASS +
+1 PASS-with-deferred-visual, 0 PENDING).
 
 ---
 

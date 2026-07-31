@@ -70,7 +70,7 @@ class OperationalContractTest {
         var g = relationshipService.graph();
         Set<String> ids = g.nodes().stream().map(RelationshipsDto.NodeDto::id).collect(Collectors.toSet());
         for (var e : g.edges()) { assertThat(ids).contains(e.from()); assertThat(ids).contains(e.to()); }
-        assertThat(g.nodes().stream().filter(n -> n.kind().equals("recipe")).count()).isGreaterThanOrEqualTo(18);
+        assertThat(g.nodes().stream().filter(n -> n.kind().equals("recipe")).count()).isGreaterThanOrEqualTo(30);
     }
 
     @Test

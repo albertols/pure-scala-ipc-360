@@ -39,11 +39,20 @@ explicit ask. New UI states (loading, error, empty) reuse existing tokens
 (`--text-dim`, `--red`, etc.) rather than introducing new ones.
 
 `src/mockData.ts` is **legacy, being retired tab-by-tab** (see its header comment).
-The sidebar tree and Tab 1 (IPC ETL Viewer) are already real (`src/api/filesystemAdapter.ts`
-+ `useFilesystem`; `src/api/mappingAdapter.ts` + `useMappingModel`/`useMappingDom`); the
-`MAPPINGS` mock export Tab 1 used to consume is gone. The remaining three tab bodies
-(Modifier, Operational, DAG) still render from `mockData.ts` until their own
-sub-project rewires them — don't remove mock imports you haven't actually replaced.
+**All four tab bodies are real now** — `src/mockData.ts` has finished retiring:
+- Tab 1 (IPC ETL Viewer): `src/api/filesystemAdapter.ts` + `useFilesystem`;
+  `src/api/mappingAdapter.ts` + `useMappingModel`/`useMappingDom`.
+- Tab 2 (ETL Modifier): `src/api/recipeAdapter.ts` + `useRecipe`/`useDdl`, editing via
+  `src/api/recipeEdits.ts` against the recipe write API.
+- Tab 3 (ETL Operational): `src/api/relationshipsAdapter.ts`'s `toOperationalGraph` over
+  `useRelationships` + `useOperationalSummary` + `useOperationalDates`.
+- Tab 4 (ETL DAG): `src/api/dagAdapter.ts` + `useRelationships`/`useOperationalSnapshots`.
+
+`MAPPINGS`, `ETL_RECIPES`/`DDL_SCHEMAS` and `DAG_CLUSTERS`/`DAG_RUNS` are gone (zero
+importers, grep-verified at each retirement). `OPERATIONAL_CARDS` still exists but has
+zero importers after the four-stream merge — retire it in the next task that touches
+`mockData.ts`. Tab 4's Replay button is a client-side mock toast (no Pub/Sub) — labeled
+in `ETLDag.tsx`.
 
 ## API layer
 
@@ -51,10 +60,20 @@ sub-project rewires them — don't remove mock imports you haven't actually repl
 - `types.gen.ts` — generated, committed; regenerate from a running backend with
   `make generate-api` (or `pnpm generate:api`) after any backend DTO change. Don't
   hand-edit it.
-- `client.ts` — thin typed fetch wrapper (`apiGet`), problem+json → `ApiError`.
+- `client.ts` — thin typed fetch wrapper: `apiGet` for reads, `apiSend` for
+  `PUT`/`POST` writes (recipe save/validate/rollback); both map problem+json →
+  `ApiError`.
 - `queries.ts` — TanStack Query hooks (`useTree`, `useMappingDom`, `useMappingModel`,
-  `useRecipe`, `useDdl`, `useExpressions`, `useAppConfig`) and the type aliases app
-  code should import instead of `types.gen.ts` directly.
+  `useRecipe`, `useDdl`, `useExpressions`, `useAppConfig`, plus the Operational/DAG
+  hooks) and the type aliases app code should import instead of `types.gen.ts`
+  directly. Hooks keyed on a path argument (`useMappingDom`, `useMappingModel`,
+  `useRecipe`, `useDdl`) set `enabled: !!path` so no request fires before a tree click
+  supplies one.
+- `recipeAdapter.ts` (recipe→canvas projection, `recipeToCanvas`) and
+  `recipeEdits.ts` (immutable draft mutators — `setFieldTransformation`, `addStep`,
+  `deleteNode`, `deleteEdge`, …) behind Tab 2's editing state: `import type` only,
+  runtime imports use explicit `.ts` extensions so `node --experimental-strip-types`
+  can load the chain for `scripts/recipe_sweep.mts`.
 
 ## Key files
 

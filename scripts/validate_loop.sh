@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+# The gate validates the COMMITTED mock data, so pin the mock tiers unless the caller
+# overrode them. Without this, an untracked local `parser/src/main/resources/DWH_CONTROL`
+# (or composer) wins the real tier in DataRoots and the relationships/operational gates
+# silently assert against an empty graph — a gate that flips on machine state is not a gate.
+export ETL360_DWH_CONTROL_ROOT="${ETL360_DWH_CONTROL_ROOT:-backend/src/main/resources/mock/DWH_CONTROL}"
+export ETL360_COMPOSER_ROOT="${ETL360_COMPOSER_ROOT:-backend/src/main/resources/mock/composer}"
 echo "[validate-loop] building backend…"
 mvn -q -am -pl backend install -DskipTests
 ( cd backend && mvn -q spring-boot:run ) & BOOT=$!
@@ -27,6 +34,12 @@ curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/operational/2001-01-01
 echo "[validate-loop] viewer sweep…"
 # node >= 22.6 is required for --experimental-strip-types to run the .mts sweep directly.
 node --experimental-strip-types scripts/viewer_sweep.mts || fail "viewer sweep"
+echo "[validate-loop] recipe sweep…"
+node --experimental-strip-types scripts/recipe_sweep.mts || fail "recipe sweep"
+echo "[validate-loop] mock_etl_data --check…"
+node --experimental-strip-types scripts/mock_etl_data.mts --check || fail "mock_etl_data drift"
+echo "[validate-loop] relationships sweep…"
+node --experimental-strip-types scripts/relationships_sweep.mts || fail "relationships sweep"
 echo "[validate-loop] backend loop OK — running frontend hook tests…"
 ( cd frontend && pnpm test )
 echo "[validate-loop] PASS"

@@ -1,8 +1,13 @@
 // LEGACY FIGMA MOCK DATA — being retired tab-by-tab per docs/superpowers/specs/2026-07-29-etl360-foundation-design.md.
-// The filesystem tree AND the Tab-1 Viewer canvas are REAL now; remaining tabs below still consume mocks until their sub-project lands.
+// ALL FOUR TABS ARE REAL NOW — the filesystem tree, Tab-1 Viewer, Tab-2 Modifier,
+// Tab-3 Operational and Tab-4 DAG all consume the live backend. MAPPINGS,
+// ETL_RECIPES/DDL_SCHEMAS and DAG_CLUSTERS/DAG_RUNS were retired with their
+// sub-projects; OPERATIONAL_CARDS below now has ZERO importers (Tab 3 and Tab 4 both
+// left it at the four-stream merge) and is retire-on-sight for the next task that
+// touches this file.
 import type {
-  FSDir, ETLRecipe, DDLColumn,
-  OperationalCard, DagCluster, StatusType
+  FSDir,
+  OperationalCard, StatusType
 } from './types'
 
 // ─── Filesystem ───────────────────────────────────────────────────────────────
@@ -67,154 +72,6 @@ export const FILESYSTEM: FSDir = {
         },
       ],
     },
-  ],
-}
-
-// ─── ETL Recipes ──────────────────────────────────────────────────────────────
-
-export const ETL_RECIPES: Record<string, ETLRecipe> = {
-  etl_cdm_count_report: {
-    recipe_id: 'm_DM_DWHES_TABLA_COUNT_REPORT',
-    layer: 'CDM',
-    source: { type: 'Oracle', schema: 'DWHES_SCHEMA', table: 'TABLA_METADATA', filter: "STATUS = 'ACTIVE'", db_connection: 'CONN_ERP_PROD' },
-    transformations: [
-      {
-        id: 'EXP_001', type: 'EXPRESSION', name: 'EXP_FORMAT_REPORT',
-        ports: [
-          { name: 'REPORT_KEY', expression: "MD5(TABLA_ID || '_' || TO_CHAR(LOAD_DATE,'YYYYMMDD'))", dataType: 'VARCHAR2(32)' },
-          { name: 'ROW_COUNT_FMT', expression: "TO_CHAR(ROW_COUNT,'999,999,999')", dataType: 'VARCHAR2(20)' },
-          { name: 'LOAD_DT_STR', expression: "TO_CHAR(LOAD_DATE,'YYYY-MM-DD')", dataType: 'VARCHAR2(10)' },
-          { name: 'COUNT_BAND', expression: "IIF(ROW_COUNT>1000000,'LARGE',IIF(ROW_COUNT>100000,'MEDIUM','SMALL'))", dataType: 'VARCHAR2(10)' },
-        ],
-      },
-      {
-        id: 'AGG_001', type: 'AGGREGATOR', name: 'AGG_DAILY_COUNTS',
-        group_by: ['LOAD_DT_STR', 'COUNT_BAND'],
-        ports: [
-          { name: 'TABLE_CNT', expression: 'COUNT(REPORT_KEY)', dataType: 'NUMBER(10)' },
-          { name: 'TOTAL_ROWS', expression: 'SUM(ROW_COUNT)', dataType: 'NUMBER(18)' },
-        ],
-      },
-    ],
-    target: { type: 'BigQuery', dataset: 'cdm_dwhes', table: 'TABLA_COUNT_REPORT', load_type: 'INSERT', partition_field: 'LOAD_DT_STR', cluster_fields: ['COUNT_BAND'] },
-    metadata: { version: '1.4', owner: 'data-eng-cdm', last_modified: '2025-10-22', description: 'Daily table row count report aggregated by band' },
-  },
-
-  etl_cdm_customer_profile: {
-    recipe_id: 'm_DM_DWHES_CUSTOMER_PROFILE',
-    layer: 'CDM',
-    source: { type: 'PostgreSQL', schema: 'crm_public', table: 'CUSTOMER_MASTER', filter: 'ACTIVE = TRUE AND GDPR_CONSENT = TRUE', db_connection: 'CONN_CRM_PROD' },
-    transformations: [
-      {
-        id: 'EXP_001', type: 'EXPRESSION', name: 'EXP_NORMALIZE_CUSTOMER',
-        ports: [
-          { name: 'CUST_KEY', expression: "MD5(TO_CHAR(CUST_ID))", dataType: 'VARCHAR2(32)' },
-          { name: 'CUST_NAME_CLEAN', expression: "INITCAP(LTRIM(RTRIM(FULL_NAME)))", dataType: 'VARCHAR2(200)' },
-          { name: 'SEGMENT_GROUP', expression: "IIF(INSTR(SEGMENT,'VIP')>0,'PREMIUM',IIF(INSTR(SEGMENT,'SMB')>0,'SMB','STANDARD'))", dataType: 'VARCHAR2(20)' },
-        ],
-      },
-    ],
-    target: { type: 'BigQuery', dataset: 'cdm_dwhes', table: 'CUSTOMER_DIM', load_type: 'UPSERT', partition_field: '', cluster_fields: ['SEGMENT_GROUP'] },
-    metadata: { version: '2.1', owner: 'data-eng-cdm', last_modified: '2025-11-05', description: 'Customer dimension with GDPR-filtered and normalized profiles' },
-  },
-
-  etl_ods_flag_audit: {
-    recipe_id: 'm_ODS_CRR_FLAG_AUDIT_LOG_BPM',
-    layer: 'ODS',
-    bpm_id: 'BPM_74674_1',
-    source: { type: 'Oracle', schema: 'CRR_SCHEMA', table: 'AUDIT_LOG', filter: "LOG_TYPE = 'FLAG' AND PROC_DATE >= SYSDATE - 1", db_connection: 'CONN_CRR_PROD' },
-    transformations: [
-      {
-        id: 'EXP_001', type: 'EXPRESSION', name: 'EXP_PARSE_FLAGS',
-        ports: [
-          { name: 'FLAG_BIT', expression: "IIF(FLAG_VAL='Y',1,0)", dataType: 'NUMBER(1)' },
-          { name: 'AUDIT_KEY', expression: "LOG_ID || '_' || TO_CHAR(PROC_DATE,'YYYYMMDD')", dataType: 'VARCHAR2(50)' },
-          { name: 'PROC_DT_STR', expression: "TO_CHAR(PROC_DATE,'YYYY-MM-DD')", dataType: 'VARCHAR2(10)' },
-        ],
-      },
-      {
-        id: 'LKP_001', type: 'LOOKUP', name: 'LKP_FLAG_CODES',
-        lookup_table: 'REF_FLAG_CODES',
-        lookup_condition: 'FLAG_CODE = :IN_FLAG_CODE',
-        cache_type: 'Persistent',
-      },
-      {
-        id: 'FLT_001', type: 'FILTER', name: 'FLT_VALID_FLAGS',
-        filter_condition: "FLAG_BIT = 1 AND LKP_FLAG_DESC IS NOT NULL",
-      },
-    ],
-    target: { type: 'BigQuery', dataset: 'ods_crr', table: 'FLAG_AUDIT_LOG', load_type: 'INSERT', partition_field: 'PROC_DT_STR', cluster_fields: [] },
-    metadata: { version: '1.1', owner: 'data-eng-ods', last_modified: '2025-11-14', description: 'BPM 74674: Flag audit log ingestion with reference lookup' },
-  },
-
-  etl_ods_payment_reconcile: {
-    recipe_id: 'm_ODS_ACC_PAYMENT_RECONCILE_BPM',
-    layer: 'ODS',
-    bpm_id: 'BPM_83201_2',
-    source: { type: 'Oracle', schema: 'ACC_SCHEMA', table: 'PAYMENT_TXN', filter: "TXN_STATUS IN ('SETTLED','REVERSED')", db_connection: 'CONN_ACC_PROD' },
-    transformations: [
-      {
-        id: 'EXP_001', type: 'EXPRESSION', name: 'EXP_RECONCILE_AMT',
-        ports: [
-          { name: 'NET_AMT', expression: 'IIF(TXN_STATUS=\'REVERSED\', TXN_AMT * -1, TXN_AMT)', dataType: 'NUMBER(18,2)' },
-          { name: 'SETTLE_DT_STR', expression: "TO_CHAR(SETTLE_DATE,'YYYY-MM-DD')", dataType: 'VARCHAR2(10)' },
-          { name: 'RECON_KEY', expression: "TXN_ID || '_' || ACCOUNT_ID", dataType: 'VARCHAR2(60)' },
-        ],
-      },
-      {
-        id: 'JNR_001', type: 'JOINER', name: 'JNR_ACCOUNT_PAYMENT',
-        join_type: 'Left Outer',
-        join_condition: 'EXP_RECONCILE_AMT.ACCOUNT_ID = SQ_ACCOUNT_MASTER.ACC_ID',
-      },
-      {
-        id: 'AGG_001', type: 'AGGREGATOR', name: 'AGG_DAILY_RECON',
-        group_by: ['SETTLE_DT_STR', 'ACCOUNT_ID'],
-        ports: [
-          { name: 'TOTAL_NET_AMT', expression: 'SUM(NET_AMT)', dataType: 'NUMBER(18,2)' },
-          { name: 'TXN_COUNT', expression: 'COUNT(RECON_KEY)', dataType: 'NUMBER(10)' },
-        ],
-      },
-    ],
-    target: { type: 'BigQuery', dataset: 'ods_acc', table: 'PAYMENT_RECONCILE', load_type: 'INSERT', partition_field: 'SETTLE_DT_STR', cluster_fields: ['ACCOUNT_ID'] },
-    metadata: { version: '3.0', owner: 'data-eng-ods', last_modified: '2025-12-01', description: 'BPM 83201: Daily payment reconciliation with account join' },
-  },
-}
-
-// ─── DDL Schemas ─────────────────────────────────────────────────────────────
-
-export const DDL_SCHEMAS: Record<string, DDLColumn[]> = {
-  etl_cdm_count_report: [
-    { name: 'LOAD_DT_STR', bq_type: 'STRING', mode: 'REQUIRED', description: 'Partition date key YYYY-MM-DD' },
-    { name: 'COUNT_BAND', bq_type: 'STRING', mode: 'REQUIRED', description: 'Row count classification: SMALL / MEDIUM / LARGE' },
-    { name: 'TABLE_CNT', bq_type: 'INT64', mode: 'NULLABLE', description: 'Number of tables in this band on this date' },
-    { name: 'TOTAL_ROWS', bq_type: 'INT64', mode: 'NULLABLE', description: 'Sum of row counts across all tables in band' },
-    { name: '_INSERTED_AT', bq_type: 'TIMESTAMP', mode: 'REQUIRED', description: 'Record insertion timestamp (UTC)' },
-    { name: '_JOB_ID', bq_type: 'STRING', mode: 'NULLABLE', description: 'Dataproc/Spark job ID that wrote this record' },
-  ],
-  etl_cdm_customer_profile: [
-    { name: 'CUST_KEY', bq_type: 'STRING', mode: 'REQUIRED', description: 'MD5 surrogate key from CUST_ID' },
-    { name: 'CUST_NAME_CLEAN', bq_type: 'STRING', mode: 'NULLABLE', description: 'Normalized customer full name' },
-    { name: 'SEGMENT_GROUP', bq_type: 'STRING', mode: 'NULLABLE', description: 'Derived segment: PREMIUM / SMB / STANDARD' },
-    { name: '_EFFECTIVE_FROM', bq_type: 'DATE', mode: 'REQUIRED', description: 'SCD effective date start' },
-    { name: '_EFFECTIVE_TO', bq_type: 'DATE', mode: 'NULLABLE', description: 'SCD effective date end (NULL = current)' },
-    { name: '_IS_CURRENT', bq_type: 'BOOL', mode: 'REQUIRED', description: 'TRUE if this is the current active record' },
-  ],
-  etl_ods_flag_audit: [
-    { name: 'AUDIT_KEY', bq_type: 'STRING', mode: 'REQUIRED', description: 'Composite key LOG_ID + PROC_DATE' },
-    { name: 'LOG_ID', bq_type: 'INT64', mode: 'REQUIRED', description: 'Source audit log ID' },
-    { name: 'FLAG_BIT', bq_type: 'INT64', mode: 'NULLABLE', description: '1=flagged 0=cleared' },
-    { name: 'FLAG_CODE', bq_type: 'STRING', mode: 'NULLABLE', description: 'Flag type code from source' },
-    { name: 'FLAG_DESC', bq_type: 'STRING', mode: 'NULLABLE', description: 'Lookup description from REF_FLAG_CODES' },
-    { name: 'PROC_DT_STR', bq_type: 'STRING', mode: 'REQUIRED', description: 'Processing date partition key' },
-    { name: '_INSERTED_AT', bq_type: 'TIMESTAMP', mode: 'REQUIRED', description: 'BQ insertion timestamp' },
-  ],
-  etl_ods_payment_reconcile: [
-    { name: 'SETTLE_DT_STR', bq_type: 'STRING', mode: 'REQUIRED', description: 'Settlement date YYYY-MM-DD' },
-    { name: 'ACCOUNT_ID', bq_type: 'STRING', mode: 'REQUIRED', description: 'Account identifier' },
-    { name: 'TOTAL_NET_AMT', bq_type: 'NUMERIC', mode: 'NULLABLE', description: 'Net daily settled amount (reversals subtracted)' },
-    { name: 'TXN_COUNT', bq_type: 'INT64', mode: 'NULLABLE', description: 'Number of transactions in reconciliation' },
-    { name: 'ACC_NAME', bq_type: 'STRING', mode: 'NULLABLE', description: 'Account name from master join' },
-    { name: '_INSERTED_AT', bq_type: 'TIMESTAMP', mode: 'REQUIRED', description: 'BQ insertion timestamp' },
   ],
 }
 
@@ -287,61 +144,3 @@ export const OPERATIONAL_CARDS: OperationalCard[] = [
     x: 920, y: 360,
   },
 ]
-
-// ─── DAG Clusters ─────────────────────────────────────────────────────────────
-
-export const DAG_CLUSTERS: DagCluster[] = [
-  {
-    dag_id: 'DAG_CDM_DAILY',
-    schedule: '0 5 * * *',
-    last_run: '2025-12-10T05:00:00Z',
-    status: 'success',
-    tasks: [
-      { task_id: 'wait_source_ready', recipe_id: 'sensor', depends_on: [], last_status: 'success', duration_s: 12, x: 60, y: 80 },
-      { task_id: 'run_cdm_count_report', recipe_id: 'etl_cdm_count_report', depends_on: ['wait_source_ready'], last_status: 'success', duration_s: 142, card_id: 'rec_cdm_count', x: 280, y: 80 },
-      { task_id: 'run_cdm_customer', recipe_id: 'etl_cdm_customer_profile', depends_on: ['wait_source_ready'], last_status: 'success', duration_s: 87, card_id: 'rec_cdm_customer', x: 280, y: 200 },
-      {
-        task_id: 'sub_dag_cdm_validate', recipe_id: 'sub_dag', depends_on: ['run_cdm_count_report', 'run_cdm_customer'], last_status: 'success', duration_s: 34, x: 520, y: 140,
-        sub_dag: {
-          dag_id: 'SUB_DAG_CDM_VALIDATE',
-          schedule: '',
-          last_run: '2025-12-10T06:25:00Z',
-          status: 'success',
-          tasks: [
-            { task_id: 'validate_row_counts', recipe_id: 'validator', depends_on: [], last_status: 'success', duration_s: 18, x: 60, y: 80 },
-            { task_id: 'validate_bq_schema', recipe_id: 'validator', depends_on: ['validate_row_counts'], last_status: 'success', duration_s: 16, x: 280, y: 80 },
-          ],
-        },
-      },
-      { task_id: 'notify_success', recipe_id: 'notifier', depends_on: ['sub_dag_cdm_validate'], last_status: 'success', duration_s: 2, x: 740, y: 140 },
-    ],
-  },
-  {
-    dag_id: 'DAG_ODS_BPM_74674',
-    schedule: '30 4 * * *',
-    last_run: '2025-12-10T04:30:00Z',
-    status: 'failed',
-    tasks: [
-      { task_id: 'wait_crr_extract', recipe_id: 'sensor', depends_on: [], last_status: 'success', duration_s: 8, x: 60, y: 80 },
-      { task_id: 'run_ods_flag_audit', recipe_id: 'etl_ods_flag_audit', depends_on: ['wait_crr_extract'], last_status: 'failed', duration_s: 54, card_id: 'rec_ods_flag', x: 280, y: 80 },
-      { task_id: 'run_ods_payment', recipe_id: 'etl_ods_payment_reconcile', depends_on: ['run_ods_flag_audit'], last_status: 'skipped', duration_s: 0, card_id: 'rec_ods_payment', x: 520, y: 80 },
-      { task_id: 'notify_failure', recipe_id: 'notifier', depends_on: ['run_ods_flag_audit'], last_status: 'success', duration_s: 2, x: 520, y: 200 },
-    ],
-  },
-]
-
-export const DAG_RUNS: Record<string, { run_id: string; status: string; started_at: string; duration_s: number }[]> = {
-  DAG_CDM_DAILY: [
-    { run_id: 'run-2025-12-10-0500', status: 'success', started_at: '2025-12-10T05:00:00Z', duration_s: 280 },
-    { run_id: 'run-2025-12-09-0500', status: 'success', started_at: '2025-12-09T05:00:00Z', duration_s: 262 },
-    { run_id: 'run-2025-12-08-0500', status: 'success', started_at: '2025-12-08T05:00:00Z', duration_s: 301 },
-    { run_id: 'run-2025-12-07-0500', status: 'failed', started_at: '2025-12-07T05:00:00Z', duration_s: 89 },
-    { run_id: 'run-2025-12-06-0500', status: 'success', started_at: '2025-12-06T05:00:00Z', duration_s: 258 },
-  ],
-  DAG_ODS_BPM_74674: [
-    { run_id: 'run-2025-12-10-0430', status: 'failed', started_at: '2025-12-10T04:30:00Z', duration_s: 64 },
-    { run_id: 'run-2025-12-09-0430', status: 'success', started_at: '2025-12-09T04:30:00Z', duration_s: 198 },
-    { run_id: 'run-2025-12-08-0430', status: 'success', started_at: '2025-12-08T04:30:00Z', duration_s: 205 },
-    { run_id: 'run-2025-12-07-0430', status: 'success', started_at: '2025-12-07T04:30:00Z', duration_s: 191 },
-  ],
-}

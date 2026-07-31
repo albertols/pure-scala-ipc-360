@@ -1,0 +1,69 @@
+// ─── Palette — designer strip (Task 9) ──────────────────────────────────────
+//
+// Right-side vertical strip of IPC primitives. Every entry is both click-to-add
+// (onAdd) and HTML5-draggable (drop target lives on EtlCanvas via onDropType,
+// reading the same 'text/etl-type' payload). `type` is the raw recipe `type`
+// string ETLModifier hands to `addStep`/`addSourceTable` — see recipeAdapter's
+// RECIPE_KIND/FIXED_LABEL maps for how each resolves to a canvas kind, and
+// recipeEdits' addStep/addSourceTable for how each becomes a draft mutation.
+// Colors are read straight from NodeBox's NODE_STYLES tokens — no new palette
+// introduced (Figma contract §6/§9).
+
+import { NODE_STYLES } from '../tab1/NodeBox'
+
+/** Sentinel `type` handled specially by ETLModifier (addSourceTable, not
+ * addStep) — everything else is a literal recipe step `type` string. */
+export const SOURCE_TABLE_TYPE = 'sourceTable'
+
+export const PALETTE: { type: string; label: string; color: string }[] = [
+  { type: SOURCE_TABLE_TYPE, label: 'source table', color: NODE_STYLES.source.color },
+  { type: 'sourceQualifier', label: 'sourceQualifier', color: NODE_STYLES.sq.color },
+  { type: 'filter', label: 'filter', color: NODE_STYLES.filter.color },
+  { type: 'joiner', label: 'joiner', color: NODE_STYLES.joiner.color },
+  { type: 'aggregator', label: 'aggregator', color: NODE_STYLES.aggregator.color },
+  { type: 'router', label: 'router', color: NODE_STYLES.router.color },
+  { type: 'union', label: 'union', color: NODE_STYLES.expression.color },
+  { type: 'normalizer', label: 'normalizer', color: NODE_STYLES.expression.color },
+  { type: 'java', label: 'java', color: NODE_STYLES.expression.color },
+  { type: 'storedProcedure', label: 'storedProcedure', color: NODE_STYLES.expression.color },
+  { type: 'table', label: 'target table', color: NODE_STYLES.target.color },
+  { type: 'expression', label: 'expression step', color: NODE_STYLES.expression.color },
+]
+
+export function Palette({ onAdd }: { onAdd: (type: string) => void }) {
+  return (
+    <div style={{
+      width: 132, flexShrink: 0,
+      background: 'var(--surface)',
+      borderLeft: '1px solid var(--border)',
+      display: 'flex', flexDirection: 'column',
+      padding: 8, gap: 4,
+      overflowY: 'auto',
+    }}>
+      <div style={{ fontSize: 9, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 4px 4px' }}>
+        Add node
+      </div>
+      {PALETTE.map(entry => (
+        <button
+          key={entry.type}
+          type="button"
+          draggable
+          onDragStart={e => e.dataTransfer.setData('text/etl-type', entry.type)}
+          onClick={() => onAdd(entry.type)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 8px', borderRadius: 5,
+            background: 'transparent', border: '1px solid var(--border)',
+            cursor: 'grab', textAlign: 'left',
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: 3, background: entry.color, flexShrink: 0 }} />
+          <span style={{
+            fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>{entry.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}

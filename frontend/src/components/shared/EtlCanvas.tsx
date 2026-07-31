@@ -1,6 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import type { ETLNode, Connection } from '../../types'
+import type { ETLNode, Connection, Port } from '../../types'
 import { NodeBox, getNodeHeight, getPortY, buildPath, NODE_WIDTH } from '../tab1/NodeBox'
+
+/** True when two connections refer to the same edge (all four endpoints equal). */
+function sameConnection(a: Connection | null | undefined, b: Connection): boolean {
+  return !!a && a.fromNode === b.fromNode && a.fromPort === b.fromPort && a.toNode === b.toNode && a.toPort === b.toPort
+}
 
 export function EtlCanvas({
   nodes,
@@ -8,12 +13,23 @@ export function EtlCanvas({
   selectedNode,
   onSelectNode,
   highlightIds,
+  onPortClick,
+  onSelectEdge,
+  selectedEdge,
+  onDropType,
 }: {
   nodes: ETLNode[]
   connections: Connection[]
   selectedNode: string | null
   onSelectNode: (id: string) => void
   highlightIds: string[]
+  /** Task 9 (ETL Modifier click-wire) — optional, behavior-only additions. Tab 1
+   * (ETLViewer) passes none of these, so it keeps today's exact behavior: no port
+   * interactivity, no edge selection, no HTML5 drop target. */
+  onPortClick?: (nodeId: string, port: Port) => void
+  onSelectEdge?: (conn: Connection) => void
+  selectedEdge?: Connection | null
+  onDropType?: (type: string) => void
 }) {
   const [pan, setPan] = useState({ x: 30, y: 30 })
   const [zoom, setZoom] = useState(1)
@@ -61,6 +77,12 @@ export function EtlCanvas({
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
+      onDragOver={onDropType ? (e: React.DragEvent) => e.preventDefault() : undefined}
+      onDrop={onDropType ? (e: React.DragEvent) => {
+        e.preventDefault()
+        const type = e.dataTransfer.getData('text/etl-type')
+        if (type) onDropType(type)
+      } : undefined}
     >
       {/* dot grid */}
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
@@ -100,7 +122,7 @@ export function EtlCanvas({
           const y1 = fi >= 0 && !compact ? getPortY(fn, fi) : fn.y + getNodeHeight(fn, compact) / 2
           const x2 = tn.x
           const y2 = ti >= 0 && !compact ? getPortY(tn, ti) : tn.y + getNodeHeight(tn, compact) / 2
-          const hi = selectedNode === conn.fromNode || selectedNode === conn.toNode
+          const hi = selectedNode === conn.fromNode || selectedNode === conn.toNode || sameConnection(selectedEdge, conn)
           return (
             <path key={i}
               d={buildPath(x1, y1, x2, y2)}
@@ -108,6 +130,8 @@ export function EtlCanvas({
               stroke={hi ? '#4f9cf9' : '#2a3050'}
               strokeWidth={hi ? 1.5 : 1}
               markerEnd={hi ? 'url(#va-hi)' : 'url(#va)'}
+              onClick={onSelectEdge ? (e: React.MouseEvent) => { e.stopPropagation(); onSelectEdge(conn) } : undefined}
+              style={onSelectEdge ? { cursor: 'pointer' } : undefined}
             />
           )
         })}
@@ -120,6 +144,7 @@ export function EtlCanvas({
             isSelected={selectedNode === n.id || highlightIds.includes(n.id)}
             onClick={() => onSelectNode(n.id)}
             compact={compact}
+            onPortClick={onPortClick}
           />
         ))}
       </svg>

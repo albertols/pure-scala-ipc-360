@@ -1,0 +1,80 @@
+{
+  "steps" : [
+    {
+      "target" : {
+        "name" : "ODS_SYN_ORDERS",
+        "type" : "table",
+        "fields" : [
+          {
+            "name" : "ORDER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_L_SYN_ORDERS.ORDER_ID"
+            }
+          },
+          {
+            "name" : "CUSTOMER_ID",
+            "dataType" : "String",
+            "transformation" : {
+              "source" : "STG_L_SYN_ORDERS.CUSTOMER_ID"
+            }
+          },
+          {
+            "name" : "AMOUNT",
+            "dataType" : "BigDecimal",
+            "transformation" : {
+              "name" : "Undefined",
+              "parameters" : [
+                {
+                  "name" : "EXP_ARITHMETIC",
+                  "parameters" : [
+                    {
+                      "source" : "STG_L_SYN_ORDERS.AMOUNT"
+                    },
+                    {
+                      "value" : "*"
+                    },
+                    {
+                      "name" : "LKP_SYN_CURRENCY",
+                      "outputField" : "FX_RATE",
+                      "table" : "SYN_LKP_CURRENCY",
+                      "condition" : "CURRENCY_CODE = in_CURRENCY_CODE",
+                      "matchPolicy" : "First",
+                      "parameters" : [
+                        {
+                          "name" : "in_CURRENCY_CODE",
+                          "dataType" : "String",
+                          "transformation" : {
+                            "source" : "STG_L_SYN_ORDERS.CURRENCY_CODE"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "value" : "2"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "sources" : [
+        {
+          "name" : "STG_L_SYN_ORDERS",
+          "type" : "table"
+        }
+      ]
+    }
+  ],
+  "table" : {
+    "targetTableNames" : [
+      "ODS_SYN_ORDERS"
+    ],
+    "sourceTableNames" : [
+      "STG_L_SYN_ORDERS",
+      "SYN_LKP_CURRENCY"
+    ]
+  }
+}

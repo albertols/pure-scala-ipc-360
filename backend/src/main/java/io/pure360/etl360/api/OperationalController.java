@@ -1,6 +1,7 @@
 package io.pure360.etl360.api;
 
 import io.pure360.etl360.api.dto.OperationalSnapshotDto;
+import io.pure360.etl360.api.dto.OperationalSummaryDto;
 import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.service.OperationalService;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,11 @@ public class OperationalController {
     @GetMapping("/dates")
     public OperationalDatesDto dates() {
         return new OperationalDatesDto(operational.dates(), roots.composerMode());
+    }
+
+    @GetMapping("/summary")
+    public OperationalSummaryDto summary() {
+        return operational.summary();
     }
 
     @GetMapping("/{date}")

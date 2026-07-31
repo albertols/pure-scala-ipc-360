@@ -3,6 +3,7 @@ package io.pure360.etl360.api;
 import io.pure360.etl360.service.support.InvalidCorpusPathException;
 import io.pure360.etl360.service.support.InvalidDateException;
 import io.pure360.etl360.service.support.NotFoundException;
+import io.pure360.etl360.service.support.StaleRecipeException;
 import io.pure360.etl360.service.support.UnreadableFileException;
 import io.pure360.etl360.service.support.XmlUnparsableException;
 import org.slf4j.Logger;
@@ -29,6 +30,13 @@ public class ApiExceptionHandler {
     ProblemDetail badPath(InvalidCorpusPathException e) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
         pd.setTitle("Invalid path");
+        return pd;
+    }
+
+    @ExceptionHandler(StaleRecipeException.class)
+    ProblemDetail stale(StaleRecipeException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+        pd.setTitle("Recipe modified since load");
         return pd;
     }
 

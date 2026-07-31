@@ -19,5 +19,6 @@ function toFile(node: TreeNode): FSFile {
     path: node.path ?? '',
     type: node.kind === 'xml' ? 'xml' : 'json',
     mapping: node.mappingPath ?? undefined,
+    recipe: node.kind === 'json' && (node.name ?? '').startsWith('_ETL_') ? (node.path ?? undefined) : undefined,
   }
 }
