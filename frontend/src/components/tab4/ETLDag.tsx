@@ -433,7 +433,7 @@ export function ETLDag() {
   const selectedTask = litDag?.tasks.find(t => t.task_id === selectedTaskId) ?? null
 
   const config = useAppConfig().data
-  const project = config?.projectId ?? 'mock-project'   // served field is projectId (types.gen.ts:474) — design intent said gcpProjectId; defensive either way
+  const project = config?.gcpProjectId ?? 'mock-project'   // served field is gcpProjectId (types.gen.ts:585)
   const region = config?.region ?? 'europe-southwest1'
   const selRow = rowsByDate[selectedDate]?.find(r => r.recipeFilename === selectedTask?.task_id)
   const card = selectedTask ? toOperationalCard(selectedTask, dates, rowsByDate, selectedDate) : null

@@ -27,7 +27,7 @@ class ConfigControllerTest {
 
     // The exact AppConfigDto field set — nothing secret-ish beyond these 8 belongs here.
     private static final Set<String> EXPECTED_FIELDS = Set.of(
-        "projectId", "region", "dataprocJobUrl", "dataprocClusterUrl",
+        "gcpProjectId", "region", "dataprocJobUrl", "dataprocClusterUrl",
         "loggingUrl", "dwhControlMode", "composerMode", "corpusRoot");
 
     @Test

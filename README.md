@@ -36,12 +36,28 @@ Starts the backend on `http://127.0.0.1:8080` and the frontend dev server on
 which proxies `/api/*` to the backend. Output from each process is prefixed
 `[backend]`/`[frontend]`; Ctrl-C stops both.
 
-`scripts/dev.sh` first runs `mvn -am -pl backend install -DskipTests` and only then
-`(cd backend && mvn spring-boot:run)`, rather than `mvn -am -pl backend spring-boot:run`
-directly — a multi-module reactor and the `spring-boot:run` goal don't mix (invoked with
-`-am` across the reactor, the run goal fans out to every module, including `parser`,
-and fails). Building once up front and then running `spring-boot:run` scoped to
-`backend` alone avoids that.
+`scripts/dev.sh` runs in four staged steps, each printed as `[1/4]`…`[4/4]`:
+config resolution (`config.json`/`.env`/shell env/auto-detect — see "Run the 360
+suite on your own data" below), backend build, backend boot (waits for
+`/api/health`), then frontend boot. Pass `--check-config` to print the resolved
+config table and exit without building or booting anything — a dry run:
+`bash scripts/dev.sh --check-config` (there is no `make` target for this — `make dev`
+doesn't forward extra arguments, and `make dev --check-config` fails with
+`make: unrecognized option`, since `make` parses that flag itself).
+
+For the build step, `scripts/dev.sh` runs `mvn -am -pl backend install -DskipTests`
+and only then `(cd backend && mvn spring-boot:run)`, rather than
+`mvn -am -pl backend spring-boot:run` directly — a multi-module reactor and the
+`spring-boot:run` goal don't mix (invoked with `-am` across the reactor, the run goal
+fans out to every module, including `parser`, and fails). Building once up front and
+then running `spring-boot:run` scoped to `backend` alone avoids that.
+
+The committed `scripts/dev.sh` now resolves JAVA_HOME and the Node `bin/` directory
+itself (auto-detecting a JDK 17+ `java_home`/IDE-bundled JBR and the newest
+`~/.local/toolchains/node-v*` install, both overridable via `config.json`'s
+`javaHome`/`nodeBin`) — any local `JAVA_HOME`/`PATH` edits previously hand-added
+inside `scripts/dev.sh` are obsolete; discard them
+(`git checkout -- scripts/dev.sh` in the old main checkout).
 
 ## Make targets
 
@@ -92,6 +108,55 @@ Each data root can be in one of a few modes, reported by `GET /api/config` and
 - `ETL360_COMPOSER_ROOT` — same real/mock/absent shape, falling back to
   `ETL360_MOCK_ROOT/composer`.
 
+## Run the 360 suite on your own data
+
+```bash
+git pull
+cp config.example.json config.json   # git-ignored — yours to edit
+$EDITOR config.json                  # point the 4 data fields at your exports
+make dev                             # resolved config echoes at [1/4]; dry-run: bash scripts/dev.sh --check-config
+```
+
+`config.json` is **optional** — with no file at all, `make dev` boots on the committed
+sample corpus and mock operational tiers. Field reference (empty string = auto-detect;
+layering in `docs/adr/0009-config-json-entrypoint.md`):
+
+| Field | Feeds | Expected layout |
+|---|---|---|
+| `xmltobqPath` | `ETL360_CORPUS_ROOT` | IPC XML corpus, see tree below |
+| `composerRoot` | `ETL360_COMPOSER_ROOT` | b15 CSV history, see tree below |
+| `dwhControlRoot` | `ETL360_DWH_CONTROL_ROOT` | `LAYER_TO_LAYER/` statements, see below |
+| `gcpProjectId` | `ETL360_GCP_PROJECT` | project id for Dataproc/Logging deep links |
+| `javaHome` | `JAVA_HOME` | JDK 17+ home (e.g. an IDE-bundled JBR) |
+| `nodeBin` | `PATH` | a Node ≥ 22.6 `bin/` directory |
+
+Expected layouts (layers: `STG ODS DWH CDM RDM QDM ETL OUTPUT`):
+
+```
+<xmltobqPath>/<LAYER>/m_NAME.xml          # IPC Powermart export
+<xmltobqPath>/<LAYER>/m_NAME/             # parser output, next to the XML
+    _ETL_m_NAME.json                      #   recipe
+    <TABLE>.json                          #   BigQuery DDL per table
+
+<composerRoot>/dwh/config/cluster_tuning/inputs/<YYYY_MM_DD>/
+    b15_application_end_with_recipe_null_status.csv
+    # columns: cluster_name,recipe_filename,job_id,app_start_iso,
+    #          avg_job_duration_in_mins_sec,status,message
+
+<dwhControlRoot>/LAYER_TO_LAYER/<LAYER>/statements.sql
+    # rows: INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES
+    #   ('DWH','src/...','_ETL_m_X.json','wf_X','TARGET_TABLE',3,
+    #    [STRUCT('SRC_TABLE', true, 0)], ['LKP_X'],
+    #    [STRUCT('TARGET_TABLE','TRUNCATE_INSERT')],
+    #    [STRUCT('TARGET_TABLE','DAILY','LOAD_DATE','UNKNOWN_SUBPARTITION')])
+```
+
+Note: pointing `composerRoot`/`dwhControlRoot` at the committed mock dirs serves the
+same data but reports mode `real` in `/api/config` — an explicitly configured
+directory wins the real tier. Diagrams (architecture, per-tab data flow, config
+resolution): `docs/visual-guide.md` — screenshots are pending a short human capture
+pass, tracked as a checklist in that same doc.
+
 ## Synthetic operational data & the b15 generator
 
 `/api/relationships` and `/api/operational/*` are backed entirely by committed synthetic
@@ -131,14 +196,17 @@ python3 scripts/gen_b15_history.py --anchor 2026-08-05 --days 21
 │   ├── regen_corpus.sh        # regenerate corpus into a temp dir, diff vs committed
 │   ├── validate_loop.sh       # frontend→middleware→backend gate over the mock operational data
 │   └── gen_b15_history.py     # deterministic b15 job-history CSV generator
+├── config.example.json          # template for config.json (git-ignored — copy it, don't edit the template)
 ├── .env.example                # ETL360_* env var reference
 ├── pom.xml                     # parent Maven aggregator (parser, backend)
 ├── parser/                     # Scala 2.12 IPC XML → recipe/DDL/SQL parser (standalone tool)
 ├── backend/                    # Spring Boot 3 / Java 17 REST API over the corpus + parser
 ├── frontend/                   # React 19 / Vite / TanStack Query UI
 └── docs/
-    ├── adr/                      # Architecture Decision Records (MADR-lite, 0000 template + 0001-0007)
+    ├── adr/                      # Architecture Decision Records (MADR-lite, 0000 template + 0001-0009)
     ├── architecture.md           # system diagram, endpoint table, config reference
+    ├── harness.md                # the SDD/TDD harness: skills, agents, gate composition
+    ├── visual-guide.md           # 4 diagrams (rendered); screenshots pending a human capture pass
     └── superpowers/
         ├── specs/               # approved design specs
         └── plans/                # implementation plans (checkbox-tracked progress)
@@ -147,14 +215,15 @@ python3 scripts/gen_b15_history.py --anchor 2026-08-05 --days 21
 `docs/architecture.md` (system diagram, sequence diagram, endpoint table, config
 reference) and `docs/adr/*` (the Architecture Decision Records behind the
 multi-module split, DOM+semantic overlay, mock-mirror fallback, OpenAPI-generated
-types, the Figma visual contract, the synthetic operational data mock tiers, and
-recipes-as-source-of-truth after a GUI edit) are the reference docs for this repo's
-shape. For the original design rationale and the
-task-by-task build logs behind them, see
-`docs/superpowers/specs/2026-07-29-etl360-foundation-design.md` +
-`docs/superpowers/plans/2026-07-29-etl360-foundation.md`, and
-`docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md` +
-`docs/superpowers/plans/2026-07-30-synthetic-operational-data.md`.
+types, the Figma visual contract, the synthetic operational data mock tiers,
+recipes-as-source-of-truth after a GUI edit, the manifest-driven CAS mock data, and
+the `config.json` entrypoint) are the reference docs for this repo's shape. For the
+SDD/TDD harness these sub-projects are built with, see `docs/harness.md`; for the
+suite diagrams (screenshots pending a human capture pass — see its checklist), see
+`docs/visual-guide.md`. For the original
+design rationale and the task-by-task build logs behind each sub-project, see
+`CLAUDE.md`'s "Current spec/plan" list (grows with every sub-project — not
+duplicated here).
 
 ## Corpus caveats
 

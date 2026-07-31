@@ -309,7 +309,7 @@ export function ETLOperational() {
   // GCP quick links: templated from the served config + (for the cluster
   // name) the raw summary entry looked up by name — `lastClusterName` isn't
   // on OperationalCard (keeps that type stable), so it's read here.
-  const projectId = cfg.data?.projectId ?? 'mock-project'
+  const projectId = cfg.data?.gcpProjectId ?? 'mock-project'
   const clusterName = selectedCard
     ? (summary.data?.recipes?.find(r => r.recipeFilename === selectedCard.name)?.lastClusterName ?? '')
     : ''

@@ -582,7 +582,7 @@ export interface components {
             origin?: string;
         };
         AppConfigDto: {
-            projectId?: string;
+            gcpProjectId?: string;
             region?: string;
             dataprocJobUrl?: string;
             dataprocClusterUrl?: string;

@@ -82,7 +82,7 @@ const SUMMARY_14: OperationalSummaryDto = {
 }
 
 const CONFIG: AppConfigDto = {
-  projectId: 'db-dev-example-project',
+  gcpProjectId: 'db-dev-example-project',
   region: 'europe-southwest1',
   dataprocJobUrl: 'https://console.cloud.google.com/dataproc/jobs/{jobId}?project={project}&region={region}',
   dataprocClusterUrl: 'https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}',
