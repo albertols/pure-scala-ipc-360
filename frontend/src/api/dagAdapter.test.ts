@@ -149,3 +149,36 @@ describe('run-history aggregation', () => {
     expect(fillGcpUrl('https://x/{a}?p={b}', 'unused', { a: 'v 1', b: 'w' })).toBe('https://x/v%201?p=w')
   })
 })
+
+describe('flow hardening — UNGROUPED, no-data recipes, degenerate inputs', () => {
+  it('nodes with workflow "" or workflow absent both land in UNGROUPED, which sorts among clusters by name like any other', () => {
+    const rel = structuredClone(REL) as RelationshipsT
+    rel.nodes!.push(
+      { id: 'recipe:_ETL_m_FIX_EMPTYWF.json', kind: 'recipe', name: '_ETL_m_FIX_EMPTYWF.json', layer: 'STG', mappingPath: 'STG/m_FIX_EMPTYWF', hasRecipe: true, workflow: '', executionOrder: 1 },
+      { id: 'recipe:_ETL_m_FIX_NOWF.json', kind: 'recipe', name: '_ETL_m_FIX_NOWF.json', layer: 'STG', mappingPath: 'STG/m_FIX_NOWF', hasRecipe: true, executionOrder: 1 },
+    )
+    const clusters = toDagClusters(rel)
+    // 'UNGROUPED'.localeCompare('wf_FIX_ODS') sorts before the lowercase 'wf_*'
+    // ids — no special-casing, it's an ordinary dag_id in the sort.
+    expect(clusters.map(c => c.dag_id)).toEqual([UNGROUPED, 'wf_FIX_ODS', 'wf_FIX_STG'])
+    const ungrouped = clusters.find(c => c.dag_id === UNGROUPED)!
+    expect(ungrouped.tasks.map(t => t.task_id).sort()).toEqual(['_ETL_m_FIX_EMPTYWF.json', '_ETL_m_FIX_NOWF.json'])
+  })
+
+  it('a recipe with no edges at all gets depends_on: [], lays out at its order-rank column, never throws', () => {
+    const rel: RelationshipsT = {
+      nodes: [{ id: 'recipe:_ETL_m_SOLO.json', kind: 'recipe', name: '_ETL_m_SOLO.json', layer: 'STG', mappingPath: 'STG/m_SOLO', hasRecipe: true, workflow: 'wf_SOLO', executionOrder: 3 }],
+      meta: { entryCount: 1, skippedRows: 0, layers: ['STG'] },
+      // no `edges` key at all
+    }
+    let clusters: ReturnType<typeof toDagClusters> = []
+    expect(() => { clusters = toDagClusters(rel) }).not.toThrow()
+    const solo = clusters[0].tasks[0]
+    expect(solo.depends_on).toEqual([])
+    expect([solo.x, solo.y]).toEqual([60, 80])   // sole distinct executionOrder -> rank 0 -> first column/row
+  })
+
+  it('toDagClusters({}) with nodes/edges/meta all undefined returns []', () => {
+    expect(toDagClusters({})).toEqual([])
+  })
+})

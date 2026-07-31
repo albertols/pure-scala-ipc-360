@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import { REL } from '../../api/dagAdapter.test'
+import type { RelationshipsT } from '../../api/dagAdapter'
 import { ETLDag } from './ETLDag'
 
 // No RTL auto-cleanup in this project's setup — explicit cleanup between
@@ -163,5 +164,73 @@ describe('ETLDag — real run selector, per-date coloring, GCP links, replay-moc
     fireEvent.click(await screen.findByText('Publish Replay'))
 
     expect(await screen.findByText(/Replay published for/)).toBeInTheDocument()
+  })
+})
+
+describe('ETLDag — flow hardening (UNGROUPED, no-data recipes, cross-workflow deps)', () => {
+  // A workflow:'' loner recipe, added to a clone of the base fixture so the
+  // other describe blocks' REL-derived expectations stay untouched.
+  const REL_WITH_LONER = structuredClone(REL) as RelationshipsT
+  REL_WITH_LONER.nodes!.push({
+    id: 'recipe:_ETL_m_FIX_LONER.json', kind: 'recipe', name: '_ETL_m_FIX_LONER.json',
+    layer: 'QDM', mappingPath: 'QDM/m_FIX_LONER', hasRecipe: true, workflow: '',
+  })
+
+  it('(4) recipe with workflow "" lands in UNGROUPED; selecting it renders no-data (skipped) on every served date', async () => {
+    server.use(http.get('/api/relationships', () => HttpResponse.json(REL_WITH_LONER)))
+    const { container } = renderDag()
+
+    expect(await screen.findByText('UNGROUPED')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('UNGROUPED'))
+    fireEvent.click(await screen.findByText('_ETL_m_FIX_LONER.json', { selector: 'span' }))
+
+    // "Now" resolves to the latest served date (2026-07-29) — the loner never
+    // appears in any b15 row, so it's no-data (grey/skipped) there too.
+    // Two matches: the canvas node's status text AND the detail panel's own
+    // "Status" meta row (both read "skipped").
+    expect(await screen.findAllByText('skipped')).toHaveLength(2)
+    expect(container.querySelector('rect[fill="#4a5570"]')).not.toBeNull()
+
+    const dateInput = container.querySelector('input[type="date"]') as HTMLInputElement
+    fireEvent.change(dateInput, { target: { value: '2026-07-28' } })
+
+    expect(await screen.findAllByText('skipped')).toHaveLength(2)
+    expect(container.querySelector('rect[fill="#4a5570"]')).not.toBeNull()
+  })
+
+  it('(5) cross-workflow dep is not drawn on the canvas; the Depends on row still names it', async () => {
+    const { container } = renderDag()
+
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+
+    // Only the intra-cluster B->A edge is drawable (both endpoints live in the
+    // selected dag's taskMap); the STG->A cross-workflow dep has no node on
+    // this canvas to connect to, so it's silently skipped, not drawn dangling.
+    // (truncated label per TaskNode's 20-char cutoff, same idiom as the test above.)
+    await screen.findByText('_ETL_m_FIX_ODS_A.js…', { selector: 'text' })
+    expect(container.querySelectorAll('path[marker-end]')).toHaveLength(1)
+
+    fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
+
+    // Two DOM matches for the STG_A filename exist once selected (the detail
+    // panel's own "Depends on" value AND the still-expanded wf_FIX_STG row in
+    // the explorer sidebar) — scope to the meta row via its label sibling.
+    const label = await screen.findByText('Depends on')
+    expect(label.nextElementSibling?.textContent).toBe('_ETL_m_FIX_STG_A.json')
+  })
+
+  it('(6) date outside the served set: rowsByDate lookup is undefined -> all nodes render skipped, no crash', async () => {
+    const { container } = renderDag()
+
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+    expect(await screen.findByText(/^failed/)).toBeInTheDocument()   // sanity: A is failed at "Now"
+
+    const dateInput = container.querySelector('input[type="date"]') as HTMLInputElement
+    fireEvent.change(dateInput, { target: { value: '2001-01-01' } })
+
+    const skipped = await screen.findAllByText('skipped')
+    expect(skipped).toHaveLength(2)   // both ODS tasks, no-data at an unserved date
+    expect(screen.queryByText(/^failed/)).not.toBeInTheDocument()
   })
 })
