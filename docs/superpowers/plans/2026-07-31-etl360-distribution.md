@@ -34,7 +34,7 @@ Tick checkboxes per task, commit this file with each task. Resume = `git log --o
 
 **Interfaces (Tasks 5/7 rely on these):** `scripts/dev.sh --check-config` prints one summary line per key in the form `<name> <value> (<source>[, mode <real|mock|absent>])` and exits 0 without building; env mapping is `xmltobqPath→ETL360_CORPUS_ROOT`, `composerRoot→ETL360_COMPOSER_ROOT`, `dwhControlRoot→ETL360_DWH_CONTROL_ROOT`, `gcpProjectId→ETL360_GCP_PROJECT` (real placeholder names, `application.yml:5,6,8,10`), `javaHome→JAVA_HOME`, `nodeBin→PATH` prepend.
 
-- [ ] **Step 1: `config.example.json`** (defaults = committed mock/sample data; empty string = auto-detect):
+- [x] **Step 1: `config.example.json`** (defaults = committed mock/sample data; empty string = auto-detect):
 
 ```json
 {
@@ -47,7 +47,7 @@ Tick checkboxes per task, commit this file with each task. Resume = `git log --o
 }
 ```
 
-- [ ] **Step 2: `.gitignore`** — append `/config.json` and `/.env`, AND repair the `85963a9` breakage: the current last line `parser/src/main/scala/io/pure360/ipc/xmltojson/doc.worktrees/` is a no-newline concatenation (verify: `git show 85963a9 -- .gitignore` shows `\ No newline at end of file` on the removed side; `git check-ignore .worktrees` currently matches nothing). Split it back into two lines with a trailing newline:
+- [x] **Step 2: `.gitignore`** — append `/config.json` and `/.env`, AND repair the `85963a9` breakage: the current last line `parser/src/main/scala/io/pure360/ipc/xmltojson/doc.worktrees/` is a no-newline concatenation (verify: `git show 85963a9 -- .gitignore` shows `\ No newline at end of file` on the removed side; `git check-ignore .worktrees` currently matches nothing). Split it back into two lines with a trailing newline:
 
 ```
 parser/src/main/resources/DWH_CONTROL
@@ -58,7 +58,7 @@ parser/src/main/scala/io/pure360/ipc/xmltojson/doc
 /.env
 ```
 
-- [ ] **Step 3: rewrite `scripts/dev.sh`** (full content — replaces today's 14 lines; the uncommitted USER edit adding JAVA_HOME/toolchain exports becomes obsolete):
+- [x] **Step 3: rewrite `scripts/dev.sh`** (full content — replaces today's 14 lines; the uncommitted USER edit adding JAVA_HOME/toolchain exports becomes obsolete):
 
 ```bash
 #!/usr/bin/env bash
@@ -163,7 +163,7 @@ echo "${BLD}ETL 360 up${RST} — backend ${GRN}http://127.0.0.1:8080${RST} · fr
 wait
 ```
 
-- [ ] **Step 4: ADR** `docs/adr/0009-config-json-entrypoint.md` (template `docs/adr/0000-template.md`, ≤30 lines):
+- [x] **Step 4: ADR** `docs/adr/0009-config-json-entrypoint.md` (template `docs/adr/0000-template.md`, ≤30 lines):
 
 ```markdown
 # ADR-0009: config.json entrypoint with env-var layering
@@ -202,8 +202,8 @@ config.json is optional — a fresh clone boots on committed defaults.
   domain keys; no place for javaHome/nodeBin semantics.
 ```
 
-- [ ] **Step 5: verify** — `bash -n scripts/dev.sh`; `bash scripts/dev.sh --check-config` (expect all sources `env` in an agent shell / `default` in a clean one); `cp config.example.json config.json && env -u ETL360_CORPUS_ROOT -u JAVA_HOME NO_COLOR=1 bash scripts/dev.sh --check-config` (expect `config.json` sources, no ANSI bytes: pipe through `grep -c $'\033'` → 0); `rm config.json`. Then a full `make dev` boot smoke: health `up`, Ctrl-C teardown clean.
-- [ ] **Step 6: Commit**
+- [x] **Step 5: verify** — `bash -n scripts/dev.sh`; `bash scripts/dev.sh --check-config` (expect all sources `env` in an agent shell / `default` in a clean one); `cp config.example.json config.json && env -u ETL360_CORPUS_ROOT -u JAVA_HOME NO_COLOR=1 bash scripts/dev.sh --check-config` (expect `config.json` sources, no ANSI bytes: pipe through `grep -c $'\033'` → 0); `rm config.json`. Then a full `make dev` boot smoke: health `up`, Ctrl-C teardown clean.
+- [x] **Step 6: Commit**
 
 ```bash
 git add config.example.json scripts/dev.sh .gitignore docs/adr/0009-config-json-entrypoint.md docs/superpowers/plans/2026-07-31-etl360-distribution.md

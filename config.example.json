@@ -1,0 +1,8 @@
+{
+  "xmltobqPath": "parser/src/main/resources/xmltobq",
+  "composerRoot": "backend/src/main/resources/mock/composer",
+  "dwhControlRoot": "backend/src/main/resources/mock/DWH_CONTROL",
+  "gcpProjectId": "my-gcp-project",
+  "javaHome": "",
+  "nodeBin": ""
+}
