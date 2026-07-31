@@ -2,6 +2,7 @@ package io.pure360.etl360.service;
 
 import io.pure360.etl360.api.dto.TreeNodeDto;
 import io.pure360.etl360.config.Etl360Properties;
+import io.pure360.etl360.service.support.HistorySidecar;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -32,6 +33,9 @@ public class CorpusService {
             for (Path p : entries) {
                 String name = p.getFileName().toString();
                 if (Files.isDirectory(p)) {
+                    // Write-history sidecar (see HistorySidecar): archived recipe versions,
+                    // never a browsable tree entry.
+                    if (HistorySidecar.DIR.equals(name)) continue;
                     children.add(dirNode(p, null));
                 } else if (hasXmlExtension(name)) {
                     children.add(xmlNode(p));
@@ -108,6 +112,7 @@ public class CorpusService {
     public List<String> allXmlPaths() {
         try (Stream<Path> walk = Files.walk(root)) {
             return walk.filter(Files::isRegularFile)
+                .filter(p -> !HistorySidecar.isHistoryPath(root, p))
                 .filter(p -> hasXmlExtension(p.getFileName().toString()))
                 .map(this::relative).sorted()
                 .map(CorpusService::stripXmlExtension).toList();
@@ -122,6 +127,7 @@ public class CorpusService {
     private List<String> collect(String ext) {
         try (Stream<Path> walk = Files.walk(root)) {
             return walk.filter(Files::isRegularFile)
+                .filter(p -> !HistorySidecar.isHistoryPath(root, p))
                 .filter(p -> p.getFileName().toString().endsWith(ext))
                 .map(this::relative).sorted().toList();
         } catch (IOException e) { throw new UncheckedIOException(e); }

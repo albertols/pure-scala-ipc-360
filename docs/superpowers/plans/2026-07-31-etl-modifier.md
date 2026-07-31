@@ -462,7 +462,7 @@ public record RecipeHistoryEntryDto(String version, String timestamp, long sizeB
 
 Service rules: writable iff path ends `.json` AND basename starts `_ETL_` AND `PathResolver.insideCorpus` passes AND no `_history` segment — else `InvalidCorpusPathException` (→ existing 400). `save`: current `modifiedAt` string ≠ `baseModified` ⇒ `StaleRecipeException` (409); archive current file to `<dir>/_history/<base>.<version>.json` (create dir), write body atomically (`Files.write` to `<dir>/.<name>.tmp` + `Files.move(…, ATOMIC_MOVE, REPLACE_EXISTING)`), return fresh `recipe(path)`. `rollback`: archive current, copy archived version over, return fresh DTO. `validate` (no file IO, tolerates `fields`/`weststone`): errors for — unparsable/`steps` missing or empty; step target missing `name`; step target `type` missing/blank (**RULED DEVIATION:** spec's "every step type known" is implemented as *non-blank*, NOT membership of the canonical set — the anonymizer also corrupted type VALUES corpus-wide (`BERYLFALLS`×86, `EARLYGLADE`×49, `ASHPATH2`×10, `CEDARWICK2`×1) and spec §9 requires all 74 corpus recipes to validate green; §3 limits repair to the `weststone` key); field missing `name`; dot-ref `T.F` where `T` (case-insensitive) ∉ {all `sources[]` names ∪ step target names ∪ `table.sourceTableNames`} — corpus-audited: zero violations under exactly this rule. Exclusion filter: `CorpusService.dirNode` skips child dirs named `_history`; `allXmlPaths`/`collect` filter `HistorySidecar.isHistoryPath` — one shared predicate, contract-tested.
 
-- [ ] **Step 1: Failing MockMvc test** — isolated temp corpus so tests never write the real one:
+- [x] **Step 1: Failing MockMvc test** — isolated temp corpus so tests never write the real one:
 
 ```java
 @SpringBootTest @AutoConfigureMockMvc
@@ -512,8 +512,8 @@ class RecipeWriteControllerTest {
 }
 ```
 
-- [ ] **Step 2: RED** (`mvn -q -am -pl backend test` — 404/405s) **→ Step 3: implement** per interfaces **→ Step 4: GREEN** (full backend suite — existing contract tests prove the exclusion filter changed nothing for the real corpus).
-- [ ] **Step 5: Commit**
+- [x] **Step 2: RED** (`mvn -q -am -pl backend test` — 404/405s) **→ Step 3: implement** per interfaces **→ Step 4: GREEN** (full backend suite — existing contract tests prove the exclusion filter changed nothing for the real corpus).
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/RecipeController.java \
