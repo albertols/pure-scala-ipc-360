@@ -388,14 +388,18 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const { fs, loading, error } = useFilesystem()
   const queryClient = useQueryClient()
 
-  // History drawer + view mode (Task 10): `viewingVersion`/`viewedContent` are
+  // History drawer + view mode (Task 10): `viewingVersion`/`viewedRecipe` are
   // set together (handleViewVersion awaits the archived GET, then sets both in
   // the same render) — `viewingVersion !== null` is the single "isViewing"
-  // source of truth used to swap the canvas/panels onto the archived content
-  // and to blanket-disable every editing affordance below.
+  // source of truth used to swap the canvas/panels/header onto the archived
+  // recipe and to blanket-disable every editing affordance below. `viewedRecipe`
+  // keeps the FULL archived RecipeDto (not just `.content`) so the header card
+  // can show the archive's own fileName/sizeBytes/modifiedAt instead of the
+  // live recipe's (review finding: showing the read-only banner next to the
+  // LIVE modifiedAt was misleading).
   const [historyOpen, setHistoryOpen] = useState(false)
   const [viewingVersion, setViewingVersion] = useState<string | null>(null)
-  const [viewedContent, setViewedContent] = useState<RecipeJson | null>(null)
+  const [viewedRecipe, setViewedRecipe] = useState<RecipeFile | null>(null)
   const isViewing = viewingVersion !== null
 
   const rec = useRecipe(recipePath ?? '')
@@ -421,8 +425,13 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
 
   // Canvas + panels derive from whichever content is "current" — the live
   // draft normally, or the archived version while viewing (spec §6: "canvas +
-  // panels derive from the archived content").
-  const content = isViewing ? viewedContent : draft
+  // panels derive from the archived content"). Header metadata follows the
+  // same swap (see `headerRecipe` below).
+  const content = isViewing ? ((viewedRecipe?.content ?? null) as RecipeJson | null) : draft
+  // Header card metadata (fileName/path/sizeBytes/modifiedAt) follows the same
+  // swap as `content` — review finding: showing a read-only "viewing archived
+  // version" banner next to the LIVE modifiedAt was misleading.
+  const headerRecipe = isViewing && viewedRecipe ? viewedRecipe : rec.data
   const graph = useMemo(
     () => (content && recipePath ? recipeToCanvas(content, recipePath) : null),
     [content, recipePath],
@@ -446,7 +455,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
       setShowRaw(false)
       setHistoryOpen(false)
       setViewingVersion(null)
-      setViewedContent(null)
+      setViewedRecipe(null)
     }
   }
 
@@ -532,7 +541,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     if (!recipePath) return
     try {
       const archived = await apiGet<RecipeFile>(`/recipes/history/${recipePath}?version=${version}`)
-      setViewedContent((archived.content ?? {}) as RecipeJson)
+      setViewedRecipe(archived)
       setViewingVersion(version)
       setSelectedNodeId(null)
       setSelectedEdge(null)
@@ -546,7 +555,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const handleRestored = () => {
     void queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
     setViewingVersion(null)
-    setViewedContent(null)
+    setViewedRecipe(null)
   }
 
   // Closing the drawer is the only escape hatch out of view mode short of
@@ -558,7 +567,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
       const next = !o
       if (!next) {
         setViewingVersion(null)
-        setViewedContent(null)
+        setViewedRecipe(null)
       }
       return next
     })
@@ -646,19 +655,19 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, width: '100%' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#e2e8f8' }}>{rec.data.fileName}</h2>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#e2e8f8' }}>{headerRecipe?.fileName}</h2>
                     <span style={{
                       fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 600,
                       background: 'rgba(79,156,249,0.15)',
                       color: '#4f9cf9',
                       border: '1px solid rgba(79,156,249,0.3)',
                       fontFamily: 'JetBrains Mono, monospace',
-                    }}>{(rec.data.path ?? '').split('/')[0]}</span>
+                    }}>{(headerRecipe?.path ?? '').split('/')[0]}</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-                    <EditableField label="Path" value={rec.data.path ?? ''} onChange={() => {}} mono />
-                    <EditableField label="Size bytes" value={String(rec.data.sizeBytes ?? '')} onChange={() => {}} mono />
-                    <EditableField label="Modified" value={rec.data.modifiedAt ?? ''} onChange={() => {}} mono />
+                    <EditableField label="Path" value={headerRecipe?.path ?? ''} onChange={() => {}} mono />
+                    <EditableField label="Size bytes" value={String(headerRecipe?.sizeBytes ?? '')} onChange={() => {}} mono />
+                    <EditableField label="Modified" value={headerRecipe?.modifiedAt ?? ''} onChange={() => {}} mono />
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>

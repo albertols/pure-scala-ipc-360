@@ -373,6 +373,10 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
 
+    // Baseline: the header card shows the LIVE recipe's own metadata.
+    expect(screen.getByDisplayValue('321')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
+
     // Open the drawer — the version row is listed (mono timestamp + sizeBytes).
     fireEvent.click(screen.getByText('{ history }'))
     expect(await screen.findByText('2026-07-31T12:00:00Z')).toBeInTheDocument()
@@ -383,6 +387,13 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
     expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
 
+    // Review finding: the header card must follow the archive too — showing
+    // the read-only banner next to the LIVE modifiedAt/sizeBytes is misleading.
+    expect(screen.getByDisplayValue('100')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('2026-07-31T12:00:00Z')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('321')).not.toBeInTheDocument()
+    expect(screen.queryByDisplayValue('2026-07-31T00:00:00Z')).not.toBeInTheDocument()
+
     // Editing affordances are gone while viewing: the palette is hidden, and
     // the live draft's node ("T") is no longer what the canvas renders.
     expect(screen.queryByText('target table')).not.toBeInTheDocument()
@@ -392,5 +403,57 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     fireEvent.click(screen.getByText('Restore this version'))
     await waitFor(() => expect(capturedRollbackVersion).toBe('20260731-120000-000'))
     await waitFor(() => expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument())
+
+    // The header card's LIVE values are back (the recipe query was invalidated
+    // and refetched — the base GET handler's own values, since this MSW
+    // fixture doesn't simulate the rollback mutating the live file on disk).
+    await waitFor(() => expect(screen.getByDisplayValue('321')).toBeInTheDocument())
+    expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
+  })
+
+  it('closing the drawer while viewing exits view mode back to the live draft, without discarding an in-progress unsaved edit', async () => {
+    server.use(
+      http.get('/api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json', ({ request }) => {
+        const version = new URL(request.url).searchParams.get('version')
+        if (!version) {
+          return HttpResponse.json([
+            { version: '20260731-120000-000', timestamp: '2026-07-31T12:00:00Z', sizeBytes: 100 },
+          ])
+        }
+        return HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 100,
+          modifiedAt: '2026-07-31T12:00:00Z',
+          content: {
+            steps: [{ target: { name: 'T_OLD', type: 'table', fields: [] }, sources: [] }],
+            table: { targetTableNames: ['T_OLD'], sourceTableNames: [] },
+          },
+        })
+      }),
+    )
+
+    // Dirty the draft first (field A's formula, seeded '1' -> '999') so
+    // closing view mode without restoring can be shown to preserve it.
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '999' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('{ history }'))
+    fireEvent.click(await screen.findByText('View'))
+    expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
+    expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
+
+    // Close the drawer — the escape hatch back to the live draft (no rollback).
+    fireEvent.click(screen.getByText('{ history }'))
+
+    expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument()
+    expect(await screen.findByText('T', { selector: 'text' })).toBeInTheDocument()
+
+    // The prior unsaved edit survived — viewing never touched the draft.
+    expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(await screen.findByText(/999/)).toBeInTheDocument()
   })
 })
