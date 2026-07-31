@@ -88,7 +88,7 @@ Renderer rules (mirror the committed SYN XMLs byte-idiomatically — they are th
 5. `checkAll`: re-render every artifact in memory and byte-compare against disk (XML files, L2L marker blocks, CAS rows per date CSV), plus recipe existence `parser/src/main/resources/xmltobq/<layer>/<name>/_ETL_<name>.json`. Returns human-readable drift strings.
 6. CLI `main` guarded by `process.argv[1]` endsWith check so the test file can import the pure functions.
 
-- [ ] **Step 1: Write the failing tests** (`scripts/mock_etl_data.test.mts`):
+- [x] **Step 1: Write the failing tests** (`scripts/mock_etl_data.test.mts`):
 
 ```ts
 import { test } from 'node:test'
@@ -135,10 +135,10 @@ test('b15 rows: 12 per date, KO pattern per manifest, anchor-date KO for #5', ()
 })
 ```
 
-- [ ] **Step 2: Run to verify failure** — `node --experimental-strip-types --test scripts/mock_etl_data.test.mts` — FAIL (module missing).
-- [ ] **Step 3: Write the manifest + implement** `mock_etl_data.mts` per the Interfaces block. Verify a rendered XML against the real parser BEFORE trusting it (temp copy, Task-1-of-SYN idiom): render #3 to a scratch dir, `mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <scratch> --generateDDLContent --generateRecipe --generateTargetDDL --generateSourceDDL"`, confirm `_ETL_m_CAS_ODS_EVENTS.json` appears. Iterate the renderer if not (≤3 iterations, else STOP and report BLOCKED with the parser log).
-- [ ] **Step 4: GREEN** — all node:test cases pass.
-- [ ] **Step 5: Commit**
+- [x] **Step 2: Run to verify failure** — `node --experimental-strip-types --test scripts/mock_etl_data.test.mts` — FAIL (module missing).
+- [x] **Step 3: Write the manifest + implement** `mock_etl_data.mts` per the Interfaces block. Verify a rendered XML against the real parser BEFORE trusting it (temp copy, Task-1-of-SYN idiom): render #3 to a scratch dir, `mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <scratch> --generateDDLContent --generateRecipe --generateTargetDDL --generateSourceDDL"`, confirm `_ETL_m_CAS_ODS_EVENTS.json` appears. Iterate the renderer if not (≤3 iterations, else STOP and report BLOCKED with the parser log).
+- [x] **Step 4: GREEN** — all node:test cases pass.
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/mock_etl_data.mts scripts/mock_etl_data.manifest.json scripts/mock_etl_data.test.mts docs/superpowers/plans/2026-07-31-operational-casuistics.md

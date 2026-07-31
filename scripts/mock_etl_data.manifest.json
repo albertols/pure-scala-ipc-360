@@ -1,0 +1,255 @@
+{
+  "family": "CAS",
+  "creationDate": "01/07/2026 00:00:00",
+  "uuidBase": "00000000-0000-0000-0000-0000000005",
+  "dates": [
+    "2026-07-16", "2026-07-17", "2026-07-18", "2026-07-19", "2026-07-20",
+    "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-25",
+    "2026-07-26", "2026-07-27", "2026-07-28", "2026-07-29"
+  ],
+  "incidentDate": "2026-07-21",
+  "incidentMessage": "Cluster-wide driver OOM cascade (synthetic CAS)",
+  "jobIdEpoch": 1774840777,
+  "mappings": [
+    {
+      "n": 1,
+      "name": "m_CAS_STG_L_EVENTS_LOAD",
+      "layer": "STG",
+      "ext": "xml",
+      "workflow": "wf_CAS_STG_LOAD",
+      "order": 1,
+      "sources": [
+        { "table": "CAS_FF_EVENTS", "dbtype": "Flat File",
+          "fields": ["EVENT_ID:string:20", "EVENT_TS:string:26", "AMOUNT_RAW:string:30", "STATUS_RAW:string:4"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_STG_L_EVENTS", "writeMode": "TRUNCATE_INSERT", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT_RAW"], "expr": "TO_DECIMAL(LTRIM(RTRIM(AMOUNT_RAW)))" },
+      "b15": { "cluster": "cluster-wf-cas-01-4001", "baseSeconds": 480, "spreadSeconds": 240, "koDates": [] }
+    },
+    {
+      "n": 2,
+      "name": "m_CAS_STG_L_REFS_LOAD",
+      "layer": "STG",
+      "ext": "xml",
+      "workflow": "wf_CAS_STG_LOAD",
+      "order": 1,
+      "sources": [
+        { "table": "CAS_FF_REFS", "dbtype": "Flat File",
+          "fields": ["REF_ID:string:20", "REF_NAME:string:60"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_STG_L_REFS", "writeMode": "TRUNCATE_INSERT", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
+      ],
+      "derived": { "name": "REF_NAME", "from": ["REF_NAME"], "expr": "UPPER(TRIM(REF_NAME))" },
+      "b15": { "cluster": "cluster-wf-cas-02-4002", "baseSeconds": 300, "spreadSeconds": 120, "koDates": [] }
+    },
+    {
+      "n": 3,
+      "name": "m_CAS_ODS_EVENTS",
+      "layer": "ODS",
+      "ext": "xml",
+      "workflow": "wf_CAS_ODS_LOAD",
+      "order": 2,
+      "sources": [
+        { "table": "CAS_STG_L_EVENTS", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "lookup": { "table": "CAS_LKP_STATUS", "inField": "STATUS_RAW", "keyField": "STATUS_CODE", "outField": "STATUS_DESC" },
+      "targets": [
+        { "table": "CAS_ODS_EVENTS", "writeMode": "APPEND", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_DESC:varchar2:60"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
+      "b15": { "cluster": "cluster-wf-cas-03-4003", "baseSeconds": 900, "spreadSeconds": 300, "koDates": [] }
+    },
+    {
+      "n": 4,
+      "name": "m_CAS_ODS_EVENTS_ENRICH",
+      "layer": "ODS",
+      "ext": "xml",
+      "workflow": "wf_CAS_ODS_LOAD",
+      "order": 2,
+      "sources": [
+        { "table": "CAS_STG_L_EVENTS", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_ODS_EVENTS", "writeMode": "APPEND", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
+      "b15": { "cluster": "cluster-wf-cas-04-4004", "baseSeconds": 660, "spreadSeconds": 200, "koDates": [] }
+    },
+    {
+      "n": 5,
+      "name": "m_CAS_DWH_EVENTS_FACT",
+      "layer": "DWH",
+      "ext": "xml",
+      "workflow": "wf_CAS_DWH_LOAD",
+      "order": 3,
+      "sources": [
+        { "table": "CAS_ODS_EVENTS", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] },
+        { "table": "CAS_ODS_REFS", "dbtype": "Oracle",
+          "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_DWH_EVENTS_FACT", "writeMode": "TRUNCATE_INSERT", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4", "REF_NAME:varchar2:60"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
+      "b15": { "cluster": "cluster-wf-cas-05-4005", "baseSeconds": 2400, "spreadSeconds": 900,
+        "koDates": ["2026-07-18", "2026-07-23", "2026-07-29"],
+        "koMessage": "Executor lost: shuffle fetch failed (synthetic CAS)" }
+    },
+    {
+      "n": 6,
+      "name": "m_CAS_ODS_REFS",
+      "layer": "ODS",
+      "ext": "xml",
+      "workflow": "wf_CAS_ODS_LOAD",
+      "order": 2,
+      "sources": [
+        { "table": "CAS_STG_L_REFS", "dbtype": "Oracle",
+          "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_ODS_REFS", "writeMode": "TRUNCATE_INSERT", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
+      ],
+      "derived": { "name": "REF_NAME", "from": ["REF_NAME"], "expr": "UPPER(TRIM(REF_NAME))" },
+      "b15": { "cluster": "cluster-wf-cas-06-4006", "baseSeconds": 420, "spreadSeconds": 150, "koDates": [] }
+    },
+    {
+      "n": 7,
+      "name": "m_CAS_ETL_EVENTS_SPLIT",
+      "layer": "ETL",
+      "ext": "xml",
+      "workflow": "wf_CAS_ETL_LOAD",
+      "order": 4,
+      "sources": [
+        { "table": "CAS_DWH_EVENTS_FACT", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4", "REF_NAME:varchar2:60"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_ETL_EVENTS_CURR", "writeMode": "TRUNCATE_INSERT", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] },
+        { "table": "CAS_ETL_EVENTS_HIST", "writeMode": "APPEND", "partition": "MONTHLY", "partitionKey": "LOAD_MONTH",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
+      "b15": { "cluster": "cluster-wf-cas-07-4007", "baseSeconds": 1200, "spreadSeconds": 400, "koDates": [] }
+    },
+    {
+      "n": 8,
+      "name": "m_CAS_CDM_EVENTS_MART",
+      "layer": "CDM",
+      "ext": "xml",
+      "workflow": "wf_CAS_CDM_LOAD",
+      "order": 5,
+      "sources": [
+        { "table": "CAS_DWH_EVENTS_FACT", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4", "REF_NAME:varchar2:60"] },
+        { "table": "CAS_ETL_EVENTS_CURR", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_CDM_EVENTS_MART", "writeMode": "APPEND", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] },
+        { "table": "CAS_CDM_EVENTS_ROLLUP", "writeMode": "TRUNCATE_INSERT", "partition": "MONTHLY", "partitionKey": "LOAD_MONTH",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
+      "b15": { "cluster": "cluster-wf-cas-08-4008", "baseSeconds": 1800, "spreadSeconds": 600, "koDates": [] }
+    },
+    {
+      "n": 9,
+      "name": "m_CAS_RDM_EVENTS_EXPORT",
+      "layer": "RDM",
+      "ext": "xml",
+      "workflow": "wf_CAS_RDM_LOAD",
+      "order": 6,
+      "sources": [
+        { "table": "CAS_CDM_EVENTS_MART", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] },
+        { "table": "CAS_ODS_EVENTS", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_RDM_EVENTS_EXPORT", "writeMode": "APPEND", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
+      "b15": { "cluster": "cluster-wf-cas-09-4009", "baseSeconds": 540, "spreadSeconds": 180, "koDates": [] }
+    },
+    {
+      "n": 10,
+      "name": "m_CAS_QDM_EVENTS_QUALITY",
+      "layer": "QDM",
+      "ext": "XML",
+      "workflow": "wf_CAS_QDM_LOAD",
+      "order": 6,
+      "sources": [
+        { "table": "CAS_DWH_EVENTS_FACT", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4", "REF_NAME:varchar2:60"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_QDM_EVENTS_QUALITY", "writeMode": "TRUNCATE_INSERT", "partition": "MONTHLY", "partitionKey": "LOAD_MONTH",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
+      "b15": { "cluster": "cluster-wf-cas-10-4010", "baseSeconds": 240, "spreadSeconds": 90, "koDates": [] }
+    },
+    {
+      "n": 11,
+      "name": "m_CAS_OUT_EVENTS_FEED",
+      "layer": "OUTPUT",
+      "ext": "xml",
+      "workflow": "wf_CAS_OUTPUT_LOAD",
+      "order": 7,
+      "sources": [
+        { "table": "CAS_RDM_EVENTS_EXPORT", "dbtype": "Oracle",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_OUT_EVENTS_FEED", "writeMode": "APPEND", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
+      ],
+      "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
+      "b15": { "cluster": "cluster-wf-cas-11-4011", "baseSeconds": 360, "spreadSeconds": 120, "koDates": [] }
+    },
+    {
+      "n": 12,
+      "name": "m_CAS_DWH_ORPHAN_METRICS",
+      "layer": "DWH",
+      "ext": "xml",
+      "workflow": "wf_CAS_DWH_LOAD",
+      "order": 3,
+      "sources": [
+        { "table": "CAS_STG_UNREFERENCED", "dbtype": "Oracle",
+          "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
+      ],
+      "lookup": null,
+      "targets": [
+        { "table": "CAS_DWH_ORPHAN_METRICS", "writeMode": "APPEND", "partition": "DAILY", "partitionKey": "LOAD_DATE",
+          "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
+      ],
+      "derived": { "name": "REF_NAME", "from": ["REF_NAME"], "expr": "UPPER(TRIM(REF_NAME))" },
+      "b15": { "cluster": "cluster-wf-cas-12-4012", "baseSeconds": 150, "spreadSeconds": 60, "koDates": [] }
+    }
+  ]
+}
