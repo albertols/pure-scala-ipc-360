@@ -515,9 +515,9 @@ echo "[validate-loop] relationships sweep…"
 node --experimental-strip-types scripts/relationships_sweep.mts || fail "relationships sweep"
 ```
 
-- [ ] **Step 1: write script + wire the two steps.** Verify the adapter import loads under strip-types (`relationshipsAdapter.ts` must be `import type`-only — it is, by Task 6's contract).
-- [ ] **Step 2: run `make validate-loop` end-to-end** — expect `viewer_sweep: 81/81`, `mock_etl_data --check` clean, `relationships_sweep: PASS` with every `ok` line printed, anchor-date checks green, frontend tests green. Any FAIL names its casuistic: fix data via the SKILL workflow (manifest → emit → floors), never by editing generated blocks.
-- [ ] **Step 3: Commit**
+- [x] **Step 1: write script + wire the two steps.** Verify the adapter import loads under strip-types (`relationshipsAdapter.ts` must be `import type`-only — it is, by Task 6's contract).
+- [x] **Step 2: run `make validate-loop` end-to-end** — expect `viewer_sweep: 81/81`, `mock_etl_data --check` clean, `relationships_sweep: PASS` with every `ok` line printed, anchor-date checks green, frontend tests green. Any FAIL names its casuistic: fix data via the SKILL workflow (manifest → emit → floors), never by editing generated blocks.
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/relationships_sweep.mts scripts/validate_loop.sh docs/superpowers/plans/2026-07-31-operational-casuistics.md
