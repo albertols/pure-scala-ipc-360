@@ -83,7 +83,7 @@
 - Consumes: nothing.
 - Produces: `IpcVocabulary.canonicalTargetType(String) -> String`, `canonicalSourceType(String) -> String`, `canonicalKey(String) -> String`, `TARGET_TYPES: Set<String>`, `SOURCE_TYPES: Set<String>`, `TYPE_ALIASES: Map<String,String>`, `KEY_ALIASES: Map<String,String>`. Every later Part 1 task resolves types through this class rather than reading `type` raw.
 
-- [ ] **Step 1: Write the failing vocabulary test**
+- [x] **Step 1: Write the failing vocabulary test**
 
 Create `backend/src/test/java/io/pure360/etl360/service/ipc/IpcVocabularyTest.java`:
 
@@ -133,12 +133,12 @@ class IpcVocabularyTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `mvn -am -pl backend test -Dtest=IpcVocabularyTest -DfailIfNoTests=false`
 Expected: FAIL — compilation error, `IpcVocabulary` does not exist.
 
-- [ ] **Step 3: Write `IpcVocabulary`**
+- [x] **Step 3: Write `IpcVocabulary`**
 
 Create `backend/src/main/java/io/pure360/etl360/service/ipc/IpcVocabulary.java`:
 
@@ -227,12 +227,12 @@ public final class IpcVocabulary {
 }
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `mvn -am -pl backend test -Dtest=IpcVocabularyTest -DfailIfNoTests=false`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Write the failing alias-witness contract test**
+- [x] **Step 5: Write the failing alias-witness contract test**
 
 This is the test that keeps the alias table honest against the real corpus. Note the two
 different lookups — `EARLYGLADE`'s witness is a `GROUP` name, not a `TRANSFORMATION` name
@@ -315,13 +315,13 @@ class AliasWitnessContractTest {
 }
 ```
 
-- [ ] **Step 6: Run it to verify it passes**
+- [x] **Step 6: Run it to verify it passes**
 
 Run: `mvn -am -pl backend test -Dtest=AliasWitnessContractTest -DfailIfNoTests=false`
 Expected: PASS, 5 tests. If a path resolution fails, check the `CORPUS` relative base —
 backend tests run with CWD `backend/`, so `../parser/...` is correct.
 
-- [ ] **Step 7: Write `docs/ipc/README.md`**
+- [x] **Step 7: Write `docs/ipc/README.md`**
 
 Content must cover, each as its own `##` section: what the wiki is; the provenance policy
 verbatim from spec §5.1 (cite-don't-vendor, the observed `docs.informatica.com` 403, derive
@@ -333,7 +333,7 @@ vocabulary, `ipc-rules.json` for severities, this wiki for prose); and an index 
 `00-model-map.md`, `rules.md`, `expressions.md` and the `transformations/` pages that Task 6
 creates.
 
-- [ ] **Step 8: Write `docs/ipc/00-model-map.md`**
+- [x] **Step 8: Write `docs/ipc/00-model-map.md`**
 
 A three-column table — IPC XML element → parser class (`file:line`) → recipe JSON key —
 with one row per construct: `TRANSFORMATION@TYPE`, `TRANSFORMFIELD`, `TRANSFORMFIELD@GROUP`,
@@ -342,7 +342,7 @@ Include the observation from spec §4 that IPC `Expression` transformations are 
 (`StepMode.scala:5` has no `EXPRESSION` value; `AbstractTarget` has no expression subclass)
 and instead inline into field transformation trees as `EXP_*` call nodes.
 
-- [ ] **Step 9: Run the full backend suite and commit**
+- [x] **Step 9: Run the full backend suite and commit**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS.
