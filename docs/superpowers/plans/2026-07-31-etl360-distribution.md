@@ -423,6 +423,18 @@ git add .claude/skills/sdd-cycle/SKILL.md .claude/skills/tab-rewire/SKILL.md .cl
 git commit -m "feat(harness): sdd-cycle + tab-rewire skills, implementer/task-reviewer agents, docs/harness.md"
 ```
 
+**Review fix (task-reviewer FIX, addressed same task):** `docs/harness.md`'s
+freely-authored sub-projects list had three factual misattributions —
+`mock-etl-data`'s author paraphrased as "the synthetic-data stream" instead of the
+brief's literal "Stream B" (which is the operational-casuistics sub-project, not
+synthetic-operational-data); the composer mock tier (ADR-0003, commit `5081f14`)
+credited to ETL Modifier instead of Synthetic operational data, where it actually
+landed; and Operational casuistics described as having "no new UI surface" though
+its own spec §6 rewires Tab 3. Also added a caveat that the sub-projects 1–5
+numbering reflects shipped order, not each spec's self-declared ordinal (two specs
+independently call themselves "sub-project 4"). Fixed in commit `fix(harness):
+correct mock-etl-data and composer-tier attributions in harness.md`.
+
 ---
 
 ### Task 4: `docs/visual-guide.md` — mermaid diagrams + screenshot scaffold

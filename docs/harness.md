@@ -13,7 +13,7 @@ are the executable detail.
 | [`regen-corpus`](../.claude/skills/regen-corpus/SKILL.md) | Regenerating, re-running, or verifying the parser against the IPC XML corpus — always via `make regen-corpus`, never in place. |
 | [`run-app`](../.claude/skills/run-app/SKILL.md) | Running, starting, or health-checking the ETL 360 suite locally (backend + frontend). |
 | [`validate-loop`](../.claude/skills/validate-loop/SKILL.md) | Running the end-to-end validation gate over the mock operational data. |
-| `mock-etl-data` | Regenerating the synthetic CAS/SYN mock operational data safely (authored by the synthetic-data stream; not duplicated here). |
+| `mock-etl-data` | Regenerating the synthetic CAS/SYN mock operational data safely (authored by the operational-casuistics sub-project, Stream B; not duplicated here). |
 | [`sdd-cycle`](../.claude/skills/sdd-cycle/SKILL.md) | Starting, resuming, or reviewing an ETL 360 sub-project end to end — brainstorm to merged branch. |
 | [`tab-rewire`](../.claude/skills/tab-rewire/SKILL.md) | Converting a mock-fed frontend tab to real backend data, or adding its corpus-wide render gate. |
 
@@ -41,18 +41,21 @@ yet: **functional prerequisites** (fixtures, corpus, schema) → **data/mock lay
 **gates/docs** (sweep wiring, harness/architecture updates). Never GUI before its
 data contract exists; never a gate before the thing it gates is real.
 
-Worked examples, sub-projects 1–5:
+Worked examples, sub-projects 1–5 (numbered here by shipped order, not by each
+spec's own self-declared ordinal — those are mutually inconsistent across specs,
+e.g. two independently call themselves "sub-project 4"):
 
 1. **Foundation** — module move, corpus contract test, `make dev`/`make test` shape.
    Everything else stands on this.
 2. **Synthetic operational data** — the data/mock layer: `SYN`-marked mappings, mock
-   `LayerToLayerConfig`, generated b15 history, feeding `/api/operational/*`.
+   `LayerToLayerConfig`, generated b15 history, feeding `/api/operational/*`; also
+   lands the composer mock tier (ADR-0003; commit `5081f14`).
 3. **IPC ETL Viewer** — Tab 1 real: adapter → fixtures → TDD → component rewire →
    sweep, the `tab-rewire` recipe's origin.
-4. **ETL Modifier** — same recipe applied to Tab 2, plus the mock composer tier
-   (ADR-0003).
-5. **Operational casuistics** — deeper operational-history cases layered on
-   sub-project 2's data, no new UI surface.
+4. **ETL Modifier** — same recipe applied to Tab 2.
+5. **Operational casuistics** — Tab 3 (ETL Operational) rewired to the real
+   relationships graph + job history, plus a new `CAS_*` relationship-shape mock
+   family layered on sub-project 2's data.
 
 ## How the gates compose
 
