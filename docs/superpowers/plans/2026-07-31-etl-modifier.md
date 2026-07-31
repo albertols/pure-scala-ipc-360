@@ -750,7 +750,7 @@ git commit -m "feat(modifier): 74/74 recipe_sweep gate in validate-loop"
 - Create: `docs/adr/0007-recipes-as-source-of-truth.md` from `docs/adr/0000-template.md` (≤30 lines: GUI-saved recipes fork from XML at first edit; write API + `_history/` sidecar versioning; `make regen-corpus` overwrite risk documented, not code-guarded in v1; alternatives: regen-lock file, XML round-trip editing — both rejected one-line)
 - Modify: `.claude/skills` regen skill / `README.md` regen section — one warning line about overwriting GUI-edited recipes (per spec §7).
 
-- [ ] **Step 1: Walk spec §10's eight criteria**, recording PASS/FAIL with evidence in the commit body:
+- [x] **Step 1: Walk spec §10's eight criteria**, recording PASS/FAIL with evidence in the commit body:
   1. Tree click renders any `_ETL_*.json` — manual boot; spot-check `CDM/m_DM_INFOHUB_BIZLINK` + `ODS/m_SYN_ODS_ORDERS` (fixture tests are the RTL evidence).
   2. `recipe_sweep` 74/74 inside `make validate-loop`.
   3. Palette all 12 primitives + click-wire dot-ref verbatim (Task 9 tests).
@@ -759,7 +759,7 @@ git commit -m "feat(modifier): 74/74 recipe_sweep gate in validate-loop"
   6. Explorer collapse (Task 3 test); Tab 1 byte-identical — `git diff main...HEAD --stat -- frontend/src/components/tab1` shows only the sanctioned Canvas-removal/import edits + `NodeBox` `onPortClick`; visual side-by-side deferred to human sign-off (standing ruling).
   7. `pnpm test`, `npx tsc --noEmit`, `make test`, `make check`, `make validate-loop` all green (run all five).
   8. Docs updated (this task's own edits verified by reading them back).
-- [ ] **Step 2: Fix small reds, re-run, commit**
+- [x] **Step 2: Fix small reds, re-run, commit** — no reds found; all eight criteria PASS or (visual halves) DEFERRED-human. See `.superpowers/sdd/2026-07-31-etl-modifier/task-13-report.md` for full evidence.
 
 ```bash
 git add docs/superpowers/specs/2026-07-31-etl-modifier-design.md CLAUDE.md docs/architecture.md \

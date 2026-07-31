@@ -39,11 +39,14 @@ explicit ask. New UI states (loading, error, empty) reuse existing tokens
 (`--text-dim`, `--red`, etc.) rather than introducing new ones.
 
 `src/mockData.ts` is **legacy, being retired tab-by-tab** (see its header comment).
-The sidebar tree and Tab 1 (IPC ETL Viewer) are already real (`src/api/filesystemAdapter.ts`
-+ `useFilesystem`; `src/api/mappingAdapter.ts` + `useMappingModel`/`useMappingDom`); the
-`MAPPINGS` mock export Tab 1 used to consume is gone. The remaining three tab bodies
-(Modifier, Operational, DAG) still render from `mockData.ts` until their own
-sub-project rewires them — don't remove mock imports you haven't actually replaced.
+The sidebar tree, Tab 1 (IPC ETL Viewer), and Tab 2 (ETL Modifier) are already real
+(`src/api/filesystemAdapter.ts` + `useFilesystem`; `src/api/mappingAdapter.ts` +
+`useMappingModel`/`useMappingDom`; `src/api/recipeAdapter.ts` + `useRecipe`/`useDdl`).
+The `MAPPINGS` mock export Tab 1 used to consume, and the `ETL_RECIPES`/`DDL_SCHEMAS`
+mock exports Tab 2 used to consume, are gone (zero importers, verified by grep at
+retirement). The remaining two tab bodies (Operational, DAG) still render from
+`mockData.ts` until their own sub-project rewires them — don't remove mock imports you
+haven't actually replaced.
 
 ## API layer
 
@@ -51,10 +54,20 @@ sub-project rewires them — don't remove mock imports you haven't actually repl
 - `types.gen.ts` — generated, committed; regenerate from a running backend with
   `make generate-api` (or `pnpm generate:api`) after any backend DTO change. Don't
   hand-edit it.
-- `client.ts` — thin typed fetch wrapper (`apiGet`), problem+json → `ApiError`.
+- `client.ts` — thin typed fetch wrapper: `apiGet` for reads, `apiSend` for
+  `PUT`/`POST` writes (recipe save/validate/rollback); both map problem+json →
+  `ApiError`.
 - `queries.ts` — TanStack Query hooks (`useTree`, `useMappingDom`, `useMappingModel`,
-  `useRecipe`, `useDdl`, `useExpressions`, `useAppConfig`) and the type aliases app
-  code should import instead of `types.gen.ts` directly.
+  `useRecipe`, `useDdl`, `useExpressions`, `useAppConfig`, plus the Operational/DAG
+  hooks) and the type aliases app code should import instead of `types.gen.ts`
+  directly. Hooks keyed on a path argument (`useMappingDom`, `useMappingModel`,
+  `useRecipe`, `useDdl`) set `enabled: !!path` so no request fires before a tree click
+  supplies one.
+- `recipeAdapter.ts` (recipe→canvas projection, `recipeToCanvas`) and
+  `recipeEdits.ts` (immutable draft mutators — `setFieldTransformation`, `addStep`,
+  `deleteNode`, `deleteEdge`, …) behind Tab 2's editing state: `import type` only,
+  runtime imports use explicit `.ts` extensions so `node --experimental-strip-types`
+  can load the chain for `scripts/recipe_sweep.mts`.
 
 ## Key files
 

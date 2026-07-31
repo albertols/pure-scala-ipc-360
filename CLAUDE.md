@@ -12,8 +12,11 @@ platform-agnostic. A multi-module Maven repo:
   in-JVM and serves the corpus (tree, DOM, semantic model, recipes, DDL, expressions,
   table relationships, mock operational job history).
 - `frontend/` — React 19 / Vite / Tailwind v4 GUI (Figma Make prototype), being wired
-  to `backend/` tab by tab. Tab 1 (IPC ETL Viewer) is real now — canvas, detail panel,
-  search, and zoom all consume the live corpus; Tabs 2–4 remain mock-data-driven.
+  to `backend/` tab by tab. Tab 1 (IPC ETL Viewer) and Tab 2 (ETL Modifier) are real
+  now — Tab 1's canvas/detail panel/search/zoom and Tab 2's recipe canvas, designer
+  palette, click-wire editing, save/history/rollback all consume the live corpus,
+  including the backend's first write API (`PUT`/`validate`/`history`/`rollback` on
+  `/api/recipes`); Tabs 3–4 land via separate parallel streams.
 - `docs/` — ADRs, `architecture.md`, and `superpowers/{specs,plans}/` design artifacts.
 
 No Spark, GCS, or xlsx dependencies in `parser/` — deliberately removed in the slim

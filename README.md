@@ -53,7 +53,7 @@ and fails). Building once up front and then running `spring-boot:run` scoped to
 | `make test-frontend`| `cd frontend && pnpm test` (vitest).                                       |
 | `make check`        | Full test suite, plus `tsc --noEmit` and `pnpm format --check`.            |
 | `make build`        | `mvn package` (parser + backend jars) and `cd frontend && pnpm build`.     |
-| `make regen-corpus` | Regenerates recipes/DDL over a **temp copy** of the XML corpus and diffs vs. the committed output — never writes back into the repo. See `scripts/regen_corpus.sh`. |
+| `make regen-corpus` | Regenerates recipes/DDL over a **temp copy** of the XML corpus and diffs vs. the committed output — never writes back into the repo. See `scripts/regen_corpus.sh`. Copying its regenerated output over a committed recipe by hand can silently overwrite a recipe edited through Tab 2 (ETL Modifier)'s write API — GUI edits fork from XML and become the source of truth (ADR-0007), and `regen-corpus` doesn't know that. |
 | `make generate-api` | Refreshes `frontend/src/api/types.gen.ts` from a **running** backend (`http://localhost:8080/v3/api-docs`) via `openapi-typescript`. |
 | `make validate-loop` | End-to-end frontend→middleware→backend gate: boots the backend, curls `/api/health`, `/api/relationships`, `/api/operational/dates`/`{date}`, then runs the frontend hook tests. See `scripts/validate_loop.sh`. |
 
@@ -137,7 +137,7 @@ python3 scripts/gen_b15_history.py --anchor 2026-08-05 --days 21
 ├── backend/                    # Spring Boot 3 / Java 17 REST API over the corpus + parser
 ├── frontend/                   # React 19 / Vite / TanStack Query UI
 └── docs/
-    ├── adr/                      # Architecture Decision Records (MADR-lite, 0000 template + 0001-0006)
+    ├── adr/                      # Architecture Decision Records (MADR-lite, 0000 template + 0001-0007)
     ├── architecture.md           # system diagram, endpoint table, config reference
     └── superpowers/
         ├── specs/               # approved design specs
@@ -147,8 +147,9 @@ python3 scripts/gen_b15_history.py --anchor 2026-08-05 --days 21
 `docs/architecture.md` (system diagram, sequence diagram, endpoint table, config
 reference) and `docs/adr/*` (the Architecture Decision Records behind the
 multi-module split, DOM+semantic overlay, mock-mirror fallback, OpenAPI-generated
-types, the Figma visual contract, and the synthetic operational data mock tiers) are
-the reference docs for this repo's shape. For the original design rationale and the
+types, the Figma visual contract, the synthetic operational data mock tiers, and
+recipes-as-source-of-truth after a GUI edit) are the reference docs for this repo's
+shape. For the original design rationale and the
 task-by-task build logs behind them, see
 `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md` +
 `docs/superpowers/plans/2026-07-29-etl360-foundation.md`, and
