@@ -10,7 +10,7 @@ import {
   renameNode,
   setFieldTransformation,
 } from './recipeEdits'
-import { renderFormula } from './recipeAdapter'
+import { recipeToCanvas, renderFormula } from './recipeAdapter'
 import type { RecipeJson } from './recipeAdapter'
 import bizlink from './__fixtures__/recipe_m_DM_INFOHUB_BIZLINK.json'
 
@@ -284,6 +284,59 @@ describe('deleteEdge', () => {
   it('no-ops when the step or field does not exist', () => {
     expect(deleteEdge(MINI, 'NOPE', 'B')).toEqual(MINI)
     expect(deleteEdge(MINI, 'T', 'NOPE')).toEqual(MINI)
+  })
+})
+
+// Review finding (Task 9 fix round): deriveConnections synthesizes a blank
+// fromPort/toPort "center-anchor" edge for a sources[] entry with zero
+// field-level dot-refs landing on its step (recipeAdapter.test.ts's
+// "field-less source entry" case). deleteEdge(d, toStep, '') used to look up
+// a field literally named '' and find nothing — a silent no-op even though
+// the UI treated it as a real, selectable, deletable edge.
+describe('deleteEdge — center-anchor (blank toPort) edges', () => {
+  const centerAnchor: RecipeJson = {
+    steps: [
+      {
+        target: { name: 'T', type: 'table', fields: [{ name: 'A', dataType: 'String', transformation: { value: '1' } }] },
+        sources: [{ name: 'S', type: 'table' }],
+      },
+    ],
+    table: { targetTableNames: ['T'], sourceTableNames: ['S'] },
+  }
+
+  it('removes the matching sources[] entry (by fromNode); canvas re-derivation drops the edge; the draft actually changes', () => {
+    const before = recipeToCanvas(centerAnchor, 'x')
+    expect(before.connections).toEqual([{ fromNode: 'S', fromPort: '', toNode: 'T', toPort: '' }])
+
+    const out = deleteEdge(centerAnchor, 'T', '', 'S')
+
+    expect(out).not.toBe(centerAnchor)
+    expect(out).not.toEqual(centerAnchor) // a REAL change — not the prior silent no-op
+    expect(out.steps![0].sources).toEqual([])
+    // Kept simple per review: table.sourceTableNames is NOT touched here (that's
+    // deleteNode's job) — S may still be meaningful bookkeeping even though no
+    // step references it anymore.
+    expect(out.table!.sourceTableNames).toEqual(['S'])
+
+    const after = recipeToCanvas(out, 'x')
+    expect(after.connections).toEqual([])
+  })
+
+  it('is a no-op when fromNode is omitted — nothing identifies which sources[] entry to drop', () => {
+    expect(deleteEdge(centerAnchor, 'T', '')).toEqual(centerAnchor)
+  })
+
+  it('only removes the target step\'s own sources[] entry — a sibling step referencing the same table is untouched', () => {
+    const shared: RecipeJson = {
+      steps: [
+        { target: { name: 'T1', type: 'table', fields: [] }, sources: [{ name: 'S', type: 'table' }] },
+        { target: { name: 'T2', type: 'table', fields: [] }, sources: [{ name: 'S', type: 'table' }] },
+      ],
+      table: { targetTableNames: ['T1', 'T2'], sourceTableNames: ['S'] },
+    }
+    const out = deleteEdge(shared, 'T1', '', 'S')
+    expect(out.steps![0].sources).toEqual([])
+    expect(out.steps![1].sources).toEqual([{ name: 'S', type: 'table' }])
   })
 })
 

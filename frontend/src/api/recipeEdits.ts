@@ -263,12 +263,35 @@ export function refsInto(d: RecipeJson, name: string): number {
 }
 
 /** Clears (deletes) the `.transformation` of a single field — the edge from
- * whatever it referenced into `toStep.toField`. No-op if the step/field don't
- * exist. */
-export function deleteEdge(d: RecipeJson, toStep: string, toField: string): RecipeJson {
+ * whatever it referenced into `toStep.toField`.
+ *
+ * Center-anchor edges (recipeAdapter's `deriveConnections`: a blank-port edge
+ * synthesized for a `sources[]` entry that has zero field-level dot-refs
+ * landing on its step — there is no field to clear) are handled by a
+ * DIFFERENT removal: when `toField` is blank, this removes the matching
+ * `sources[]` entry (matched by `fromNode`, the source table's name) from
+ * `toStep` instead — that IS the semantic of "delete this edge" when the edge
+ * *is* the sources[]-entry connectivity itself, not a field transformation.
+ * Kept deliberately simple per review: only `toStep`'s own `sources[]` entry
+ * is removed (`table.sourceTableNames` and any OTHER step's `sources[]`
+ * mention of the same table are left alone — another step may still legitimately
+ * depend on it; that's a `deleteNode`-shaped decision, not this one's).
+ * `fromNode` is optional so 3-arg callers (an existing field-level edge, where
+ * `toField` is always non-blank) are unaffected; omitting it for a blank
+ * `toField` is a safe no-op (nothing to identify which sources[] entry to drop).
+ * No-op if the step doesn't exist, or (field case) the field doesn't exist. */
+export function deleteEdge(d: RecipeJson, toStep: string, toField: string, fromNode?: string): RecipeJson {
   const draft = structuredClone(d)
   const step = draft.steps?.find(s => s.target?.name === toStep)
   if (!step) return draft
+
+  if (isBlank(toField)) {
+    if (fromNode !== undefined && step.sources) {
+      step.sources = step.sources.filter(s => s.name !== fromNode)
+    }
+    return draft
+  }
+
   const field = readFields(step.target).find(f => f.name === toField)
   if (field) delete field.transformation
   return draft

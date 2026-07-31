@@ -278,6 +278,45 @@ describe('ETLModifier — palette, click-wire, delete (Task 9)', () => {
     expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
   })
 
+  // Review finding (fix round): every IN/OUT port is a valid wire-start AND a
+  // valid completion target, so without a guard an armed wire could complete
+  // on a different port of the SAME node — a self-referencing dot-ref. A
+  // same-node completion click must be ignored (wire mode stays armed), not
+  // silently write S.A as a source of another field on S itself.
+  it('click-wire: a completion click on the origin node is ignored (self-wire guard); wire mode stays armed', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          { target: { name: 'S', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+          { target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] }, sources: [] },
+        ],
+        table: { targetTableNames: ['T'], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('S', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('A'))
+    expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
+
+    // A second click on A — same node as wireFrom, and A is IN/OUT-eligible —
+    // must NOT complete the wire: no dirty change, wire chip stays exactly as is.
+    fireEvent.click(screen.getByText('A'))
+    expect(screen.getByText('wire: S.A → click an IN port')).toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+
+    // The wire is still armed: completing on a DIFFERENT node's IN port still works.
+    fireEvent.click(screen.getByText('X'))
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
+  })
+
   it('delete: selecting node S shows a ref-count confirm hint; confirming removes it from the canvas', async () => {
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))

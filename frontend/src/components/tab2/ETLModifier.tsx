@@ -467,9 +467,18 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   // clicked port always carries its own name, since ports are derived 1:1 from
   // existing recipe fields). Any other OUT/IN-OUT click while armed restarts
   // the wire from the new port instead.
+  //
+  // Self-wire guard (review finding, Task 9 fix round): every IN/OUT port is
+  // BOTH a valid wire-start AND a valid wire-completion target, so an armed
+  // wire could otherwise "complete" on a different port of the SAME node it
+  // started from, writing a self-referencing dot-ref. A completion click
+  // whose nodeId matches wireFrom.nodeId is ignored outright — wire mode
+  // stays armed (neither completes nor restarts) so a stray same-node click
+  // doesn't silently drop the in-progress wire either.
   const handlePortClick = (nodeId: string, port: Port) => {
     const isInEligible = port.direction === 'IN' || port.direction === 'IN/OUT'
     if (wireFrom && isInEligible) {
+      if (nodeId === wireFrom.nodeId) return
       const { nodeId: fromNode, portName: fromPort } = wireFrom
       applyEdit(d => setFieldTransformation(d, nodeId, port.name || fromPort, { source: `${fromNode}.${fromPort}` }))
       setWireFrom(null)
@@ -490,7 +499,10 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   }
 
   const handleDeleteEdge = (conn: Connection) => {
-    applyEdit(d => deleteEdge(d, conn.toNode, conn.toPort))
+    // conn.fromNode identifies which sources[] entry to drop when this is a
+    // center-anchor edge (conn.toPort === '') — see recipeEdits.deleteEdge's
+    // docstring (review finding, Task 9 fix round).
+    applyEdit(d => deleteEdge(d, conn.toNode, conn.toPort, conn.fromNode))
     setSelectedEdge(null)
   }
 
