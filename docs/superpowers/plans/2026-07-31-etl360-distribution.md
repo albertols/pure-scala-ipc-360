@@ -274,7 +274,7 @@ git commit -m "feat(config): /api/config projectId -> gcpProjectId — property-
 
 Conventions: superpowers:writing-skills (frontmatter `name` + third-person "Use when…" `description`, ≤1024 chars, no workflow summary in the description). `mock-etl-data` is Stream B's — referenced in harness.md, NOT duplicated. `.claude/skills/{regen-corpus,run-app,validate-loop}` already committed — untouched.
 
-- [ ] **Step 1: `.claude/skills/sdd-cycle/SKILL.md`:**
+- [x] **Step 1: `.claude/skills/sdd-cycle/SKILL.md`:**
 
 ```markdown
 ---
@@ -325,7 +325,7 @@ Spec, plan, and review deserve the strongest available model; mechanical tasks
 the design, not the model. Never tier the task-reviewer below the implementer.
 ```
 
-- [ ] **Step 2: `.claude/skills/tab-rewire/SKILL.md`:**
+- [x] **Step 2: `.claude/skills/tab-rewire/SKILL.md`:**
 
 ```markdown
 ---
@@ -361,7 +361,7 @@ description: Use when converting a mock-fed ETL 360 frontend tab to real backend
 - New multi-render test files add `afterEach(() => cleanup())` — no global RTL cleanup here.
 ```
 
-- [ ] **Step 3: `.claude/agents/implementer.md`:**
+- [x] **Step 3: `.claude/agents/implementer.md`:**
 
 ```markdown
 ---
@@ -387,7 +387,7 @@ Report contract (final message): task name · changed-file list · RED evidence 
 GREEN evidence · verification tail · deviations (or "none") · commit hash.
 ```
 
-- [ ] **Step 4: `.claude/agents/task-reviewer.md`:**
+- [x] **Step 4: `.claude/agents/task-reviewer.md`:**
 
 ```markdown
 ---
@@ -414,9 +414,9 @@ Output format:
 - **Evidence checked:** the commands you ran
 ```
 
-- [ ] **Step 5: `docs/harness.md`** — sections (write in full, ~70 lines): **Skills** table (`regen-corpus`, `run-app`, `validate-loop`, `mock-etl-data` [authored by Stream B — safe CAS/SYN mock-data regeneration], `sdd-cycle`, `tab-rewire` — one "use when" line each, pointing at `.claude/skills/<name>/SKILL.md`); **Subagents** (`implementer`, `task-reviewer` — brief contract, report/verdict formats, the fix-loop); **Loop layering** (functional prerequisites → data/mock layer → backend/middleware → GUI → gates, with sub-projects 1–5 as worked examples: foundation → synthetic data → viewer → modifier/casuistics); **How the gates compose** (`make test` = backend reactor + vitest; `make check` = + `tsc --noEmit` + format check; `make validate-loop` = booted-backend endpoint loop + viewer/recipe sweeps + frontend hook tests — cite `scripts/validate_loop.sh`); **Starting a new sub-project** (checklist: brainstorm → spec → plan → worktree → sdd-cycle per task → acceptance → merge; root-doc edits last, single owner). Cross-link `docs/visual-guide.md` for the harness-loop diagram — do not duplicate the diagram here (DRY).
-- [ ] **Step 6: verify** — frontmatter of both skills ≤1024-char descriptions, "Use when" phrasing; `python3 - <<'PY'` YAML-frontmatter sanity optional; no repo tests affected: `git status` shows only the five new files.
-- [ ] **Step 7: Commit**
+- [x] **Step 5: `docs/harness.md`** — sections (write in full, ~70 lines): **Skills** table (`regen-corpus`, `run-app`, `validate-loop`, `mock-etl-data` [authored by Stream B — safe CAS/SYN mock-data regeneration], `sdd-cycle`, `tab-rewire` — one "use when" line each, pointing at `.claude/skills/<name>/SKILL.md`); **Subagents** (`implementer`, `task-reviewer` — brief contract, report/verdict formats, the fix-loop); **Loop layering** (functional prerequisites → data/mock layer → backend/middleware → GUI → gates, with sub-projects 1–5 as worked examples: foundation → synthetic data → viewer → modifier/casuistics); **How the gates compose** (`make test` = backend reactor + vitest; `make check` = + `tsc --noEmit` + format check; `make validate-loop` = booted-backend endpoint loop + viewer/recipe sweeps + frontend hook tests — cite `scripts/validate_loop.sh`); **Starting a new sub-project** (checklist: brainstorm → spec → plan → worktree → sdd-cycle per task → acceptance → merge; root-doc edits last, single owner). Cross-link `docs/visual-guide.md` for the harness-loop diagram — do not duplicate the diagram here (DRY).
+- [x] **Step 6: verify** — frontmatter of both skills ≤1024-char descriptions, "Use when" phrasing; `python3 - <<'PY'` YAML-frontmatter sanity optional; no repo tests affected: `git status` shows only the five new files.
+- [x] **Step 7: Commit**
 
 ```bash
 git add .claude/skills/sdd-cycle/SKILL.md .claude/skills/tab-rewire/SKILL.md .claude/agents/implementer.md .claude/agents/task-reviewer.md docs/harness.md docs/superpowers/plans/2026-07-31-etl360-distribution.md
