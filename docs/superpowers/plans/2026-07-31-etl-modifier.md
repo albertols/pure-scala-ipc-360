@@ -732,8 +732,8 @@ echo "[validate-loop] recipe sweep…"
 node --experimental-strip-types scripts/recipe_sweep.mts || fail "recipe sweep"
 ```
 
-- [ ] **Step 1: Write script + wire → Step 2: run `make validate-loop` end-to-end** — expect `viewer_sweep: 69/69` AND `recipe_sweep: 74/74 recipes render+validate`. Any FAIL line names the recipe: fix the ADAPTER or the validate rule, never skip a recipe.
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Write script + wire → Step 2: run `make validate-loop` end-to-end** — expect `viewer_sweep: 69/69` AND `recipe_sweep: 74/74 recipes render+validate`. Any FAIL line names the recipe: fix the ADAPTER or the validate rule, never skip a recipe.
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/recipe_sweep.mts scripts/validate_loop.sh docs/superpowers/plans/2026-07-31-etl-modifier.md
