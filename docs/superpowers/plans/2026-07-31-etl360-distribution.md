@@ -442,7 +442,7 @@ correct mock-etl-data and composer-tier attributions in harness.md`.
 **Files:**
 - Create: `docs/visual-guide.md` (image links included now; `.png` files land in gated Task 6 on this same branch before merge — stated in the doc's Screenshots intro)
 
-- [ ] **Step 1: write the doc.** Structure: intro (what/why, DRY note: README links here; harness.md links §4) + four mermaid diagrams + Screenshots section. Diagrams (real content):
+- [x] **Step 1: write the doc.** Structure: intro (what/why, DRY note: README links here; harness.md links §4) + four mermaid diagrams + Screenshots section. Diagrams (real content):
 
 **§1 Suite architecture**
 ```mermaid
@@ -500,8 +500,8 @@ flowchart LR
 ```
 
 **Screenshots section** — one `## Screenshot` block per capture with `![…](img/<name>.png)` + a one-line caption: `tab1-viewer.png` (Tab 1, `CDM/m_DM_INFOHUB_BIZLINK` rendered), `tab2-modifier.png` (recipe canvas + palette), `tab3-operational.png`, `tab4-dag.png`, `sidebar-collapsed.png` (slim Explorer rail), `modifier-editing.png` (SaveBar counting + formula editing), `operational-preview-overlay.png`. Intro line states images are captured from the running merged app (Task 6) at Chrome ~1440×900.
-- [ ] **Step 2: verify** — mermaid blocks render (paste-check in a mermaid-aware previewer, or `npx -y @mermaid-js/mermaid-cli -i` if network permits; else visual inspection of syntax), all 7 image links match the Task 6 capture list exactly.
-- [ ] **Step 3: Commit**
+- [x] **Step 2: verify** — mermaid blocks render (paste-check in a mermaid-aware previewer, or `npx -y @mermaid-js/mermaid-cli -i` if network permits; else visual inspection of syntax), all 7 image links match the Task 6 capture list exactly.
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/visual-guide.md docs/superpowers/plans/2026-07-31-etl360-distribution.md
