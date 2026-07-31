@@ -245,9 +245,9 @@ Follow superpowers:writing-skills conventions (mirror the committed `regen-corpu
 4. **Corpus-safety rules:** parser never runs in place (`make cas-gen` only); `DWH_CONTROL` mock mirror edits only via `--emit l2l` marker blocks; **never re-run `scripts/gen_b15_history.py` after CAS landed** (index-shift rewrites SYN rows — the frozen-generator rule) — CAS b15 rows are owned by `--emit b15`.
 5. **Extension guide:** add a manifest row (next `n`, unique CAS_* tables, pick shapes), re-run the workflow, bump `CorpusContractTest`/`viewer_sweep`/`LayerToLayerContractTest` floors, extend `relationships_sweep` if a new casuistic class is introduced.
 
-- [ ] **Step 1: Write SKILL.md** per above (≤60 lines, imperative, no narration).
-- [ ] **Step 2: Verify** — `node --experimental-strip-types scripts/mock_etl_data.mts --check` exit 0 (the skill's advertised gate is true at commit time).
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Write SKILL.md** per above (≤60 lines, imperative, no narration).
+- [x] **Step 2: Verify** — `node --experimental-strip-types scripts/mock_etl_data.mts --check` exit 0 (the skill's advertised gate is true at commit time).
+- [x] **Step 3: Commit**
 
 ```bash
 git add .claude/skills/mock-etl-data/SKILL.md docs/superpowers/plans/2026-07-31-operational-casuistics.md
