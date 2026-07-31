@@ -142,7 +142,7 @@ export function toOperationalCard(task: DagTask, dates: string[],
     lastRun: lastIso ?? new Date(0).toISOString(),
     history,
     stats: { avg_time_s: durs.length ? Math.round(durs.reduce((a, b) => a + b, 0) / durs.length) : 0,
-             p50: pct(50), p95: pct(95), p99: pct(99), avg_count: 0 },  // no row counts in b15 -> stats grid hides when 0-avg
+             p50: pct(50), p95: pct(95), p99: pct(99), avg_count: 0 },  // b15 has no row counts; avg_count stays 0 (OperationalCard shows "avg rows 0" when durations exist — cosmetic, see ledger)
     jobId: sel?.jobId || undefined, appId: sel?.jobId || undefined,     // b15 job_id IS the YARN application id
     relations: task.depends_on,
   }

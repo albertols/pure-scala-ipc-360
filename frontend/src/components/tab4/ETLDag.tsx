@@ -491,6 +491,7 @@ export function ETLDag() {
         </div>
       ) : clusters.length === 0 ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
+          <GCPIcon service="airflow" size={36} />
           <span style={{ fontSize: 12 }}>No workflows in the relationships graph</span>
         </div>
       ) : (
@@ -566,7 +567,7 @@ export function ETLDag() {
                 </a>
                 <a
                   href={fillGcpUrl(config?.loggingUrl, DEFAULT_LOGGING_URL,
-                    { jobId: selRow.jobId ?? '', project })}
+                    { jobId: selRow.jobId ?? '', project, region })}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
