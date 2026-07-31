@@ -1,11 +1,14 @@
 package io.pure360.etl360.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.pure360.etl360.api.dto.OperationalSummaryDto;
 import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.config.Etl360Properties;
 import io.pure360.etl360.service.support.InvalidDateException;
 import io.pure360.etl360.service.support.NotFoundException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -105,5 +108,30 @@ class OperationalServiceTest {
         assertThat(dmSummary.okCount()).isZero();
         assertThat(dmSummary.koCount()).isZero();
         assertThat(dmSummary.avgDurationMin()).isNotNull();
+    }
+
+    @Test
+    void allUnparseableDurationsYieldNullStatsAndDurationMinIsAbsentFromSerializedJson(@TempDir Path tmp) throws Exception {
+        Path dateDir = Files.createDirectories(tmp.resolve("dwh/config/cluster_tuning/inputs/2026_09_01"));
+        Files.writeString(dateDir.resolve("b15_application_end_with_recipe_null_status.csv"),
+            "cluster_name,recipe_filename,job_id,app_start_iso,avg_job_duration_in_mins_sec,status,message\n"
+                + "cluster-garbage-01,_ETL_m_GARBAGE.json,application_garbage_0001,2026-09-01T00:00:00.000Z,not-a-duration,SUCCESS,\n");
+
+        var props = new Etl360Properties("unused", "unused-dwh", tmp.resolve("unused-mock").toString(),
+            tmp.toString(), new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
+        DataRoots roots = new DataRoots(props);
+        OperationalService svc = new OperationalService(roots, new LayerToLayerService(roots));
+
+        var garbage = svc.summary().recipes().stream()
+            .filter(r -> r.recipeFilename().equals("_ETL_m_GARBAGE.json"))
+            .findFirst().orElseThrow();
+        assertThat(garbage.avgDurationMin()).isNull();
+        assertThat(garbage.p50DurationMin()).isNull();
+        assertThat(garbage.p95DurationMin()).isNull();
+
+        // Proves the HistoryEntryDto @JsonInclude(NON_NULL) fix actually suppresses the field —
+        // without it, this would serialize as `"durationMin":null` instead of omitting the key.
+        String json = new ObjectMapper().writeValueAsString(garbage.history().get(0));
+        assertThat(json).doesNotContain("durationMin");
     }
 }
