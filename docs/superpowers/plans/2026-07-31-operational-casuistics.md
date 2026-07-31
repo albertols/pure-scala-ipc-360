@@ -540,7 +540,7 @@ git commit -m "feat(casuistics): relationships_sweep gate — all CAS shape asse
 - [x] **Step 1: Walk spec §8's eight criteria**, recording PASS/FAIL each with evidence:
 1. PASS — Tab 3 renders the real graph (boot `make dev` once; verify SYN + CAS cards, filters/search/zoom/selection — RTL evidence + manual spot-check; visual side-by-side deferred to human sign-off per the standing Task-12 ruling, record as such). **zoom/collapse PASS (RTL pin vs real cards)** — `ETLOperational.test.tsx` clicks the "−" zoom button past the 0.65 compact threshold and asserts `RelationshipGraph`'s compact-pill rendering kicks in on the real fixture cards (and reverts on zoom-in); pixel fidelity remains under the same DEFERRED-human visual label as the rest of criterion 1.
 2. PASS — TimePicker walks the 14 dates; spot-check `_ETL_m_CAS_DWH_EVENTS_FACT.json` KO on 07-18/21/23/29 against the CSVs.
-3. **PENDING** — Preview overlay: recipe → canvas + raw JSON; table → writer recipe; Esc closes; `git diff --stat main.. -- frontend/src/components/tab1 frontend/src/components/tab2 frontend/src/components/tab4` shows no Tab-1/2/4 component churn beyond the merge base. Task 9 resequenced after Task 11 per plan protocol (Stream A's `recipeToCanvas`/`EtlCanvas` not yet merged) — walked in full once Task 9 lands, as a criterion-3 addendum commit.
+3. **PASS (walked post-merge, 2026-07-31)** — Preview overlay: recipe card → visual canvas + raw JSON; table card → writer recipe; Esc closes; Tab 1/2 untouched — all four clauses evidenced by the RTL flow in `frontend/src/components/tab3/ETLOperational.test.tsx` ("opens the full-window preview overlay from a recipe card and closes on Escape; a table card resolves its writer recipe": select recipe card → "Open preview" → SVG canvas text `CAS_ODS_TGT_STEP` + raw-JSON substring `targetTableNames` both present → `Escape` → both gone → table card → "Open preview" → same recipe canvas renders, proving writer-edge resolution) plus `git show bacbec5 --stat` (Task 9's landed commit touches only `frontend/src/components/tab3/{ETLOperational.tsx,ETLOperational.test.tsx,PreviewOverlay.tsx}` + this plan file — zero tab1/tab2/tab4 component churn). **Pixel/visual fidelity of the overlay is DEFERRED to human sign-off** per the standing Task-12 ruling — not claimed as verified here (headline-level label, not a footnote).
 4. PASS — `relationships_sweep` green inside `make validate-loop` (fresh full run).
 5. PASS — `viewer_sweep: 81/81` (same run).
 6. PASS — Full suite: `pnpm test`, `npx tsc --noEmit`, `make test`, `make check`, `make validate-loop` — all green.
@@ -554,6 +554,17 @@ git commit -m "chore: Tab 3 operational + CAS casuistics acceptance sweep — sp
 ```
 
 (`--allow-empty` if criteria passed without fixes; tick the final checkboxes; explicit staging only.)
+
+**Criterion 3 closed (2026-07-31, post-Task-9):** Task 9 landed at `bacbec5` (preview
+overlay, review-approved). Criterion 3 re-walked in full per the record above — PASS
+on all four textual clauses, **pixel/visual fidelity DEFERRED to human sign-off**
+(headline-level label, matching the standing Task-12 ruling used for criteria 1/6).
+Full gate re-run once, end-to-end, post-overlay:
+`viewer_sweep: 81/81 mappings render`, `recipe_sweep: 86/86 recipes render+validate`,
+`mock_etl_data --check: clean`, `relationships_sweep: PASS` (all 13 assertions),
+frontend `Test Files 16 passed (16)` / `Tests 141 passed (141)`,
+`[validate-loop] PASS`, exit code 0. Task 11 now stands at 8/8 criteria PASS (7 PASS +
+1 PASS-with-deferred-visual, 0 PENDING).
 
 ---
 
