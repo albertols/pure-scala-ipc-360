@@ -59,7 +59,7 @@ Every mtime-cached service (`DomService`, and the DDL/recipe read paths) follows
 same shape: check the file's mtime against the cache entry, re-read and re-parse only
 on a change. No TTL logic, no restart needed to pick up an edited file.
 
-## Endpoints (v1, read-only)
+## Endpoints (v1)
 
 All under `/api`, JSON, UTF-8. `{*path}` segments are corpus-relative paths without a
 leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
@@ -71,8 +71,12 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 | `GET /api/mappings/dom/{*path}` | Lossless generic XML→JSON: `{name, attributes, text?, children[]}` recursively |
 | `GET /api/mappings/model/{*path}` | Semantic model via the in-JVM parser: repository/folder, sources, targets, mappings, mapplets, transformations, typed ports, connectors |
 | `GET /api/recipes/{*path}` | Content of one `_ETL_*.json` recipe plus file metadata; preserves `SOURCE_NAME.FIELD_NAME` dot notation |
+| `PUT /api/recipes/{*path}` | Saves a full recipe (`{baseModified, content}`); archives the current file to `_history/` (see note below) then writes atomically, returning the fresh `RecipeDto`. 409 if `baseModified` no longer matches the file's `modifiedAt` (stale edit) |
+| `POST /api/recipes/validate` | Validates a recipe JSON body, no file IO: `{valid, errors: [{path, message}]}` — shape, non-blank step types, every field named, every dot-ref resolvable |
+| `GET /api/recipes/history/{*path}` | No `?version` → sorted `[{version, timestamp, sizeBytes}]` from the `_history/` sidecar; `?version=v` → that archived version as a `RecipeDto` |
+| `POST /api/recipes/rollback/{*path}` | `?version=v` — archives the current file, restores the archived version, returns the fresh `RecipeDto` |
 | `GET /api/ddl/{*path}` | All `<TABLE>.json` BigQuery DDL files in a mapping's output dir, keyed by table name |
-| `GET /api/expressions` | Cross-corpus expression archive from XML DOMs, `origin: "xml"` (see deviation below) |
+| `GET /api/expressions` | Cross-corpus expression archive merged from two origins: `origin: "xml"` (every `TRANSFORMFIELD` EXPRESSION attribute in the mapping DOM) and `origin: "recipe"` (every recipe target field whose transformation is a call tree, walked across `CorpusService.allRecipePaths()`, `_history/` excluded) — same `ExpressionEntryDto` shape for both |
 | `GET /api/relationships` | Tables+recipes graph (`RelationshipsDto { nodes, edges, meta }`) built from the mock/real `LayerToLayerConfig` joined with the corpus recipe inventory — node ids `table:<NAME>`/`recipe:<FILE>`, edge kinds `source`\|`lookup`\|`writes` |
 | `GET /api/operational/dates` | Sorted list of available `YYYY-MM-DD` b15 snapshot dates + `mode` (`real`\|`mock`\|`absent`) |
 | `GET /api/operational/{date}` | One dated b15 "application end" snapshot (`OperationalSnapshotDto { date, rows: [B15RowDto] }`); unknown date → 404 with nearest-available hint |
@@ -83,10 +87,30 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 Tab 1 (IPC ETL Viewer) is the first frontend consumer of the mapping endpoints: the
 canvas renders from `/api/mappings/model/{*path}` (via `mappingAdapter.ts`'s
 `toCanvas`), the detail panel from `/api/mappings/dom/{*path}` (lossless attributes).
-Tab 3 (ETL Operational Table Relationships) is real too: `relationshipsAdapter.ts`'s
+Tab 2 (ETL Modifier) is the first consumer of the recipe write API: the canvas renders
+from `/api/recipes/{*path}` (via `recipeAdapter.ts`'s `recipeToCanvas`), edits stage in
+a local draft validated through `POST /api/recipes/validate` before `PUT`, and the
+History drawer / Rollback button drive the `/api/recipes/history` and
+`/api/recipes/rollback` endpoints above.
+
+Tab 3 (ETL Operational Table Relationships): `relationshipsAdapter.ts`'s
 `toOperationalGraph` combines `/api/relationships` + `/api/operational/summary` at a
 selected TimePicker date into cards/edges/layer columns for the existing
-`OperationalCard` graph — the `OPERATIONAL_CARDS` mock now serves only Tab 4 (DAG).
+`OperationalCard` graph.
+
+Tab 4 (ETL DAG) consumes `/api/relationships` (workflow clusters + table-mediated
+recipe edges via `dagAdapter.ts`) and `/api/operational/dates` +
+`/api/operational/{date}` (per-run node coloring, client-side join on
+`recipe_filename`).
+
+**`_history/` sidecar.** Every `PUT` and rollback archives the recipe's prior content
+to `<recipeDir>/_history/_ETL_<name>.<yyyyMMdd-HHmmss-SSS>.json` before writing —
+committable, since it records the user's own edit history. `_history/` is excluded
+from `/api/tree`, `CorpusService.allRecipePaths()`, DDL discovery, and the expression
+walk by one shared filter (`HistorySidecar.isHistoryPath`). The same `{*path}`-trailing
+constraint noted below for the mapping endpoints shapes the history/rollback URLs too
+— see `docs/superpowers/specs/2026-07-31-etl-modifier-design.md` §11 "Implementation
+deviations".
 
 **Deviation from spec §4 table:** the mapping endpoints are `/api/mappings/dom/{*path}`
 and `/api/mappings/model/{*path}` — verb before the path variable — not
@@ -136,8 +160,7 @@ resolve against the auto-detected repo root (first ancestor with both `pom.xml` 
 
 ## See also
 
-- `docs/adr/0001`–`0006`, `0008` — the decisions behind this shape, with rejected
-  alternatives (`0007` reserved for Stream A's recipes-as-truth ADR).
+- `docs/adr/0001`–`0008` — the decisions behind this shape, with rejected alternatives.
 - `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
   `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,
   `docs/superpowers/specs/2026-07-31-operational-casuistics-design.md` — full design specs.

@@ -27,6 +27,8 @@ curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/operational/2001-01-01
 echo "[validate-loop] viewer sweep…"
 # node >= 22.6 is required for --experimental-strip-types to run the .mts sweep directly.
 node --experimental-strip-types scripts/viewer_sweep.mts || fail "viewer sweep"
+echo "[validate-loop] recipe sweep…"
+node --experimental-strip-types scripts/recipe_sweep.mts || fail "recipe sweep"
 echo "[validate-loop] mock_etl_data --check…"
 node --experimental-strip-types scripts/mock_etl_data.mts --check || fail "mock_etl_data drift"
 echo "[validate-loop] relationships sweep…"

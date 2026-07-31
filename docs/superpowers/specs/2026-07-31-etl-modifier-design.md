@@ -218,3 +218,58 @@ documented in the regen skill/README rather than guarded in code (v1). Record as
 7. `pnpm test`, `tsc`, `make test`, `make check`, `make validate-loop` all green.
 8. Docs updated (CLAUDE.md frontend line, architecture.md endpoints, frontend/AGENTS.md
    ledger, ADR 0007). Corpus repair recorded in CLAUDE.md corpus caveats.
+
+## 11. Implementation deviations
+
+Ruled at implementation time; each traced to its task/commit for anyone diffing this
+spec against the shipped code.
+
+1. **History/rollback URL shapes.** §7's sketch (`/history`, `/history/{version}`
+   suffixes) doesn't fit Spring's `{*path}`-must-be-trailing constraint — same
+   precedent already recorded for `/api/mappings/dom|model` in
+   `docs/architecture.md` "Deviation from spec §4 table". Shipped as
+   `GET /api/recipes/history/{*path}` (no `?version` → sorted list; `?version=v` →
+   that archive, as two params-disambiguated Spring mappings so OpenAPI/codegen see a
+   real response schema for both shapes) and `POST /api/recipes/rollback/{*path}?version=v`
+   (Task 7, `RecipeController.java`). The no-version list operation collapses into the
+   same OpenAPI path item as the `?version=` one, so `frontend/src/api/queries.ts`
+   hand-aliases `RecipeHistoryEntry` straight off the generated schema instead of an
+   `operations[...]` lookup (`queries.ts:11-19`) — verified genuine, not a codegen bug
+   (Task 10 review).
+2. **Validate's "every step type known" (§7) = non-blank, not canonical-set
+   membership.** The anonymizer corrupted type VALUES corpus-wide (`BERYLFALLS`×86,
+   `EARLYGLADE`×49, `ASHPATH2`×10, `CEDARWICK2`×1 — §3's repair scope is the
+   `weststone` KEY only, not type values), and §9 requires all 74 corpus recipes to
+   validate green. `RecipeService.validate` accepts any non-blank `type` string
+   (Task 7).
+3. **Dot-ref from-node resolution is exact-then-case-insensitive; unresolvable refs
+   are dropped, never left dangling.** Rescues the 2 corpus recipes needing the
+   case-insensitive fallback (`FF_BIZLINK` refs resolving to node `ff_BIZLINK`,
+   Task 4) but also silently drops 10 ref tokens across 8 corpus recipes that point at
+   non-table `sources[]` constructs (joiner/union inputs with no matching node) — by
+   design, not a bug (Task 5).
+4. **Collapsible Explorer (§3 item 3, "all tabs") scopes to the two tabs that render
+   the shared `Sidebar`** — Tab 1 and Tab 2 only. Tab 3 has no explorer; Tab 4 has its
+   own `DagExplorer` (`ETLDag.tsx:21`) and is untouched (Task 3).
+5. **`tsconfig.json` `lib` gained `ES2021.String`** (for `replaceAll`, used by the
+   weststone-tolerance test in `recipeAdapter.test.ts` and by `recipeEdits.ts`) —
+   disclosed, judged minimal-correct at review (Task 4).
+6. **Tab 2's "All Expressions" section renders after Target** (before the DDL
+   section), not after DDL as §6 point 8's "interim … All Expressions section"
+   ordering would imply on a literal read — a page-layout change under the Figma
+   visual contract (ADR-0005), disclosed by the implementer but not yet confirmed by
+   the user (Task 6). **DEFERRED to human visual sign-off.**
+7. **Delete affordance introduces a new red-bordered/translucent button idiom**
+   (`dangerButtonStyle`, `ETLModifier.tsx:45-49`) — composed from the existing
+   `--red` token per the visual contract, but with no exact precedent elsewhere in
+   the prototype (Task 9). **DEFERRED to human visual sign-off.**
+8. **`deleteEdge` on a center-anchor edge** (§5's blank-port edge synthesized for a
+   `sources[]` entry with no field-level ref) **removes the matching `sources[]`
+   entry** from the target step rather than no-op-ing — the edge IS that
+   connectivity, so deleting it must remove the entry (Task 9 fix round;
+   `recipeEdits.ts:265-298`).
+9. **`refsInto`/`deleteNode` count and clear at FIELD granularity, not dot-ref-token
+   granularity.** §6 "Delete" reads "removes … every dot-ref pointing at it"; a field
+   whose transformation tree references the deleted node more than once is
+   cleared/counted once, matching what `deleteNode` actually does in a single step
+   (Task 8 fix round, 469-corpus-counterexample regression; `recipeEdits.ts:255-263`).

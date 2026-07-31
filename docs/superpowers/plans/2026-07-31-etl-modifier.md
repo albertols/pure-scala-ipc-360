@@ -215,14 +215,14 @@ export function fieldsOf(t: RecipeTargetJson | undefined): RecipeFieldJson[]   /
 export function recipeToCanvas(recipe: RecipeJson, recipePath: string): CanvasGraph
 ```
 
-- [ ] **Step 1: Capture fixtures** (corpus files ARE the payload — no backend boot; anonymized, committable):
+- [x] **Step 1: Capture fixtures** (corpus files ARE the payload — no backend boot; anonymized, committable):
 
 ```bash
 cp parser/src/main/resources/xmltobq/CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json frontend/src/api/__fixtures__/recipe_m_DM_INFOHUB_BIZLINK.json
 cp parser/src/main/resources/xmltobq/ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json frontend/src/api/__fixtures__/recipe_m_SYN_ODS_ORDERS.json
 ```
 
-- [ ] **Step 2: Failing test:**
+- [x] **Step 2: Failing test:**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -280,12 +280,12 @@ describe('recipeToCanvas — nodes, kinds, ports', () => {
 })
 ```
 
-- [ ] **Step 3: RED** (module missing) **→ Step 4: implement.** Rules (all reads null-safe):
+- [x] **Step 3: RED** (module missing) **→ Step 4: implement.** Rules (all reads null-safe):
   1. **Kind map** `RECIPE_KIND: Record<string, NodeType>` = `sourceQualifier→sq`, `filter→filter`, `aggregator→aggregator`, `router→router`, `joinerInput→joiner`, `joiner→joiner`. **Fixed labels** (binding spec §5 values — NOT derived): `unionInput/union→'UNI'`, `normalizer→'NRM'`, `java→'JAV'`, `storedProcedure→'STO'`, intermediate `table→'TBL'` — all `type: 'expression'`. Anything else (corrupted values like `BERYLFALLS`) → `type: 'expression'`, label = `typ.replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()` (mirrors `mappingAdapter.ts:52-54`).
   2. **Target vs intermediate (explicit spec rule):** step target `type === 'table'` AND `name ∈ table.targetTableNames` ⇒ kind `target` (ports direction `IN`); `table`-typed but not listed ⇒ intermediate `expression`/`TBL`. All non-target steps get ports direction `IN/OUT` from `fieldsOf(target)`; `dataType` = field `dataType ?? ''`.
   3. **Nodes:** one per unique `step.target.name`; PLUS one kind-`source` node per unique `sources[].name` of `type === 'table'` **that doesn't already have a step-target node** (id = name; ids must stay unique — sweep enforces). Source OUT ports = union of `F` over every dot-ref `T.F` in the whole recipe whose `T` resolves to that node (exact, else case-insensitive — the `FF_BIZLINK`→`ff_BIZLINK` rescue). Ref collection walks every field `transformation` recursively: `{source}` collects; `{parameters}` recurses; a Field-shaped parameter (`{transformation}` present) recurses into its `.transformation` (module-private `collectRefs(recipe): {table: string, field: string, toStep: string, toField: string}[]` — Task 5 reuses it for edges).
   4. `id`/`name` = recipe names verbatim; `properties` = flat non-blank scalars of the target/source object (type, name, plus e.g. `sourceFilter`); `file` = recipePath basename; `x: 0, y: 0` (layout in Task 5); `connections: []` for now; `mappingNames: [basename]`, `renderedMapping: basename`.
-- [ ] **Step 5: GREEN + tsc → Step 6: Commit**
+- [x] **Step 5: GREEN + tsc → Step 6: Commit**
 
 ```bash
 git add frontend/src/api/__fixtures__/recipe_m_DM_INFOHUB_BIZLINK.json \
@@ -311,7 +311,7 @@ export function renderFormula(t: RecipeTransformationJson | undefined): string
 // {source: "T.F"} => T.F verbatim · {value: "v"} => v · undefined/empty => ''
 ```
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```ts
 describe('recipeToCanvas — edges, formulas, layout', () => {
@@ -354,8 +354,13 @@ describe('recipeToCanvas — edges, formulas, layout', () => {
       "EXP_TO_DECIMAL(EXP_TO_CHAR(EXP_ADD_TO_DATE(EXP_TO_DATE(SQ_ff_BIZLINK.FCH_DATAENTRY, 'YYYYMMDD'), 'MM', -1), 'ROWANFIELD'))")
     expect(tgt.ports.find(p => p.name === 'GREENBLUFF')!.expression).toBeUndefined()
     const s = recipeToCanvas(syn as RecipeJson, 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json')
+    // Corrected during Task 5 implementation: the fixture's "Undefined" node (parser
+    // sentinel for an unclassified function, RecipeConstants.Undefined) genuinely
+    // carries a second parameter ({value:"2"}, recipe_m_SYN_ODS_ORDERS.json:57) — the
+    // documented rule ("NAME(p1, p2, …) recursively", no name-based exception) renders
+    // it too. See task-5-report.md NEEDS_CONTEXT section.
     expect(s.nodes.find(n => n.id === 'ODS_SYN_ORDERS')!.ports.find(p => p.name === 'AMOUNT')!.expression).toBe(
-      'Undefined(EXP_ARITHMETIC(STG_L_SYN_ORDERS.AMOUNT, *, LKP_SYN_CURRENCY(STG_L_SYN_ORDERS.CURRENCY_CODE)))')
+      'Undefined(EXP_ARITHMETIC(STG_L_SYN_ORDERS.AMOUNT, *, LKP_SYN_CURRENCY(STG_L_SYN_ORDERS.CURRENCY_CODE)), 2)')
   })
   it('layout: shared canvasLayout — finite coords, sources col 0, target rightmost', () => {
     const g = recipeToCanvas(bizlink as RecipeJson, BIZ_PATH)
@@ -367,8 +372,8 @@ describe('recipeToCanvas — edges, formulas, layout', () => {
 })
 ```
 
-- [ ] **Step 2: RED → Step 3: implement.** Edge derivation from `collectRefs`: each ref ⇒ `{fromNode: resolve(T), fromPort: F, toNode: toStep, toPort: toField}`; `resolve` = exact node id, else lower-cased match, else DROP (corpus audit: 10 tokens across 8 recipes reference joiner/union constructs that exist only as non-table `sources[]` entries — dropped by design, recorded in Task 13 footnote). Dedupe via the `|`-joined key set. Center edges: for each step, each `sources[]` entry resolving to a node with ZERO field edges into this step ⇒ `{fromNode, fromPort: '', toNode: step.target.name, toPort: ''}` (EtlCanvas already center-anchors missing ports, ETLViewer.tsx old `:121/:123` logic now in EtlCanvas). Set `port.linked` both sides (mirror `mappingAdapter.ts:244-247`). ƒ: `port.expression = renderFormula(f.transformation)` only when the transformation has `name` (call tree). Finish with `layoutNodes(nodes, connections)` from `./canvasLayout.ts`.
-- [ ] **Step 4: GREEN + tsc → Step 5: Commit**
+- [x] **Step 2: RED → Step 3: implement.** Edge derivation from `collectRefs`: each ref ⇒ `{fromNode: resolve(T), fromPort: F, toNode: toStep, toPort: toField}`; `resolve` = exact node id, else lower-cased match, else DROP (corpus audit: 10 tokens across 8 recipes reference joiner/union constructs that exist only as non-table `sources[]` entries — dropped by design, recorded in Task 13 footnote). Dedupe via the `|`-joined key set. Center edges: for each step, each `sources[]` entry resolving to a node with ZERO field edges into this step ⇒ `{fromNode, fromPort: '', toNode: step.target.name, toPort: ''}` (EtlCanvas already center-anchors missing ports, ETLViewer.tsx old `:121/:123` logic now in EtlCanvas). Set `port.linked` both sides (mirror `mappingAdapter.ts:244-247`). ƒ: `port.expression = renderFormula(f.transformation)` only when the transformation has `name` (call tree). Finish with `layoutNodes(nodes, connections)` from `./canvasLayout.ts`.
+- [x] **Step 4: GREEN + tsc → Step 5: Commit**
 
 ```bash
 git add frontend/src/api/recipeAdapter.ts frontend/src/api/recipeAdapter.test.ts \
@@ -411,8 +416,8 @@ Behavior spec (exact):
 8. All Expressions section (interim until Task 11): rows from `graph.nodes.flatMap(n => n.ports).filter(p => p.expression)`.
 9. Keep `SaveBar` mounted with `changes={0}` (dead until Task 8). Delete `ETL_RECIPES`/`DDL_SCHEMAS` exports from mockData.ts; run `grep -rn "ETL_RECIPES\|DDL_SCHEMAS" frontend/src` → only mockData history remains (zero importers).
 
-- [ ] **Step 1: Failing tests.** `filesystemAdapter.test.ts`: tree json leaf `{ name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' }` ⇒ `file.recipe === 'CDM/m_FIX/_ETL_m_FIX.json'`; a plain `BIZLINK.json` leaf ⇒ `recipe` undefined. `ETLModifier.test.tsx` (MSW, `afterEach(cleanup)` + server lifecycle like `ETLViewer.test.tsx:132-139`): handlers `/api/tree` (json `_ETL_m_FIX.json` leaf), `/api/recipes/CDM/m_FIX/_ETL_m_FIX.json` → `{ path, fileName: '_ETL_m_FIX.json', sizeBytes: 321, modifiedAt: '2026-07-31T00:00:00Z', content: MINI }` where MINI = the Task-5 field-less-source recipe literal plus one dot-ref field, `/api/ddl/CDM/m_FIX` → `{}`. Flow: render in QueryClientProvider → click `_ETL_m_FIX.json` → `await screen.findByText('T', { selector: 'text' })` (canvas SVG card) → toggle raw JSON → assert a verbatim dot-ref string appears → DDL section absent.
-- [ ] **Step 2: RED → Step 3: implement per behavior spec → Step 4: GREEN + tsc → Step 5: Commit**
+- [x] **Step 1: Failing tests.** `filesystemAdapter.test.ts`: tree json leaf `{ name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' }` ⇒ `file.recipe === 'CDM/m_FIX/_ETL_m_FIX.json'`; a plain `BIZLINK.json` leaf ⇒ `recipe` undefined. `ETLModifier.test.tsx` (MSW, `afterEach(cleanup)` + server lifecycle like `ETLViewer.test.tsx:132-139`): handlers `/api/tree` (json `_ETL_m_FIX.json` leaf), `/api/recipes/CDM/m_FIX/_ETL_m_FIX.json` → `{ path, fileName: '_ETL_m_FIX.json', sizeBytes: 321, modifiedAt: '2026-07-31T00:00:00Z', content: MINI }` where MINI = the Task-5 field-less-source recipe literal plus one dot-ref field, `/api/ddl/CDM/m_FIX` → `{}`. Flow: render in QueryClientProvider → click `_ETL_m_FIX.json` → `await screen.findByText('T', { selector: 'text' })` (canvas SVG card) → toggle raw JSON → assert a verbatim dot-ref string appears → DDL section absent.
+- [x] **Step 2: RED → Step 3: implement per behavior spec → Step 4: GREEN + tsc → Step 5: Commit**
 
 ```bash
 git add frontend/src/api/filesystemAdapter.ts frontend/src/api/filesystemAdapter.test.ts \
@@ -457,7 +462,7 @@ public record RecipeHistoryEntryDto(String version, String timestamp, long sizeB
 
 Service rules: writable iff path ends `.json` AND basename starts `_ETL_` AND `PathResolver.insideCorpus` passes AND no `_history` segment — else `InvalidCorpusPathException` (→ existing 400). `save`: current `modifiedAt` string ≠ `baseModified` ⇒ `StaleRecipeException` (409); archive current file to `<dir>/_history/<base>.<version>.json` (create dir), write body atomically (`Files.write` to `<dir>/.<name>.tmp` + `Files.move(…, ATOMIC_MOVE, REPLACE_EXISTING)`), return fresh `recipe(path)`. `rollback`: archive current, copy archived version over, return fresh DTO. `validate` (no file IO, tolerates `fields`/`weststone`): errors for — unparsable/`steps` missing or empty; step target missing `name`; step target `type` missing/blank (**RULED DEVIATION:** spec's "every step type known" is implemented as *non-blank*, NOT membership of the canonical set — the anonymizer also corrupted type VALUES corpus-wide (`BERYLFALLS`×86, `EARLYGLADE`×49, `ASHPATH2`×10, `CEDARWICK2`×1) and spec §9 requires all 74 corpus recipes to validate green; §3 limits repair to the `weststone` key); field missing `name`; dot-ref `T.F` where `T` (case-insensitive) ∉ {all `sources[]` names ∪ step target names ∪ `table.sourceTableNames`} — corpus-audited: zero violations under exactly this rule. Exclusion filter: `CorpusService.dirNode` skips child dirs named `_history`; `allXmlPaths`/`collect` filter `HistorySidecar.isHistoryPath` — one shared predicate, contract-tested.
 
-- [ ] **Step 1: Failing MockMvc test** — isolated temp corpus so tests never write the real one:
+- [x] **Step 1: Failing MockMvc test** — isolated temp corpus so tests never write the real one:
 
 ```java
 @SpringBootTest @AutoConfigureMockMvc
@@ -507,8 +512,8 @@ class RecipeWriteControllerTest {
 }
 ```
 
-- [ ] **Step 2: RED** (`mvn -q -am -pl backend test` — 404/405s) **→ Step 3: implement** per interfaces **→ Step 4: GREEN** (full backend suite — existing contract tests prove the exclusion filter changed nothing for the real corpus).
-- [ ] **Step 5: Commit**
+- [x] **Step 2: RED** (`mvn -q -am -pl backend test` — 404/405s) **→ Step 3: implement** per interfaces **→ Step 4: GREEN** (full backend suite — existing contract tests prove the exclusion filter changed nothing for the real corpus).
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/RecipeController.java \
@@ -557,11 +562,11 @@ export function parseFormulaText(text: string): RecipeTransformationJson
 //   lenient: `NAME(a, b)` -> {name, parameters:[…]} recursive, depth-0 comma split; bare `T.F` -> {source}; else {value}
 ```
 
-- [ ] **Step 1: Failing unit tests** (`recipeEdits.test.ts`, on the Task-4 fixtures + minimal literals): each helper returns a NEW object (`expect(out).not.toBe(d)`, input JSON unchanged); `setFieldTransformation` on a weststone-keyed clone writes into `weststone`; `renameNode('SQ_ff_BIZLINK','SQ_X')` rewrites all 60 `SQ_ff_BIZLINK.*` refs and no others; `deleteNode` clears `refsInto` count transformations; `parseFormulaText("EXP_TO_CHAR(A.B, 'X')")` round-trips through `renderFormula` to itself; `parseFormulaText('T.F')` → `{source:'T.F'}`; `parseFormulaText('hello')` → `{value:'hello'}`.
-- [ ] **Step 2: RED → implement → GREEN.**
-- [ ] **Step 3: Regenerate API types** (Task 7 DTOs): boot backend (`mvn -q -am -pl backend install -DskipTests && (cd backend && mvn -q spring-boot:run &)`, poll `/api/health`), `cd frontend && pnpm generate:api`, kill backend + verify port 8080 free.
-- [ ] **Step 4: Wire ETLModifier** — failing MSW test first (extend `ETLModifier.test.tsx`): handlers add `http.post('/api/recipes/validate', …valid:true)` and `http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', capture body → fresh RecipeDto)`. Flow: load recipe → select target node → edit panel (existing `EditableField` card idiom on the selected node: name, per-field name/dataType, formula textarea seeded with `renderFormula`, parsed back via `parseFormulaText` on blur) → SaveBar shows `1 unsaved change` → Save → captured PUT body has `baseModified === '2026-07-31T00:00:00Z'` and the dot-ref string verbatim → SaveBar clears. Discard → draft re-clones from `rec.data.content`. Implementation: `draft` state (deep clone on `rec.data` change via `useEffect` keyed on `recipePath`+`modifiedAt`), `dirtyOps` counter incremented per helper call, `useMemo(() => recipeToCanvas(draft, path), [draft])`, Save = `apiSend('POST','/recipes/validate', draft)` → errors render in the `--red` idiom list; else `apiSend('PUT', `/recipes/${path}`, { baseModified, content: draft })` → `queryClient.invalidateQueries({queryKey:['recipe', path]})`, reset `dirtyOps`.
-- [ ] **Step 5: GREEN + tsc → Step 6: Commit**
+- [x] **Step 1: Failing unit tests** (`recipeEdits.test.ts`, on the Task-4 fixtures + minimal literals): each helper returns a NEW object (`expect(out).not.toBe(d)`, input JSON unchanged); `setFieldTransformation` on a weststone-keyed clone writes into `weststone`; `renameNode('SQ_ff_BIZLINK','SQ_X')` rewrites all 60 `SQ_ff_BIZLINK.*` refs and no others; `deleteNode` clears `refsInto` count transformations; `parseFormulaText("EXP_TO_CHAR(A.B, 'X')")` round-trips through `renderFormula` to itself; `parseFormulaText('T.F')` → `{source:'T.F'}`; `parseFormulaText('hello')` → `{value:'hello'}`.
+- [x] **Step 2: RED → implement → GREEN.**
+- [x] **Step 3: Regenerate API types** (Task 7 DTOs): boot backend (`mvn -q -am -pl backend install -DskipTests && (cd backend && mvn -q spring-boot:run &)`, poll `/api/health`), `cd frontend && pnpm generate:api`, kill backend + verify port 8080 free.
+- [x] **Step 4: Wire ETLModifier** — failing MSW test first (extend `ETLModifier.test.tsx`): handlers add `http.post('/api/recipes/validate', …valid:true)` and `http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', capture body → fresh RecipeDto)`. Flow: load recipe → select target node → edit panel (existing `EditableField` card idiom on the selected node: name, per-field name/dataType, formula textarea seeded with `renderFormula`, parsed back via `parseFormulaText` on blur) → SaveBar shows `1 unsaved change` → Save → captured PUT body has `baseModified === '2026-07-31T00:00:00Z'` and the dot-ref string verbatim → SaveBar clears. Discard → draft re-clones from `rec.data.content`. Implementation: `draft` state (deep clone on `rec.data` change via `useEffect` keyed on `recipePath`+`modifiedAt`), `dirtyOps` counter incremented per helper call, `useMemo(() => recipeToCanvas(draft, path), [draft])`, Save = `apiSend('POST','/recipes/validate', draft)` → errors render in the `--red` idiom list; else `apiSend('PUT', `/recipes/${path}`, { baseModified, content: draft })` → `queryClient.invalidateQueries({queryKey:['recipe', path]})`, reset `dirtyOps`.
+- [x] **Step 5: GREEN + tsc → Step 6: Commit**
 
 ```bash
 git add frontend/src/api/recipeEdits.ts frontend/src/api/recipeEdits.test.ts frontend/src/api/client.ts \
@@ -595,8 +600,8 @@ export function Palette(props: { onAdd: (type: string) => void }): JSX.Element
 
 Behavior: `onAdd`/canvas `onDrop` (container div gains `onDragOver` preventDefault + `onDrop` reading `text/etl-type`) call `addStep(draft, type)` or `addSourceTable(draft)`; position emerges from auto-layout (v1: no persisted x/y). Click-wire: `onPortClick` with `direction !== 'IN'` sets `wireFrom = {nodeId, portName}` (indicator chip in the SaveBar row area, existing token style, `wire: FROM.FIELD → click an IN port`); a subsequent click on an `IN`/`IN/OUT` port of another node calls `setFieldTransformation(draft, toNodeStep, toField ?? fromPort, { source: \`${fromNode}.${fromPort}\` })` (field auto-created named after the source field when absent — spec §6) and clears `wireFrom`. Delete: with a node selected, a Delete button (existing `--red` bordered idiom) shows confirm hint `Removes <name> and clears <refsInto(draft,name)> incoming reference(s)` → confirm calls `deleteNode`; with a selected edge (clicking a connection path sets `selectedEdge`) → `deleteEdge`.
 
-- [ ] **Step 1: Failing RTL tests** (extend `ETLModifier.test.tsx`): (a) palette click `target table` ⇒ canvas gains a node named `NEW_TABLE_1` and SaveBar counts; (b) wire flow: click OUT port `A` on `S`, indicator appears, click IN port on `T` ⇒ draft (asserted via raw-JSON toggle text) contains `"source": "S.A"` verbatim; (c) delete node `S` ⇒ confirm hint mentions the ref count, canvas loses the node.
-- [ ] **Step 2: RED → Step 3: implement → Step 4: GREEN + tsc** (Tab 1 tests untouched — proves `onPortClick` optionality). **Step 5: Commit**
+- [x] **Step 1: Failing RTL tests** (extend `ETLModifier.test.tsx`): (a) palette click `target table` ⇒ canvas gains a node named `NEW_TABLE_1` and SaveBar counts; (b) wire flow: click OUT port `A` on `S`, indicator appears, click IN port on `T` ⇒ draft (asserted via raw-JSON toggle text) contains `"source": "S.A"` verbatim; (c) delete node `S` ⇒ confirm hint mentions the ref count, canvas loses the node.
+- [x] **Step 2: RED → Step 3: implement → Step 4: GREEN + tsc** (Tab 1 tests untouched — proves `onPortClick` optionality). **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab2/Palette.tsx frontend/src/components/shared/EtlCanvas.tsx \
@@ -627,8 +632,8 @@ export function HistoryDrawer(props: {
 
 Drawer = right-side panel in the existing card idiom (list rows: mono timestamp + sizeBytes + View button). View mode renders a banner (`--yellow` tokens): `Viewing archived version <v> — read-only` + `Restore this version` button; canvas + panels derive from the archived content; all editing affordances disabled while viewing.
 
-- [ ] **Step 1: Failing MSW test:** handlers `GET /api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json` (no version → `[{version:'20260731-120000-000', timestamp:'2026-07-31T12:00:00Z', sizeBytes: 100}]`; with `?version=` → RecipeDto-shaped archived payload whose target is named `T_OLD`), `POST /api/recipes/rollback/...?version=...` → fresh DTO. Flow: open History → row listed → View → banner + `T_OLD` on canvas → Restore → rollback request captured + banner gone.
-- [ ] **Step 2: RED → Step 3: implement → Step 4: GREEN + tsc → Step 5: Commit**
+- [x] **Step 1: Failing MSW test:** handlers `GET /api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json` (no version → `[{version:'20260731-120000-000', timestamp:'2026-07-31T12:00:00Z', sizeBytes: 100}]`; with `?version=` → RecipeDto-shaped archived payload whose target is named `T_OLD`), `POST /api/recipes/rollback/...?version=...` → fresh DTO. Flow: open History → row listed → View → banner + `T_OLD` on canvas → Restore → rollback request captured + banner gone.
+- [x] **Step 2: RED → Step 3: implement → Step 4: GREEN + tsc → Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab2/HistoryDrawer.tsx frontend/src/components/tab2/ETLModifier.tsx \
@@ -659,10 +664,10 @@ public static String render(JsonNode transformation)
 // new ExpressionEntryDto(recipePath, layerOf(recipePath), stepName, fieldName, render(t), "recipe")
 ```
 
-- [ ] **Step 1: Failing backend test:** `all()` contains an entry with `origin() == "recipe"`, `mappingPath() == "ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json"`, `transformation() == "ODS_SYN_ORDERS"`, `port() == "AMOUNT"`, `formula() == "Undefined(EXP_ARITHMETIC(STG_L_SYN_ORDERS.AMOUNT, *, LKP_SYN_CURRENCY(STG_L_SYN_ORDERS.CURRENCY_CODE)))"` (byte-equal to the frontend Task-5 assertion — the cross-language determinism contract); xml-origin entries still present; total ≥ previous count.
-- [ ] **Step 2: RED → implement → backend GREEN.**
-- [ ] **Step 3: Frontend registry view** — failing MSW test: handler `GET /api/expressions` → two entries (one `origin:'xml'`, one `origin:'recipe'`); the "All Expressions" section (now fed by `useExpressions`, `queries.ts:29-30`) renders both with origin badges (existing chip idiom, `xml` `--cyan`-family / `recipe` `#34d399`-family tokens), a filter input narrows by substring, CopyButton per row, and — when a formula textarea has focus context (state: `focusedFormula: {stepName, fieldName} | null`, set onFocus in the edit panel) — an `Insert` button calls `setFieldTransformation(draft, …, parseFormulaText(entry.formula))`. Test: focus formula textarea → Insert → textarea value equals the inserted formula, SaveBar counts.
-- [ ] **Step 4: GREEN both sides + tsc → Step 5: Commit**
+- [x] **Step 1: Failing backend test:** `all()` contains an entry with `origin() == "recipe"`, `mappingPath() == "ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json"`, `transformation() == "ODS_SYN_ORDERS"`, `port() == "AMOUNT"`, `formula() == "Undefined(EXP_ARITHMETIC(STG_L_SYN_ORDERS.AMOUNT, *, LKP_SYN_CURRENCY(STG_L_SYN_ORDERS.CURRENCY_CODE)), 2)"` (byte-equal to the frontend Task-5 assertion, corrected during Task 5 — the fixture's outer "Undefined" node genuinely has a second `{value:"2"}` parameter, rendered per the no-exceptions rule; see task-5-report.md — the cross-language determinism contract); xml-origin entries still present; total ≥ previous count.
+- [x] **Step 2: RED → implement → backend GREEN.**
+- [x] **Step 3: Frontend registry view** — failing MSW test: handler `GET /api/expressions` → two entries (one `origin:'xml'`, one `origin:'recipe'`); the "All Expressions" section (now fed by `useExpressions`, `queries.ts:29-30`) renders both with origin badges (existing chip idiom, `xml` `--cyan`-family / `recipe` `#34d399`-family tokens), a filter input narrows by substring, CopyButton per row, and — when a formula textarea has focus context (state: `focusedFormula: {stepName, fieldName} | null`, set onFocus in the edit panel) — an `Insert` button calls `setFieldTransformation(draft, …, parseFormulaText(entry.formula))`. Test: focus formula textarea → Insert → textarea value equals the inserted formula, SaveBar counts.
+- [x] **Step 4: GREEN both sides + tsc → Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/support/FormulaRenderer.java \
@@ -727,8 +732,8 @@ echo "[validate-loop] recipe sweep…"
 node --experimental-strip-types scripts/recipe_sweep.mts || fail "recipe sweep"
 ```
 
-- [ ] **Step 1: Write script + wire → Step 2: run `make validate-loop` end-to-end** — expect `viewer_sweep: 69/69` AND `recipe_sweep: 74/74 recipes render+validate`. Any FAIL line names the recipe: fix the ADAPTER or the validate rule, never skip a recipe.
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Write script + wire → Step 2: run `make validate-loop` end-to-end** — expect `viewer_sweep: 69/69` AND `recipe_sweep: 74/74 recipes render+validate`. Any FAIL line names the recipe: fix the ADAPTER or the validate rule, never skip a recipe.
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/recipe_sweep.mts scripts/validate_loop.sh docs/superpowers/plans/2026-07-31-etl-modifier.md
@@ -745,7 +750,7 @@ git commit -m "feat(modifier): 74/74 recipe_sweep gate in validate-loop"
 - Create: `docs/adr/0007-recipes-as-source-of-truth.md` from `docs/adr/0000-template.md` (≤30 lines: GUI-saved recipes fork from XML at first edit; write API + `_history/` sidecar versioning; `make regen-corpus` overwrite risk documented, not code-guarded in v1; alternatives: regen-lock file, XML round-trip editing — both rejected one-line)
 - Modify: `.claude/skills` regen skill / `README.md` regen section — one warning line about overwriting GUI-edited recipes (per spec §7).
 
-- [ ] **Step 1: Walk spec §10's eight criteria**, recording PASS/FAIL with evidence in the commit body:
+- [x] **Step 1: Walk spec §10's eight criteria**, recording PASS/FAIL with evidence in the commit body:
   1. Tree click renders any `_ETL_*.json` — manual boot; spot-check `CDM/m_DM_INFOHUB_BIZLINK` + `ODS/m_SYN_ODS_ORDERS` (fixture tests are the RTL evidence).
   2. `recipe_sweep` 74/74 inside `make validate-loop`.
   3. Palette all 12 primitives + click-wire dot-ref verbatim (Task 9 tests).
@@ -754,7 +759,7 @@ git commit -m "feat(modifier): 74/74 recipe_sweep gate in validate-loop"
   6. Explorer collapse (Task 3 test); Tab 1 byte-identical — `git diff main...HEAD --stat -- frontend/src/components/tab1` shows only the sanctioned Canvas-removal/import edits + `NodeBox` `onPortClick`; visual side-by-side deferred to human sign-off (standing ruling).
   7. `pnpm test`, `npx tsc --noEmit`, `make test`, `make check`, `make validate-loop` all green (run all five).
   8. Docs updated (this task's own edits verified by reading them back).
-- [ ] **Step 2: Fix small reds, re-run, commit**
+- [x] **Step 2: Fix small reds, re-run, commit** — no reds found; all eight criteria PASS or (visual halves) DEFERRED-human. See `.superpowers/sdd/2026-07-31-etl-modifier/task-13-report.md` for full evidence.
 
 ```bash
 git add docs/superpowers/specs/2026-07-31-etl-modifier-design.md CLAUDE.md docs/architecture.md \
