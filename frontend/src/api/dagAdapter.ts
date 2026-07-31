@@ -1,5 +1,5 @@
 import type { components } from './types.gen'
-import type { DagCluster, DagStatus, DagTask } from '../types'
+import type { DagCluster, DagRun, DagStatus, DagTask, OperationalCard, StatusType } from '../types'
 
 export type RelationshipsT = components['schemas']['RelationshipsDto']
 export type RelNodeT = components['schemas']['NodeDto']
@@ -79,4 +79,75 @@ function layoutTasks(tasks: DagTask[], members: RelNodeT[]) {
     t.x = X0 + c * COL_PITCH
     t.y = Y0 + r * ROW_PITCH
   }
+}
+
+export type B15RowT = components['schemas']['B15RowDto']
+
+export const DEFAULT_DATAPROC_JOB_URL = 'https://console.cloud.google.com/dataproc/jobs/{jobId}?project={project}&region={region}'
+export const DEFAULT_DATAPROC_CLUSTER_URL = 'https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}'
+export const DEFAULT_LOGGING_URL = 'https://console.cloud.google.com/logs/query;query=resource.labels.job_id%3D%22{jobId}%22?project={project}'
+// ^ byte-mirrors backend application.yml gcp templates (the served AppConfigDto normally supplies them)
+
+export function parseDurationSec(v: string | undefined): number {
+  const m = /^(\d+)m\s+(\d+)sec$/.exec((v ?? '').trim())
+  return m ? Number(m[1]) * 60 + Number(m[2]) : 0
+}
+
+export function statusFromB15(status: string | undefined): DagStatus {
+  const s = (status ?? '').trim().toUpperCase()
+  return s === 'SUCCESS' ? 'success' : s === 'FAILED' ? 'failed' : s === 'RUNNING' ? 'running' : 'skipped'
+}
+
+export function overlayRun(cluster: DagCluster, rows: B15RowT[] | undefined): DagCluster {
+  const byRecipe = new Map((rows ?? []).map(r => [r.recipeFilename ?? '', r]))
+  const tasks = cluster.tasks.map(t => {
+    const row = byRecipe.get(t.task_id)
+    return { ...t,
+      last_status: row ? statusFromB15(row.status) : ('skipped' as DagStatus),
+      duration_s: row ? parseDurationSec(row.avgJobDurationInMinsSec) : 0 }
+  })
+  const set = new Set(tasks.map(t => t.last_status))
+  const status: DagStatus = set.has('failed') ? 'failed'
+    : set.has('success') || set.has('running') ? 'success' : 'skipped'
+  const ids = new Set(cluster.tasks.map(t => t.task_id))
+  const last_run = (rows ?? []).filter(r => ids.has(r.recipeFilename ?? ''))
+    .map(r => r.appStartIso ?? '').sort().at(-1) ?? ''
+  return { ...cluster, tasks, status, last_run }
+}
+
+export function clusterRuns(cluster: DagCluster, dates: string[],
+    rowsByDate: Record<string, B15RowT[] | undefined>): DagRun[] {
+  return [...dates].sort().map(date => {
+    const lit = overlayRun(cluster, rowsByDate[date])
+    return { run_id: date, dag_id: cluster.dag_id, status: lit.status,
+             started_at: lit.last_run, duration_s: lit.tasks.reduce((s, t) => s + t.duration_s, 0) }
+  })
+}
+
+const STATUS_UP: Record<DagStatus, StatusType> = { success: 'OK', failed: 'KO', running: 'RUNNING', skipped: 'PENDING' }
+
+export function toOperationalCard(task: DagTask, dates: string[],
+    rowsByDate: Record<string, B15RowT[] | undefined>, selectedDate: string): OperationalCard {
+  const sorted = [...dates].sort()
+  const rowFor = (d: string) => (rowsByDate[d] ?? []).find(r => r.recipeFilename === task.task_id)
+  const history: StatusType[] = sorted.map(d => { const r = rowFor(d); return r ? STATUS_UP[statusFromB15(r.status)] : 'PENDING' })
+  const durs = sorted.map(d => parseDurationSec(rowFor(d)?.avgJobDurationInMinsSec)).filter(n => n > 0).sort((a, b) => a - b)
+  const pct = (p: number) => durs.length ? durs[Math.min(durs.length - 1, Math.max(0, Math.ceil((p / 100) * durs.length) - 1))] : 0
+  const sel = rowFor(selectedDate)
+  const lastIso = sorted.flatMap(d => { const r = rowFor(d); return r?.appStartIso ? [r.appStartIso] : [] }).at(-1)
+  return {
+    id: task.task_id, kind: 'recipe', name: task.task_id,
+    layer: task.recipe_id.includes('/') ? task.recipe_id.slice(0, task.recipe_id.indexOf('/')) : '—',
+    status: sel ? STATUS_UP[statusFromB15(sel.status)] : 'PENDING',
+    lastRun: lastIso ?? new Date(0).toISOString(),
+    history,
+    stats: { avg_time_s: durs.length ? Math.round(durs.reduce((a, b) => a + b, 0) / durs.length) : 0,
+             p50: pct(50), p95: pct(95), p99: pct(99), avg_count: 0 },  // no row counts in b15 -> stats grid hides when 0-avg
+    jobId: sel?.jobId || undefined, appId: sel?.jobId || undefined,     // b15 job_id IS the YARN application id
+    relations: task.depends_on,
+  }
+}
+
+export function fillGcpUrl(template: string | undefined, fallback: string, vars: Record<string, string>): string {
+  return (template || fallback).replace(/\{(\w+)\}/g, (_, k: string) => encodeURIComponent(vars[k] ?? ''))
 }
