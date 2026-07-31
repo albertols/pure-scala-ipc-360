@@ -92,13 +92,13 @@ JSON under anonymized `type` tokens, not under the canonical name shown here:
 
 | `type` | class:line | additional keys | corpus |
 |---|---|---|---|
-| `table` | `TableTarget:10` | `primaryKeys?`, `updateOverride?` | 90 |
+| `table` | `TableTarget:10` | `primaryKeys?` (9), `updateOverride?` (0 — `None` throughout this corpus) | 90 |
 | `unionInput` | `UnionInputTarget:16` | — | 49 |
 | `sourceQualifier` | `SourceQualifierTarget:20` | `sourceFilter?`, `sqlQuery?`, `userDefinedJoin?`, `selectDistinct` | 86 |
 | `filter` | `FilterTarget:28` | `filterCondition?` (a transformation tree) | 23 |
 | `joinerInput` | `JoinerTarget:33` | — (name is `<joiner>.<MASTER\|DETAIL>`, `AbstractTargetFactory.scala:88`) | 10 |
 | `aggregator` | `AggregatorTarget:37` | `groupByFields` | 6 |
-| `router` | `RouterTarget:42` | `groups: RouterGroup[]` | 1 |
+| `router` | `RouterTarget:42` | `groups: RouterGroup[]` — appears in the corpus under the anonymized key `greencliff` (§5.3) | 1 |
 | `normalizer` | `NormalizerTarget:58` | `normalizedFields: NormalizedField[]` | 4 |
 | `java` | `JavaTarget:80` | `javaCode` | 1 |
 | `storedProcedure` | `StoredProcedureTarget:85` | `procedureName`, `returnField?` | 1 |
@@ -185,21 +185,31 @@ copyrighted material, the wiki's policy is:
 Four `type` values in the committed corpus are anonymizer output, not IPC vocabulary.
 Resolution, with the evidence that identifies each:
 
-| Token | Corpus | Evidence | Resolves to |
+All four are **confirmed against the source XML** (verified 2026-08-01; the exact
+witnesses below are re-asserted as a test in Part 1):
+
+| Token | Corpus | Confirming witness | Resolves to |
 |---|---|---|---|
-| `BERYLFALLS` | 86 target / 95 source | Every occurrence carries `selectDistinct`; 15 also `sourceFilter`, 9 `sqlQuery`, 8 `userDefinedJoin`. All 110 paired sources are `table`. Matches `SourceQualifierTarget:20` exactly | `sourceQualifier` |
-| `EARLYGLADE` | 49 target | Key signature is `{fields}` only. The sole canonical target kind unaccounted for once the other three tokens resolve | `unionInput` |
-| `ASHPATH2` | 10 target | All named `JNR_*`; 10 = the 5 corpus `joiner` sources × master/detail, matching `AbstractTargetFactory.scala:88`'s `<joiner>.<inputType>` naming | `joinerInput` |
-| `CEDARWICK2` | 1 target / 1 source | Carries `procedureName` + `returnField` — unique to `StoredProcedureTarget:85` | `storedProcedure` |
+| `BERYLFALLS` | 86 target / 95 source | Step `SQ_ff_BIZLINK` in `CDM/m_DM_INFOHUB_BIZLINK` ⇒ `<TRANSFORMATION NAME="SQ_ff_BIZLINK" TYPE="Source Qualifier">` | `sourceQualifier` |
+| `ASHPATH2` | 10 target | Step `JNR_Ashshore.DETAIL` in `DWH/m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES` ⇒ `<TRANSFORMATION NAME="JNR_Ashshore" TYPE="Joiner">`, with the `.DETAIL` suffix produced by `AbstractTargetFactory.scala:88` | `joinerInput` |
+| `CEDARWICK2` | 1 target / 1 source | Step `SWIFTVALE_BIRCHMILL_OAKFORD_P_MAIN` in `QDM/m_GENERATE_ERROR_BRISKGROVE` ⇒ `<TRANSFORMATION NAME="…" TYPE="Stored Procedure">` | `storedProcedure` |
+| `EARLYGLADE` | 49 target | Step `LKP_CEDARMOOR_NETHUB_ELMYARD` in `CDM/m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR` is **not** a `TRANSFORMATION` name at all — it is `<GROUP NAME="LKP_CEDARMOOR_NETHUB_ELMYARD" ORDER="9" TYPE="INPUT"/>`, i.e. an input-group name. That is exactly what `createUnionTarget` (`AbstractTargetFactory.scala:51-55`) uses to name a `UnionInputTarget` (`inputGroup` ← the `TRANSFORMFIELD@GROUP` attribute) | `unionInput` |
 
-One **key** alias also survives the `weststone`→`fields` repair: `greencliff` appears on
-1 target, and `updateOverride` (`TableTarget:13`) appears 0 times corpus-wide, so
-`greencliff` = `updateOverride` by elimination.
+`EARLYGLADE`'s witness is a different evidence class from the other three — union input
+steps are named after IPC input **groups**, not transformations, so a
+`TRANSFORMATION@TYPE` lookup necessarily misses them. The Part 1 test must therefore
+assert `GROUP@NAME` for this token and `TRANSFORMATION@TYPE` for the other three, rather
+than applying one lookup uniformly.
 
-**Confirmation is a task requirement, not an assumption.** Before the alias table is
-committed, each entry is verified against the corresponding source XML's
-`TRANSFORMATION@TYPE` attribute for at least one mapping per token. Any token that fails
-to confirm is recorded as unresolved rather than guessed.
+One **key** alias also survives the `weststone`→`fields` repair. `greencliff` appears on
+exactly 1 target — step `RTR_CIPHERKEY_OFFERING` (`ETL/m_DWH_E_MAPLEGROVE_DEALFLOW_MIS_GCP1`),
+whose `type` is `router` and whose XML witness is `<TRANSFORMATION NAME="RTR_CIPHERKEY_OFFERING"
+TYPE="Router">`. Its value is a 14-entry array of `{name, filterCondition, default,
+fields}` objects with exactly one `default: true` — structurally identical to
+`RouterGroup` (`AbstractTarget.scala:47`). So **`greencliff` = `groups`**
+(`RouterTarget:44`), and `updateOverride` (`TableTarget:13`) simply never appears in this
+corpus, being an `Option` that is `None` throughout. This also means the corpus already
+satisfies the `IPC-TYP-ROUTER` "at most one `default: true`" rule (§5.4) on real data.
 
 **Display and validation only.** The alias table never rewrites corpus bytes (CLAUDE.md
 hard rule 2 and the "never fix them back to real-looking identifiers" caveat). It is
