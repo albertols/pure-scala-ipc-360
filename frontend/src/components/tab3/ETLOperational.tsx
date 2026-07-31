@@ -1,29 +1,12 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import type { OperationalCard as CardData } from '../../types'
-import { OPERATIONAL_CARDS } from '../../mockData'
+import type { ApiError } from '../../api/client'
+import { useRelationships, useOperationalSummary } from '../../api/queries'
+import { toOperationalGraph, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { OperationalCard } from '../shared/OperationalCard'
 import { TimePicker, type TimeSelection } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
-
-const CANVAS_W = 1200
-const CANVAS_H = 700
-
-function buildEdges(cards: CardData[]): { from: CardData; to: CardData }[] {
-  const byId = Object.fromEntries(cards.map(c => [c.id, c]))
-  const edges: { from: CardData; to: CardData }[] = []
-  const seen = new Set<string>()
-  cards.forEach(c => {
-    c.relations.forEach(rid => {
-      const key = [c.id, rid].sort().join('|')
-      if (!seen.has(key) && byId[rid]) {
-        seen.add(key)
-        edges.push({ from: c, to: byId[rid] })
-      }
-    })
-  })
-  return edges
-}
 
 function StatusSummary({ cards }: { cards: CardData[] }) {
   const counts = { OK: 0, KO: 0, RUNNING: 0, PENDING: 0 }
@@ -44,11 +27,13 @@ function StatusSummary({ cards }: { cards: CardData[] }) {
 
 function RelationshipGraph({
   cards,
+  edges,
   selected,
   onSelect,
   zoom,
 }: {
   cards: CardData[]
+  edges: OperationalEdge[]
   selected: string | null
   onSelect: (id: string | null) => void
   zoom: number
@@ -56,7 +41,14 @@ function RelationshipGraph({
   const [pan, setPan] = useState({ x: 40, y: 40 })
   const dragging = useRef(false)
   const lastPan = useRef({ x: 0, y: 0 })
-  const edges = buildEdges(cards)
+
+  const byId = Object.fromEntries(cards.map(c => [c.id, c]))
+  const visibleEdges = edges.filter(e => byId[e.fromId] && byId[e.toId])
+
+  // Computed maxima from card coordinates + margins (was a static 1200x700;
+  // real layouts can exceed that, and floor stays for small/empty graphs).
+  const CANVAS_W = Math.max(1200, ...cards.map(c => (c.x ?? 0) + 280))
+  const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + 220))
 
   const compact = zoom < 0.65
 
@@ -111,12 +103,14 @@ function RelationshipGraph({
               <path d="M0 1 L6 3.5 L0 6 Z" fill="#4f9cf9" />
             </marker>
           </defs>
-          {edges.map((e, i) => {
-            const fx = (e.from.x ?? 0) + 120
-            const fy = (e.from.y ?? 0) + 50
-            const tx = (e.to.x ?? 0)
-            const ty = (e.to.y ?? 0) + 50
-            const hi = selected === e.from.id || selected === e.to.id
+          {visibleEdges.map((e, i) => {
+            const from = byId[e.fromId]!
+            const to = byId[e.toId]!
+            const fx = (from.x ?? 0) + 120
+            const fy = (from.y ?? 0) + 50
+            const tx = (to.x ?? 0)
+            const ty = (to.y ?? 0) + 50
+            const hi = selected === e.fromId || selected === e.toId
             const dx = Math.abs(tx - fx) * 0.45
             return (
               <path key={i}
@@ -124,6 +118,7 @@ function RelationshipGraph({
                 fill="none"
                 stroke={hi ? '#4f9cf9' : '#1e2438'}
                 strokeWidth={hi ? 2 : 1.5}
+                strokeDasharray={e.kind === 'lookup' ? '5 4' : undefined}
                 markerEnd={hi ? 'url(#oa-hi)' : 'url(#oa)'}
               />
             )
@@ -179,7 +174,35 @@ export function ETLOperational() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const cards = OPERATIONAL_CARDS.filter(c => {
+  const rel = useRelationships()
+  const summary = useOperationalSummary()
+  // Task 8 wires this to the TimePicker; for now the latest known date governs.
+  const selectedDate = summary.data?.dates?.at(-1) ?? null
+
+  const view = useMemo(
+    () => (rel.data ? toOperationalGraph(rel.data, summary.data, selectedDate) : null),
+    [rel.data, summary.data, selectedDate],
+  )
+
+  if (rel.isLoading || summary.isLoading) {
+    return <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 16 }}>Loading relationships…</div>
+  }
+
+  const apiError = (rel.error ?? summary.error) as ApiError | null
+  if (apiError) {
+    return (
+      <div style={{ color: 'var(--red)', fontSize: 12, padding: 16 }}>
+        <div>{apiError.title}</div>
+        {apiError.detail && <div>{apiError.detail}</div>}
+      </div>
+    )
+  }
+
+  if (!view || view.cards.length === 0) {
+    return <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 16 }}>No relationship entries</div>
+  }
+
+  const cards = view.cards.filter(c => {
     if (layerFilter !== 'ALL' && c.layer !== layerFilter) return false
     if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
     if (statusFilter !== 'ALL' && c.status !== statusFilter) return false
@@ -187,7 +210,7 @@ export function ETLOperational() {
     return true
   })
 
-  const selectedCard = selected ? OPERATIONAL_CARDS.find(c => c.id === selected) : null
+  const selectedCard = selected ? view.cards.find(c => c.id === selected) : null
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
@@ -221,14 +244,16 @@ export function ETLOperational() {
           />
         </div>
 
-        {/* filters */}
-        <FilterChips label="Layer" options={['ALL', 'CDM', 'ODS']} value={layerFilter} onChange={setLayerFilter} />
+        {/* filters — options are data-driven from the real graph */}
+        <FilterChips label="Layer" options={['ALL', ...view.layers]} value={layerFilter} onChange={setLayerFilter} />
         <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter} />
-        <FilterChips label="Status" options={['ALL', 'OK', 'KO', 'RUNNING']} value={statusFilter} onChange={setStatusFilter}
-          colors={{ OK: '#34d399', KO: '#f87171', RUNNING: '#fbbf24' }} />
+        {/* RUNNING isn't a real operational state (mock/real history only ever
+            resolves OK/KO/PENDING) — swapped for PENDING per the plan's ledger note. */}
+        <FilterChips label="Status" options={['ALL', 'OK', 'KO', 'PENDING']} value={statusFilter} onChange={setStatusFilter}
+          colors={{ OK: '#34d399', KO: '#f87171', PENDING: '#4a5570' }} />
 
         <div style={{ flex: 1 }} />
-        <StatusSummary cards={OPERATIONAL_CARDS} />
+        <StatusSummary cards={view.cards} />
 
         {/* zoom */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -249,6 +274,7 @@ export function ETLOperational() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <RelationshipGraph
           cards={cards}
+          edges={view.edges}
           selected={selected}
           onSelect={setSelected}
           zoom={zoom}
@@ -282,11 +308,11 @@ export function ETLOperational() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {selectedCard.relations.map(rid => {
-                  const rel = OPERATIONAL_CARDS.find(c => c.id === rid)
-                  if (!rel) return null
+                  const relCard = view.cards.find(c => c.id === rid)
+                  if (!relCard) return null
                   return (
                     <div key={rid} onClick={() => setSelected(rid)} style={{ cursor: 'pointer' }}>
-                      <OperationalCard card={rel} compact />
+                      <OperationalCard card={relCard} compact />
                     </div>
                   )
                 })}

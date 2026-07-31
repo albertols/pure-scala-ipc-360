@@ -1,5 +1,5 @@
 // LEGACY FIGMA MOCK DATA — being retired tab-by-tab per docs/superpowers/specs/2026-07-29-etl360-foundation-design.md.
-// The filesystem tree AND the Tab-1 Viewer canvas are REAL now; remaining tabs below still consume mocks until their sub-project lands.
+// The filesystem tree, Tab-1 Viewer, and Tab-3 Operational are REAL now; OPERATIONAL_CARDS remains ONLY for Tab 4's DAG panel; other mocks retire with their sub-projects.
 import type {
   FSDir, ETLRecipe, DDLColumn,
   OperationalCard, DagCluster, StatusType

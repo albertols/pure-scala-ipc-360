@@ -358,8 +358,8 @@ Behavior spec (exact):
 
 RTL+MSW single-flow test: module-scoped `setupServer` with handlers `/api/relationships` (mini graph: 1 STG table + 1 recipe `_ETL_m_CAS_T.json` + 1 target table, 2 edges), `/api/operational/summary` (dates `['2026-07-28','2026-07-29']`, that recipe OK on 29, KO on 28). Flow: render inside `QueryClientProvider` (retry false) → `await findByText('_ETL_m_CAS_T.json')` → status badge `OK` present → search input narrows to 1 card → layer chip `STG` filters → click card → Details panel shows Related (2) → Clear selection.
 
-- [ ] **Step 1: failing test → Step 2: RED (`pnpm test`) → Step 3: implement per behavior spec → Step 4: GREEN + `npx tsc --noEmit`.**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: failing test → Step 2: RED (`pnpm test`) → Step 3: implement per behavior spec → Step 4: GREEN + `npx tsc --noEmit`.**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/ETLOperational.test.tsx frontend/src/mockData.ts docs/superpowers/plans/2026-07-31-operational-casuistics.md
