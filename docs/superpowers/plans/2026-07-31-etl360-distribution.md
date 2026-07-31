@@ -517,7 +517,7 @@ git commit -m "docs(visual): visual-guide — architecture, tab data-flow, confi
 **Files:**
 - Modify: `README.md` (new section after "Configuration"), `CLAUDE.md`, `.env.example`
 
-- [ ] **Step 1: README "Run the 360 suite on your own data".** Content (verbatim skeleton):
+- [x] **Step 1: README "Run the 360 suite on your own data".** Content (verbatim skeleton):
 
 ````markdown
 ## Run the 360 suite on your own data
@@ -570,7 +570,7 @@ resolution): `docs/visual-guide.md` — screenshots of every tab live there too.
 ````
 
 Also in README: update the `scripts/dev.sh` paragraph (install-then-run text stays; add the `[1/4]`…`[4/4]` staged boot + `--check-config` mention) and note the committed script now resolves toolchains itself — **any local `JAVA_HOME`/PATH edits inside `scripts/dev.sh` are obsolete; discard them** (`git checkout -- scripts/dev.sh` in the old main checkout).
-- [ ] **Step 2: CLAUDE.md.** (a) Build & run bullet: "`config.json` (git-ignored, `config.example.json` template) is the user entrypoint — `scripts/dev.sh` maps it onto `ETL360_*` env vars and resolves JAVA_HOME/node; `scripts/dev.sh --check-config` dry-runs the resolution (ADR-0009)." (b) New short section before "More":
+- [x] **Step 2: CLAUDE.md.** (a) Build & run bullet: "`config.json` (git-ignored, `config.example.json` template) is the user entrypoint — `scripts/dev.sh` maps it onto `ETL360_*` env vars and resolves JAVA_HOME/node; `scripts/dev.sh --check-config` dry-runs the resolution (ADR-0009)." (b) New short section before "More":
 
 ```markdown
 ## Working practices
@@ -583,9 +583,9 @@ Visual overview + screenshots: `docs/visual-guide.md`.
 ```
 
 (c) "More" list gains `docs/harness.md` + `docs/visual-guide.md`.
-- [ ] **Step 3: `.env.example`.** Fix the stale composer comment (lines 21-22 — composer HAS a mock tier, `DataRoots.java:45-51`: mode is `real | mock | absent`); add a header note: ".env is the power-user tier — layering is defaults < config.json < .env < shell env for ETL360_* (ADR-0009); most users want config.json instead."
-- [ ] **Step 4: verify** — `make test` green post-rebase; README renders (link check to visual-guide/ADR paths exist).
-- [ ] **Step 5: Commit**
+- [x] **Step 3: `.env.example`.** Fix the stale composer comment (lines 21-22 — composer HAS a mock tier, `DataRoots.java:45-51`: mode is `real | mock | absent`); add a header note: ".env is the power-user tier — layering is defaults < config.json < .env < shell env for ETL360_* (ADR-0009); most users want config.json instead."
+- [x] **Step 4: verify** — `make test` green post-rebase; README renders (link check to visual-guide/ADR paths exist).
+- [x] **Step 5: Commit**
 
 ```bash
 git add README.md CLAUDE.md .env.example docs/superpowers/plans/2026-07-31-etl360-distribution.md
