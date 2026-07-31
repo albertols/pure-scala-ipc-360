@@ -1,12 +1,38 @@
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import type { OperationalCard as CardData } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useRelationships, useOperationalSummary } from '../../api/queries'
+import { useRelationships, useOperationalSummary, useOperationalDates, useAppConfig } from '../../api/queries'
 import { toOperationalGraph, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { OperationalCard } from '../shared/OperationalCard'
-import { TimePicker, type TimeSelection } from '../shared/TimePicker'
+import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
+
+function daysBetween(a: string, b: string): number {
+  return Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000
+}
+
+/**
+ * Client-side mirror of the backend's nearest-available-date rule
+ * (`OperationalService#nearestAvailable`): smallest day-distance to `target`.
+ * Ties favor the earlier date — falls out naturally here because `avail` is
+ * ascending (as served by `/api/operational/dates`) and we only replace
+ * `best` on a STRICTLY smaller distance, so the first (earliest) date at the
+ * minimum distance wins, same as the backend's `isBefore` tie-break.
+ */
+function nearestAvailableDate(target: string, avail: string[]): string {
+  if (avail.length === 0) return target
+  let best = avail[0]!
+  let bestDist = daysBetween(target, best)
+  for (const iso of avail) {
+    const dist = daysBetween(target, iso)
+    if (dist < bestDist) {
+      bestDist = dist
+      best = iso
+    }
+  }
+  return best
+}
 
 function StatusSummary({ cards }: { cards: CardData[] }) {
   const counts = { OK: 0, KO: 0, RUNNING: 0, PENDING: 0 }
@@ -163,8 +189,11 @@ function RelationshipGraph({
 export function ETLOperational() {
   const [selected, setSelected] = useState<string | null>(null)
   const [zoom, setZoom] = useState(0.85)
-  const [timeVal, setTimeVal] = useState<TimeSelection>({
-    date: new Date().toISOString().slice(0, 10),
+  // Date is real state (this task); "Now"/hour/precision stay locally tracked
+  // and are re-merged with `selectedDate` into the TimeSelection the
+  // (unmodified) TimePicker expects.
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [timeMeta, setTimeMeta] = useState<{ hour: number; precision: Precision; isNow: boolean }>({
     hour: new Date().getUTCHours(),
     precision: 'hour',
     isNow: true,
@@ -176,8 +205,29 @@ export function ETLOperational() {
 
   const rel = useRelationships()
   const summary = useOperationalSummary()
-  // Task 8 wires this to the TimePicker; for now the latest known date governs.
-  const selectedDate = summary.data?.dates?.at(-1) ?? null
+  const dates = useOperationalDates()
+  const cfg = useAppConfig()
+
+  // On first data, default selectedDate to the latest snapshot ("Now").
+  // Guarded on selectedDate === null so a later user pick is never clobbered.
+  useEffect(() => {
+    if (selectedDate === null && dates.data?.dates && dates.data.dates.length > 0) {
+      setSelectedDate(dates.data.dates.at(-1)!)
+    }
+  }, [dates.data, selectedDate])
+
+  const availableDates = dates.data?.dates ?? []
+
+  const timeVal: TimeSelection = {
+    date: selectedDate ?? new Date().toISOString().slice(0, 10),
+    hour: timeMeta.hour,
+    precision: timeMeta.precision,
+    isNow: timeMeta.isNow,
+  }
+  const handleTimeChange = (v: TimeSelection) => {
+    setSelectedDate(availableDates.length > 0 ? nearestAvailableDate(v.date, availableDates) : v.date)
+    setTimeMeta({ hour: v.hour, precision: v.precision, isNow: v.isNow })
+  }
 
   const view = useMemo(
     () => (rel.data ? toOperationalGraph(rel.data, summary.data, selectedDate) : null),
@@ -211,6 +261,22 @@ export function ETLOperational() {
   })
 
   const selectedCard = selected ? view.cards.find(c => c.id === selected) : null
+
+  // GCP quick links: templated from the served config + (for the cluster
+  // name) the raw summary entry looked up by name — `lastClusterName` isn't
+  // on OperationalCard (keeps that type stable), so it's read here.
+  const projectId = cfg.data?.projectId ?? 'mock-project'
+  const clusterName = selectedCard
+    ? (summary.data?.recipes?.find(r => r.recipeFilename === selectedCard.name)?.lastClusterName ?? '')
+    : ''
+  const loggingHref = (cfg.data?.loggingUrl ?? '')
+    .replace('{jobId}', selectedCard?.jobId ?? '')
+    .replace('{project}', projectId)
+  const monitoringHref = (cfg.data?.dataprocClusterUrl ?? '')
+    .replace('{clusterName}', clusterName)
+    .replace('{project}', projectId)
+    .replace('{region}', cfg.data?.region ?? '')
+  const bigQueryHref = `https://console.cloud.google.com/bigquery?project=${projectId}`
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
@@ -267,7 +333,7 @@ export function ETLOperational() {
 
       {/* time picker */}
       <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
-        <TimePicker value={timeVal} onChange={setTimeVal} />
+        <TimePicker value={timeVal} onChange={handleTimeChange} />
       </div>
 
       {/* main area */}
@@ -323,9 +389,9 @@ export function ETLOperational() {
             <div>
               <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>GCP Quick Links</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <GCPLink icon="bigquery" label="Open in BigQuery" href={`https://console.cloud.google.com/bigquery?project=my-project`} />
-                <GCPLink icon="monitoring" label="Monitoring Dashboard" href={`https://console.cloud.google.com/monitoring`} />
-                <GCPLink icon="logging" label="Cloud Logging" href={`https://console.cloud.google.com/logs`} />
+                <GCPLink icon="bigquery" label="Open in BigQuery" href={bigQueryHref} />
+                <GCPLink icon="monitoring" label="Monitoring Dashboard" href={monitoringHref} />
+                <GCPLink icon="logging" label="Cloud Logging" href={loggingHref} />
               </div>
             </div>
           </div>

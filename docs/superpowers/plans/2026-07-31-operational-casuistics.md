@@ -382,8 +382,8 @@ Behavior spec (exact):
 
 RTL additions (same file, same flow style): MSW `/api/operational/dates` (`{dates:['2026-07-28','2026-07-29'], mode:'mock'}`) + `/api/config` handler (URL templates with `{jobId}`/`{project}` placeholders). Assert: date input shows `2026-07-29` initially and card is `OK`; `fireEvent.change` to `2026-07-28` flips the badge to `KO`; select the recipe card and assert the Logging quick-link `href` contains the fixture `lastJobId` and project id; `container.querySelectorAll` on the history strip yields 2 cells (fixture) — plus one summary-fixture card asserting a 14-entry strip renders 14 cells.
 
-- [ ] **Step 1: failing assertions → Step 2: RED → Step 3: implement → Step 4: GREEN + `npx tsc --noEmit`.**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: failing assertions → Step 2: RED → Step 3: implement → Step 4: GREEN + `npx tsc --noEmit`.**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/ETLOperational.test.tsx docs/superpowers/plans/2026-07-31-operational-casuistics.md
