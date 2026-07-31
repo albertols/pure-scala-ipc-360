@@ -48,6 +48,7 @@ const server = setupServer(
   })),
   http.get('/api/ddl/CDM/m_FIX', () => HttpResponse.json({})),
   http.post('/api/recipes/validate', () => HttpResponse.json({ valid: true, errors: [] })),
+  http.get('/api/expressions', () => HttpResponse.json([])),
 )
 beforeAll(() => server.listen())
 afterEach(() => { server.resetHandlers(); cleanup() })
@@ -455,5 +456,64 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/999/)).toBeInTheDocument()
+  })
+})
+
+// ─── Task 11: expression registry — merged XML + recipe origins ──────────────
+
+const REGISTRY_ENTRIES = [
+  {
+    mappingPath: 'CDM/m_DM_INFOHUB_BIZLINK', layer: 'CDM',
+    transformation: 'EXP_FIX', port: 'COL_A_OUT', formula: 'LTRIM(COL_A)', origin: 'xml',
+  },
+  {
+    mappingPath: 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json', layer: 'ODS',
+    transformation: 'ODS_SYN_ORDERS', port: 'AMOUNT',
+    formula: 'ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)', origin: 'recipe',
+  },
+]
+
+describe('ETLModifier — expression registry (Task 11)', () => {
+  it('renders both xml- and recipe-origin entries corpus-wide, with origin badges', async () => {
+    server.use(http.get('/api/expressions', () => HttpResponse.json(REGISTRY_ENTRIES)))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    expect(await screen.findByText('LTRIM(COL_A)')).toBeInTheDocument()
+    expect(screen.getByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
+    expect(screen.getByText('xml')).toBeInTheDocument()
+    expect(screen.getByText('recipe')).toBeInTheDocument()
+  })
+
+  it('filter box narrows the registry by substring', async () => {
+    server.use(http.get('/api/expressions', () => HttpResponse.json(REGISTRY_ENTRIES)))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+    await screen.findByText('LTRIM(COL_A)')
+
+    fireEvent.change(screen.getByPlaceholderText('Filter expressions…'), { target: { value: 'AMOUNT' } })
+
+    expect(screen.queryByText('LTRIM(COL_A)')).not.toBeInTheDocument()
+    expect(screen.getByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
+  })
+
+  it('Insert writes the entry formula into the focused formula textarea and dirties the SaveBar', async () => {
+    server.use(http.get('/api/expressions', () => HttpResponse.json(REGISTRY_ENTRIES)))
+
+    const formula = await loadAndSelectT()
+    expect(screen.queryAllByText('Insert')).toHaveLength(0)
+
+    fireEvent.focus(formula)
+    const inserts = await screen.findAllByText('Insert')
+    expect(inserts).toHaveLength(REGISTRY_ENTRIES.length)
+
+    fireEvent.click(inserts[1]) // the recipe-origin ROUND(...) entry
+
+    expect(await screen.findByDisplayValue('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
   })
 })
