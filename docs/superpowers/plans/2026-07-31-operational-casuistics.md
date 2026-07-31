@@ -328,9 +328,9 @@ Rules (all null-safe; every DTO field optional):
 6. **Edges**: passthrough `{fromId: e.from, toId: e.to, kind}`, deduped by `from|to|kind`, dropping edges whose endpoint ids don't exist. **`relations`**: per card, sorted unique neighbor ids from edges (both directions).
 7. **Layout** (layer-ordered columns per spec §6; local implementation — `canvasLayout.ts`'s longest-path layering is connection-driven, not layer-driven, so only its stacking discipline is mirrored; note this in a file comment): column index `col = 2*rank + 1` for recipes; tables with an incoming `writes` edge `col = 2*rank + 2`; source-only tables `col = 2*rank`. `x = 40 + col * 320`; within a column order by (average predecessor y, then name), `y = 40 + i * 190`. Rank from `LAYER_RANK` (unknown → 8). This yields strictly left-to-right STG→…→OUTPUT flow incl. the cross-layer skip.
 
-- [ ] **Step 1: Failing tests** — inline fixture: 2 STG head tables, recipes r3/r4 both writing `T_ODS` (fan-in), r5 reading `T_ODS`+`T_REFS` writing `T_FACT` (diamond converge), a lookup table into r3, plus a summary with per-date statuses. Cases: (a) fan-in table KO when one writer KO at date; (b) recipe PENDING when date absent from history; (c) x strictly increases along the chain and `(x-40) % 320 === 0`; (d) p99 === p95 and seconds rounding; (e) edges dedup + relations symmetry; (f) `summary === undefined` ⇒ all PENDING, no throw.
-- [ ] **Step 2: RED → Step 3: implement → Step 4: GREEN + `npx tsc --noEmit`.**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Failing tests** — inline fixture: 2 STG head tables, recipes r3/r4 both writing `T_ODS` (fan-in), r5 reading `T_ODS`+`T_REFS` writing `T_FACT` (diamond converge), a lookup table into r3, plus a summary with per-date statuses. Cases: (a) fan-in table KO when one writer KO at date; (b) recipe PENDING when date absent from history; (c) x strictly increases along the chain and `(x-40) % 320 === 0`; (d) p99 === p95 and seconds rounding; (e) edges dedup + relations symmetry; (f) `summary === undefined` ⇒ all PENDING, no throw.
+- [x] **Step 2: RED → Step 3: implement → Step 4: GREEN + `npx tsc --noEmit`.**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/api/relationshipsAdapter.ts frontend/src/api/relationshipsAdapter.test.ts docs/superpowers/plans/2026-07-31-operational-casuistics.md
