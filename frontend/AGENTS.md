@@ -39,11 +39,15 @@ explicit ask. New UI states (loading, error, empty) reuse existing tokens
 (`--text-dim`, `--red`, etc.) rather than introducing new ones.
 
 `src/mockData.ts` is **legacy, being retired tab-by-tab** (see its header comment).
-The sidebar tree and Tab 1 (IPC ETL Viewer) are already real (`src/api/filesystemAdapter.ts`
-+ `useFilesystem`; `src/api/mappingAdapter.ts` + `useMappingModel`/`useMappingDom`); the
-`MAPPINGS` mock export Tab 1 used to consume is gone. The remaining three tab bodies
-(Modifier, Operational, DAG) still render from `mockData.ts` until their own
-sub-project rewires them — don't remove mock imports you haven't actually replaced.
+The sidebar tree, Tab 1 (IPC ETL Viewer), and Tab 4 (ETL DAG) are already real
+(`src/api/filesystemAdapter.ts` + `useFilesystem`; `src/api/mappingAdapter.ts` +
+`useMappingModel`/`useMappingDom`; `src/api/dagAdapter.ts` +
+`useRelationships`/`useOperationalSnapshots`); the `MAPPINGS` mock export Tab 1 used to
+consume and the `DAG_CLUSTERS`/`DAG_RUNS` exports Tab 4 used to consume are gone. The
+remaining two tab bodies (Modifier, Operational) still render from `mockData.ts` until
+their own sub-project rewires them — don't remove mock imports you haven't actually
+replaced. Tab 4's Replay button is a client-side mock toast (no Pub/Sub) — labeled in
+`ETLDag.tsx`.
 
 ## API layer
 
