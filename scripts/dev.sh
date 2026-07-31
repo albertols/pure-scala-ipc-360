@@ -98,11 +98,19 @@ CORPUS="${ETL360_CORPUS_ROOT:-parser/src/main/resources/xmltobq}"
 DWH="${ETL360_DWH_CONTROL_ROOT:-parser/src/main/resources/DWH_CONTROL}"
 COMPOSER="${ETL360_COMPOSER_ROOT:-parser/src/main/resources/composer}"
 GCP="${ETL360_GCP_PROJECT:-db-dev-example-project}"
-mode() { if [ -d "$1" ]; then echo real; elif [ -d "backend/src/main/resources/mock/$2" ]; then echo mock; else echo absent; fi; }
+# MUST mirror DataRoots.java: a root is "real" only if it carries the substructure its
+# reader needs ($3), not merely because the directory exists. A legacy DWH_CONTROL with
+# no LAYER_TO_LAYER/ reports mock here exactly as the backend resolves it — otherwise
+# this table would confidently print "real" for a root the server has fallen back from.
+mode() {
+  if [ -d "$1/$3" ]; then echo real
+  elif [ -d "backend/src/main/resources/mock/$2/$3" ]; then echo mock
+  else echo absent; fi
+}
 row() { printf '  %-12s %s %s(%s)%s\n' "$1" "$2" "$DIM" "$3" "$RST"; }
 row xmltobq     "$CORPUS"   "$SRC_CORPUS"
-row DWH_CONTROL "$DWH"      "$SRC_DWH, mode $(mode "$DWH" DWH_CONTROL)"
-row composer    "$COMPOSER" "$SRC_COMPOSER, mode $(mode "$COMPOSER" composer)"
+row DWH_CONTROL "$DWH"      "$SRC_DWH, mode $(mode "$DWH" DWH_CONTROL LAYER_TO_LAYER)"
+row composer    "$COMPOSER" "$SRC_COMPOSER, mode $(mode "$COMPOSER" composer dwh/config/cluster_tuning/inputs)"
 row gcp-project "$GCP"      "$SRC_GCP"
 row JAVA_HOME   "${JAVA_HOME:-—}" "$SRC_JAVA"
 row node        "$(command -v node || echo '—')" "$SRC_NODE"
