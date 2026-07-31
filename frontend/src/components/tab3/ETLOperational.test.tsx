@@ -127,6 +127,15 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     const dateInput = container.querySelector('input[type="date"]') as HTMLInputElement
     expect(dateInput.value).toBe('2026-07-29')
 
+    // An off-fixture pick snaps client-side to the NEAREST served date
+    // (mirrors the backend's nearest-available rule): 2026-07-30 is 1 day
+    // from 2026-07-29 and 2 from 2026-07-28, so it snaps to 07-29 — this is
+    // the only assertion that forces `nearestAvailableDate`'s comparison
+    // loop to actually replace its initial guess (an exact-fixture pick
+    // never does, since day-0 can't be beaten).
+    fireEvent.change(dateInput, { target: { value: '2026-07-30' } })
+    expect(dateInput.value).toBe('2026-07-29')
+
     // History strip on the recipe's canvas card: 2 real cells (fixture
     // history length). Scoped via the existing `data-card` wrapper so the
     // count isn't inflated by other cards' own history bars.
