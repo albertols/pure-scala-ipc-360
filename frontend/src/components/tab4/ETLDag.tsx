@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react'
-import type { DagCluster, DagTask } from '../../types'
-import { DAG_CLUSTERS, DAG_RUNS, OPERATIONAL_CARDS } from '../../mockData'
-import { OperationalCard } from '../shared/OperationalCard'
+import { useState, useRef, useCallback, useMemo } from 'react'
+import type { DagCluster, DagRun, DagTask } from '../../types'
+import type { ApiError } from '../../api/client'
+import { useRelationships } from '../../api/queries'
+import { toDagClusters } from '../../api/dagAdapter'
 import { TimePicker, type TimeSelection } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
@@ -356,8 +357,11 @@ function ReplayModal({ dagId, taskId, onClose, onConfirm }: {
 
 // ─── Run History ──────────────────────────────────────────────────────────────
 
-function RunHistory({ dagId }: { dagId: string }) {
-  const runs = DAG_RUNS[dagId] ?? []
+// selectedDate/onSelectRun accepted now (signature-only, Task 3) but not yet
+// consumed in the render below — Task 4 wires per-date highlighting + click-to-select.
+function RunHistory({ runs, selectedDate: _selectedDate, onSelectRun: _onSelectRun }: {
+  runs: DagRun[]; selectedDate: string; onSelectRun: (date: string) => void
+}) {
   const color: Record<string, string> = { success: '#34d399', failed: '#f87171', running: '#fbbf24', skipped: '#4a5570' }
 
   return (
@@ -402,9 +406,12 @@ export function ETLDag() {
     isNow: true,
   })
 
-  const dag = DAG_CLUSTERS.find(d => d.dag_id === selectedDagId) ?? null
+  const rel = useRelationships()
+  const relError = rel.error as ApiError | null
+  const clusters = useMemo(() => (rel.data ? toDagClusters(rel.data) : []), [rel.data])
+
+  const dag = clusters.find(d => d.dag_id === selectedDagId) ?? null
   const selectedTask = dag?.tasks.find(t => t.task_id === selectedTaskId) ?? null
-  const card = selectedTask?.card_id ? OPERATIONAL_CARDS.find(c => c.id === selectedTask.card_id) : null
 
   const handleConfirmReplay = () => {
     setReplayModal(null)
@@ -445,8 +452,23 @@ export function ETLDag() {
 
       {/* body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      {rel.isLoading ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
+          Loading workflows…
+        </div>
+      ) : relError ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
+          <div>{relError.title}</div>
+          {relError.detail && <div>{relError.detail}</div>}
+        </div>
+      ) : clusters.length === 0 ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
+          <span style={{ fontSize: 12 }}>No workflows in the relationships graph</span>
+        </div>
+      ) : (
+        <>
         <DagExplorer
-          clusters={DAG_CLUSTERS}
+          clusters={clusters}
           selectedDag={selectedDagId}
           selectedTask={selectedTaskId}
           onSelectDag={id => { setSelectedDagId(id); setSelectedTaskId(null) }}
@@ -529,14 +551,6 @@ export function ETLDag() {
               </div>
             )}
 
-            {/* operational card */}
-            {card && (
-              <div>
-                <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>Operational State</div>
-                <OperationalCard card={card} />
-              </div>
-            )}
-
             {/* sub-dag */}
             {selectedTask.sub_dag && (
               <div>
@@ -558,9 +572,11 @@ export function ETLDag() {
             )}
 
             {/* run history */}
-            {selectedDagId && <RunHistory dagId={selectedDagId} />}
+            {selectedDagId && <RunHistory runs={[]} selectedDate="" onSelectRun={() => {}} />}
           </div>
         )}
+      </>
+      )}
       </div>
 
       {replayModal && (
