@@ -30,10 +30,14 @@ walk(await (await fetch(`${BASE}/api/tree`)).json() as Tree)
 if (paths.length < 86) { console.error(`recipe_sweep: only ${paths.length} recipes in tree (expected >= 86)`); process.exit(1) }
 
 type IpcRuleMeta = { id: string }
-type IpcRulesDto = { rules: IpcRuleMeta[] }
+type IpcRulesDto = { rules: IpcRuleMeta[]; typeAliases?: Record<string, string> }
 const catalog = await (await fetch(`${BASE}/api/ipc/rules`)).json() as IpcRulesDto
 const knownRuleIds = new Set(catalog.rules.map(r => r.id))
 if (!knownRuleIds.size) { console.error('recipe_sweep: GET /api/ipc/rules returned no rules'); process.exit(1) }
+// Task 19: fetched once, passed to every recipeToCanvas() call below — same catalogue
+// the frontend's ETLModifier threads from useIpcRules(), so the sweep exercises the
+// canvas exactly as a real session would (anonymizer tokens resolved, not fallback boxes).
+const typeAliases = catalog.typeAliases ?? {}
 
 let failed = 0
 let warningChecks = 0
@@ -42,7 +46,7 @@ for (const p of paths.sort()) {
     const res = await fetch(`${BASE}/api/recipes/${p}`)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const dto = await res.json() as { content: unknown }
-    const g = recipeToCanvas(dto.content as never, p)
+    const g = recipeToCanvas(dto.content as never, p, typeAliases)
     if (!g.nodes.length) throw new Error('empty canvas')
     const ids = new Set(g.nodes.map(n => n.id))
     if (ids.size !== g.nodes.length) throw new Error('duplicate node ids')

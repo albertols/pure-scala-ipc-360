@@ -621,6 +621,23 @@ Recorded here at implementation time, each traced to its task and commit.
    passes. **User decision required**; not fixed by Task 18 (`recipeAdapter.ts` is
    outside this task's file scope).
 
+   **Closed by plan Task 19** (2026-08-01, added after the Task 18 acceptance walk found
+   this gap in the plan's own decomposition — no task had ever been assigned to wire the
+   alias table into the canvas). `recipeToCanvas` gained a third parameter,
+   `typeAliases: Record<string, string> = {}` (optional, default `{}`, so every existing
+   caller — this module's own tests, `scripts/recipe_sweep.mts` — kept working
+   unchanged); `kindAndLabel` resolves it before the `RECIPE_KIND`/`FIXED_LABEL` lookups,
+   so an aliased type takes the identical path a canonical type would, never a parallel
+   branch. `ETLModifier.tsx` threads `useIpcRules().data?.typeAliases` in; the sweep
+   fetches `GET /api/ipc/rules` once and passes `typeAliases` through. The locking test
+   (`recipeAdapter.test.ts:13-14`) was re-pointed at the canonical result — the assertion
+   itself encoded the bug, so changing it was correct here, unlike every other test in
+   this codebase's convention of never touching an existing assertion. Re-verified live
+   against a running backend with the real adapter code, the same way the original defect
+   was found: of the 86 corpus recipes, the fallback-label count for the four aliased
+   tokens (`BER`/`EAR`/`ASH`/`CED`) is **0** (down from the 146 measured above). Acceptance
+   criterion 3's second clause now passes; both halves of §5.3's promise hold.
+
 5. **Explorer-header ⓘ placement needs human visual sign-off** (Task 14, flagged for
    Task 18 acceptance under ADR-0005). The info affordance is an absolutely-positioned
    overlay (`right: 34`) composed in `ETLModifier.tsx` rather than a `Sidebar` header

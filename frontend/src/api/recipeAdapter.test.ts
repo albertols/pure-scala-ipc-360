@@ -7,11 +7,11 @@ const BIZ_PATH = 'CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json'
 
 describe('recipeToCanvas — nodes, kinds, ports', () => {
   it('derives target / intermediate / source nodes from the BIZLINK recipe', () => {
-    const g = recipeToCanvas(bizlink as RecipeJson, BIZ_PATH)
+    const g = recipeToCanvas(bizlink as RecipeJson, BIZ_PATH, { BERYLFALLS: 'sourceQualifier' })
     const byId = new Map(g.nodes.map(n => [n.id, n]))
     expect(byId.get('BIZLINK')!.type).toBe('target')          // table-typed AND in targetTableNames
-    expect(byId.get('SQ_ff_BIZLINK')!.type).toBe('expression') // corrupted type "BERYLFALLS" -> unknown rule
-    expect(byId.get('SQ_ff_BIZLINK')!.label).toBe('BER')
+    expect(byId.get('SQ_ff_BIZLINK')!.type).toBe('sq')        // anonymizer token "BERYLFALLS" resolved via typeAliases -> sourceQualifier -> sq
+    expect(byId.get('SQ_ff_BIZLINK')!.label).toBe('SQ')
     expect(byId.get('ff_BIZLINK')!.type).toBe('source')        // sources[] entry of type table
     expect(g.nodes).toHaveLength(3)
   })
@@ -43,6 +43,41 @@ describe('recipeToCanvas — nodes, kinds, ports', () => {
     }
     const sq = recipeToCanvas(mk('sourceQualifier'), 'L/x/_ETL_x.json').nodes.find(x => x.id === 'X')!
     expect(sq.type).toBe('sq')
+  })
+  it('typeAliases (from GET /api/ipc/rules) resolve the four anonymizer tokens to their canonical kind, ' +
+     'identically to the canonical type they alias', () => {
+    const mk = (type: string): RecipeJson => ({
+      steps: [{ target: { name: 'X', type, fields: [] }, sources: [] },
+              { target: { name: 'T', type: 'table', fields: [] }, sources: [] }],
+      table: { targetTableNames: ['T'], sourceTableNames: [] },
+    })
+    const typeAliases = {
+      BERYLFALLS: 'sourceQualifier',
+      EARLYGLADE: 'unionInput',
+      ASHPATH2: 'joinerInput',
+      CEDARWICK2: 'storedProcedure',
+    }
+    const cases: [string, string, string, string][] = [
+      ['BERYLFALLS', 'sourceQualifier', 'sq', 'SQ'],
+      ['EARLYGLADE', 'unionInput', 'expression', 'UNI'],
+      ['ASHPATH2', 'joinerInput', 'joiner', 'JNR'],
+      ['CEDARWICK2', 'storedProcedure', 'expression', 'STO'],
+    ]
+    for (const [aliasType, canonicalType, expectType, expectLabel] of cases) {
+      const aliased = recipeToCanvas(mk(aliasType), 'L/x/_ETL_x.json', typeAliases).nodes.find(x => x.id === 'X')!
+      const canonical = recipeToCanvas(mk(canonicalType), 'L/x/_ETL_x.json', typeAliases).nodes.find(x => x.id === 'X')!
+      expect([aliased.type, aliased.label]).toEqual([expectType, expectLabel])
+      expect([aliased.type, aliased.label]).toEqual([canonical.type, canonical.label]) // aliased and canonical take identical paths
+    }
+  })
+  it('typeAliases defaults to {} — an aliased token with no aliases supplied still falls back (backward compat)', () => {
+    const r: RecipeJson = {
+      steps: [{ target: { name: 'X', type: 'BERYLFALLS', fields: [] }, sources: [] },
+              { target: { name: 'T', type: 'table', fields: [] }, sources: [] }],
+      table: { targetTableNames: ['T'], sourceTableNames: [] },
+    }
+    const n = recipeToCanvas(r, 'L/x/_ETL_x.json').nodes.find(x => x.id === 'X')!
+    expect([n.type, n.label]).toEqual(['expression', 'BER'])
   })
   it('SYN recipe: clean 2-node shape; empty/garbage input never throws', () => {
     const g = recipeToCanvas(syn as RecipeJson, 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json')

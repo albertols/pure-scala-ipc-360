@@ -2962,6 +2962,44 @@ Spec §10's criteria verified with evidence; deviations recorded in spec §13."
 
 ---
 
+### Task 19: Wire the alias table into the canvas (closes acceptance criterion 3)
+
+**Added after Task 18's acceptance walk.** Spec §5.3 promised that resolving the anonymized
+type tokens would fix a live defect — "the 49 `EARLYGLADE` union-input steps currently render
+as generic `EAR` expression boxes, 86 `BERYLFALLS` source qualifiers as `BER`, and 10
+`ASHPATH2` joiner inputs as `ASH`" — and acceptance criterion 3 requires "no `EAR`/`BER`/`ASH`
+boxes remain". The alias table was wired into the backend rule engine (Task 1) and the
+Inspector's schema lookup (Task 12), but **no task ever wired it into
+`frontend/src/api/recipeAdapter.ts`**. That omission is a defect in this plan's task
+decomposition, not in any task's execution. Measured at Task 18: **146 corpus nodes** still
+render fallback labels (`BERYLFALLS` 86, `EARLYGLADE` 49, `ASHPATH2` 10, `CEDARWICK2` 1).
+
+**Files:**
+- Modify: `frontend/src/api/recipeAdapter.ts` (`kindAndLabel`, `recipeToCanvas`, `toStepNode`)
+- Modify: `frontend/src/api/recipeAdapter.test.ts` (the test at `:13-14` currently asserts `label: 'BER'` — it locks the defect in and must be re-pointed at the canonical result)
+- Modify: `frontend/src/components/tab2/ETLModifier.tsx` (thread `typeAliases` from `useIpcRules()`)
+- Modify: `scripts/recipe_sweep.mts` (fetch `/api/ipc/rules` once, pass `typeAliases` through)
+- Modify: `CLAUDE.md`, `docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md` (§13 deviation 4)
+
+**Interfaces:**
+- Consumes: `GET /api/ipc/rules`'s `typeAliases` (Task 5), `useIpcRules()` (`queries.ts`).
+- Produces: `recipeToCanvas(recipe, recipePath, typeAliases?)` — the third parameter is
+  **optional and defaults to `{}`**, so every existing caller keeps working unchanged and the
+  pure-function contract the sweep depends on is preserved.
+
+**Do NOT hardcode the alias map in TypeScript.** The whole plan's principle is that the
+frontend holds no second copy of the recipe grammar; the map is served by the backend and must
+be threaded in. A hardcoded copy would drift the moment `IpcVocabulary` changes.
+
+- [x] **Step 1: Re-point the locking test and add canonical-kind assertions (RED)**
+- [x] **Step 2: Run it — must fail on the label/type assertions specifically**
+- [x] **Step 3: Add the optional `typeAliases` parameter and resolve in `kindAndLabel`**
+- [x] **Step 4: Thread it from `ETLModifier` and `recipe_sweep.mts`**
+- [x] **Step 5: Re-run — frontend suite green, `tsc --noEmit` clean, `make validate-loop` green**
+- [x] **Step 6: Update `CLAUDE.md` and spec §13 deviation 4 to match reality; commit**
+
+---
+
 ## Critical Files for Implementation
 
 | File | Why it matters |

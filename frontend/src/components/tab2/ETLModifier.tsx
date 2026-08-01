@@ -310,8 +310,8 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // version" banner next to the LIVE modifiedAt was misleading.
   const headerRecipe = isViewing && viewedRecipe ? viewedRecipe : rec.data
   const graph = useMemo(
-    () => (content && recipePath ? recipeToCanvas(content, recipePath) : null),
-    [content, recipePath],
+    () => (content && recipePath ? recipeToCanvas(content, recipePath, ipcRules.data?.typeAliases ?? {}) : null),
+    [content, recipePath, ipcRules.data?.typeAliases],
   )
 
   // Task 16: view-aware corpus summary, Explorer footer — static corpus

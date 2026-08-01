@@ -159,10 +159,17 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   one structural key (`greencliff`) are anonymizer output, not IPC vocabulary — resolved
   to their canonical kind/key (`sourceQualifier`/`joinerInput`/`storedProcedure`/
   `unionInput`, `groups`) by `IpcVocabulary`'s alias table for rule evaluation and canvas
-  labels only; the JSON on disk is never rewritten. Every mapping is confirmed against a
-  source-XML witness and re-asserted by `AliasWitnessContractTest`, so treat a new
-  unrecognized `type` token the same way — as anonymizer damage to alias, not a bug to
-  patch into the corpus. See `docs/ipc/README.md` for the full table and witnesses.
+  labels only; the JSON on disk is never rewritten. Rule evaluation resolves server-side
+  (`IpcVocabulary.canonicalTargetType`/`canonicalSourceType`); canvas labels resolve
+  client-side — `GET /api/ipc/rules`'s `typeAliases` is threaded into
+  `frontend/src/api/recipeAdapter.ts`'s `kindAndLabel` (an optional third parameter,
+  never a hardcoded frontend copy of the map) so an aliased node renders identically to
+  the canonical kind it aliases instead of falling through to a generic expression box
+  (closed 2026-08-01, sub-project 8 Task 19 — see spec §13 deviation 4). Every mapping is
+  confirmed against a source-XML witness and re-asserted by `AliasWitnessContractTest`,
+  so treat a new unrecognized `type` token the same way — as anonymizer damage to alias,
+  not a bug to patch into the corpus. See `docs/ipc/README.md` for the full table and
+  witnesses.
 
 ## Working practices
 
