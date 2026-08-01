@@ -638,6 +638,28 @@ Recorded here at implementation time, each traced to its task and commit.
    tokens (`BER`/`EAR`/`ASH`/`CED`) is **0** (down from the 146 measured above). Acceptance
    criterion 3's second clause now passes; both halves of §5.3's promise hold.
 
+   **Follow-up, same day:** Task 19's own file scope (`ETLModifier.tsx` only) left one
+   more `recipeToCanvas` caller unaliased — `frontend/src/components/tab3/
+   PreviewOverlay.tsx`, the read-only recipe preview reachable from Tab 3's relationships
+   graph (a different canvas instance, `EtlCanvas`, than Tab 2's `IpcCanvas`, but the same
+   adapter function). Flagged rather than silently fixed, per the same file-scope
+   discipline as the rest of this deviation's history — then closed immediately on
+   review, since leaving it meant "some canvases resolve aliases, some don't," which is a
+   worse state than either extreme and would have re-broken the CLAUDE.md corpus caveat's
+   "canvas labels" claim for exactly this one call site. `PreviewOverlay.tsx` now threads
+   `useIpcRules().data?.typeAliases ?? {}` through its own `safeRecipeToCanvas` wrapper,
+   identically to `ETLModifier.tsx`. A full grep inventory of every `recipeToCanvas` call
+   site (production and test) turned up no third instance:
+   `frontend/src/components/tab2/ETLModifier.tsx:313`, `frontend/src/components/tab3/
+   PreviewOverlay.tsx:25`, and `scripts/recipe_sweep.mts:49` are the only three
+   production call sites, and all three now pass `typeAliases`. A new RTL test
+   (`ETLOperational.test.tsx`, "preview overlay does not blank while typeAliases is still
+   loading…") proves the overlay renders immediately with a fallback label while
+   `GET /api/ipc/rules` is still in flight (never blank, never throws — the same
+   `typeAliases = {}` default `recipeToCanvas` already relied on) and upgrades to the
+   canonical label once the query resolves, using a deliberately delayed MSW handler to
+   force the assertion to run inside that window.
+
 5. **Explorer-header ⓘ placement needs human visual sign-off** (Task 14, flagged for
    Task 18 acceptance under ADR-0005). The info affordance is an absolutely-positioned
    overlay (`right: 34`) composed in `ETLModifier.tsx` rather than a `Sidebar` header

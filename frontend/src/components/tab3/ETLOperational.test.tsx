@@ -2,7 +2,7 @@ import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { ETLOperational } from './ETLOperational'
 import type { RelationshipGraph } from '../../api/queries'
 import type { components } from '../../api/types.gen'
@@ -120,6 +120,18 @@ const ROWS_28 = [{
   status: 'FAILED', message: 'Stage failure (synthetic)',
 }]
 
+// Task 19: PreviewOverlay threads GET /api/ipc/rules' typeAliases into recipeToCanvas
+// the same way ETLModifier does — a default handler here keeps every "Open preview"
+// test (which conditionally mounts PreviewOverlay, and so only now fires this request)
+// deterministic, mirroring the ETLModifier.test.tsx idiom. Real alias entries, not an
+// empty stub, since one test below (`typeAliases still loading…`) exercises them.
+const IPC_RULES = {
+  rules: [],
+  typeAliases: { BERYLFALLS: 'sourceQualifier', EARLYGLADE: 'unionInput', ASHPATH2: 'joinerInput', CEDARWICK2: 'storedProcedure' },
+  keyAliases: {},
+  keySchema: {},
+}
+
 const server = setupServer(
   http.get('/api/relationships', () => HttpResponse.json(GRAPH)),
   http.get('/api/operational/summary', () => HttpResponse.json(SUMMARY)),
@@ -134,6 +146,7 @@ const server = setupServer(
     modifiedAt: '2026-07-31T00:00:00Z',
     content: PREVIEW_RECIPE,
   })),
+  http.get('/api/ipc/rules', () => HttpResponse.json(IPC_RULES)),
 )
 beforeAll(() => server.listen())
 afterEach(() => {
@@ -288,6 +301,53 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     fireEvent.click(tgtOnCanvas)
     fireEvent.click(await screen.findByText('Open preview'))
     expect(await screen.findByText('CAS_ODS_TGT_STEP', { selector: 'text' })).toBeInTheDocument()
+  })
+
+  // Task 19 follow-up: PreviewOverlay is the OTHER place in the app that turns a
+  // recipe into a canvas (ETLModifier is the other), so it must resolve the same
+  // alias table — and must not blank out or throw while GET /api/ipc/rules is still
+  // in flight (it resolves asynchronously; recipeToCanvas's own `typeAliases = {}`
+  // default is what covers the gap).
+  it('preview overlay does not blank while typeAliases is still loading, then upgrades a fallback label to its canonical kind once it resolves', async () => {
+    // A non-table step with an aliased type, feeding the table target — exercises
+    // exactly the kindAndLabel path Task 19 fixed, on the SAME overlay this app's
+    // other recipe canvas (ETLModifier) already covers.
+    const ALIASED_RECIPE = {
+      steps: [
+        { target: { name: 'SQ_ALIASED', type: 'BERYLFALLS', fields: [{ name: 'A', dataType: 'String', transformation: { value: '1' } }] }, sources: [] },
+        { target: { name: 'T', type: 'table', fields: [{ name: 'A', dataType: 'String', transformation: { source: 'SQ_ALIASED.A' } }] }, sources: [{ name: 'SQ_ALIASED', type: 'table' }] },
+      ],
+      table: { targetTableNames: ['T'], sourceTableNames: [] },
+    }
+    server.use(
+      http.get('/api/recipes/ODS/m_CAS_T/_ETL_m_CAS_T.json', () => HttpResponse.json({
+        path: 'ODS/m_CAS_T/_ETL_m_CAS_T.json', fileName: '_ETL_m_CAS_T.json',
+        sizeBytes: 1, modifiedAt: '2026-07-31T00:00:00Z', content: ALIASED_RECIPE,
+      })),
+      // Deliberately delayed — the assertion right after opening the overlay runs
+      // WHILE this is still pending, proving the overlay renders (not blank, not
+      // thrown) before useIpcRules() has anything to give it.
+      http.get('/api/ipc/rules', async () => {
+        await delay(60)
+        return HttpResponse.json(IPC_RULES)
+      }),
+    )
+
+    renderTab()
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+    fireEvent.click(await screen.findByText('Open preview'))
+
+    // Before /api/ipc/rules resolves: the node is there (not blank), showing the
+    // fallback label — recipeToCanvas's `typeAliases = {}` default in action.
+    expect(await screen.findByText('SQ_ALIASED', { selector: 'text' })).toBeInTheDocument()
+    expect(await screen.findByText('BER', { selector: 'text' })).toBeInTheDocument()
+
+    // Once it resolves: same node, canonical label — no remount, no blank frame.
+    await waitFor(() => {
+      expect(screen.queryByText('BER', { selector: 'text' })).not.toBeInTheDocument()
+    })
+    expect(screen.getByText('SQ', { selector: 'text' })).toBeInTheDocument()
+    expect(screen.getByText('SQ_ALIASED', { selector: 'text' })).toBeInTheDocument()
   })
 
   // Task 16: view-aware corpus summary — floating bottom-left chip, counts

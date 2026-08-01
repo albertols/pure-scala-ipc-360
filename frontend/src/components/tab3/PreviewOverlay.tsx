@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useMappingModel, useRecipe } from '../../api/queries'
+import { useIpcRules, useMappingModel, useRecipe } from '../../api/queries'
 import { recipeToCanvas, type RecipeJson } from '../../api/recipeAdapter'
 import { toCanvas, type CanvasGraph } from '../../api/mappingAdapter'
 import type { ApiError } from '../../api/client'
@@ -14,11 +14,15 @@ function basename(path: string): string {
 
 /** Defensive per the adapter's contract: `recipeToCanvas` assumes a shaped
  * object (it dereferences `recipe.table`/`.steps` freely) — an absent or
- * malformed `content` yields the empty graph rather than a thrown render error. */
-function safeRecipeToCanvas(content: RecipeJson | undefined, recipePath: string): CanvasGraph {
+ * malformed `content` yields the empty graph rather than a thrown render error.
+ * `typeAliases` (Task 19, `GET /api/ipc/rules`'s `typeAliases` via `useIpcRules()`
+ * below) resolves the same four anonymizer tokens `ETLModifier.tsx` resolves, so
+ * this read-only preview — the other place in the app that renders a recipe onto a
+ * canvas — never falls back to a generic `BER`/`EAR`/`ASH`/`CED` box either. */
+function safeRecipeToCanvas(content: RecipeJson | undefined, recipePath: string, typeAliases: Record<string, string>): CanvasGraph {
   if (!content) return EMPTY_GRAPH
   try {
-    return recipeToCanvas(content, recipePath)
+    return recipeToCanvas(content, recipePath, typeAliases)
   } catch {
     return EMPTY_GRAPH
   }
@@ -57,10 +61,19 @@ export function PreviewOverlay({
   const showXmlFallback = recipeMissing && !!mappingPath
   const model = useMappingModel(showXmlFallback ? mappingPath! : '')
 
+  // Task 19: same catalogue `ETLModifier` threads (`staleTime: Infinity`, so once any
+  // tab has loaded it this call is a cache hit). Arrives asynchronously — until it
+  // does, `?? {}` is the exact same default `recipeToCanvas`'s own optional parameter
+  // uses, so the canvas renders immediately with fallback labels rather than blanking
+  // or throwing, then re-renders with canonical labels once the query settles.
+  const ipcRules = useIpcRules()
+
   const content = rec.data?.content as RecipeJson | undefined
   const xmlGraph = showXmlFallback && model.data && mappingPath ? toCanvas(model.data, mappingPath) : null
   const graph: CanvasGraph =
-    content && recipePath ? safeRecipeToCanvas(content, recipePath) : (xmlGraph ?? EMPTY_GRAPH)
+    content && recipePath
+      ? safeRecipeToCanvas(content, recipePath, ipcRules.data?.typeAliases ?? {})
+      : (xmlGraph ?? EMPTY_GRAPH)
 
   const title = recipePath ? basename(recipePath) : mappingPath ? basename(mappingPath) : 'Preview'
   const rawJson = JSON.stringify(content ?? {}, null, 2)
