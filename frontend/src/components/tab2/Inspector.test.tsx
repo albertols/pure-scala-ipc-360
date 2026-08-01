@@ -46,6 +46,17 @@ const KEY_SCHEMA: Record<string, IpcKeySpec[]> = {
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
     { key: 'filterCondition', parserType: 'RecipeTransformation', required: false, widget: 'formula' },
   ],
+  'target:normalizer': [
+    { key: 'name', parserType: 'String', required: true, widget: 'text' },
+    { key: 'type', parserType: 'String', required: true, widget: 'text' },
+    { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
+    { key: 'normalizedFields', parserType: 'List[NormalizedField]', required: true, widget: 'rowTable', ruleId: 'IPC-TYP-NORMALIZER-001' },
+  ],
+  'source:union': [
+    { key: 'name', parserType: 'String', required: true, widget: 'text' },
+    { key: 'type', parserType: 'String', required: true, widget: 'text' },
+    { key: 'unionTables', parserType: 'List[UnionTable]', required: true, widget: 'rowTable', ruleId: 'IPC-TYP-UNION-001' },
+  ],
 }
 
 const KEY_ALIASES = { greencliff: 'groups', weststone: 'fields' }
@@ -193,6 +204,66 @@ describe('Inspector — widget class per key (Task 12)', () => {
     expect(screen.getByDisplayValue('A')).toBeInTheDocument()
     expect(screen.getByDisplayValue('X=1')).toBeInTheDocument()
     expect(screen.getByText('On')).toBeInTheDocument()
+  })
+
+  // Coordinator follow-up (post-review): a row-table cell whose value is a nested
+  // array of OBJECTS (unionTables[].fieldMapping — 2197 pairs across 7 real
+  // recipes) is not representable as a single text/toggle cell, but it must still
+  // be VISIBLE — "nothing is hidden" is non-negotiable even where nested editing
+  // is out of scope (recorded as an explicit deferred deviation in the task-12
+  // report). Rendered read-only, same label/value idiom as the unrecognized-keys
+  // group, so the actual origin/union values are real text nodes, not just a
+  // column header.
+  it('a source:union node renders unionTables\' nested fieldMapping pairs read-only — the origin/union VALUES are visible, not just the column label', () => {
+    const draft = {
+      steps: [{
+        target: { name: 'TGT', type: 'table', fields: [] },
+        sources: [{
+          name: 'UNI1', type: 'union',
+          unionTables: [
+            { name: 'T1', fieldMapping: [{ origin: 'SRC_A.COL1', union: 'COL_OUT' }] },
+          ],
+        }],
+      }],
+      table: { targetTableNames: ['TGT'], sourceTableNames: [] },
+    }
+    renderInspector({ draft, node: node('UNI1', 'source') })
+
+    expect(screen.getByText('unionTables')).toBeInTheDocument()
+    expect(screen.getByText('fieldMapping')).toBeInTheDocument()
+    // The nested pair's own VALUES render as real text — not just the "fieldMapping"
+    // column header, and not swallowed into an opaque summary.
+    expect(screen.getByText('SRC_A.COL1')).toBeInTheDocument()
+    expect(screen.getByText('COL_OUT')).toBeInTheDocument()
+  })
+
+  // Coordinator follow-up: refSource is a plain List[String] — reuse
+  // StringListWidget inside the row cell rather than leaving it read-only.
+  it('target:normalizer\'s normalizedFields row table renders refSource as an EDITABLE string list; adding an entry commits via setTargetProperty', () => {
+    const draft = {
+      steps: [{
+        target: {
+          name: 'NRM1', type: 'normalizer', fields: [],
+          normalizedFields: [{ name: 'N', refSource: ['N_in'], generatedColumnId: false, generatedKey: false }],
+        },
+        sources: [],
+      }],
+      table: emptyTable(),
+    }
+    const { onChange } = renderInspector({ draft, node: node('NRM1', 'expression') })
+
+    expect(screen.getByText('normalizedFields')).toBeInTheDocument()
+    expect(screen.getByText('refSource')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('N_in')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByPlaceholderText('add…'), { target: { value: 'N_in2' } })
+    fireEvent.click(screen.getByText('+ add'))
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    const [next] = onChange.mock.calls[0]
+    expect(next).toEqual(setTargetProperty(draft, 'NRM1', 'normalizedFields', [
+      { name: 'N', refSource: ['N_in', 'N_in2'], generatedColumnId: false, generatedKey: false },
+    ]))
   })
 })
 

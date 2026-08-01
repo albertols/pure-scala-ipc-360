@@ -207,8 +207,11 @@ const addButtonStyle: React.CSSProperties = {
   color: '#4f9cf9', fontSize: 11, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
 }
 
-/** A column of string rows (joinerTables/groupByFields/primaryKeys/…), each with a
- * text input + `×` remover, plus an "+ add" row reusing AddFieldControl's idiom. */
+/** A column of string rows (joinerTables/groupByFields/primaryKeys/… — and, nested
+ * inside a RowTableWidget cell, a row's own `refSource`), each with a text input +
+ * `×` remover, plus an "+ add" row reusing AddFieldControl's idiom. `label === ''`
+ * skips the label div entirely — RowTableWidget's own column header already
+ * carries the label when this is reused inside a grid cell. */
 export function StringListWidget({
   label,
   value,
@@ -228,7 +231,7 @@ export function StringListWidget({
 
   return (
     <div>
-      <div style={labelStyle}>{label}</div>
+      {label !== '' && <div style={labelStyle}>{label}</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {value.map((v, i) => (
           <div key={i} style={{ display: 'flex', gap: 4 }}>
@@ -260,16 +263,58 @@ export function StringListWidget({
 export interface RowTableColumn {
   key: string
   label: string
-  widget: 'text' | 'toggle'
+  /** `text`/`toggle` — a plain scalar cell, editable in place. `stringList` — a
+   * nested `List[String]` (e.g. a normalized field's own `refSource`), editable
+   * via a nested `StringListWidget`. `nested` — a nested array of OBJECTS (e.g.
+   * a union table's own `fieldMapping`) — NOT independently editable through this
+   * widget (see Inspector.tsx's `deriveRowTableColumns` and the task-12 report's
+   * deferred-editing deviation), but always rendered, read-only, so "nothing is
+   * hidden" holds even where nested editing doesn't yet exist. */
+  widget: 'text' | 'toggle' | 'stringList' | 'nested'
+}
+
+/** A raw cell value rendered as text: a string renders verbatim (so a value like
+ * "SRC_A.COL1" is a plain, findable text node); anything else falls back to
+ * `JSON.stringify` (matches the unrecognized-keys group's own formatting). */
+function formatRawValue(v: unknown): string {
+  return typeof v === 'string' ? v : JSON.stringify(v)
+}
+
+/** Read-only rendering for a nested array-of-objects cell (RowTableColumn's
+ * `nested` widget): a compact "N entries" summary, then every entry's own
+ * key/value pairs — same label/value idiom as the Inspector's unrecognized-keys
+ * group (muted mono label, `#c8d3e8` mono value). Values are ALWAYS real text
+ * nodes (never collapsed into an opaque summary), so nested data a nested editor
+ * doesn't exist for yet is still fully inspectable. */
+function NestedArrayCell({ items }: { items: unknown[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <span style={{ fontSize: 9, color: '#4a5570' }}>{`${items.length} ${items.length === 1 ? 'entry' : 'entries'}`}</span>
+      {items.map((item, i) => (
+        <div key={i} style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {item !== null && typeof item === 'object' ? (
+            Object.entries(item as Record<string, unknown>).map(([k, v]) => (
+              <span key={k} style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#7b88aa' }}>
+                {k}: <span style={{ color: '#c8d3e8' }}>{formatRawValue(v)}</span>
+              </span>
+            ))
+          ) : (
+            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}>{formatRawValue(item)}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 /** An array-of-objects (groups/normalizedFields/unionTables/…) rendered as a grid,
  * same header/row styling idiom as DDLViewer. `columns` is supplied by the caller
  * (Inspector.tsx derives it from the row VALUES at runtime, not from any per-kind
  * knowledge — see `deriveRowTableColumns`) — this component only knows how to lay
- * out whatever columns it's given. Editing a cell replaces that row via a shallow
- * spread, so any column NOT in `columns` (e.g. a group's own nested `fields`
- * array) survives untouched. */
+ * out whatever columns it's given. Editing a scalar/stringList cell replaces that
+ * row via a shallow spread, so any column NOT in `columns` (there are none today —
+ * every row key gets SOME column, scalar/toggle/stringList/nested) survives
+ * untouched regardless. */
 export function RowTableWidget({
   label,
   value,
@@ -304,7 +349,7 @@ export function RowTableWidget({
             <div key={i} style={{
               display: 'grid', gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
               padding: '6px 10px', borderBottom: i < value.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-              alignItems: 'center', gap: 6,
+              alignItems: 'start', gap: 6,
             }}>
               {columns.map(c => {
                 const cell = row[c.key]
@@ -319,6 +364,18 @@ export function RowTableWidget({
                       fontSize: 9, fontFamily: 'JetBrains Mono, monospace',
                     }}>{on ? 'On' : 'Off'}</button>
                   )
+                }
+                if (c.widget === 'stringList') {
+                  const items = Array.isArray(cell) ? cell as string[] : []
+                  return (
+                    <div key={c.key}>
+                      <StringListWidget label="" value={items} onChange={v => setCell(i, c.key, v)} />
+                    </div>
+                  )
+                }
+                if (c.widget === 'nested') {
+                  const items = Array.isArray(cell) ? cell : []
+                  return <NestedArrayCell key={c.key} items={items} />
                 }
                 return (
                   <input

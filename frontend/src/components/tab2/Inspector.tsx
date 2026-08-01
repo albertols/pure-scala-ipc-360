@@ -81,14 +81,21 @@ function resolveRawKey(raw: RawRecord, canonicalKey: string, keyAliases: Record<
   return canonicalKey
 }
 
-/** Column descriptor derived from the row VALUES themselves — the union of
- * scalar-typed (string/number/boolean) keys across every row, first-seen order.
- * Nested arrays/objects (a router group's own `fields`, a normalized field's
- * `refSource`) aren't representable as a single grid cell and are excluded —
- * they still round-trip untouched (RowTableWidget spreads the existing row on
- * edit). Deliberately shape-driven, not kind-driven: no `if (type === 'router')`
- * anywhere — this is what lets ONE row-table renderer cover groups/
- * normalizedFields/unionTables alike. */
+/** Column descriptor derived from the row VALUES themselves, first-seen order —
+ * deliberately shape-driven, not kind-driven: no `if (type === 'router')`
+ * anywhere, which is what lets ONE row-table renderer cover groups/
+ * normalizedFields/unionTables alike.
+ *
+ * - `boolean` -> `toggle`, `string`/`number` -> `text` (both editable in place).
+ * - An array whose elements are all strings (or an empty array — a `List[String]`
+ *   with nothing in it yet) -> `stringList` (editable — a normalized field's own
+ *   `refSource` is exactly this shape).
+ * - An array whose elements are objects (a union table's own `fieldMapping`, a
+ *   router group's own `fields`) -> `nested` — always RENDERED (read-only; see
+ *   `NestedArrayCell`/`RowTableColumn`'s own docs and the task-12 report's
+ *   deferred-editing deviation for why this isn't independently editable yet).
+ *   "Nothing is hidden" holds regardless of whether an editor exists: every key on
+ *   every row gets SOME column. */
 function deriveRowTableColumns(rows: RawRecord[]): RowTableColumn[] {
   const seen = new Set<string>()
   const columns: RowTableColumn[] = []
@@ -101,7 +108,16 @@ function deriveRowTableColumns(rows: RawRecord[]): RowTableColumn[] {
       } else if (typeof v === 'string' || typeof v === 'number') {
         seen.add(k)
         columns.push({ key: k, label: k, widget: 'text' })
+      } else if (Array.isArray(v)) {
+        seen.add(k)
+        const isStringList = v.every(x => typeof x === 'string')
+        columns.push({ key: k, label: k, widget: isStringList ? 'stringList' : 'nested' })
       }
+      // A bare nested OBJECT (non-array) row value has never appeared in the real
+      // corpus for a row-table row (spot-checked against all 86 recipes: router
+      // groups/normalizedFields/unionTables rows only ever carry scalars,
+      // booleans, and arrays) — left without a column (falls through) rather than
+      // guessed at; would need its own widget class if the corpus ever grows one.
     }
   }
   return columns
