@@ -115,8 +115,10 @@ Add above the component:
 ```tsx
 /** Rendered-row cap. The archive is 1909 recipe-origin entries corpus-wide; mounting
  * them all is both unreadable and a real DOM cost. The filter above remains the way to
- * reach any entry, so this caps what is PAINTED, never what is reachable. */
-const RENDER_CAP = 150
+ * reach any entry, so this caps what is PAINTED, never what is reachable.
+ * EXPORTED because Task 13's `RegistrySearch` caps its list the same way — one constant,
+ * not two that can drift. */
+export const RENDER_CAP = 150
 /** Clamp height for a collapsed formula: 3 lines at fontSize 10 / lineHeight 1.6. */
 const CLAMP_PX = 10 * 1.6 * 3
 ```
@@ -1018,12 +1020,22 @@ conformance chip all follow automatically.
 
 `IpcCanvas`'s `onDropType` handler does the same — it must open the dialog, not insert.
 
-- [ ] **Step 3: Verify the old direct-add path is gone**
+- [ ] **Step 3: Delete the superseded mutators**
 
-Run: `grep -n 'addStep\|addSourceTable' frontend/src/components/tab2/ETLModifier.tsx`
-Expected: no call sites remain outside the dialog's own path. `addStep`/`addSourceTable` may stay
-exported in `recipeEdits.ts` if their tests still cover them, but nothing in the UI may reach
-them directly.
+`addStep` and `addSourceTable` exist solely to serve the direct-add path this task removes, and
+`buildStep`/`insertConfiguredStep` supersede them with a shape that carries sources, properties
+and links. **Delete both from `frontend/src/api/recipeEdits.ts` along with their tests in
+`recipeEdits.test.ts`** (human ruling, pre-flight scan 2026-08-01) — leaving them exported and
+tested with no production caller repeats a defect sub-project 8's final review already named
+once, where tested-but-unreachable code reads as coverage without being it.
+
+`addSourceTable` currently calls `addStep` internally; both go together. Update
+`Palette.tsx`'s header comment, which references them by name.
+
+Then verify nothing reaches them:
+
+Run: `grep -rn 'addStep\|addSourceTable' frontend/src`
+Expected: no hits at all outside this task's own deletions.
 
 - [ ] **Step 4: Run all gates and commit**
 
@@ -1107,7 +1119,7 @@ Expected: FAIL — module not found.
 
 `useRegistry()` mirrors `useIpcRules()` exactly (`staleTime: Infinity`, same `apiGet` call shape)
 — the registry is static per backend build. `RegistrySearch` is a filter input over a capped
-list, reusing Task 1's `RENDER_CAP` constant rather than declaring a second cap. Filter across
+list, importing Task 1's exported `RENDER_CAP` from `./ExpressionDock` rather than declaring a second cap. Filter across
 both the table name and its column names, so searching a column finds its table.
 
 Run: `cd frontend && pnpm test src/components/tab2/RegistrySearch.test.tsx && npx tsc --noEmit`
