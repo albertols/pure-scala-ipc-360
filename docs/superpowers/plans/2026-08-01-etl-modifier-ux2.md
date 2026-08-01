@@ -333,7 +333,7 @@ export function EditorLayout(props: {
 **Why:** this is spec §5.2's shell. It owns geometry and nothing else — no recipe state, no
 mutators — so Task 4 can move `ETLModifier` onto it without the two concerns tangling.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Cover: all four slots render; a `pointerdown` + `pointermove` + `pointerup` on the vertical
 splitter calls through to a size change (assert the inspector element's inline `width` changes);
@@ -345,12 +345,12 @@ etc. — give each splitter and the grip a stable `data-splitter` / `data-grip` 
 Note jsdom does no layout, so assert on the inline styles the hook drives, not on measured
 geometry.
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `cd frontend && pnpm test src/components/tab2/EditorLayout.test.tsx`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Structure: an outer `display: flex; flex-direction: column; flex: 1; overflow: hidden`. Row 1 is
 `toolbar`. Row 2 is `display: flex; flex: 1; min-height: 0` containing the canvas region
@@ -372,12 +372,12 @@ Styling: splitters are `var(--border)` at rest and `#4f9cf9` while dragging; dra
 the existing small-mono-uppercase label idiom (`#4a5570`, 10 px, letter-spacing `0.08em`), active
 tab in `#c8d3e8`.
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `cd frontend && pnpm test src/components/tab2/EditorLayout.test.tsx && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab2/EditorLayout.tsx \
