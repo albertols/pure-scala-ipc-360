@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/layouts/{*path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["layout"];
+        put: operations["save_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/recipes/validate": {
         parameters: {
             query?: never;
@@ -60,6 +76,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["tree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["summary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -123,7 +155,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["summary"];
+        get: operations["summary_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -172,6 +204,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["dom"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ipc/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["rules"];
         put?: never;
         post?: never;
         delete?: never;
@@ -261,9 +309,31 @@ export interface components {
             modifiedAt?: string;
             content?: components["schemas"]["JsonNode"];
         };
+        LayoutDto: {
+            /** Format: int32 */
+            version?: number;
+            nodes?: {
+                [key: string]: components["schemas"]["NodeOffsetDto"];
+            };
+        };
+        NodeOffsetDto: {
+            /** Format: double */
+            dx?: number;
+            /** Format: double */
+            dy?: number;
+        };
+        IpcCheckDto: {
+            ruleId?: string;
+            severity?: string;
+            status?: string;
+            path?: string;
+            message?: string;
+        };
         RecipeValidationDto: {
             valid?: boolean;
             errors?: components["schemas"]["RecipeValidationErrorDto"][];
+            warnings?: components["schemas"]["RecipeValidationErrorDto"][];
+            checks?: components["schemas"]["IpcCheckDto"][];
         };
         RecipeValidationErrorDto: {
             path?: string;
@@ -281,6 +351,17 @@ export interface components {
             hasRecipe?: boolean;
             hasDdl?: boolean;
             children?: components["schemas"]["TreeNodeDto"][];
+        };
+        SummaryDto: {
+            /** Format: int32 */
+            xmlCount?: number;
+            /** Format: int32 */
+            recipeCount?: number;
+            /** Format: int32 */
+            ddlCount?: number;
+            /** Format: int32 */
+            dirCount?: number;
+            layers?: string[];
         };
         EdgeDto: {
             from?: string;
@@ -573,6 +654,33 @@ export interface components {
             text?: string;
             children?: components["schemas"]["XmlNodeDto"][];
         };
+        IpcKeySpecDto: {
+            key?: string;
+            parserType?: string;
+            required?: boolean;
+            widget?: string;
+            ruleId?: string;
+        };
+        IpcRuleMetaDto: {
+            id?: string;
+            severity?: string;
+            statement?: string;
+            parserRef?: string;
+            ipcRef?: string;
+            wikiRef?: string;
+        };
+        IpcRulesDto: {
+            rules?: components["schemas"]["IpcRuleMetaDto"][];
+            typeAliases?: {
+                [key: string]: string;
+            };
+            keyAliases?: {
+                [key: string]: string;
+            };
+            keySchema?: {
+                [key: string]: components["schemas"]["IpcKeySpecDto"][];
+            };
+        };
         ExpressionEntryDto: {
             mappingPath?: string;
             layer?: string;
@@ -648,6 +756,54 @@ export interface operations {
             };
         };
     };
+    layout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LayoutDto"];
+                };
+            };
+        };
+    };
+    save_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayoutDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LayoutDto"];
+                };
+            };
+        };
+    };
     validate: {
         parameters: {
             query?: never;
@@ -712,6 +868,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TreeNodeDto"];
+                };
+            };
+        };
+    };
+    summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SummaryDto"];
                 };
             };
         };
@@ -782,7 +958,7 @@ export interface operations {
             };
         };
     };
-    summary: {
+    summary_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -862,6 +1038,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["XmlNodeDto"];
+                };
+            };
+        };
+    };
+    rules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IpcRulesDto"];
                 };
             };
         };

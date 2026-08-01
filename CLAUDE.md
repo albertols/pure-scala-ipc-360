@@ -13,8 +13,14 @@ platform-agnostic. A multi-module Maven repo:
   table relationships, mock operational job history).
 - `frontend/` — React 19 / Vite / Tailwind v4 GUI (Figma Make prototype), wired to
   `backend/` tab by tab. **All four tabs are real now** — Tab 1 (IPC ETL Viewer)'s
-  canvas/detail panel/search/zoom, Tab 2 (ETL Modifier)'s recipe canvas, designer
-  palette, click-wire editing, save/history/rollback (the backend's first write API,
+  canvas/detail panel/search/zoom, Tab 2 (ETL Modifier)'s banded `IpcCanvas` (drag,
+  auto-layout, per-node conformance dots), schema-driven Inspector covering every
+  recipe key for the 18 of 20 IPC kinds that reach a canvas node — `union` (10) and
+  `joiner` (5) sources have none, leaving 2197 `fieldMapping` pairs and 5 joiner
+  configs unreachable in the GUI (spec `2026-08-01-etl-modifier-redesign-design.md`
+  §13 deviation 3) — a conformance chip + drawer against the IPC ruleset
+  (`docs/ipc/`), recipe-scoped Explorer/expression dock, focus mode
+  (`?focus=<recipePath>`), and save/history/rollback (the backend's first write API,
   `PUT`/`validate`/`history`/`rollback` on `/api/recipes`), Tab 3 (ETL Operational)'s
   relationships graph + operational summary, and Tab 4 (ETL DAG)'s clusters/run
   history all consume the live corpus. See `frontend/AGENTS.md`.
@@ -103,7 +109,11 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   (`SYN`-marked mappings, mock `LayerToLayerConfig`, 14-day b15 job history — see
   `docs/adr/0006-synthetic-operational-data.md`); (2) `scripts/viewer_sweep.mts` — every
   mapping in the tree renders (81/81); (3) `scripts/recipe_sweep.mts` — every recipe
-  renders+validates (86/86); (4) `node --experimental-strip-types
+  renders+validates (86/86) via the extended `POST /api/recipes/validate` (`checks[]`
+  against the IPC ruleset) and fails if any returned `checks[].ruleId` is absent from
+  `GET /api/ipc/rules`, printing a per-run tally of warning-severity checks so a
+  severity regression is visible without failing the gate (`docs/adr/0010-ipc-conformance-ruleset.md`);
+  (4) `node --experimental-strip-types
   scripts/mock_etl_data.mts --check` (manifest↔corpus↔mock drift over the `m_CAS_*`
   family) then `scripts/relationships_sweep.mts` (asserts every CAS relationship
   casuistic — fan-in, 1→N, diamond converge, lookup edge, source-only table,
@@ -114,6 +124,10 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   the caller overrides them, so the gate validates the committed mock data and can't
   flip to "real" (and silently assert against an empty graph) just because a developer
   machine happens to carry an untracked local `DWH_CONTROL`/composer export.
+  `GET /api/summary` (corpus counts for the view-aware Explorer footer/chip) and
+  `GET`/`PUT /api/layouts/{*path}` (canvas node offsets, `docs/adr/0011-canvas-layout-sidecar.md`)
+  round out the endpoints this sub-project added; both are covered by backend contract
+  tests rather than a `validate-loop` curl.
 
 ## Corpus caveats
 
@@ -144,6 +158,21 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   `statements.sql`, so adding the 12 CAS recipe names shifts every index after the
   insertion point — re-running it would silently rewrite the existing SYN/real b15
   rows. CAS b15 rows are owned exclusively by `mock_etl_data.mts --emit b15`.
+- Four recipe `type` values (`BERYLFALLS`, `ASHPATH2`, `CEDARWICK2`, `EARLYGLADE`) and
+  one structural key (`greencliff`) are anonymizer output, not IPC vocabulary — resolved
+  to their canonical kind/key (`sourceQualifier`/`joinerInput`/`storedProcedure`/
+  `unionInput`, `groups`) by `IpcVocabulary`'s alias table for rule evaluation and canvas
+  labels only; the JSON on disk is never rewritten. Rule evaluation resolves server-side
+  (`IpcVocabulary.canonicalTargetType`/`canonicalSourceType`); canvas labels resolve
+  client-side — `GET /api/ipc/rules`'s `typeAliases` is threaded into
+  `frontend/src/api/recipeAdapter.ts`'s `kindAndLabel` (an optional third parameter,
+  never a hardcoded frontend copy of the map) so an aliased node renders identically to
+  the canonical kind it aliases instead of falling through to a generic expression box
+  (closed 2026-08-01, sub-project 8 Task 19 — see spec §13 deviation 4). Every mapping is
+  confirmed against a source-XML witness and re-asserted by `AliasWitnessContractTest`,
+  so treat a new unrecognized `type` token the same way — as anonymizer damage to alias,
+  not a bug to patch into the corpus. See `docs/ipc/README.md` for the full table and
+  witnesses.
 
 ## Working practices
 
@@ -157,7 +186,10 @@ checklist): `docs/visual-guide.md`.
 ## More
 
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0009`
+- Design rationale: `docs/adr/0001`–`0011`
+- `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,
+  alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
+  expression grammar. Start at `docs/ipc/README.md`.
 - Current spec/plan: `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
   `docs/superpowers/plans/2026-07-29-etl360-foundation.md`,
   `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,
@@ -169,7 +201,9 @@ checklist): `docs/visual-guide.md`.
   `docs/superpowers/specs/2026-07-31-operational-casuistics-design.md` +
   `docs/superpowers/plans/2026-07-31-operational-casuistics.md`,
   `docs/superpowers/specs/2026-07-31-etl360-distribution-design.md` +
-  `docs/superpowers/plans/2026-07-31-etl360-distribution.md`
+  `docs/superpowers/plans/2026-07-31-etl360-distribution.md`,
+  `docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md` +
+  `docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md`
 - Parser deep-dive: `parser/src/main/scala/io/pure360/ipc/xmltojson/README.md`,
   `_DWH_Transformations_and_XML_Parsing.md`
 - Dev harness, prerequisites, `.env.example` reference: root `README.md`

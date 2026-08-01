@@ -1,5 +1,5 @@
-import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
+import { describe, expect, it, vi, beforeAll, afterAll, afterEach } from 'vitest'
+import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
@@ -25,6 +25,9 @@ const MINI = {
   table: { targetTableNames: ['T'], sourceTableNames: ['S'] },
 }
 
+// Task 14: a sibling native XML export (and a non-recipe .json, e.g. a
+// generated DDL file) alongside the recipe — the Explorer's fileFilter must
+// keep only `_ETL_*.json` entries, so both siblings are exercised here.
 const TREE = {
   name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
   children: [
@@ -32,13 +35,56 @@ const TREE = {
       name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
       children: [
         { name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' },
+        { name: 'm_FIX.xml', path: 'CDM/m_FIX/m_FIX.xml', kind: 'xml' },
+        { name: 'BIZLINK.json', path: 'CDM/m_FIX/BIZLINK.json', kind: 'json' },
       ],
     },
   ],
 }
 
+// Task 12: a slice of the real backend/src/main/resources/ipc/ipc-rules.json
+// keySchema covering exactly the kinds this suite's fixtures use (target:table —
+// MINI's "T" and every palette-added node; target:sourceQualifier — the
+// click-wire/delete fixtures' "S" step target; source:table — MINI's own "S"
+// sources[] entry). The Inspector takes keySchema as a prop rather than fetching
+// it itself, but ETLModifier.tsx DOES call useIpcRules() to produce that prop, so
+// this suite needs a real handler — without one, keySchema stays `{}` and the
+// Inspector renders nothing (no field table, no properties).
+const IPC_RULES = {
+  rules: [],
+  typeAliases: {},
+  keyAliases: {},
+  keySchema: {
+    'target:table': [
+      { key: 'name', parserType: 'String', required: true, widget: 'text' },
+      { key: 'type', parserType: 'String', required: true, widget: 'text' },
+      { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
+      { key: 'primaryKeys', parserType: 'List[String]', required: false, widget: 'stringList' },
+      { key: 'updateOverride', parserType: 'Option[String]', required: false, widget: 'textarea' },
+    ],
+    'target:sourceQualifier': [
+      { key: 'name', parserType: 'String', required: true, widget: 'text' },
+      { key: 'type', parserType: 'String', required: true, widget: 'text' },
+      { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
+      { key: 'selectDistinct', parserType: 'Boolean', required: true, widget: 'toggle', ruleId: 'IPC-TYP-SOURCEQUALIFIER-001' },
+      { key: 'sourceFilter', parserType: 'Option[String]', required: false, widget: 'textarea' },
+      { key: 'sqlQuery', parserType: 'Option[String]', required: false, widget: 'textarea' },
+      { key: 'userDefinedJoin', parserType: 'Option[String]', required: false, widget: 'textarea' },
+    ],
+    'source:table': [
+      { key: 'name', parserType: 'String', required: true, widget: 'text' },
+      { key: 'type', parserType: 'String', required: true, widget: 'text' },
+      { key: 'primaryKeys', parserType: 'List[String]', required: false, widget: 'stringList' },
+    ],
+  },
+}
+
+// Task 16: static corpus counts for the Explorer footer's corpus summary.
+const SUMMARY = { xmlCount: 81, recipeCount: 86, ddlCount: 212, dirCount: 119, layers: ['CDM', 'DWH', 'ETL', 'ODS', 'OUTPUT', 'QDM', 'RDM', 'STG'] }
+
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
+  http.get('/api/summary', () => HttpResponse.json(SUMMARY)),
   http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
     path: 'CDM/m_FIX/_ETL_m_FIX.json',
     fileName: '_ETL_m_FIX.json',
@@ -49,6 +95,11 @@ const server = setupServer(
   http.get('/api/ddl/CDM/m_FIX', () => HttpResponse.json({})),
   http.post('/api/recipes/validate', () => HttpResponse.json({ valid: true, errors: [] })),
   http.get('/api/expressions', () => HttpResponse.json([])),
+  http.get('/api/ipc/rules', () => HttpResponse.json(IPC_RULES)),
+  // Task 10: unsaved-layout default (`{version:1,nodes:{}}` never 404s) — every
+  // suite above this one renders the canvas, so this default keeps them
+  // green without knowing about the layout sidecar at all.
+  http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({ version: 1, nodes: {} })),
 )
 beforeAll(() => server.listen())
 afterEach(() => { server.resetHandlers(); cleanup() })
@@ -106,26 +157,29 @@ describe('ETLModifier — real recipes on the shared canvas', () => {
     expect(screen.queryByText('BigQuery DDL Schema')).not.toBeInTheDocument()
   })
 
-  it('clicking a non-recipe json leaf does nothing harmful (no recipe fetch, no crash)', async () => {
-    server.use(http.get('/api/tree', () => HttpResponse.json({
-      name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
-      children: [
-        {
-          name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
-          children: [
-            { name: 'BIZLINK.json', path: 'CDM/m_FIX/BIZLINK.json', kind: 'json' },
-          ],
-        },
-      ],
-    })))
+  // Superseded by Task 14's Explorer scoping (below): a non-recipe .json leaf
+  // like BIZLINK.json is now excluded from Tab 2's tree entirely by
+  // `fileFilter`, so "click it and confirm nothing crashes" is no longer a
+  // reachable scenario — there's nothing to click. See "ETLModifier — Explorer
+  // scoping + info copy (Task 14)" for the coverage that replaces it.
 
+  // Task 16: view-aware corpus summary — Explorer footer, static corpus counts
+  // PLUS (once a recipe is open) that recipe's own steps/fields/sources.
+  it('renders the corpus summary in the Explorer footer, extended with the open recipe\'s steps/fields/sources', async () => {
     renderModifier()
 
-    const file = await screen.findByText('BIZLINK.json')
-    fireEvent.click(file)
+    expect(await screen.findByText('86 recipes')).toBeInTheDocument()
+    expect(screen.getByText('8 layers')).toBeInTheDocument()
+    // No recipe open yet — MINI's own counts are absent.
+    expect(screen.queryByText('1 steps')).not.toBeInTheDocument()
 
-    // Still on the empty-hint state — no recipe was activated.
-    expect(await screen.findByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    // MINI: 1 step, 2 fields on its single target, 1 source table.
+    expect(await screen.findByText('1 steps')).toBeInTheDocument()
+    expect(screen.getByText('2 fields')).toBeInTheDocument()
+    expect(screen.getByText('1 sources')).toBeInTheDocument()
   })
 })
 
@@ -164,6 +218,62 @@ describe('ETLModifier — editing state (Task 8)', () => {
     expect(fieldA.transformation).toEqual({ name: 'EXP_TO_CHAR', parameters: [{ source: 'S.B' }, { value: "'X'" }] })
 
     await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+  })
+
+  // Task 17: Save button spinner + disable while handleSave is in flight —
+  // re-enables on both success and failure so a save that errors can never
+  // leave the button permanently disabled.
+  it('disables Save Changes and shows an inline spinner while the save is in flight, then re-enables on success', async () => {
+    server.use(
+      http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', async () => {
+        await new Promise(resolve => setTimeout(resolve, 60))
+        return HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 340,
+          modifiedAt: '2026-07-31T00:05:00Z',
+          content: MINI,
+        })
+      }),
+    )
+
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    const saveButton = screen.getByText('Save Changes').closest('button')!
+    expect(saveButton).not.toBeDisabled()
+    fireEvent.click(saveButton)
+
+    await waitFor(() => expect(saveButton).toBeDisabled())
+    expect(within(saveButton).getByRole('status')).toBeInTheDocument()
+
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+    expect(saveButton).not.toBeInTheDocument() // SaveBar unmounts once changes === 0
+  })
+
+  it('re-enables Save Changes after a failed save — never stays disabled', async () => {
+    server.use(
+      http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', async () => {
+        await new Promise(resolve => setTimeout(resolve, 60))
+        return HttpResponse.json({ title: 'Conflict', detail: 'Recipe changed since you loaded it.' }, { status: 409 })
+      }),
+    )
+
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    const saveButton = screen.getByText('Save Changes').closest('button')!
+    fireEvent.click(saveButton)
+
+    await waitFor(() => expect(saveButton).toBeDisabled())
+
+    await screen.findByText('Recipe changed since you loaded it.')
+    await waitFor(() => expect(saveButton).not.toBeDisabled())
+    expect(within(saveButton).queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('Discard re-clones the draft from the loaded recipe, clearing dirty state', async () => {
@@ -548,7 +658,169 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
   })
 })
 
-// ─── Task 11: expression registry — merged XML + recipe origins ──────────────
+// ─── Task 10: layout sidecar wiring — drag persists, saved layout re-renders ──
+
+describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
+  it('dragging a node fires a debounced PUT of its snapped position (as dx/dy) to the layout sidecar', async () => {
+    type CapturedLayout = { version?: number; nodes?: Record<string, { dx: number; dy: number }> }
+    let capturedBody: CapturedLayout | null = null
+    server.use(
+      http.put('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', async ({ request }) => {
+        capturedBody = await request.json() as CapturedLayout
+        return HttpResponse.json(capturedBody)
+      }),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    const nodeGroup = screen.getByTestId('ipc-node-T')
+    const canvasRoot = screen.getByTestId('ipc-canvas-root')
+
+    fireEvent.pointerDown(nodeGroup, { clientX: 100, clientY: 100, pointerId: 1 })
+    fireEvent.pointerMove(canvasRoot, { clientX: 120, clientY: 140, pointerId: 1 })
+    fireEvent.pointerUp(canvasRoot, { clientX: 120, clientY: 140, pointerId: 1 })
+
+    // Debounced 500ms — the PUT isn't immediate.
+    expect(capturedBody).toBeNull()
+
+    await waitFor(() => expect(capturedBody).not.toBeNull(), { timeout: 2000 })
+    expect(capturedBody).toEqual({ version: 1, nodes: { T: { dx: 20, dy: 40 } } })
+  })
+
+  it('seeds offsets from a saved layout: the node renders shifted by its dx/dy from where it renders with no saved layout', async () => {
+    // First render with the default (unsaved, {}) layout to capture node T's
+    // un-offset base position.
+    const first = renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+    const baseRect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
+    const baseX = Number(baseRect.getAttribute('x'))
+    const baseY = Number(baseRect.getAttribute('y'))
+    first.unmount()
+    cleanup()
+
+    server.use(http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      version: 1, nodes: { T: { dx: 30, dy: -15 } },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    await waitFor(() => {
+      const rect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
+      expect(rect.getAttribute('x')).toBe(String(baseX + 30))
+      expect(rect.getAttribute('y')).toBe(String(baseY - 15))
+    })
+  })
+
+  // Critical fix (review round 1): a layout refetch (window refocus after
+  // staleTime, an invalidated ['layout', ...] query, anything) must touch
+  // ONLY `offsets` — the draft-reset effect it used to share a dependency
+  // array with must stay keyed to recipePath/rec.data alone (Task 8's
+  // original invariant), or an in-progress edit silently vanishes with no
+  // recipe switch involved at all.
+  it('a layout refetch updates offsets but never wipes an in-progress recipe edit or its dirty count', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ETLModifier searchQuery="" />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    fireEvent.click(await screen.findByText('T', { selector: 'text' }))
+    const formula = await screen.findByDisplayValue('1')
+    fireEvent.change(formula, { target: { value: '999' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    const baseRect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
+    const baseX = Number(baseRect.getAttribute('x'))
+
+    server.use(http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      version: 1, nodes: { T: { dx: 40, dy: 0 } },
+    })))
+    await queryClient.invalidateQueries({ queryKey: ['layout', 'CDM/m_FIX/_ETL_m_FIX.json'] })
+
+    // Offsets DO update to the refetched layout...
+    await waitFor(() => {
+      const rect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
+      expect(rect.getAttribute('x')).toBe(String(baseX + 40))
+    })
+
+    // ...but the in-progress edit and its dirty count survive untouched.
+    expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('999')).toBeInTheDocument()
+  })
+
+  // IMPORTANT finding (review round 1): the debounce-cancel-on-recipe-switch
+  // logic (layoutSaveTimer's cleanup effect, keyed [recipePath]) was correct
+  // by inspection only — no test exercised it. Regression coverage: drag a
+  // node on recipe 1, switch to recipe 2 well before the 500ms debounce
+  // elapses, and assert recipe 1's PUT never fires.
+  it('switching recipes while a drag-debounce is pending cancels it — no stale PUT for the abandoned path', async () => {
+    let fix1PutCalled = false
+    server.use(
+      http.get('/api/tree', () => HttpResponse.json({
+        name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
+        children: [
+          {
+            name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
+            children: [
+              { name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' },
+              { name: '_ETL_m_FIX2.json', path: 'CDM/m_FIX2/_ETL_m_FIX2.json', kind: 'json' },
+            ],
+          },
+        ],
+      })),
+      http.get('/api/recipes/CDM/m_FIX2/_ETL_m_FIX2.json', () => HttpResponse.json({
+        path: 'CDM/m_FIX2/_ETL_m_FIX2.json',
+        fileName: '_ETL_m_FIX2.json',
+        sizeBytes: 50,
+        modifiedAt: '2026-07-31T01:00:00Z',
+        content: {
+          steps: [{ target: { name: 'T2', type: 'table', fields: [] }, sources: [] }],
+          table: { targetTableNames: ['T2'], sourceTableNames: [] },
+        },
+      })),
+      http.get('/api/ddl/CDM/m_FIX2', () => HttpResponse.json({})),
+      http.get('/api/layouts/CDM/m_FIX2/_ETL_m_FIX2.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+      http.put('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => {
+        fix1PutCalled = true
+        return HttpResponse.json({ version: 1, nodes: {} })
+      }),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    const nodeGroup = screen.getByTestId('ipc-node-T')
+    const canvasRoot = screen.getByTestId('ipc-canvas-root')
+    fireEvent.pointerDown(nodeGroup, { clientX: 100, clientY: 100, pointerId: 1 })
+    fireEvent.pointerMove(canvasRoot, { clientX: 120, clientY: 140, pointerId: 1 })
+    fireEvent.pointerUp(canvasRoot, { clientX: 120, clientY: 140, pointerId: 1 })
+
+    // Switch recipes immediately — well before the 500ms debounce elapses.
+    fireEvent.click(screen.getByText('_ETL_m_FIX2.json'))
+    await screen.findByText('T2', { selector: 'text' })
+
+    // Wait comfortably past the debounce window: the abandoned path's PUT
+    // must never fire.
+    await new Promise(resolve => setTimeout(resolve, 700))
+    expect(fix1PutCalled).toBe(false)
+  })
+})
+
+// ─── Task 11/14: expression dock — recipe-origin only, relocated ─────────────
+//
+// Task 14 moved `ExpressionRegistry` into `ExpressionDock` (its own unit
+// suite: `ExpressionDock.test.tsx`) and scoped it to `origin === 'recipe'`.
+// What's left here is integration coverage through the real `/api/expressions`
+// wiring + the Insert round-trip into the Inspector's formula field.
 
 const REGISTRY_ENTRIES = [
   {
@@ -560,20 +832,23 @@ const REGISTRY_ENTRIES = [
     transformation: 'ODS_SYN_ORDERS', port: 'AMOUNT',
     formula: 'ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)', origin: 'recipe',
   },
+  {
+    mappingPath: 'CDM/m_FIX/_ETL_m_FIX.json', layer: 'CDM',
+    transformation: 'FIX_STEP', port: 'B', formula: 'UPPER(S.B)', origin: 'recipe',
+  },
 ]
 
-describe('ETLModifier — expression registry (Task 11)', () => {
-  it('renders both xml- and recipe-origin entries corpus-wide, with origin badges', async () => {
+describe('ETLModifier — expression dock (Task 11/14)', () => {
+  it('renders only recipe-origin entries corpus-wide — the xml-origin entry is excluded', async () => {
     server.use(http.get('/api/expressions', () => HttpResponse.json(REGISTRY_ENTRIES)))
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
 
-    expect(await screen.findByText('LTRIM(COL_A)')).toBeInTheDocument()
-    expect(screen.getByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
-    expect(screen.getByText('xml')).toBeInTheDocument()
-    expect(screen.getByText('recipe')).toBeInTheDocument()
+    expect(await screen.findByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
+    expect(screen.getByText('UPPER(S.B)')).toBeInTheDocument()
+    expect(screen.queryByText('LTRIM(COL_A)')).not.toBeInTheDocument()
   })
 
   it('filter box narrows the registry by substring', async () => {
@@ -582,11 +857,11 @@ describe('ETLModifier — expression registry (Task 11)', () => {
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
-    await screen.findByText('LTRIM(COL_A)')
+    await screen.findByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')
 
     fireEvent.change(screen.getByPlaceholderText('Filter expressions…'), { target: { value: 'AMOUNT' } })
 
-    expect(screen.queryByText('LTRIM(COL_A)')).not.toBeInTheDocument()
+    expect(screen.queryByText('UPPER(S.B)')).not.toBeInTheDocument()
     expect(screen.getByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
   })
 
@@ -598,11 +873,98 @@ describe('ETLModifier — expression registry (Task 11)', () => {
 
     fireEvent.focus(formula)
     const inserts = await screen.findAllByText('Insert')
-    expect(inserts).toHaveLength(REGISTRY_ENTRIES.length)
+    // Only the two recipe-origin entries offer Insert — the xml-origin one never rendered.
+    expect(inserts).toHaveLength(2)
 
-    fireEvent.click(inserts[1]) // the recipe-origin ROUND(...) entry
+    fireEvent.click(inserts[0]) // the recipe-origin ROUND(...) entry
 
     expect(await screen.findByDisplayValue('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+  })
+
+  it('mounts the canvas inside a flex container so EtlCanvas flex:1 resolves to a real height', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    const nodeText = await screen.findByText('T', { selector: 'text' })
+
+    // Walk up from the rendered node to the fixed-height canvas host and assert every
+    // ancestor between them participates in flex layout. EtlCanvas's root is `flex: 1`
+    // with absolutely-positioned children, so a non-flex parent collapses it to 0px and
+    // the canvas renders invisibly (the original bug: "Canvas (2 nodes)" over an empty box).
+    const svg = nodeText.closest('svg')!
+    const canvasRoot = svg.parentElement!            // EtlCanvas root div (flex: 1)
+    const host = canvasRoot.parentElement!           // the height:420 wrapper
+    expect(host.style.height).toBe('420px')
+    expect(host.style.display).toBe('flex')
+  })
+})
+
+// ─── Task 14: Explorer scoping + info copy ────────────────────────────────────
+
+describe('ETLModifier — Explorer scoping + info copy (Task 14)', () => {
+  it('Explorer tree shows the recipe and excludes its sibling XML and non-recipe json', async () => {
+    renderModifier()
+
+    expect(await screen.findByText('_ETL_m_FIX.json')).toBeInTheDocument()
+    expect(screen.queryByText('m_FIX.xml')).not.toBeInTheDocument()
+    expect(screen.queryByText('BIZLINK.json')).not.toBeInTheDocument()
+  })
+
+  it('the Explorer header exposes an info affordance naming both _ETL_*.json and the IPC ETL Viewer tab', async () => {
+    const { container } = renderModifier()
+    // Load the recipe first so the empty state (which carries the SAME copy,
+    // per the brief) isn't also on screen, keeping the tooltip's own text
+    // assertion unambiguous.
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    const infoIcon = container.querySelector('span[style*="cursor"][style*="help"]')
+    expect(infoIcon).toBeTruthy()
+
+    fireEvent.mouseEnter(infoIcon!)
+    const tooltip = await within(infoIcon!.parentElement as HTMLElement).findByText(/_ETL_\*\.json/)
+    expect(tooltip.textContent).toMatch(/IPC ETL Viewer/)
+  })
+
+  it('the empty state names both _ETL_*.json and the IPC ETL Viewer tab', async () => {
+    renderModifier()
+
+    expect(await screen.findByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
+    expect(await screen.findByText(/IPC ETL Viewer/)).toBeInTheDocument()
+  })
+})
+
+// ─── Task 15: Focus mode ───────────────────────────────────────────────────────
+
+describe('ETLModifier — focus mode (Task 15)', () => {
+  it('focusRecipe seeds recipePath directly: no Sidebar, no "select a recipe" empty state, the recipe loads', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <ETLModifier searchQuery="" focusRecipe="CDM/m_FIX/_ETL_m_FIX.json" />
+      </QueryClientProvider>,
+    )
+
+    // Recipe header renders — no click-through-the-tree needed.
+    expect(await screen.findByRole('heading', { name: '_ETL_m_FIX.json' })).toBeInTheDocument()
+
+    // No Sidebar/Explorer, and its info-tooltip overlay is gone with it.
+    expect(screen.queryByText('Explorer')).not.toBeInTheDocument()
+    // No "select a recipe" empty state either.
+    expect(screen.queryByText('Select an _ETL_*.json recipe to edit')).not.toBeInTheDocument()
+  })
+
+  it('a ⤢ button beside { history } opens ?focus=<encoded recipePath> in a new tab', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('⤢'))
+
+    expect(openSpy).toHaveBeenCalledWith('?focus=CDM%2Fm_FIX%2F_ETL_m_FIX.json', '_blank')
+
+    openSpy.mockRestore()
   })
 })

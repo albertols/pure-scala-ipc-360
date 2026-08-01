@@ -1,8 +1,10 @@
 package io.pure360.etl360.service;
 
+import io.pure360.etl360.api.dto.SummaryDto;
 import io.pure360.etl360.api.dto.TreeNodeDto;
 import io.pure360.etl360.config.Etl360Properties;
 import io.pure360.etl360.service.support.HistorySidecar;
+import io.pure360.etl360.service.support.LayoutSidecar;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -40,6 +42,9 @@ public class CorpusService {
                 } else if (hasXmlExtension(name)) {
                     children.add(xmlNode(p));
                 } else if (name.endsWith(".json")) {
+                    // Canvas-layout sidecar (see LayoutSidecar): editor state, never a
+                    // browsable corpus entry — same exclusion contract as _history/.
+                    if (LayoutSidecar.isLayoutFile(name)) continue;
                     children.add(leaf(p, "json"));
                 }
             }
@@ -130,6 +135,44 @@ public class CorpusService {
                 .filter(p -> !HistorySidecar.isHistoryPath(root, p))
                 .filter(p -> p.getFileName().toString().endsWith(ext))
                 .map(this::relative).sorted().toList();
+        } catch (IOException e) { throw new UncheckedIOException(e); }
+    }
+
+    /** Static corpus counts for the view-aware summary (Tabs 1/2/4's rail, Tab 3's chip —
+     * spec §7.1). Reuses {@link #allXmlPaths()}/{@link #allRecipePaths()} (both already
+     * {@code _history}-clean) and a {@link #collect(String)} pass over {@code .json}, further
+     * filtered to real DDL files: names that neither start with {@code _} (excludes
+     * {@code _ETL_*} recipes and anonymizer-mangled {@code _sqlTranslations_*}/
+     * {@code _WESTPOND_*} files) nor are {@link LayoutSidecar} entries. {@code layers} is the
+     * sorted set of first path segments across all three collections. */
+    public SummaryDto summary() {
+        List<String> xmlPaths = allXmlPaths();
+        List<String> recipePaths = allRecipePaths();
+        List<String> ddlPaths = collect(".json").stream().filter(CorpusService::isDdlPath).toList();
+
+        Set<String> layers = new TreeSet<>();
+        xmlPaths.forEach(p -> layers.add(firstSegment(p)));
+        recipePaths.forEach(p -> layers.add(firstSegment(p)));
+        ddlPaths.forEach(p -> layers.add(firstSegment(p)));
+
+        return new SummaryDto(xmlPaths.size(), recipePaths.size(), ddlPaths.size(), countDirs(), new ArrayList<>(layers));
+    }
+
+    private static boolean isDdlPath(String relPath) {
+        String name = relPath.substring(relPath.lastIndexOf('/') + 1);
+        return !name.startsWith("_") && !LayoutSidecar.isLayoutFile(name);
+    }
+
+    private static String firstSegment(String relPath) {
+        int slash = relPath.indexOf('/');
+        return slash < 0 ? relPath : relPath.substring(0, slash);
+    }
+
+    private int countDirs() {
+        try (Stream<Path> walk = Files.walk(root)) {
+            return (int) walk.filter(Files::isDirectory)
+                .filter(p -> !HistorySidecar.isHistoryPath(root, p))
+                .count();
         } catch (IOException e) { throw new UncheckedIOException(e); }
     }
 }

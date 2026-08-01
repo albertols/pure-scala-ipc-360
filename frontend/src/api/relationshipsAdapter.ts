@@ -1,5 +1,5 @@
 import type { OperationalCard, StatusType } from '../types'
-import type { RelationshipGraph, OperationalSummary } from './queries'
+import type { RelationshipGraph, OperationalSummary, B15Row } from './queries'
 import type { components } from './types.gen'
 
 type NodeDto = components['schemas']['NodeDto']
@@ -242,4 +242,47 @@ export function toOperationalGraph(
   if (orderedCards.some(c => c.layer === 'UNKNOWN') && !layers.includes('UNKNOWN')) layers.push('UNKNOWN')
 
   return { cards: orderedCards, edges, layers }
+}
+
+// ─── summarizeSnapshot (Task 16) ───────────────────────────────────────────
+//
+// Tab 3's floating bottom-left chip: b15 row count, distinct recipes, distinct
+// tables, and the OK/KO split for `useOperational(selectedDate)`'s ALREADY-
+// LOADED snapshot — client-derived over the SAME cards/edges `toOperationalGraph`
+// produced, no new endpoint. "Distinct tables" is recipe -> `writes` edge ->
+// table, so two rows for two DIFFERENT recipes that fan into the SAME table
+// (spec's fan-in casuistic) count that table once; a row naming a recipe
+// absent from the graph (unrecognized/stale b15 entry) still counts toward
+// rows/recipes, just contributes no table.
+export interface OperationalSnapshotSummary {
+  rows: number
+  recipes: number
+  tables: number
+  ok: number
+  ko: number
+}
+
+export function summarizeSnapshot(
+  rows: B15Row[],
+  cards: OperationalCard[],
+  edges: OperationalEdge[],
+): OperationalSnapshotSummary {
+  const recipeIdByName = new Map(cards.filter(c => c.kind === 'recipe').map(c => [c.name, c.id]))
+
+  const recipeNames = new Set<string>()
+  let ok = 0, ko = 0
+  for (const row of rows) {
+    if (row.recipeFilename) recipeNames.add(row.recipeFilename)
+    if (row.status === 'SUCCESS') ok++
+    else if (row.status === 'FAILED') ko++
+  }
+
+  const tableIds = new Set<string>()
+  for (const name of recipeNames) {
+    const recipeId = recipeIdByName.get(name)
+    if (!recipeId) continue
+    for (const e of edges) if (e.kind === 'writes' && e.fromId === recipeId) tableIds.add(e.toId)
+  }
+
+  return { rows: rows.length, recipes: recipeNames.size, tables: tableIds.size, ok, ko }
 }

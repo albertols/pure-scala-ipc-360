@@ -43,6 +43,13 @@ export const useExpressions = () =>
 export const useAppConfig = () =>
   useQuery({ queryKey: ['config'], queryFn: () => apiGet<AppConfig>('/config'), staleTime: Infinity })
 
+// Task 16: static corpus counts (xml/recipe/ddl/dir totals, layers) for the
+// view-aware corpus summary Tabs 1/2/4 dock into their left rail (spec §7.1).
+export type Summary = components['schemas']['SummaryDto']
+
+export const useSummary = () =>
+  useQuery({ queryKey: ['summary'], queryFn: () => apiGet<Summary>('/summary'), staleTime: STALE_MS })
+
 export type RelationshipGraph = components['schemas']['RelationshipsDto']
 export type OperationalSnapshot = components['schemas']['OperationalSnapshotDto']
 export type B15Row = components['schemas']['B15RowDto']
@@ -60,3 +67,11 @@ export const useOperational = (date: string) =>
 
 export const useOperationalSummary = () =>
   useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS })
+
+export type IpcRules = components['schemas']['IpcRulesDto']
+export type IpcRuleMeta = components['schemas']['IpcRuleMetaDto']
+export type IpcKeySpec = components['schemas']['IpcKeySpecDto']
+export type IpcCheck = components['schemas']['IpcCheckDto']
+
+export const useIpcRules = () =>
+  useQuery({ queryKey: ['ipcRules'], queryFn: () => apiGet<IpcRules>('/ipc/rules'), staleTime: Infinity })

@@ -113,9 +113,14 @@ function collectScalarProps(props: Record<string, string>, obj: Record<string, u
   }
 }
 
-/** Kind + label for a step target/source `type` string. */
-function kindAndLabel(typ: string | undefined): { type: NodeType; label: string } {
-  const t = typ ?? ''
+/** Kind + label for a step target/source `type` string. `typeAliases` (served by
+ * `GET /api/ipc/rules`, backend `IpcVocabulary.TYPE_ALIASES`) resolves anonymizer
+ * tokens (`BERYLFALLS` -> `sourceQualifier`, etc.) to their canonical kind BEFORE the
+ * RECIPE_KIND / FIXED_LABEL lookups, so an aliased type takes the exact same path as
+ * the canonical type it aliases — never a parallel branch. Defaults to `{}`, so a type
+ * with no matching alias behaves exactly as before. */
+function kindAndLabel(typ: string | undefined, typeAliases: Record<string, string>): { type: NodeType; label: string } {
+  const t = typeAliases[typ ?? ''] ?? (typ ?? '')
   const kind = RECIPE_KIND[t]
   if (kind) return { type: kind, label: ABBR[kind] }
   const fixed = FIXED_LABEL[t]
@@ -204,7 +209,7 @@ function portFor(field: RecipeFieldJson, direction: Port['direction']): Port {
 
 // ─── Node construction ─────────────────────────────────────────────────────────
 
-function toStepNode(step: RecipeStepJson, isTarget: boolean, file: string): ETLNode {
+function toStepNode(step: RecipeStepJson, isTarget: boolean, file: string, typeAliases: Record<string, string>): ETLNode {
   const target = step.target
   const id = target?.name ?? ''
   const name = id
@@ -217,7 +222,7 @@ function toStepNode(step: RecipeStepJson, isTarget: boolean, file: string): ETLN
     return { id, type: 'target', label: ABBR.target, name, x: 0, y: 0, ports, properties, file }
   }
 
-  const { type, label } = kindAndLabel(target?.type)
+  const { type, label } = kindAndLabel(target?.type, typeAliases)
   const ports: Port[] = fields.map(field => portFor(field, 'IN/OUT'))
   return { id, type, label, name, x: 0, y: 0, ports, properties, file }
 }
@@ -314,7 +319,16 @@ function deriveConnections(
 
 // ─── Entry point ────────────────────────────────────────────────────────────────
 
-export function recipeToCanvas(recipe: RecipeJson, recipePath: string): CanvasGraph {
+/**
+ * `typeAliases` (`GET /api/ipc/rules`'s `typeAliases`, `useIpcRules()` in
+ * `queries.ts`) resolves the anonymized-corpus type tokens (`BERYLFALLS`,
+ * `EARLYGLADE`, `ASHPATH2`, `CEDARWICK2` — CLAUDE.md corpus caveats) to their
+ * canonical IPC kind before node/label derivation. Optional, defaults to `{}`, so
+ * every existing caller (this module's own tests, `scripts/recipe_sweep.mts`
+ * pre-Task-19) keeps working unchanged — the frontend never hardcodes a second copy
+ * of this map; it must be threaded in from the backend-served catalogue.
+ */
+export function recipeToCanvas(recipe: RecipeJson, recipePath: string, typeAliases: Record<string, string> = {}): CanvasGraph {
   const steps = recipe.steps ?? []
   const basename = recipePath.split('/').pop() ?? recipePath
   const targetTableNames = new Set(recipe.table?.targetTableNames ?? [])
@@ -326,7 +340,7 @@ export function recipeToCanvas(recipe: RecipeJson, recipePath: string): CanvasGr
     const target = step.target
     if (!target || isBlank(target.name)) continue
     const isTarget = target.type === 'table' && targetTableNames.has(target.name!)
-    const node = toStepNode(step, isTarget, basename)
+    const node = toStepNode(step, isTarget, basename, typeAliases)
     if (nodeIds.has(node.id)) continue
     nodeIds.add(node.id)
     nodes.push(node)

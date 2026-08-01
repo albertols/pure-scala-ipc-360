@@ -1,127 +1,75 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import type { ETLNode, Connection, Port } from '../../types'
+import type { Connection, Port } from '../../types'
 import type { FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
 import { apiGet, apiSend } from '../../api/client'
-import { useRecipe, useDdl, useExpressions } from '../../api/queries'
-import type { RecipeFile, RecipeValidation, RecipeValidationError, ExpressionEntry } from '../../api/queries'
-import { recipeToCanvas, renderFormula, fieldsOf } from '../../api/recipeAdapter'
-import type { RecipeJson, RecipeFieldJson } from '../../api/recipeAdapter'
+import { useRecipe, useDdl, useExpressions, useIpcRules, useSummary } from '../../api/queries'
+import { useLayout, putLayout } from '../../api/layoutQueries'
+import type { NodeOffset } from '../../api/layoutQueries'
+import type { RecipeFile, RecipeValidation, RecipeValidationError } from '../../api/queries'
+import { recipeToCanvas, fieldsOf } from '../../api/recipeAdapter'
+import type { RecipeJson } from '../../api/recipeAdapter'
 import {
-  addField,
   addSourceTable,
   addStep,
   deleteEdge,
   deleteNode,
-  editFieldDataType,
   parseFormulaText,
-  refsInto,
-  renameNode,
   setFieldTransformation,
 } from '../../api/recipeEdits'
+import { useValidation, nodeStatusFrom } from '../../api/ipcRules'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
-import { EtlCanvas } from '../shared/EtlCanvas'
+import { InfoTooltip } from '../shared/InfoTooltip'
+import { IpcCanvas } from './IpcCanvas'
 import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
+import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
+import { LoadingState } from '../shared/Spinner'
 import { Palette, SOURCE_TABLE_TYPE } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
+import { SaveBar, dangerButtonStyle } from './SaveBar'
+import { DDLViewer, type DdlColumnJson } from './DDLViewer'
+import { Inspector } from './Inspector'
+import { ConformanceChip } from './ConformanceChip'
+import { ExpressionDock } from './ExpressionDock'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
-/** Real DDL JSON shape (parser `<TABLE>.json` output) — BigQuery field list. */
-interface DdlColumnJson {
-  name?: string
-  type?: string
-  mode?: string
-  description?: string
-}
+// ─── Explorer scoping + info copy (Task 14) ────────────────────────────────────
+//
+// The Modifier's whole premise is the platform-agnostic `_ETL_*.json` model
+// XMLParser derives from native IPC `.xml` exports — so Tab 2's Explorer keeps
+// only recipes (`fileFilter`, spec §6.8) and explains the omission (both here
+// and in the empty state below) rather than silently hiding the XML.
+const RECIPE_ONLY_FILTER = (f: FSFile) => f.name.startsWith('_ETL_') && f.name.endsWith('.json')
+const EXPLORER_INFO_COPY = 'The Modifier edits the platform-agnostic _ETL_*.json recipes XMLParser produces from native IPC .xml exports. The source XML lives in the IPC ETL Viewer tab.'
 
-// ─── Save Bar ─────────────────────────────────────────────────────────────────
+// ─── Layout offsets ⇄ wire DTO (Task 10) ───────────────────────────────────────
+// Two vocabularies meet at this boundary and nowhere else: IpcCanvas's in-memory
+// `offsets` map is keyed `{x, y}` (Task 8's existing shape, unchanged), while the
+// `LayoutDto` wire format is keyed `{dx, dy}` (deliberately named that way so
+// nobody reads them as absolute canvas coordinates — see NodeOffsetDto's Javadoc).
 
-/** Delete idiom (Task 9): the SaveBar's existing "Save Changes"/"Discard" button
- * pair, recomposed with the `--red` token in place of the blue one — no new
- * tokens introduced. */
-const dangerButtonStyle: React.CSSProperties = {
-  padding: '5px 14px', borderRadius: 5,
-  background: 'rgba(248,113,113,0.15)', border: '1px solid var(--red)',
-  color: 'var(--red)', fontSize: 12, cursor: 'pointer', fontWeight: 600,
-}
-const ghostButtonStyle: React.CSSProperties = {
-  padding: '5px 14px', borderRadius: 5,
-  background: 'transparent', border: '1px solid var(--border)',
-  color: '#7b88aa', fontSize: 12, cursor: 'pointer',
-}
-
-/** Task 9: the wire-mode indicator lives in the same sticky row as the dirty
- * indicator/Save/Discard controls — the bar now also mounts while a wire is
- * in progress (dirty count 0), not only while there are unsaved changes. */
-function SaveBar({
-  changes,
-  wireFrom,
-  onCancelWire,
-  onSave,
-  onDiscard,
-}: {
-  changes: number
-  wireFrom: { nodeId: string; portName: string } | null
-  onCancelWire: () => void
-  onSave: () => void
-  onDiscard: () => void
-}) {
-  if (changes === 0 && !wireFrom) return null
-  return (
-    <div style={{
-      position: 'sticky', bottom: 0,
-      background: 'var(--surface)',
-      borderTop: '1px solid #fbbf2444',
-      padding: '10px 16px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 12,
-      zIndex: 10,
-    }}>
-      {wireFrom && (
-        <div
-          onClick={onCancelWire}
-          title="Click to cancel"
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '3px 10px', borderRadius: 5,
-            background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-            color: '#4f9cf9', fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
-            cursor: 'pointer',
-          }}
-        >{`wire: ${wireFrom.nodeId}.${wireFrom.portName} → click an IN port`}</div>
-      )}
-      {changes > 0 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          fontSize: 11, color: '#fbbf24',
-        }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="5" stroke="#fbbf24" strokeWidth="1.2" />
-            <line x1="6" y1="3.5" x2="6" y2="6.5" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" />
-            <circle cx="6" cy="8.5" r="0.8" fill="#fbbf24" />
-          </svg>
-          {changes} unsaved change{changes !== 1 ? 's' : ''}
-        </div>
-      )}
-      <div style={{ flex: 1 }} />
-      {changes > 0 && (
-        <>
-          <button onClick={onDiscard} style={ghostButtonStyle}>Discard</button>
-          <button onClick={onSave} style={{
-            padding: '5px 16px', borderRadius: 5,
-            background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-            color: '#4f9cf9', fontSize: 12, cursor: 'pointer', fontWeight: 600,
-          }}>Save Changes</button>
-        </>
-      )}
-    </div>
+/** `LayoutDto.nodes` (dx/dy) -> IpcCanvas's `offsets` prop shape (x/y). Missing
+ * dx/dy (an empty/partial sidecar) fall back to 0, matching "no offset". */
+function toCanvasOffsets(nodes: Record<string, NodeOffset> | undefined): Record<string, { x: number; y: number }> {
+  if (!nodes) return {}
+  return Object.fromEntries(
+    Object.entries(nodes).map(([id, off]) => [id, { x: off.dx ?? 0, y: off.dy ?? 0 }]),
   )
 }
+
+/** IpcCanvas's `offsets` prop shape (x/y) -> the `putLayout` wire body (dx/dy). */
+function toWireOffsets(offsets: Record<string, { x: number; y: number }>): Record<string, { dx: number; dy: number }> {
+  return Object.fromEntries(
+    Object.entries(offsets).map(([id, { x, y }]) => [id, { dx: x, dy: y }]),
+  )
+}
+
+/** Debounce interval (ms) between a node drag settling and the layout PUT firing. */
+const LAYOUT_SAVE_DEBOUNCE_MS = 500
 
 // ─── Editable Field ───────────────────────────────────────────────────────────
 
@@ -167,48 +115,6 @@ function EditableField({
   )
 }
 
-// ─── DDL Viewer ───────────────────────────────────────────────────────────────
-
-function DDLViewer({ cols }: { cols: DdlColumnJson[] }) {
-  if (cols.length === 0) return null
-
-  const modeColor: Record<string, string> = { REQUIRED: '#34d399', NULLABLE: '#4a5570', REPEATED: '#818cf8' }
-
-  return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr auto auto 2fr',
-        background: 'var(--surface-2)', padding: '6px 10px',
-        borderBottom: '1px solid var(--border)',
-        fontSize: 9, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.06em',
-      }}>
-        <span>Column</span>
-        <span style={{ textAlign: 'right', paddingRight: 12 }}>BQ Type</span>
-        <span style={{ textAlign: 'right', paddingRight: 12 }}>Mode</span>
-        <span>Description</span>
-      </div>
-      {cols.map((col, i) => (
-        <div key={i} className="port-row" style={{
-          display: 'grid', gridTemplateColumns: '1fr auto auto 2fr',
-          padding: '6px 10px', borderBottom: i < cols.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-          alignItems: 'center', gap: 4,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}>{col.name}</span>
-            <CopyButton value={col.name ?? ''} size={11} />
-          </div>
-          <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#4f9cf9', textAlign: 'right', paddingRight: 12 }}>{col.type}</span>
-          <span style={{
-            fontSize: 8, fontFamily: 'JetBrains Mono, monospace', textAlign: 'right', paddingRight: 12,
-            color: modeColor[col.mode ?? ''] ?? '#4a5570',
-          }}>{col.mode}</span>
-          <span style={{ fontSize: 10, color: '#4a5570', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{col.description || '—'}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 // ─── Section Header ───────────────────────────────────────────────────────────
 
 function SectionHeader({ icon, label, color, extra }: { icon: string; label: string; color: string; extra?: React.ReactNode }) {
@@ -242,311 +148,18 @@ function TableNameList({ names, emptyLabel }: { names: string[]; emptyLabel: str
   )
 }
 
-// ─── Edit panel (Task 8) ────────────────────────────────────────────────────────
-
-/** One field's editors: dataType + a formula textarea seeded with `renderFormula`
- * and parsed back via `parseFormulaText` on blur. Local state so keystrokes stay
- * responsive; commits (draft mutation + dirty count) fire on blur only. */
-function FieldEditor({
-  stepName,
-  field,
-  onDataType,
-  onFormula,
-  onFocusFormula,
-}: {
-  stepName: string
-  field: RecipeFieldJson
-  onDataType: (stepName: string, fieldName: string, dataType: string) => void
-  onFormula: (stepName: string, fieldName: string, text: string) => void
-  /** Task 11: reports focus-in on this field's formula textarea so the "All
-   * Expressions" registry can offer an Insert action targeting it. */
-  onFocusFormula: (stepName: string, fieldName: string) => void
-}) {
-  const fieldName = field.name ?? ''
-  const originalFormula = renderFormula(field.transformation)
-  const [dataType, setDataType] = useState(field.dataType ?? '')
-  const [formula, setFormula] = useState(originalFormula)
-
-  useEffect(() => {
-    setDataType(field.dataType ?? '')
-    setFormula(originalFormula)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fieldName, field.dataType, originalFormula])
-
-  return (
-    <div style={{
-      border: '1px solid var(--border-subtle)', borderRadius: 5, padding: 10,
-      display: 'flex', flexDirection: 'column', gap: 8,
-    }}>
-      <div style={{ fontSize: 10, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{fieldName}</div>
-      <EditableField label="Data type" value={dataType} onChange={setDataType} mono
-        onCommit={() => { if (dataType !== (field.dataType ?? '')) onDataType(stepName, fieldName, dataType) }} />
-      <div>
-        <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 3 }}>Formula</div>
-        <textarea
-          value={formula}
-          onChange={e => setFormula(e.target.value)}
-          onFocus={() => onFocusFormula(stepName, fieldName)}
-          onBlur={() => { if (formula !== originalFormula) onFormula(stepName, fieldName, formula) }}
-          rows={2}
-          style={{
-            width: '100%', resize: 'vertical',
-            background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4,
-            color: '#c8d3e8', fontSize: 11, padding: '5px 8px',
-            fontFamily: 'JetBrains Mono, monospace', outline: 'none',
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
-/** Delete affordance for the selected node (Task 9): a `--red`-bordered Delete
- * button which, on first click, arms a confirm hint quoting the exact field
- * count `refsInto` would clear (the same helper `deleteNode` itself uses to
- * decide what to clear, so the hint can never drift from the actual effect) —
- * a second click (Confirm delete) or Cancel resolves it. Re-arms to the
- * unconfirmed state whenever the selected node changes. */
-function DeleteNodeControl({ draft, nodeId, onDelete }: { draft: RecipeJson; nodeId: string; onDelete: (name: string) => void }) {
-  const [armed, setArmed] = useState(false)
-  useEffect(() => { setArmed(false) }, [nodeId])
-  const refCount = refsInto(draft, nodeId)
-
-  return (
-    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
-      {!armed ? (
-        <button onClick={() => setArmed(true)} style={dangerButtonStyle}>Delete</button>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ fontSize: 11, color: 'var(--red)' }}>
-            {`Removes ${nodeId} and clears ${refCount} incoming reference(s)`}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setArmed(false)} style={ghostButtonStyle}>Cancel</button>
-            <button onClick={() => onDelete(nodeId)} style={dangerButtonStyle}>Confirm delete</button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/** Minimal "+ field" affordance (final-review fix): a palette-added node starts
- * with `fields: []`, and ports derive 1:1 from fields (recipeAdapter's
- * `toStepNode`) — with no way to ever add one, a freshly added node could
- * never be wired, which broke the product intent of building a recipe
- * interactively. A name input + button, composed from the same input/button
- * idioms already in this file (`FieldEditor`'s textarea styling, the registry
- * Insert button's blue token) — no new colors. Field name only; the new
- * field's dataType always starts at `addField`'s own `'String'` default and is
- * editable afterward via that field's own `FieldEditor` once it exists. */
-function AddFieldControl({ onAdd }: { onAdd: (fieldName: string) => void }) {
-  const [name, setName] = useState('')
-  const commit = () => {
-    const trimmed = name.trim()
-    if (trimmed === '') return
-    onAdd(trimmed)
-    setName('')
-  }
-  return (
-    <div style={{ display: 'flex', gap: 4 }}>
-      <input
-        value={name}
-        onChange={e => setName(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') commit() }}
-        placeholder="field name…"
-        style={{
-          flex: 1, background: 'var(--surface-2)', border: '1px solid var(--border)',
-          borderRadius: 4, color: '#c8d3e8', fontSize: 11, padding: '5px 8px',
-          fontFamily: 'JetBrains Mono, monospace', outline: 'none',
-        }}
-      />
-      <button onClick={commit} style={{
-        padding: '5px 10px', borderRadius: 4,
-        background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-        color: '#4f9cf9', fontSize: 11, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
-      }}>+ field</button>
-    </div>
-  )
-}
-
-/** Edit panel for the selected canvas node: rename (any node) plus, for step
- * nodes (not sources — those have no `step.target.fields` to edit), a
- * per-field dataType + formula editor and the "+ field" affordance, plus the
- * delete control (any node). */
-function EditPanel({
-  draft,
-  node,
-  onRename,
-  onFieldDataType,
-  onFieldFormula,
-  onFocusFormula,
-  onAddField,
-  onDelete,
-}: {
-  draft: RecipeJson
-  node: ETLNode
-  onRename: (oldName: string, newName: string) => void
-  onFieldDataType: (stepName: string, fieldName: string, dataType: string) => void
-  onFieldFormula: (stepName: string, fieldName: string, text: string) => void
-  onFocusFormula: (stepName: string, fieldName: string) => void
-  onAddField: (stepName: string, fieldName: string) => void
-  onDelete: (name: string) => void
-}) {
-  const [name, setName] = useState(node.id)
-  useEffect(() => { setName(node.id) }, [node.id])
-
-  const step = draft.steps?.find(s => s.target?.name === node.id)
-  const fields = step ? fieldsOf(step.target) : []
-
-  return (
-    <section>
-      <SectionHeader icon="✎" label={`Edit — ${node.id}`} color="#4f9cf9" />
-      <div style={{
-        padding: 16, background: 'var(--surface)',
-        border: '1px solid var(--border)', borderRadius: 7,
-        display: 'flex', flexDirection: 'column', gap: 16,
-      }}>
-        <EditableField label="Node name" value={name} onChange={setName}
-          onCommit={() => { if (name.trim() !== '' && name !== node.id) onRename(node.id, name) }} />
-
-        {step && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {fields.map(f => (
-              <FieldEditor key={f.name} stepName={node.id} field={f}
-                onDataType={onFieldDataType} onFormula={onFieldFormula} onFocusFormula={onFocusFormula} />
-            ))}
-            <AddFieldControl onAdd={fieldName => onAddField(node.id, fieldName)} />
-          </div>
-        )}
-
-        <DeleteNodeControl draft={draft} nodeId={node.id} onDelete={onDelete} />
-      </div>
-    </section>
-  )
-}
-
-// ─── Expression registry (Task 11) ─────────────────────────────────────────────
-
-/** Origin chip — reuses the header layer-badge idiom (mono, small, tinted
- * background/border in the origin's own token color): `xml` -> `--cyan`
- * (#67e8f9), `recipe` -> `--green` (#34d399), same rgba-tint pattern as the
- * layer badge above (tokens duplicated as rgb() triples, matching the rest
- * of this file's inline styles — see `dangerButtonStyle`). */
-const ORIGIN_STYLE: Record<string, { color: string; bg: string; border: string }> = {
-  xml: { color: 'var(--cyan)', bg: 'rgba(103,232,249,0.15)', border: 'rgba(103,232,249,0.35)' },
-  recipe: { color: 'var(--green)', bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.35)' },
-}
-const DEFAULT_ORIGIN_STYLE = { color: '#7b88aa', bg: 'rgba(123,136,170,0.15)', border: 'rgba(123,136,170,0.35)' }
-
-function OriginBadge({ origin }: { origin: string }) {
-  const s = ORIGIN_STYLE[origin] ?? DEFAULT_ORIGIN_STYLE
-  return (
-    <span style={{
-      fontSize: 9, padding: '2px 7px', borderRadius: 4, fontWeight: 600,
-      background: s.bg, color: s.color, border: `1px solid ${s.border}`,
-      fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', letterSpacing: '0.04em',
-    }}>{origin}</span>
-  )
-}
-
-const exprFilterInputStyle: React.CSSProperties = {
-  background: 'var(--surface-2)', border: '1px solid var(--border)',
-  borderRadius: 5, color: '#c8d3e8', fontSize: 11, padding: '4px 9px',
-  outline: 'none', width: 200, fontFamily: 'Inter, sans-serif',
-}
-
-/** Corpus-wide expression archive (Task 11): merges xml- and recipe-origin
- * entries from `useExpressions()` (was: only the currently open recipe's own
- * `port.expression`s, Task 6-10's interim collector). A substring filter
- * narrows the list across every field; when a formula textarea in the edit
- * panel has focus (`canInsert`), each row grows an Insert button that writes
- * that entry's formula into the focused field via `onInsert`. */
-function ExpressionRegistry({
-  entries,
-  isLoading,
-  error,
-  filter,
-  onFilterChange,
-  canInsert,
-  onInsert,
-}: {
-  entries: ExpressionEntry[]
-  isLoading: boolean
-  error: ApiError | null
-  filter: string
-  onFilterChange: (v: string) => void
-  canInsert: boolean
-  onInsert: (formula: string) => void
-}) {
-  const q = filter.trim().toLowerCase()
-  const filtered = q === '' ? entries : entries.filter(e =>
-    [e.mappingPath, e.layer, e.transformation, e.port, e.formula, e.origin]
-      .some(v => (v ?? '').toLowerCase().includes(q)))
-
-  return (
-    <section>
-      <SectionHeader icon="ƒ" label="All Expressions" color="#a78bfa" extra={
-        <input
-          value={filter}
-          onChange={e => onFilterChange(e.target.value)}
-          placeholder="Filter expressions…"
-          style={exprFilterInputStyle}
-        />
-      } />
-      {isLoading ? (
-        <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Loading expressions…</div>
-      ) : error ? (
-        <div style={{ color: 'var(--red)', fontSize: 11 }}>{error.title}</div>
-      ) : filtered.length === 0 ? (
-        <div style={{ color: '#4a5570', fontSize: 11 }}>No expressions match.</div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {filtered.map((e, i) => (
-            <div key={i} style={{ border: '1px solid rgba(167,139,250,0.2)', borderRadius: 5, overflow: 'hidden' }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '5px 10px', background: 'rgba(167,139,250,0.05)',
-                borderBottom: '1px solid rgba(167,139,250,0.15)',
-              }}>
-                <OriginBadge origin={e.origin ?? ''} />
-                <span style={{ fontSize: 9, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{e.layer}</span>
-                <span style={{
-                  fontSize: 10, color: '#c8d3e8', fontFamily: 'JetBrains Mono, monospace', flex: 1,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>{e.transformation}.{e.port}</span>
-                <CopyButton value={e.formula ?? ''} size={11} />
-                {canInsert && (
-                  <button onClick={() => onInsert(e.formula ?? '')} style={{
-                    padding: '2px 8px', borderRadius: 4,
-                    background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-                    color: '#4f9cf9', fontSize: 9, cursor: 'pointer', fontWeight: 600,
-                  }}>Insert</button>
-                )}
-              </div>
-              <div style={{
-                fontSize: 9, color: '#4a5570', padding: '3px 10px 0',
-                fontFamily: 'JetBrains Mono, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>{e.mappingPath}</div>
-              <pre style={{
-                margin: 0, padding: '6px 10px',
-                fontSize: 10, color: '#a78bfa',
-                fontFamily: 'JetBrains Mono, monospace',
-                whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-              }}>{e.formula}</pre>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  )
-}
-
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function ETLModifier({ searchQuery }: { searchQuery: string }) {
+export function ETLModifier({ searchQuery, focusRecipe }: {
+  searchQuery: string
+  /** Focus mode (Task 15): when set, this recipe seeds `recipePath` directly
+   * (no click-through-the-tree) and the whole Explorer disappears — the
+   * component renders as a single isolated editor, matching the `?focus=`
+   * deep link `App.tsx` reads once at mount. */
+  focusRecipe?: string
+}) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const [recipePath, setRecipePath] = useState<string | null>(null)
+  const [recipePath, setRecipePath] = useState<string | null>(focusRecipe ?? null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdge, setSelectedEdge] = useState<Connection | null>(null)
   const [wireFrom, setWireFrom] = useState<{ nodeId: string; portName: string } | null>(null)
@@ -557,12 +170,18 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
 
   // Expression registry (Task 11): corpus-wide, independent of the currently
   // open recipe. `focusedFormula` tracks which field's formula textarea last
-  // gained focus in the edit panel below — set via `FieldEditor.onFocusFormula`
-  // — so a registry row can offer "Insert" only while there's somewhere for it
-  // to write.
+  // gained focus in the Inspector below (`Inspector`'s `onFocusFormula`) — so a
+  // registry row can offer "Insert" only while there's somewhere for it to write.
   const expr = useExpressions()
   const [exprFilter, setExprFilter] = useState('')
   const [focusedFormula, setFocusedFormula] = useState<{ stepName: string; fieldName: string } | null>(null)
+
+  // Schema-driven Inspector (Task 12): the per-kind key schema + alias tables the
+  // Inspector renders from — fetched once here (staleTime: Infinity, same as the
+  // rest of `useIpcRules`'s callers) and threaded down as props so the Inspector
+  // itself never touches the network (keeps its tests fast/offline, per its own
+  // brief) and holds no second copy of the recipe grammar.
+  const ipcRules = useIpcRules()
 
   // History drawer + view mode (Task 10): `viewingVersion`/`viewedRecipe` are
   // set together (handleViewVersion awaits the archived GET, then sets both in
@@ -588,6 +207,18 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const [dirtyOps, setDirtyOps] = useState(0)
   const [validationErrors, setValidationErrors] = useState<RecipeValidationError[]>([])
   const [saveError, setSaveError] = useState<{ title: string; detail?: string } | null>(null)
+  // Task 17: Save-in-flight state — drives the SaveBar's inline spinner and
+  // disables the button so a slow validate+PUT round trip can't be
+  // double-submitted. `finally` re-enables on both success AND failure.
+  const [saving, setSaving] = useState(false)
+
+  // Node drag offsets (Task 8) + the layout sidecar (Task 9/10): per-node pixel
+  // deltas from IpcCanvas's default layout position, added at render time
+  // (`n.x + offsets[n.id].x`). `layout` fetches the persisted sidecar for the
+  // CURRENT recipePath (an unsaved recipe resolves to `{version:1,nodes:{}}`,
+  // never a "missing" state — see LayoutService).
+  const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({})
+  const layout = useLayout(recipePath ?? '')
 
   useEffect(() => {
     if (rec.data) {
@@ -599,6 +230,76 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipePath, rec.data?.modifiedAt])
 
+  // Layout offsets (Task 9/10): a SEPARATE effect from the draft reset above —
+  // review finding (fix round 1): folding `layout.data` into the draft-reset
+  // effect's deps meant ANY layout refetch (window refocus after staleTime, an
+  // invalidated `['layout', ...]` query, anything) re-ran that whole effect and
+  // silently wiped in-progress recipe edits, since the reset code inside it is
+  // unconditional on why the effect fired. Keeping offsets in their own effect
+  // means a layout refetch only ever touches `offsets`, never `draft`/`dirtyOps`.
+  //
+  // This still resets on every recipe change (recipePath) THEN re-fires once
+  // `layout.data` lands (its own query, can resolve after rec.data) to re-seed
+  // from the fetched sidecar — a fresh recipe never inherits the previous
+  // one's positions: the window between the reset and the seed renders with
+  // offsets:{}, same as the recipe having no saved layout at all.
+  useEffect(() => {
+    setOffsets(toCanvasOffsets(layout.data?.nodes))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipePath, layout.data])
+
+  // Debounce cleanup (Task 10): the timer lives in a ref so a drag mid-flight
+  // when the user switches recipes doesn't fire its PUT against the path
+  // they've navigated away from — this effect's cleanup runs on every
+  // recipePath change AND on unmount (React calls a cleanup function on both).
+  const layoutSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (layoutSaveTimer.current) {
+      clearTimeout(layoutSaveTimer.current)
+      layoutSaveTimer.current = null
+    }
+  }, [recipePath])
+
+  // Best-effort layout persistence (review finding, fix round 1): a failed PUT
+  // (network error, 5xx) must not block editing — layout is a nudge, not a
+  // recipe edit — but leaving the rejection unhandled would silently swallow
+  // it AND produce an unhandled-promise-rejection warning. Log, don't surface
+  // into `saveError` — that state is scoped to the recipe validate/save flow
+  // (SaveBar's --red banner) and a background layout-save failure isn't that.
+  const reportLayoutSaveError = (e: unknown) => {
+    // eslint-disable-next-line no-console
+    console.error('[ETLModifier] failed to persist canvas layout', e)
+  }
+
+  // Drag (Task 10): updates local state immediately (unchanged Task 8
+  // behavior — the canvas must track the pointer with no round-trip latency)
+  // and debounces a putLayout of the FULL current offsets map, translated to
+  // the dx/dy wire shape at this boundary only.
+  const handleMoveNode = (id: string, x: number, y: number) => {
+    setOffsets(o => {
+      const next = { ...o, [id]: { x, y } }
+      if (layoutSaveTimer.current) clearTimeout(layoutSaveTimer.current)
+      const path = recipePath
+      layoutSaveTimer.current = setTimeout(() => {
+        layoutSaveTimer.current = null
+        if (path) putLayout(path, toWireOffsets(next)).catch(reportLayoutSaveError)
+      }, LAYOUT_SAVE_DEBOUNCE_MS)
+      return next
+    })
+  }
+
+  // Auto-layout (Task 10): clears local state AND the sidecar immediately (not
+  // debounced — a discrete action, not a drag in progress) — and cancels any
+  // pending drag-save so a stale timer can't resurrect the offsets it just cleared.
+  const handleAutoLayout = () => {
+    if (layoutSaveTimer.current) {
+      clearTimeout(layoutSaveTimer.current)
+      layoutSaveTimer.current = null
+    }
+    setOffsets({})
+    if (recipePath) putLayout(recipePath, {}).catch(reportLayoutSaveError)
+  }
+
   // Canvas + panels derive from whichever content is "current" — the live
   // draft normally, or the archived version while viewing (spec §6: "canvas +
   // panels derive from the archived content"). Header metadata follows the
@@ -609,9 +310,35 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   // version" banner next to the LIVE modifiedAt was misleading.
   const headerRecipe = isViewing && viewedRecipe ? viewedRecipe : rec.data
   const graph = useMemo(
-    () => (content && recipePath ? recipeToCanvas(content, recipePath) : null),
-    [content, recipePath],
+    () => (content && recipePath ? recipeToCanvas(content, recipePath, ipcRules.data?.typeAliases ?? {}) : null),
+    [content, recipePath, ipcRules.data?.typeAliases],
   )
+
+  // Task 16: view-aware corpus summary, Explorer footer — static corpus
+  // counts, PLUS (once a recipe is open) that recipe's own steps/fields/
+  // sources (spec §7.1's Tab 2 row).
+  const summary = useSummary()
+  const summaryItems: SummaryItem[] = [
+    ...(summary.data ? [
+      { label: 'recipes', value: summary.data.recipeCount ?? 0 },
+      { label: 'layers', value: summary.data.layers?.length ?? 0 },
+    ] : []),
+    ...(content ? [
+      { label: 'steps', value: content.steps?.length ?? 0 },
+      { label: 'fields', value: (content.steps ?? []).reduce((n, s) => n + fieldsOf(s.target).length, 0) },
+      { label: 'sources', value: content.table?.sourceTableNames?.length ?? 0 },
+    ] : []),
+  ]
+
+  // Conformance chip (Task 13): validates whichever content is CURRENT — the
+  // same swap `content`/`graph` above follow — so a check's `$.steps[i]…`
+  // path always indexes the SAME steps array `graph.nodes` was built from
+  // (validating the live draft while viewing an archived version would
+  // desync the index and mislabel nodes). No local rule mirror — the full
+  // 35-rule catalogue runs debounced against POST /api/recipes/validate
+  // (spec §6.5 ruling, recorded in ipcRules.ts).
+  const { checks, errors: ipcErrors, warnings: ipcWarnings, isValidating, failed: validationFailed } = useValidation(content)
+  const nodeStatus = useMemo(() => nodeStatusFrom(checks, graph), [checks, graph])
 
   const recipeSlash = recipePath ? recipePath.lastIndexOf('/') : -1
   const recipeDir = recipeSlash >= 0 ? recipePath!.slice(0, recipeSlash) : ''
@@ -640,27 +367,22 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     setDirtyOps(n => n + 1)
   }
 
-  const handleRename = (oldName: string, newName: string) => {
-    applyEdit(d => renameNode(d, oldName, newName))
-    setSelectedNodeId(newName)
-    // Final-review finding: an armed wire's nodeId/portName refer to the OLD
-    // name; left standing, a completion click after a rename would write a
-    // dot-ref pointing at a node that no longer exists under that name.
-    setWireFrom(null)
-  }
-
-  const handleFieldDataType = (stepName: string, fieldName: string, dataType: string) => {
-    applyEdit(d => editFieldDataType(d, stepName, fieldName, dataType))
-  }
-
-  const handleFieldFormula = (stepName: string, fieldName: string, text: string) => {
-    applyEdit(d => setFieldTransformation(d, stepName, fieldName, parseFormulaText(text)))
-  }
-
-  // Final-review fix: the minimal creation path a palette-added node (fields:
-  // []) needs before it can ever be wired — see AddFieldControl/addField.
-  const handleAddField = (stepName: string, fieldName: string) => {
-    applyEdit(d => addField(d, { stepName, fieldName }))
+  // Inspector commit (Task 12): the Inspector owns picking WHICH mutator to run
+  // (rename/setTargetProperty/setSourceProperty/setFieldTransformation/addField/…)
+  // for a given widget edit — this just adopts the resulting RecipeJson as the new
+  // draft and bumps the dirty count, same as every other `applyEdit` caller. The
+  // optional second argument is a rename's new id: renaming is otherwise invisible
+  // up here (the Inspector is keyed on the OLD `selectedNodeId`), so without it a
+  // rename would silently unmount the Inspector on the very next render (no node
+  // in the just-recomputed graph still carries the stale id) — same fix
+  // `handleRename` used to apply directly. Also clears an armed wire for the same
+  // reason `handleRename` did: its `nodeId`/`portName` refer to the OLD name.
+  const handleInspectorChange = (next: RecipeJson, selectId?: string) => {
+    applyEdit(() => next)
+    if (selectId) {
+      setSelectedNodeId(selectId)
+      setWireFrom(null)
+    }
   }
 
   const handleFocusFormula = (stepName: string, fieldName: string) => {
@@ -789,6 +511,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     if (!draft || !recipePath || !rec.data) return
     setValidationErrors([])
     setSaveError(null)
+    setSaving(true)
     try {
       const result = await apiSend<RecipeValidation>('POST', '/recipes/validate', draft)
       if (!result.valid) {
@@ -801,11 +524,13 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     } catch (e) {
       const err = e as ApiError
       setSaveError({ title: err.title ?? 'Save failed', detail: err.detail })
+    } finally {
+      setSaving(false)
     }
   }
 
   const sidebarExtra = loading ? (
-    <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 12 }}>Loading corpus…</div>
+    <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
   ) : error ? (
     <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
       <div>{error.title}</div>
@@ -815,15 +540,36 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-      <Sidebar
-        searchQuery={searchQuery}
-        selectedPath={selectedPath}
-        onSelectFile={handleSelectFile}
-        filesystem={fs ?? EMPTY_FS}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(c => !c)}
-        extraContent={sidebarExtra}
-      />
+      {/* Focus mode (Task 15): no Explorer at all — the recipe is seeded
+          directly from the `focusRecipe` prop, so there's nothing to browse
+          and no tree to click through. */}
+      {!focusRecipe && (
+        <div style={{ position: 'relative', display: 'flex', flexShrink: 0 }}>
+          <Sidebar
+            searchQuery={searchQuery}
+            selectedPath={selectedPath}
+            onSelectFile={handleSelectFile}
+            filesystem={fs ?? EMPTY_FS}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(c => !c)}
+            extraContent={sidebarExtra}
+            fileFilter={RECIPE_ONLY_FILTER}
+            footer={<div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 12px' }}>
+              <CorpusSummary items={summaryItems} />
+            </div>}
+          />
+          {/* Explorer scoping info affordance (Task 14, spec §6.8) — an overlay
+              rather than a Sidebar prop, since Sidebar's header markup itself
+              stays untouched beyond the opt-in fileFilter/footer additions
+              (Tabs 1/4 unaffected). Positioned clear of the collapse chevron
+              (which sits flush right in Sidebar's own header). */}
+          {!sidebarCollapsed && (
+            <div style={{ position: 'absolute', top: 11, right: 34 }}>
+              <InfoTooltip text={EXPLORER_INFO_COPY} placement="right" />
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
         {!recipePath ? (
@@ -835,10 +581,13 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
               <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <span style={{ fontSize: 12 }}>Select an _ETL_*.json recipe to edit</span>
+            <span style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.5 }}>
+              {EXPLORER_INFO_COPY}
+            </span>
           </div>
         ) : rec.isLoading ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
-            Loading recipe…
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <LoadingState label="Loading recipe…" />
           </div>
         ) : recError ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
@@ -876,11 +625,33 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <ConformanceChip
+                    errors={ipcErrors}
+                    warnings={ipcWarnings}
+                    checks={checks}
+                    rules={ipcRules.data?.rules ?? []}
+                    isValidating={isValidating}
+                    failed={validationFailed}
+                    graph={graph}
+                    onSelectNode={handleSelectNode}
+                  />
                   <button onClick={handleToggleHistory} style={{
                     padding: '5px 12px', borderRadius: 5,
                     background: historyOpen ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
                     color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
                   }}>{'{ history }'}</button>
+                  {/* Focus mode deep link (Task 15) — opens THIS recipe alone,
+                      full-viewport, in a new tab (encodeURIComponent: recipe
+                      paths carry '/' and are user-visible corpus paths, so an
+                      unencoded one would produce a malformed URL). */}
+                  <button
+                    onClick={() => recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')}
+                    title="Open in a new tab, isolated"
+                    style={{
+                      padding: '5px 12px', borderRadius: 5,
+                      background: 'transparent', border: '1px solid var(--border)',
+                      color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+                    }}>{'⤢'}</button>
                   <button onClick={() => setShowRaw(r => !r)} style={{
                     padding: '5px 12px', borderRadius: 5,
                     background: showRaw ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
@@ -923,17 +694,24 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
             {/* canvas */}
             <section>
               <SectionHeader icon="⇄" label={`Canvas (${graph.nodes.length} nodes)`} color="#818cf8" />
-              <div style={{ height: 420, border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
-                <EtlCanvas
+              {/* display:flex is load-bearing: IpcCanvas's root is `flex: 1` with every
+                  child absolutely positioned, so a block parent collapses it to 0px and
+                  the canvas renders invisibly. */}
+              <div style={{ height: 420, display: 'flex', border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
+                <IpcCanvas
                   nodes={graph.nodes}
                   connections={graph.connections}
                   selectedNode={selectedNodeId}
                   onSelectNode={handleSelectNode}
-                  highlightIds={[]}
+                  offsets={offsets}
+                  onMoveNode={handleMoveNode}
+                  onAutoLayout={handleAutoLayout}
                   onPortClick={isViewing ? undefined : handlePortClick}
                   onSelectEdge={isViewing ? undefined : handleSelectEdge}
                   selectedEdge={selectedEdge}
                   onDropType={isViewing ? undefined : handlePaletteAdd}
+                  onDropFormula={isViewing ? undefined : handleInsertExpression}
+                  nodeStatus={nodeStatus}
                 />
               </div>
             </section>
@@ -949,19 +727,20 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
               </div>
             </section>
 
-            {/* edit panel — shown for whichever canvas node is selected (Task 8/9);
-                hidden entirely while viewing an archived version (Task 10: "all
-                editing affordances disabled while viewing"). */}
+            {/* Inspector — schema-driven per-node property editor (Task 12) for
+                whichever canvas node is selected; hidden entirely while viewing an
+                archived version (Task 10: "all editing affordances disabled while
+                viewing"). */}
             {selectedNode && draft && !isViewing && (
-              <EditPanel
+              <Inspector
                 draft={draft}
                 node={selectedNode}
-                onRename={handleRename}
-                onFieldDataType={handleFieldDataType}
-                onFieldFormula={handleFieldFormula}
-                onFocusFormula={handleFocusFormula}
-                onAddField={handleAddField}
+                keySchema={ipcRules.data?.keySchema ?? {}}
+                typeAliases={ipcRules.data?.typeAliases ?? {}}
+                keyAliases={ipcRules.data?.keyAliases ?? {}}
+                onChange={handleInspectorChange}
                 onDelete={handleDeleteNode}
+                onFocusFormula={handleFocusFormula}
               />
             )}
 
@@ -981,17 +760,6 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                 </div>
               </section>
             )}
-
-            {/* expression registry (Task 11): corpus-wide, merged xml+recipe origins */}
-            <ExpressionRegistry
-              entries={expr.data ?? []}
-              isLoading={expr.isLoading}
-              error={expr.error as ApiError | null}
-              filter={exprFilter}
-              onFilterChange={setExprFilter}
-              canInsert={focusedFormula !== null && !isViewing}
-              onInsert={handleInsertExpression}
-            />
 
             {/* DDL — hidden entirely when the map is empty or errored */}
             {!ddl.error && ddlEntries.length > 0 && (
@@ -1042,10 +810,27 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
             onCancelWire={() => setWireFrom(null)}
             onSave={handleSave}
             onDiscard={handleDiscard}
+            saving={saving}
           />
         )}
       </div>
 
+      {/* Expression dock (Task 11/14): corpus-wide, filtered to recipe-origin
+          only. Relocated here (beside the Palette) from its old spot inline
+          below the canvas — same gating as Palette (shown once a recipe is
+          loaded), Insert stays available while viewing (row Insert buttons
+          just hide via `canInsert`, same as before the move). */}
+      {draft && (
+        <ExpressionDock
+          entries={expr.data ?? []}
+          isLoading={expr.isLoading}
+          error={expr.error as ApiError | null}
+          filter={exprFilter}
+          onFilterChange={setExprFilter}
+          canInsert={focusedFormula !== null && !isViewing}
+          onInsert={handleInsertExpression}
+        />
+      )}
       {draft && !isViewing && <Palette onAdd={handlePaletteAdd} />}
       {recipePath && historyOpen && (
         <HistoryDrawer

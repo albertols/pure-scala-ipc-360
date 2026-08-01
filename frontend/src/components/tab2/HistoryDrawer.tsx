@@ -17,6 +17,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiSend } from '../../api/client'
 import type { ApiError } from '../../api/client'
 import type { RecipeHistoryEntry } from '../../api/queries'
+import { LoadingState } from '../shared/Spinner'
 
 const viewButtonStyle: React.CSSProperties = {
   padding: '3px 10px', borderRadius: 4,
@@ -113,7 +114,7 @@ export function HistoryDrawer({
       )}
 
       {history.isLoading ? (
-        <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>Loading history…</div>
+        <LoadingState label="Loading history…" />
       ) : history.error ? (
         <div style={{ fontSize: 11, color: 'var(--red)' }}>Failed to load history.</div>
       ) : entries.length === 0 ? (

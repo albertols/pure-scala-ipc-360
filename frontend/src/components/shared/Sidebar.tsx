@@ -33,12 +33,41 @@ function FileIcon({ type }: { type: 'json' | 'xml' }) {
   )
 }
 
+// ─── Opt-in fileFilter (Task 14) ───────────────────────────────────────────────
+//
+// Pure, recursive visibility predicate — mirrors TreeItem's own null-vs-render
+// decision exactly, so a parent can know WITHOUT mounting a child whether that
+// child would render anything. Absent `fileFilter`, this reduces to exactly
+// today's rule (a file matches `searchQuery`; a dir is visible whenever its own
+// name/subtree matches `searchQuery`, regardless of its children) — the guard
+// every caller with no filter (Tabs 1 and 4) relies on staying byte-identical.
+// With a filter, a file additionally must pass it, and a directory additionally
+// needs at least one visible descendant (so a folder whose entire subtree was
+// filtered out — e.g. an XML-only mapping folder under Tab 2's recipe-only
+// filter — disappears rather than lingering as an empty row).
+function isNodeVisible(node: FSDir | FSFile, searchQuery: string, fileFilter?: (f: FSFile) => boolean): boolean {
+  if ('children' in node) {
+    const dir = node as FSDir
+    const searchMatches = !searchQuery ||
+      JSON.stringify(dir.children).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dir.name.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!searchMatches) return false
+    if (!fileFilter) return true
+    return dir.children.some(child => isNodeVisible(child, searchQuery, fileFilter))
+  }
+  const file = node as FSFile
+  const matches = !searchQuery || file.name.toLowerCase().includes(searchQuery.toLowerCase())
+  if (!matches) return false
+  return fileFilter ? fileFilter(file) : true
+}
+
 function TreeItem({
   node,
   depth,
   searchQuery,
   selectedPath,
   onSelectFile,
+  fileFilter,
   defaultExpanded,
 }: {
   node: FSDir | FSFile
@@ -46,18 +75,21 @@ function TreeItem({
   searchQuery: string
   selectedPath: string | null
   onSelectFile: (f: FSFile) => void
+  /** Opt-in (Task 14): a file returns `null` when this rejects it; a directory
+   * whose every child renders `null` (recursively, including because of this
+   * same filter) also returns `null` rather than lingering as an empty row.
+   * Undefined for every existing caller (Tabs 1 and 4) — today's tree renders
+   * unchanged in that case (see `isNodeVisible` above). */
+  fileFilter?: (f: FSFile) => boolean
   defaultExpanded?: boolean
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded ?? depth < 2)
 
+  if (!isNodeVisible(node, searchQuery, fileFilter)) return null
+
   if ('children' in node) {
     const dir = node as FSDir
     const layerColor = dir.layer && dir.layer !== 'root' ? LAYER_COLORS[dir.layer] : undefined
-
-    const visible = !searchQuery ||
-      JSON.stringify(dir.children).toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dir.name.toLowerCase().includes(searchQuery.toLowerCase())
-    if (!visible) return null
 
     return (
       <div>
@@ -104,6 +136,7 @@ function TreeItem({
             searchQuery={searchQuery}
             selectedPath={selectedPath}
             onSelectFile={onSelectFile}
+            fileFilter={fileFilter}
             defaultExpanded={depth < 1}
           />
         ))}
@@ -112,8 +145,6 @@ function TreeItem({
   }
 
   const file = node as FSFile
-  const matches = !searchQuery || file.name.toLowerCase().includes(searchQuery.toLowerCase())
-  if (!matches) return null
   const isActive = selectedPath === file.path
   const isEtl = file.name.startsWith('_ETL_')
   const isDdl = file.name.startsWith('_DDL_')
@@ -157,6 +188,8 @@ export function Sidebar({
   extraContent,
   collapsed = false,
   onToggleCollapse,
+  fileFilter,
+  footer,
 }: {
   searchQuery: string
   selectedPath: string | null
@@ -165,6 +198,12 @@ export function Sidebar({
   extraContent?: React.ReactNode
   collapsed?: boolean
   onToggleCollapse?: () => void
+  /** Opt-in (Task 14) — see `TreeItem`'s own doc. Undefined for every caller
+   * except Tab 2, so Tabs 1 and 4's trees are unaffected. */
+  fileFilter?: (f: FSFile) => boolean
+  /** Optional slot rendered after `extraContent` (Task 14 adds this for Task
+   * 16's corpus-summary line — Tabs 1/2's `Sidebar` footer, spec §7.1). */
+  footer?: React.ReactNode
 }) {
   if (collapsed) {
     return (
@@ -263,11 +302,13 @@ export function Sidebar({
           searchQuery={searchQuery}
           selectedPath={selectedPath}
           onSelectFile={onSelectFile}
+          fileFilter={fileFilter}
           defaultExpanded
         />
       </div>
 
       {extraContent}
+      {footer}
     </div>
   )
 }
