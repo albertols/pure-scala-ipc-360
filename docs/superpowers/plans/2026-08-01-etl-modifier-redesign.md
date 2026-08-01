@@ -1950,7 +1950,7 @@ metadata, alias table and the per-kind key schema."
 - Consumes: `IpcCatalog.rules()`, `docs/ipc/README.md` (Task 1).
 - Produces: the wiki `rules.md` anchors that every `wikiRef` points at.
 
-- [ ] **Step 1: Write the failing three-way parity test**
+- [x] **Step 1: Write the failing three-way parity test**
 
 Append to `IpcRulesContractTest`:
 
@@ -2012,12 +2012,12 @@ Add the imports this needs (`io.pure360.etl360.service.ipc.IpcVocabulary`,
 `PREDEFINED_FUNCTIONS` from package-private to `public` so the test in package
 `io.pure360.etl360` can read them.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `mvn -am -pl backend test -Dtest=IpcRulesContractTest -DfailIfNoTests=false`
 Expected: FAIL — `docs/ipc/rules.md` does not exist.
 
-- [ ] **Step 3: Write `docs/ipc/rules.md`**
+- [x] **Step 3: Write `docs/ipc/rules.md`**
 
 One `### <RULE-ID>` section per catalogue entry, in id order, each carrying: the `statement`
 verbatim from `ipc-rules.json`, **Severity**, **Parser** (the `parserRef` as a markdown link),
@@ -2025,7 +2025,7 @@ verbatim from `ipc-rules.json`, **Severity**, **Parser** (the `parserRef` as a m
 invariant"), and — for every rule Task 5 downgraded — a **Corpus evidence** line copied from
 that rule's `corpusEvidence` field explaining why it is a warning rather than an error.
 
-- [ ] **Step 4: Write the eleven `docs/ipc/transformations/*.md` pages**
+- [x] **Step 4: Write the eleven `docs/ipc/transformations/*.md` pages**
 
 Each page has five `##` sections: **What IPC says** (cited, with the `ipcRef` URL);
 **What the parser emits** (the case class with its `file:line`, and the exact JSON keys);
@@ -2033,7 +2033,7 @@ Each page has five `##` sections: **What IPC says** (cited, with the `ipcRef` UR
 **Corpus occurrences** (the count from spec §4's tables, plus the anonymized token if the kind
 has one); **Rules** (a list of the `IPC-TYP-<KIND>-*` ids that apply, linking into `rules.md`).
 
-- [ ] **Step 5: Write `docs/ipc/expressions.md`**
+- [x] **Step 5: Write `docs/ipc/expressions.md`**
 
 Covers the four-way `RecipeTransformation` union (`RecipeTransformation.scala:6-22`) with the
 JSON shape of each; the `EXP_LOOKUP` variant and how its `parameters` are Field-shaped rather
@@ -2042,12 +2042,12 @@ than transformation-shaped (`recipeAdapter.ts:130` discriminates on this); the 3
 formula rendering contract from `renderFormula` (`recipeAdapter.ts:180-194`) — `{name,
 parameters}` → `NAME(p1, p2, …)`, `{source}` → the dot-ref **verbatim**, `{value}` → verbatim.
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `mvn -am -pl backend test -Dtest=IpcRulesContractTest -DfailIfNoTests=false`
 Expected: PASS.
 
-- [ ] **Step 7: Run the whole backend suite and commit**
+- [x] **Step 7: Run the whole backend suite and commit**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS.
