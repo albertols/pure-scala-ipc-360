@@ -22,7 +22,7 @@ import {
 } from '../../api/recipeEdits'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
-import { EtlCanvas } from '../shared/EtlCanvas'
+import { IpcCanvas } from './IpcCanvas'
 import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
 import { Palette, SOURCE_TABLE_TYPE } from './Palette'
@@ -589,12 +589,19 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const [validationErrors, setValidationErrors] = useState<RecipeValidationError[]>([])
   const [saveError, setSaveError] = useState<{ title: string; detail?: string } | null>(null)
 
+  // Node drag offsets (Task 8): per-node pixel deltas from IpcCanvas's default
+  // layout position, added at render time (`n.x + offsets[n.id].x`). Reset
+  // alongside the draft on every fresh recipe/save load — a saved layout
+  // (Task 9/10's sidecar) will replace this reset with a fetched value.
+  const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({})
+
   useEffect(() => {
     if (rec.data) {
       setDraft(structuredClone(rec.data.content as RecipeJson))
       setDirtyOps(0)
       setValidationErrors([])
       setSaveError(null)
+      setOffsets({})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipePath, rec.data?.modifiedAt])
@@ -923,16 +930,18 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
             {/* canvas */}
             <section>
               <SectionHeader icon="⇄" label={`Canvas (${graph.nodes.length} nodes)`} color="#818cf8" />
-              {/* display:flex is load-bearing: EtlCanvas's root is `flex: 1` with every
+              {/* display:flex is load-bearing: IpcCanvas's root is `flex: 1` with every
                   child absolutely positioned, so a block parent collapses it to 0px and
                   the canvas renders invisibly. */}
               <div style={{ height: 420, display: 'flex', border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
-                <EtlCanvas
+                <IpcCanvas
                   nodes={graph.nodes}
                   connections={graph.connections}
                   selectedNode={selectedNodeId}
                   onSelectNode={handleSelectNode}
-                  highlightIds={[]}
+                  offsets={offsets}
+                  onMoveNode={(id, x, y) => setOffsets(o => ({ ...o, [id]: { x, y } }))}
+                  onAutoLayout={() => setOffsets({})}
                   onPortClick={isViewing ? undefined : handlePortClick}
                   onSelectEdge={isViewing ? undefined : handleSelectEdge}
                   selectedEdge={selectedEdge}

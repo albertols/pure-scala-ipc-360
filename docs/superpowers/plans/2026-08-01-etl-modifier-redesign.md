@@ -2175,7 +2175,7 @@ export function IpcCanvas(props: {
 `bandOf` derives from `node.type`: `'source'` → `sources`, `'target'` → `target`, everything
 else → `transformations` (spec §6.2 — membership follows the data, never drop position).
 
-- [ ] **Step 1: Write the failing canvas test**
+- [x] **Step 1: Write the failing canvas test**
 
 Create `frontend/src/components/tab2/IpcCanvas.test.tsx` covering: the three band labels
 render; `bandOf` classifies a `source`/`expression`/`target` node correctly; a pointer
@@ -2185,12 +2185,12 @@ the auto-layout button calls `onAutoLayout`; each connection renders two `<path>
 (a visible one and a transparent `strokeWidth="12"` hit area) and clicking the hit area calls
 `onSelectEdge`. Use `container.querySelectorAll('path[stroke-width="12"]')` to find hit areas.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `cd frontend && pnpm test src/components/tab2/IpcCanvas.test.tsx`
 Expected: FAIL — `IpcCanvas` does not exist.
 
-- [ ] **Step 3: Write `IpcCanvas.tsx`**
+- [x] **Step 3: Write `IpcCanvas.tsx`**
 
 Start from `EtlCanvas.tsx` as the structural template (pan/zoom/dot-grid/zoom-controls are
 carried over verbatim) and add four things. **Do not edit `EtlCanvas.tsx`** — Tab 1 depends on
@@ -2215,12 +2215,12 @@ it unchanged.
 Add an `⌗ auto-layout` button next to the existing zoom controls, styled exactly like them
 (28×28, `var(--surface)`, `1px solid var(--border)`, `#7b88aa`).
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `cd frontend && pnpm test src/components/tab2/IpcCanvas.test.tsx`
 Expected: PASS.
 
-- [ ] **Step 5: Swap Tab 2 onto `IpcCanvas`**
+- [x] **Step 5: Swap Tab 2 onto `IpcCanvas`**
 
 In `ETLModifier.tsx`: replace the `EtlCanvas` import with `IpcCanvas`, add
 `const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({})`,
@@ -2228,12 +2228,12 @@ reset it to `{}` inside the existing recipe-load `useEffect` (keyed on `recipePa
 `rec.data?.modifiedAt`), and pass `offsets`, `onMoveNode={(id, x, y) => setOffsets(o => ({ ...o, [id]: { x, y } }))}`
 and `onAutoLayout={() => setOffsets({})}`.
 
-- [ ] **Step 6: Run the Tab 2 suite and type-check**
+- [x] **Step 6: Run the Tab 2 suite and type-check**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS — including Task 7's flex regression test, unchanged.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/components/tab2/IpcCanvas.tsx \
