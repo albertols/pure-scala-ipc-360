@@ -64,7 +64,7 @@ Backend **164** tests (clean build, 32 classes = 32 reports). Frontend **239** t
 
 **Why:** the dock mounts all 1909 recipe-origin entries unclamped in a 260 px column. Median formula is 79 chars but the max is **53 881** (~1585 wrapped lines), and `wordBreak: 'break-all'` shatters identifiers mid-token. Result is a wall of horizontal lines.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `ExpressionDock.test.tsx`:
 
@@ -103,12 +103,12 @@ it('shows no footer when nothing is hidden', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `cd frontend && pnpm test src/components/tab2/ExpressionDock.test.tsx`
 Expected: FAIL — no expand button, 300 rows rendered, no footer.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Add above the component:
 
@@ -175,12 +175,12 @@ After the list, render the footer only when something is hidden:
 
 Import `useState` from `react`.
 
-- [ ] **Step 4: Run to verify they pass**
+- [x] **Step 4: Run to verify they pass**
 
 Run: `cd frontend && pnpm test src/components/tab2/ExpressionDock.test.tsx && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab2/ExpressionDock.tsx \

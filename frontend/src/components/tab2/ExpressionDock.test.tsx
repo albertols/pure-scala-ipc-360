@@ -113,3 +113,38 @@ describe('ExpressionDock (Task 14)', () => {
     expect(onInsert).toHaveBeenCalledWith('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')
   })
 })
+
+const LONG = 'CONCAT(' + 'X'.repeat(4000) + ')'
+
+describe('ExpressionDock (Task 1 — clamp and cap)', () => {
+  it('clamps a long formula and expands it on click', () => {
+    render(<ExpressionDock entries={[
+      { mappingPath: 'CDM/m_A', layer: 'CDM', transformation: 'EXP_A', port: 'P', formula: LONG, origin: 'recipe' },
+    ]} isLoading={false} error={null} filter="" onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+    const pre = screen.getByText(LONG)
+    expect(pre).toHaveStyle({ overflow: 'hidden' })      // clamped
+    fireEvent.click(screen.getByRole('button', { name: /expand/i }))
+    expect(screen.getByText(LONG)).not.toHaveStyle({ overflow: 'hidden' })
+  })
+
+  it('caps the rendered list and states truthfully how many are shown', () => {
+    const many = Array.from({ length: 300 }, (_, i) => ({
+      mappingPath: 'CDM/m_A', layer: 'CDM', transformation: `EXP_${i}`, port: 'P',
+      formula: `LTRIM(C${i})`, origin: 'recipe' as const,
+    }))
+    render(<ExpressionDock entries={many} isLoading={false} error={null} filter=""
+      onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+    expect(screen.getAllByText(/^EXP_\d+\.P$/)).toHaveLength(150)
+    expect(screen.getByText(/showing 150 of 300/i)).toBeInTheDocument()
+  })
+
+  it('shows no footer when nothing is hidden', () => {
+    render(<ExpressionDock entries={[
+      { mappingPath: 'CDM/m_A', layer: 'CDM', transformation: 'EXP_A', port: 'P', formula: 'LTRIM(A)', origin: 'recipe' },
+    ]} isLoading={false} error={null} filter="" onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+    expect(screen.queryByText(/showing/i)).not.toBeInTheDocument()
+  })
+})
