@@ -180,12 +180,31 @@ describe('recipeToCanvas — nodes, kinds, ports', () => {
     expect(jnr!.properties.joinerCondition).toBe('ID_MEMBER1 = ID_MEMBER')
   })
 
-  it('each joinerInput step (<joiner>.<MASTER|DETAIL>) gets an edge to the joiner named by the segment before the first dot', () => {
+  it('each joinerInput step (<joiner>.<MASTER|DETAIL>) gets an edge to the joiner named by the segment before the trailing dot', () => {
     const g = recipeToCanvas(joinerRecipe, 'DWH/x/_ETL_x.json', joinerTypeAliases)
     expect(g.connections).toContainEqual({ fromNode: 'JNR_Ashshore.DETAIL', fromPort: '', toNode: 'JNR_Ashshore', toPort: '' })
     expect(g.connections).toContainEqual({ fromNode: 'JNR_Ashshore.MASTER', fromPort: '', toNode: 'JNR_Ashshore', toPort: '' })
     expect(g.connections).toContainEqual(
       { fromNode: 'JNR_Ashshore', fromPort: 'ID_MEMBER', toNode: 'DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES', toPort: 'ID_MEMBER' })
+  })
+
+  it('a joiner whose own name contains a dot: both joinerInput branches still resolve to the ' +
+     'one owning joiner node (AbstractTargetFactory.scala:88 appends exactly one dot + a fixed ' +
+     'MASTER/DETAIL suffix onto the joiner\'s own name, so recovering that name must anchor on ' +
+     'the trailing suffix, not on whichever dot comes first)', () => {
+    const dottedJoinerRecipe: RecipeJson = {
+      steps: [
+        { target: { name: 'T', type: 'table', fields: [] },
+          sources: [{ name: 'A.B', type: 'joiner', joinerTables: ['A.B.MASTER', 'A.B.DETAIL'] } as RecipeSourceJson] },
+        { target: { name: 'A.B.DETAIL', type: 'ASHPATH2', fields: [] }, sources: [] },
+        { target: { name: 'A.B.MASTER', type: 'ASHPATH2', fields: [] }, sources: [] },
+      ],
+      table: { targetTableNames: ['T'], sourceTableNames: [] },
+    }
+    const g = recipeToCanvas(dottedJoinerRecipe, 'L/x/_ETL_x.json', joinerTypeAliases)
+    expect(g.nodes.find(n => n.id === 'A.B')).toBeDefined()
+    expect(g.connections).toContainEqual({ fromNode: 'A.B.DETAIL', fromPort: '', toNode: 'A.B', toPort: '' })
+    expect(g.connections).toContainEqual({ fromNode: 'A.B.MASTER', fromPort: '', toNode: 'A.B', toPort: '' })
   })
 
   it('no duplicate node id is produced when the same union feeds two steps', () => {

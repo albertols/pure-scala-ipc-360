@@ -44,12 +44,15 @@ type RawRecord = Record<string, unknown>
  * sourceQualifier/filter/aggregator/router/normalizer/java/storedProcedure/
  * joinerInput/unionInput all render via `toStepNode` in recipeAdapter.ts,
  * regardless of whether they're the mapping's final BigQuery target) or a
- * `sources[]` entry of type `table` (recipeToCanvas only ever turns a
- * TABLE-typed source into its own canvas 'source' node — every other source
- * kind is edge-only, resolved onto the step it already exists as). Resolved by
- * searching `draft` directly (not `node.type`, which collapses many kinds down
- * to a fixed abbreviation) — mirrors the old EditPanel's own
- * `draft.steps?.find(s => s.target?.name === node.id)` lookup. */
+ * `sources[]` entry of kind `table`, `union`, or `joiner` (recipeToCanvas turns
+ * each of those into its own canvas node — `toSourceNode`/`toUnionNode`/
+ * `toJoinerNode`, Task 6 — via `resolveCanonicalType`, so an aliased source
+ * type takes the same path as its canonical one; every OTHER source kind is
+ * edge-only, resolved onto the step it already exists as under that same
+ * name). Resolved by searching `draft` directly (not `node.type`, which
+ * collapses many kinds down to a fixed abbreviation) — mirrors the old
+ * EditPanel's own `draft.steps?.find(s => s.target?.name === node.id)`
+ * lookup. */
 function findTargetStep(draft: RecipeJson, id: string): RecipeStepJson | undefined {
   return draft.steps?.find(s => s.target?.name === id)
 }

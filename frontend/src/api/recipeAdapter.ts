@@ -349,11 +349,17 @@ function markLinked(nodeById: Map<string, ETLNode>, id: string, portName: string
  *
  * Task 6 adds a THIRD edge source with no dot-ref counterpart at all: a step whose
  * target resolves (via `typeAliases`) to `unionInput`/`joinerInput` gets a node-center
- * edge TO the union/joiner node it feeds. For joiners the owning joiner is the segment
- * of the `joinerInput` step's own name before the first dot (`AbstractTargetFactory.
- * scala:88`'s `<joiner>.<MASTER|DETAIL>` naming). For unions there's no such naming
- * convention, so `unionInputOwner` (built while creating union nodes: every
- * `unionTables[].name` -> the union's own node id) is consulted instead.
+ * edge TO the union/joiner node it feeds. For joiners the owning joiner is recovered
+ * from the LAST dot, not the first: `AbstractTargetFactory.scala:88` builds the name as
+ * `s"${joiner.name}.$inputType"` — the joiner's own (arbitrary) name, exactly one dot,
+ * then a fixed no-dot `MASTER`/`DETAIL` suffix — so inverting that construction means
+ * stripping the trailing `.MASTER`/`.DETAIL`, which is only safe via `lastIndexOf`
+ * (`indexOf`, the first dot, mis-splits a joiner name that itself contains a dot, e.g.
+ * `A.B.DETAIL` -> `A` instead of `A.B`; every real corpus joiner name is dot-free today,
+ * so both would agree there, but `lastIndexOf` is the one that actually matches the
+ * factory's construction rather than merely surviving on today's data). For unions
+ * there's no such naming convention, so `unionInputOwner` (built while creating union
+ * nodes: every `unionTables[].name` -> the union's own node id) is consulted instead.
  */
 function deriveConnections(
   steps: RecipeStepJson[],
@@ -403,7 +409,7 @@ function deriveConnections(
       const unionId = unionInputOwner.get(stepName!)
       if (unionId && nodeIds.has(unionId)) add({ fromNode: stepName!, fromPort: '', toNode: unionId, toPort: '' })
     } else if (canonical === 'joinerInput') {
-      const dot = stepName!.indexOf('.')
+      const dot = stepName!.lastIndexOf('.')
       const joinerId = dot >= 0 ? stepName!.slice(0, dot) : stepName!
       if (nodeIds.has(joinerId)) add({ fromNode: stepName!, fromPort: '', toNode: joinerId, toPort: '' })
     }
