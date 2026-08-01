@@ -129,10 +129,14 @@ const TREE = {
   ],
 }
 
+// Task 16: static corpus counts for the Explorer footer's corpus summary.
+const SUMMARY = { xmlCount: 81, recipeCount: 86, ddlCount: 212, dirCount: 119, layers: ['CDM', 'DWH'] }
+
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
   http.get('/api/mappings/model/CDM/m_FIX', () => HttpResponse.json(MODEL)),
   http.get('/api/mappings/dom/CDM/m_FIX', () => HttpResponse.json(DOM)),
+  http.get('/api/summary', () => HttpResponse.json(SUMMARY)),
 )
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())
@@ -257,5 +261,14 @@ describe('ETLViewer — real canvas', () => {
       expect(screen.getAllByText('ID', { selector: 'text' })).toHaveLength(3)
     })
     expect(container.querySelectorAll('rect[rx="16"]')).toHaveLength(0)
+  })
+
+  // Task 16: view-aware corpus summary — Explorer footer, real /api/summary counts.
+  it('renders the corpus summary in the Explorer footer', async () => {
+    renderViewer()
+    expect(await screen.findByText('81 xml')).toBeInTheDocument()
+    expect(screen.getByText('86 recipes')).toBeInTheDocument()
+    expect(screen.getByText('212 ddl')).toBeInTheDocument()
+    expect(screen.getByText('119 dirs')).toBeInTheDocument()
   })
 })

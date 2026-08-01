@@ -34,6 +34,7 @@ const RECIPE = {
 
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
+  http.get('/api/summary', () => HttpResponse.json({ xmlCount: 1, recipeCount: 1, ddlCount: 0, dirCount: 1, layers: ['CDM'] })),
   http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json(RECIPE)),
   http.get('/api/ddl/CDM/m_FIX', () => HttpResponse.json({})),
   http.get('/api/expressions', () => HttpResponse.json([])),

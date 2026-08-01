@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import type { OperationalCard as CardData } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useRelationships, useOperationalSummary, useOperationalDates, useAppConfig } from '../../api/queries'
+import { useRelationships, useOperationalSummary, useOperationalDates, useOperational, useAppConfig } from '../../api/queries'
 import type { RelationshipGraph } from '../../api/queries'
-import { toOperationalGraph, type OperationalEdge } from '../../api/relationshipsAdapter'
+import { toOperationalGraph, summarizeSnapshot, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { OperationalCard } from '../shared/OperationalCard'
+import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
@@ -84,12 +85,19 @@ function RelationshipGraph({
   selected,
   onSelect,
   zoom,
+  summaryItems,
 }: {
   cards: CardData[]
   edges: OperationalEdge[]
   selected: string | null
   onSelect: (id: string | null) => void
   zoom: number
+  /** Task 16: view-aware corpus summary — Tab 3 has no left rail (its 300px
+   * side panel is the RIGHT-hand detail panel), so it gets a floating
+   * bottom-left chip over the graph body instead of a Sidebar/DagExplorer
+   * footer (spec §7.1's Tab 3 row). Empty when there's no selected-date
+   * snapshot loaded yet. */
+  summaryItems: SummaryItem[]
 }) {
   const [pan, setPan] = useState({ x: 40, y: 40 })
   const dragging = useRef(false)
@@ -209,6 +217,18 @@ function RelationshipGraph({
           }}
         >Clear selection</button>
       )}
+
+      {/* Task 16: view-aware corpus summary — floating bottom-left chip (no
+          left rail to dock into, unlike Tabs 1/2/4). */}
+      {summaryItems.length > 0 && (
+        <div style={{
+          position: 'absolute', bottom: 14, left: 14,
+          padding: '5px 10px', background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 5,
+        }}>
+          <CorpusSummary items={summaryItems} />
+        </div>
+      )}
     </div>
   )
 }
@@ -239,6 +259,11 @@ export function ETLOperational() {
   const summary = useOperationalSummary()
   const dates = useOperationalDates()
   const cfg = useAppConfig()
+  // Task 16: the raw b15 rows for `selectedDate` — distinct from `summary`
+  // above (the all-time per-recipe aggregate `useOperationalSummary()`
+  // already loads), needed for the floating chip's exact row count/OK-KO
+  // split (spec §7.1's Tab 3 row: "for the selected date or range").
+  const snapshot = useOperational(selectedDate ?? '')
 
   // Raw graph nodes carry `mappingPath` (the recipe directory) — the adapter's
   // OperationalCard doesn't, so the preview resolver reads it here.
@@ -273,6 +298,20 @@ export function ETLOperational() {
     () => (rel.data ? toOperationalGraph(rel.data, summary.data, selectedDate) : null),
     [rel.data, summary.data, selectedDate],
   )
+
+  // Task 16: date-scoped chip counts, derived client-side from `view` (graph)
+  // + `snapshot` (the selected date's raw b15 rows) — no new endpoint.
+  const snapshotSummary = useMemo(
+    () => (view && snapshot.data ? summarizeSnapshot(snapshot.data.rows ?? [], view.cards, view.edges) : null),
+    [view, snapshot.data],
+  )
+  const summaryItems: SummaryItem[] = snapshotSummary ? [
+    { label: 'b15 rows', value: snapshotSummary.rows },
+    { label: 'recipes', value: snapshotSummary.recipes },
+    { label: 'tables', value: snapshotSummary.tables },
+    { label: 'OK', value: snapshotSummary.ok },
+    { label: 'KO', value: snapshotSummary.ko },
+  ] : []
 
   if (rel.isLoading || summary.isLoading) {
     return <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 16 }}>Loading relationships…</div>
@@ -388,6 +427,7 @@ export function ETLOperational() {
           selected={selected}
           onSelect={setSelected}
           zoom={zoom}
+          summaryItems={summaryItems}
         />
 
         {/* detail side panel */}

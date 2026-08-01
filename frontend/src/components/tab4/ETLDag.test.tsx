@@ -54,6 +54,16 @@ describe('ETLDag — real clusters/canvas', () => {
     expect(screen.queryByText('UNGROUPED')).not.toBeInTheDocument()
   })
 
+  // Task 16: view-aware corpus summary — DagExplorer footer. REL fixture: 2
+  // workflows (wf_FIX_ODS, wf_FIX_STG), 4 recipes total, 2 served snapshot dates.
+  it('renders the corpus summary in the DagExplorer footer', async () => {
+    renderDag()
+
+    expect(await screen.findByText('2 clusters')).toBeInTheDocument()
+    expect(screen.getByText('4 tasks')).toBeInTheDocument()
+    expect(screen.getByText('2 runs')).toBeInTheDocument()
+  })
+
   it('clicking a workflow renders both its task nodes on the canvas', async () => {
     renderDag()
 

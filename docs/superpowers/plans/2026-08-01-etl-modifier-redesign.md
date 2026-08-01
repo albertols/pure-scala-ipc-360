@@ -2787,19 +2787,19 @@ Cross-tab save races are already covered by the existing baseModified 409."
 - Consumes: `CorpusService`, `useOperational(selectedDate)` (already loaded by Tab 3, `ETLOperational.tsx:262`).
 - Produces: `GET /api/summary -> SummaryDto(int xmlCount, int recipeCount, int ddlCount, int dirCount, List<String> layers)`; `useSummary()`; `<CorpusSummary items={[{label, value}]} />`.
 
-- [ ] **Step 1: Write the failing backend test**
+- [x] **Step 1: Write the failing backend test**
 
 `SummaryControllerTest` (MockMvc, real corpus): `GET /api/summary` is 200 with
 `xmlCount >= 81`, `recipeCount >= 86`, `ddlCount > 0`, and `layers` containing `CDM` and
 `DWH`; and `_layout_*.json` / `_history/` contents are excluded from `ddlCount`.
 
-- [ ] **Step 2: Run to verify it fails, then implement**
+- [x] **Step 2: Run to verify it fails, then implement**
 
 Add `CorpusService.summary()` reusing `allXmlPaths()`/`allRecipePaths()` and a `collect(".json")`
 pass filtered to names that neither start with `_` nor are layout sidecars. `layers` is the
 sorted set of first path segments. Re-run → PASS.
 
-- [ ] **Step 3: Write the failing frontend test and implement `CorpusSummary`**
+- [x] **Step 3: Write the failing frontend test and implement `CorpusSummary`**
 
 `CorpusSummary.test.tsx`: renders each `{label, value}` pair as `value label` in mono 10px;
 renders nothing when `items` is empty. Then place it per spec §7.1:
@@ -2811,7 +2811,7 @@ renders nothing when `items` is empty. Then place it per spec §7.1:
 Tab 3's numbers derive from the already-loaded `useOperational(selectedDate)` snapshot: b15 row
 count, distinct recipes, distinct tables, and the OK/KO split.
 
-- [ ] **Step 4: Run all gates and commit**
+- [x] **Step 4: Run all gates and commit**
 
 Run: `mvn -q -am -pl backend test && cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.

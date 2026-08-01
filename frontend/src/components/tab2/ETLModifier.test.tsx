@@ -79,8 +79,12 @@ const IPC_RULES = {
   },
 }
 
+// Task 16: static corpus counts for the Explorer footer's corpus summary.
+const SUMMARY = { xmlCount: 81, recipeCount: 86, ddlCount: 212, dirCount: 119, layers: ['CDM', 'DWH', 'ETL', 'ODS', 'OUTPUT', 'QDM', 'RDM', 'STG'] }
+
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
+  http.get('/api/summary', () => HttpResponse.json(SUMMARY)),
   http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
     path: 'CDM/m_FIX/_ETL_m_FIX.json',
     fileName: '_ETL_m_FIX.json',
@@ -158,6 +162,25 @@ describe('ETLModifier — real recipes on the shared canvas', () => {
   // `fileFilter`, so "click it and confirm nothing crashes" is no longer a
   // reachable scenario — there's nothing to click. See "ETLModifier — Explorer
   // scoping + info copy (Task 14)" for the coverage that replaces it.
+
+  // Task 16: view-aware corpus summary — Explorer footer, static corpus counts
+  // PLUS (once a recipe is open) that recipe's own steps/fields/sources.
+  it('renders the corpus summary in the Explorer footer, extended with the open recipe\'s steps/fields/sources', async () => {
+    renderModifier()
+
+    expect(await screen.findByText('86 recipes')).toBeInTheDocument()
+    expect(screen.getByText('8 layers')).toBeInTheDocument()
+    // No recipe open yet — MINI's own counts are absent.
+    expect(screen.queryByText('1 steps')).not.toBeInTheDocument()
+
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    // MINI: 1 step, 2 fields on its single target, 1 source table.
+    expect(await screen.findByText('1 steps')).toBeInTheDocument()
+    expect(screen.getByText('2 fields')).toBeInTheDocument()
+    expect(screen.getByText('1 sources')).toBeInTheDocument()
+  })
 })
 
 // ─── Task 8: draft editing state — mutations, SaveBar validate+PUT ────────────

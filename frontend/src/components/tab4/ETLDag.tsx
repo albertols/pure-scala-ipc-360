@@ -9,6 +9,7 @@ import { TimePicker, type TimeSelection } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
 import { OperationalCard } from '../shared/OperationalCard'
+import { CorpusSummary } from '../shared/CorpusSummary'
 
 const STATUS_COLOR: Record<string, string> = {
   success: '#34d399',
@@ -28,12 +29,18 @@ function DagExplorer({
   selectedTask,
   onSelectDag,
   onSelectTask,
+  runCount,
 }: {
   clusters: DagCluster[]
   selectedDag: string | null
   selectedTask: string | null
   onSelectDag: (id: string) => void
   onSelectTask: (dagId: string, taskId: string) => void
+  /** Task 16: served snapshot date count — the DagExplorer footer's "K runs"
+   * (spec §7.1's Tab 4 row). Not derived from `clusters` itself: a cluster's
+   * own run history (`clusterRuns`) is per-DAG and only computed once a DAG
+   * is selected, while the footer is always visible. */
+  runCount: number
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const toggle = (id: string) => setExpanded(e => ({ ...e, [id]: !e[id] }))
@@ -128,6 +135,15 @@ function DagExplorer({
             </div>
           )
         })}
+      </div>
+      {/* Task 16: view-aware corpus summary, DagExplorer footer (spec §7.1's
+          Tab 4 row) — N clusters · M tasks · K runs. */}
+      <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 12px' }}>
+        <CorpusSummary items={[
+          { label: 'clusters', value: clusters.length },
+          { label: 'tasks', value: clusters.reduce((n, c) => n + c.tasks.length, 0) },
+          { label: 'runs', value: runCount },
+        ]} />
       </div>
     </div>
   )
@@ -502,6 +518,7 @@ export function ETLDag() {
           selectedTask={selectedTaskId}
           onSelectDag={id => { setSelectedDagId(id); setSelectedTaskId(null) }}
           onSelectTask={(dagId, taskId) => { setSelectedDagId(dagId); setSelectedTaskId(taskId) }}
+          runCount={dates.length}
         />
 
         <DagCanvas

@@ -107,10 +107,25 @@ const PREVIEW_RECIPE = {
   table: { targetTableNames: ['CAS_ODS_TGT_STEP'], sourceTableNames: ['CAS_STG_SRC_STEP'] },
 }
 
+// Task 16: b15 rows for the two GRAPH/DATES fixture dates — the floating
+// chip's "N b15 rows · M recipes · K tables · OK/KO" source data.
+const ROWS_29 = [{
+  clusterName: 'cluster-cas-t', recipeFilename: '_ETL_m_CAS_T.json', jobId: 'app-29',
+  appStartIso: '2026-07-29T04:00:00.000Z', avgJobDurationInMinsSec: '1m 12sec',
+  status: 'SUCCESS', message: '',
+}]
+const ROWS_28 = [{
+  clusterName: 'cluster-cas-t', recipeFilename: '_ETL_m_CAS_T.json', jobId: 'app-28',
+  appStartIso: '2026-07-28T04:00:00.000Z', avgJobDurationInMinsSec: '1m 30sec',
+  status: 'FAILED', message: 'Stage failure (synthetic)',
+}]
+
 const server = setupServer(
   http.get('/api/relationships', () => HttpResponse.json(GRAPH)),
   http.get('/api/operational/summary', () => HttpResponse.json(SUMMARY)),
   http.get('/api/operational/dates', () => HttpResponse.json(DATES)),
+  http.get('/api/operational/2026-07-29', () => HttpResponse.json({ date: '2026-07-29', rows: ROWS_29 })),
+  http.get('/api/operational/2026-07-28', () => HttpResponse.json({ date: '2026-07-28', rows: ROWS_28 })),
   http.get('/api/config', () => HttpResponse.json(CONFIG)),
   http.get('/api/recipes/ODS/m_CAS_T/_ETL_m_CAS_T.json', () => HttpResponse.json({
     path: 'ODS/m_CAS_T/_ETL_m_CAS_T.json',
@@ -273,5 +288,29 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     fireEvent.click(tgtOnCanvas)
     fireEvent.click(await screen.findByText('Open preview'))
     expect(await screen.findByText('CAS_ODS_TGT_STEP', { selector: 'text' })).toBeInTheDocument()
+  })
+
+  // Task 16: view-aware corpus summary — floating bottom-left chip, counts
+  // follow the selected date (the user's ask, spec §7.1's Tab 3 row).
+  it('the floating chip shows b15 row/recipe/table counts and the OK/KO split for the selected date, following date changes', async () => {
+    const { container } = renderTab()
+
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    // Latest date (2026-07-29, the default "Now"): 1 row, 1 recipe, 1 written
+    // table (r -> t_tgt), SUCCESS.
+    expect(await screen.findByText('1 b15 rows')).toBeInTheDocument()
+    expect(screen.getByText('1 recipes')).toBeInTheDocument()
+    expect(screen.getByText('1 tables')).toBeInTheDocument()
+    expect(screen.getByText('1 OK')).toBeInTheDocument()
+    expect(screen.getByText('0 KO')).toBeInTheDocument()
+
+    // Switching to the earlier snapshot flips OK/KO — proves the chip follows
+    // selectedDate, not a static all-time count.
+    const dateInput = container.querySelector('input[type="date"]') as HTMLInputElement
+    fireEvent.change(dateInput, { target: { value: '2026-07-28' } })
+
+    expect(await screen.findByText('0 OK')).toBeInTheDocument()
+    expect(screen.getByText('1 KO')).toBeInTheDocument()
   })
 })

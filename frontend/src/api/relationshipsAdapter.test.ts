@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { toOperationalGraph } from './relationshipsAdapter'
-import type { RelationshipGraph, OperationalSummary } from './queries'
+import { toOperationalGraph, summarizeSnapshot } from './relationshipsAdapter'
+import type { RelationshipGraph, OperationalSummary, B15Row } from './queries'
 
 // Mini fixture: 2 STG head tables + a lookup table into r3; recipes r3/r4 both
 // write T_ODS (fan-in); r5 reads T_ODS + T_REFS and writes T_FACT (diamond
@@ -175,5 +175,46 @@ describe('toOperationalGraph — casuistics', () => {
     const v = toOperationalGraph(graph, summary, null)
     expect(v.cards.find(c => c.id === 'r3')!.status).toBe('OK')
     expect(v.cards.find(c => c.id === 'r4')!.status).toBe('KO')
+  })
+})
+
+// ─── summarizeSnapshot (Task 16) ───────────────────────────────────────────
+//
+// Client-side b15-row-count/distinct-recipes/distinct-tables/OK-KO derivation
+// for Tab 3's floating bottom-left chip, over the SAME cards/edges the graph
+// view already computed — no new endpoint. Reuses the `graph`/`view` fixtures
+// above: r3 and r4 both write t_ods (fan-in), so two rows naming two
+// DIFFERENT recipes that write the SAME table must count that table once.
+describe('summarizeSnapshot', () => {
+  const view = toOperationalGraph(graph, summary, '2026-07-29')
+
+  it('counts rows, dedupes recipes/tables across a fan-in write, and splits OK/KO by row status', () => {
+    const rows: B15Row[] = [
+      { recipeFilename: '_ETL_m_CAS_ODS_R3.json', status: 'SUCCESS' },
+      { recipeFilename: '_ETL_m_CAS_ODS_R4.json', status: 'FAILED' },
+      // A second run of r3 the same "day" — proves row COUNT isn't collapsed
+      // to distinct-recipe count.
+      { recipeFilename: '_ETL_m_CAS_ODS_R3.json', status: 'SUCCESS' },
+    ]
+    const s = summarizeSnapshot(rows, view.cards, view.edges)
+    expect(s).toEqual({ rows: 3, recipes: 2, tables: 1, ok: 2, ko: 1 })
+  })
+
+  it('a row for a recipe absent from the graph counts toward rows/recipes but contributes no table, and never throws', () => {
+    const rows: B15Row[] = [{ recipeFilename: '_ETL_m_GHOST.json', status: 'SUCCESS' }]
+    expect(() => summarizeSnapshot(rows, view.cards, view.edges)).not.toThrow()
+    expect(summarizeSnapshot(rows, view.cards, view.edges)).toEqual({ rows: 1, recipes: 1, tables: 0, ok: 1, ko: 0 })
+  })
+
+  it('empty rows -> all zero', () => {
+    expect(summarizeSnapshot([], view.cards, view.edges)).toEqual({ rows: 0, recipes: 0, tables: 0, ok: 0, ko: 0 })
+  })
+
+  it('an unrecognized/empty status counts toward neither OK nor KO', () => {
+    const rows: B15Row[] = [{ recipeFilename: '_ETL_m_CAS_DWH_R5.json', status: '' }]
+    const s = summarizeSnapshot(rows, view.cards, view.edges)
+    expect(s.ok).toBe(0)
+    expect(s.ko).toBe(0)
+    expect(s.rows).toBe(1)
   })
 })

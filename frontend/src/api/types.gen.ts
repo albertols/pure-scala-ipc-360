@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/relationships": {
         parameters: {
             query?: never;
@@ -139,7 +155,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["summary"];
+        get: operations["summary_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -335,6 +351,17 @@ export interface components {
             hasRecipe?: boolean;
             hasDdl?: boolean;
             children?: components["schemas"]["TreeNodeDto"][];
+        };
+        SummaryDto: {
+            /** Format: int32 */
+            xmlCount?: number;
+            /** Format: int32 */
+            recipeCount?: number;
+            /** Format: int32 */
+            ddlCount?: number;
+            /** Format: int32 */
+            dirCount?: number;
+            layers?: string[];
         };
         EdgeDto: {
             from?: string;
@@ -845,6 +872,26 @@ export interface operations {
             };
         };
     };
+    summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SummaryDto"];
+                };
+            };
+        };
+    };
     relationships: {
         parameters: {
             query?: never;
@@ -911,7 +958,7 @@ export interface operations {
             };
         };
     };
-    summary: {
+    summary_1: {
         parameters: {
             query?: never;
             header?: never;

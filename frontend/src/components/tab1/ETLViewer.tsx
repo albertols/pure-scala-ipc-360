@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import type { FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useMappingDom, useMappingModel } from '../../api/queries'
+import { useMappingDom, useMappingModel, useSummary } from '../../api/queries'
 import { toCanvas } from '../../api/mappingAdapter'
 import { findElementForNode } from '../../api/domSlice'
 import { Sidebar } from '../shared/Sidebar'
@@ -9,6 +9,7 @@ import { useFilesystem } from '../shared/useFilesystem'
 import { EtlCanvas } from '../shared/EtlCanvas'
 import { NODE_STYLES } from './NodeBox'
 import { DetailPanel } from './DetailPanel'
+import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
@@ -33,6 +34,16 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   const model = useMappingModel(mappingPath ?? '')
   const dom = useMappingDom(mappingPath ?? '')
   const modelError = model.error as ApiError | null
+
+  // Task 16: view-aware corpus summary, Explorer footer — static counts,
+  // same for every mapping (spec §7.1's Tab 1 row).
+  const summary = useSummary()
+  const summaryItems: SummaryItem[] = summary.data ? [
+    { label: 'xml', value: summary.data.xmlCount ?? 0 },
+    { label: 'recipes', value: summary.data.recipeCount ?? 0 },
+    { label: 'ddl', value: summary.data.ddlCount ?? 0 },
+    { label: 'dirs', value: summary.data.dirCount ?? 0 },
+  ] : []
 
   const graph = useMemo(
     () => (model.data ? toCanvas(model.data, mappingPath!) : null),
@@ -99,6 +110,9 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
         extraContent={sidebarExtra}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(c => !c)}
+        footer={<div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 12px' }}>
+          <CorpusSummary items={summaryItems} />
+        </div>}
       />
 
       {!mappingPath ? (

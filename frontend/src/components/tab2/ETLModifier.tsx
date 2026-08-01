@@ -4,11 +4,11 @@ import type { Connection, Port } from '../../types'
 import type { FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
 import { apiGet, apiSend } from '../../api/client'
-import { useRecipe, useDdl, useExpressions, useIpcRules } from '../../api/queries'
+import { useRecipe, useDdl, useExpressions, useIpcRules, useSummary } from '../../api/queries'
 import { useLayout, putLayout } from '../../api/layoutQueries'
 import type { NodeOffset } from '../../api/layoutQueries'
 import type { RecipeFile, RecipeValidation, RecipeValidationError } from '../../api/queries'
-import { recipeToCanvas } from '../../api/recipeAdapter'
+import { recipeToCanvas, fieldsOf } from '../../api/recipeAdapter'
 import type { RecipeJson } from '../../api/recipeAdapter'
 import {
   addSourceTable,
@@ -25,6 +25,7 @@ import { InfoTooltip } from '../shared/InfoTooltip'
 import { IpcCanvas } from './IpcCanvas'
 import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
+import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { Palette, SOURCE_TABLE_TYPE } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
 import { SaveBar, dangerButtonStyle } from './SaveBar'
@@ -308,6 +309,22 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     [content, recipePath],
   )
 
+  // Task 16: view-aware corpus summary, Explorer footer — static corpus
+  // counts, PLUS (once a recipe is open) that recipe's own steps/fields/
+  // sources (spec §7.1's Tab 2 row).
+  const summary = useSummary()
+  const summaryItems: SummaryItem[] = [
+    ...(summary.data ? [
+      { label: 'recipes', value: summary.data.recipeCount ?? 0 },
+      { label: 'layers', value: summary.data.layers?.length ?? 0 },
+    ] : []),
+    ...(content ? [
+      { label: 'steps', value: content.steps?.length ?? 0 },
+      { label: 'fields', value: (content.steps ?? []).reduce((n, s) => n + fieldsOf(s.target).length, 0) },
+      { label: 'sources', value: content.table?.sourceTableNames?.length ?? 0 },
+    ] : []),
+  ]
+
   // Conformance chip (Task 13): validates whichever content is CURRENT — the
   // same swap `content`/`graph` above follow — so a check's `$.steps[i]…`
   // path always indexes the SAME steps array `graph.nodes` was built from
@@ -529,6 +546,9 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
             onToggleCollapse={() => setSidebarCollapsed(c => !c)}
             extraContent={sidebarExtra}
             fileFilter={RECIPE_ONLY_FILTER}
+            footer={<div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 12px' }}>
+              <CorpusSummary items={summaryItems} />
+            </div>}
           />
           {/* Explorer scoping info affordance (Task 14, spec §6.8) — an overlay
               rather than a Sidebar prop, since Sidebar's header markup itself
