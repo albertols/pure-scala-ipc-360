@@ -1587,7 +1587,7 @@ runs a DFS with an in-progress set over the step graph built from those refs, ex
 `canvasLayout.computeLayers` (`canvasLayout.ts:32-51`) does.
 
 `ExpressionRules` must hold the `PredefinedFunctions` list copied verbatim from
-`RecipeConstants.scala:48-52` (36 entries) and the four operator lists from
+`RecipeConstants.scala:48-51` (35 entries) and the four operator lists from
 `RecipeConstants.scala:54-57`. Add a Javadoc line stating that these are a **copy** of the
 Scala constants and must be updated together; Task 6's contract test asserts the copy has the
 same cardinality as the Scala source by counting the quoted literals in
@@ -2001,7 +2001,7 @@ has one); **Rules** (a list of the `IPC-TYP-<KIND>-*` ids that apply, linking in
 
 Covers the four-way `RecipeTransformation` union (`RecipeTransformation.scala:6-22`) with the
 JSON shape of each; the `EXP_LOOKUP` variant and how its `parameters` are Field-shaped rather
-than transformation-shaped (`recipeAdapter.ts:130` discriminates on this); the 36
+than transformation-shaped (`recipeAdapter.ts:130` discriminates on this); the 35
 `PredefinedFunctions` and four operator sets from `RecipeConstants.scala:48-57`; and the
 formula rendering contract from `renderFormula` (`recipeAdapter.ts:180-194`) — `{name,
 parameters}` → `NAME(p1, p2, …)`, `{source}` → the dot-ref **verbatim**, `{value}` → verbatim.

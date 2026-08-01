@@ -23,6 +23,17 @@ final class DataflowRules {
     static List<IpcRule> all(IpcCatalog catalog) {
         List<IpcRule> rules = new ArrayList<>();
 
+        // IPC-FLW-001 deliberately classifies "source" steps from the STRUCTURAL sources[]
+        // array (canonical source type "table"), NOT from the dot-ref graph IPC-REF-006 and
+        // IPC-FLW-003 build via ReferentialRules.collectRefs. This mirrors the parser's own
+        // producer/consumer graph (RecipeGenerator.sortStepsTopologically,
+        // RecipeGenerator.scala:82-98), which walks `step.sources` and treats
+        // `case "table" => Nil` as a chain terminator — a step reading a physical table needs
+        // no upstream producer. The dot-ref graph answers a different question (does this
+        // step's OWN field-level formulas reference another step's output?) and a step can
+        // legitimately have sources[] wiring with fields that carry no dot-refs at all (e.g. a
+        // filter/router step whose condition is the only thing referencing the source), so the
+        // two graphs are not interchangeable here.
         rules.add(rule("IPC-FLW-001", catalog, (ctx, sev, out) -> {
             List<JsonNode> steps = ctx.steps();
             Map<String, Integer> indexByLowerName = new LinkedHashMap<>();

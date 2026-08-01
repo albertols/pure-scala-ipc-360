@@ -106,4 +106,36 @@ class ReferentialAndFlowRulesTest {
               "parameters":[{"name":"in_K","dataType":"String","transformation":{"source":"S.A"}}]}""");
         assertThat(failedIds(json)).contains("IPC-FLW-004");
     }
+
+    @Test
+    void knownArithmeticOperatorLiteralPasses() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"EXP_ARITHMETIC\",\"parameters\":["
+                + "{\"source\":\"S.A\"},{\"value\":\"*\"},{\"value\":\"2\"}]}");
+        assertThat(failedIds(json)).doesNotContain("IPC-EXP-002");
+    }
+
+    @Test
+    void unknownOperatorLiteralFails() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"EXP_ARITHMETIC\",\"parameters\":["
+                + "{\"source\":\"S.A\"},{\"value\":\"§\"},{\"value\":\"2\"}]}");
+        assertThat(failedIds(json)).contains("IPC-EXP-002");
+    }
+
+    /** A bare {value} node in a NON-operator position (an operand of EXP_ARITHMETIC, or any
+     * parameter of a plain predefined-function call) is a literal, not an operator, and must
+     * never be checked against the operator sets — this is the shape most likely to produce
+     * false positives against the real corpus. */
+    @Test
+    void literalValueOutsideAnOperatorPositionNeverFailsExp002() throws Exception {
+        String arithmeticOperand = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"EXP_ARITHMETIC\",\"parameters\":["
+                + "{\"source\":\"S.A\"},{\"value\":\"*\"},{\"value\":\"2\"}]}");
+        assertThat(failedIds(arithmeticOperand)).doesNotContain("IPC-EXP-002");
+
+        String plainFunctionParam = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"SUBSTR\",\"parameters\":[{\"source\":\"S.A\"},{\"value\":\"2\"}]}");
+        assertThat(failedIds(plainFunctionParam)).doesNotContain("IPC-EXP-002");
+    }
 }
