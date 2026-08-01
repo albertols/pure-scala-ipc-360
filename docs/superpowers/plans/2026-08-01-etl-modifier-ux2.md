@@ -605,7 +605,7 @@ name with a step target so their node exists anyway; `union` (10) and `joiner` (
 leaving 2197 `unionTables[].fieldMapping` pairs across 7 recipes and 5 joiner configurations
 unreachable. Closes sub-project 8's spec §13 deviation 3.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Assert against a real corpus fixture: a recipe with a `union` source produces a node whose id is
 the union's `name`, `label === 'UNI'`, with one OUT port per distinct
@@ -613,12 +613,12 @@ the union's `name`, `label === 'UNI'`, with one OUT port per distinct
 `label === 'JNR'` and `type === 'joiner'`; edges connect each `unionInput` / `joinerInput` step
 to it; and no duplicate node id is produced when the same union feeds two steps.
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `cd frontend && pnpm test src/api/recipeAdapter.test.ts`
 Expected: FAIL — union/joiner nodes absent.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Extend the source loop: keep `type === 'table'` producing today's source node, and add branches
 for canonical `union` and `joiner` (resolve through `typeAliases` first, as `kindAndLabel`
@@ -635,7 +635,7 @@ node it belongs to. For joiners, `joinerInput` names are `<joiner>.<MASTER|DETAI
 (`AbstractTargetFactory.scala:88`), so the owning joiner is the segment before the first dot. For
 unions, the owning union is the `sources[]` entry of type `union` in the step that consumes it.
 
-- [ ] **Step 4: Extend the sweep and re-verify counts**
+- [x] **Step 4: Extend the sweep and re-verify counts**
 
 In `scripts/recipe_sweep.mts`, assert that any recipe containing a `union` or `joiner` source
 produces a node with that source's name. Then run the full gate — node and edge counts change for
@@ -645,7 +645,19 @@ Run: `make validate-loop` (boot the backend first: `mvn -am -pl backend install 
 then `mvn -pl backend spring-boot:run`, poll `/api/health`).
 Expected: viewer 81/81, recipe 86/86, no dangling edges.
 
-- [ ] **Step 5: Commit**
+**Measured (not 12):** node/edge counts changed for **8** recipes, not 12 — the 7 recipes
+carrying a `union` source ∪ the 2 recipes carrying a `joiner` source, minus their 1-recipe
+overlap (`m_DWH_E_F_OVERSIGHT_PLEDGES_MONTHLY` has both). The plan's "12" reads as `7 + 5`
+(union-recipe count + joiner-*configuration* count, i.e. counting 4 of the 5 joiner configs
+that live in the single recipe `m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES` as though each were
+its own recipe, and not netting out the union/joiner overlap) rather than a distinct-recipe
+count. Verified both ways (`recipeToCanvas` run against every corpus recipe via the live
+backend, before vs. after this task's `recipeAdapter.ts` diff) — total nodes 388 -> 403 (+15 =
+10 union + 5 joiner, exactly the corpus's union/joiner source counts), total edges 8674 -> 9233
+(+559); viewer 81/81, recipe 86/86 (73 warning-severity checks, all pre-existing), relationships
+sweep PASS, no dangling edges. Full detail in `task-6-report.md`.
+
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/api/recipeAdapter.ts frontend/src/api/recipeAdapter.test.ts \

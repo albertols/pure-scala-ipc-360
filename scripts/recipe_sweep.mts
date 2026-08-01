@@ -39,6 +39,13 @@ if (!knownRuleIds.size) { console.error('recipe_sweep: GET /api/ipc/rules return
 // canvas exactly as a real session would (anonymizer tokens resolved, not fallback boxes).
 const typeAliases = catalog.typeAliases ?? {}
 
+// Task 6: recipeToCanvas() now noded every `union`/`joiner` sources[] entry, not just
+// `table`-typed ones (frontend/src/api/recipeAdapter.ts). Re-verified against the live
+// corpus here rather than trusted from the adapter's own unit tests alone.
+type RecipeSourceLike = { name?: string; type?: string }
+type RecipeStepLike = { sources?: RecipeSourceLike[] }
+type RecipeLike = { steps?: RecipeStepLike[] }
+
 let failed = 0
 let warningChecks = 0
 for (const p of paths.sort()) {
@@ -50,6 +57,13 @@ for (const p of paths.sort()) {
     if (!g.nodes.length) throw new Error('empty canvas')
     const ids = new Set(g.nodes.map(n => n.id))
     if (ids.size !== g.nodes.length) throw new Error('duplicate node ids')
+    for (const step of (dto.content as RecipeLike).steps ?? []) {
+      for (const source of step.sources ?? []) {
+        const canonical = typeAliases[source.type ?? ''] ?? source.type
+        if (canonical !== 'union' && canonical !== 'joiner') continue
+        if (!source.name || !ids.has(source.name)) throw new Error(`${canonical} source '${source.name}' has no canvas node`)
+      }
+    }
     for (const c of g.connections) if (!ids.has(c.fromNode) || !ids.has(c.toNode)) throw new Error(`dangling edge ${c.fromNode}->${c.toNode}`)
     for (const n of g.nodes) if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) throw new Error(`no layout for ${n.name}`)
     const vRes = await fetch(`${BASE}/api/recipes/validate`, {

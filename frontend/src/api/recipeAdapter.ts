@@ -26,9 +26,35 @@ export interface RecipeTargetJson {
   weststone?: RecipeFieldJson[]
 }
 
+/** One `unionTables[].fieldMapping[]` entry: `origin` is the field name as it arrives
+ * from the feeding `unionInput` (deduped/suffixed per branch), `union` is the field name
+ * the union transformation exposes downstream — the latter is what becomes the union
+ * node's OUT port name (and what downstream dot-refs like `Union.ID_LOCATION` target). */
+export interface UnionFieldMappingJson {
+  origin?: string
+  union?: string
+}
+
+/** One branch of a `union` source: `name` is the feeding `unionInput` step's target
+ * name (`AbstractTargetFactory.scala` union-branch naming), matched against
+ * `step.target.name` to wire the unionInput -> union edge. */
+export interface UnionTableJson {
+  name?: string
+  fieldMapping?: UnionFieldMappingJson[]
+}
+
 export interface RecipeSourceJson {
   name?: string
   type?: string
+  /** `union`-typed sources only. */
+  unionTables?: UnionTableJson[]
+  /** `joiner`-typed sources only — always `[<joiner>.MASTER, <joiner>.DETAIL]`, the
+   * joiner's own two `joinerInput` step target names (corpus-verified). */
+  joinerTables?: string[]
+  /** `joiner`-typed sources only; scalar — lifted into `node.properties` via
+   * `collectScalarProps`. */
+  joinerType?: string
+  joinerCondition?: string
 }
 
 export interface RecipeStepJson {
@@ -113,14 +139,20 @@ function collectScalarProps(props: Record<string, string>, obj: Record<string, u
   }
 }
 
-/** Kind + label for a step target/source `type` string. `typeAliases` (served by
- * `GET /api/ipc/rules`, backend `IpcVocabulary.TYPE_ALIASES`) resolves anonymizer
- * tokens (`BERYLFALLS` -> `sourceQualifier`, etc.) to their canonical kind BEFORE the
- * RECIPE_KIND / FIXED_LABEL lookups, so an aliased type takes the exact same path as
- * the canonical type it aliases — never a parallel branch. Defaults to `{}`, so a type
- * with no matching alias behaves exactly as before. */
+/** `typeAliases` (served by `GET /api/ipc/rules`, backend `IpcVocabulary.TYPE_ALIASES`)
+ * resolves anonymizer tokens (`BERYLFALLS` -> `sourceQualifier`, etc.) to their
+ * canonical kind string. Shared by `kindAndLabel` (step targets) and the union/joiner
+ * source branch below (Task 6) so both take the exact same resolution path — never a
+ * parallel, hardcoded one. Defaults to `{}`, so a type with no matching alias resolves
+ * to itself, unchanged. */
+function resolveCanonicalType(typ: string | undefined, typeAliases: Record<string, string>): string {
+  return typeAliases[typ ?? ''] ?? (typ ?? '')
+}
+
+/** Kind + label for a step target/source `type` string. See `resolveCanonicalType` for
+ * the alias resolution this builds on. */
 function kindAndLabel(typ: string | undefined, typeAliases: Record<string, string>): { type: NodeType; label: string } {
-  const t = typeAliases[typ ?? ''] ?? (typ ?? '')
+  const t = resolveCanonicalType(typ, typeAliases)
   const kind = RECIPE_KIND[t]
   if (kind) return { type: kind, label: ABBR[kind] }
   const fixed = FIXED_LABEL[t]
@@ -246,6 +278,45 @@ function toSourceNode(source: RecipeSourceJson, refs: RecipeRef[], file: string)
   return { id, type: 'source', label: ABBR.source, name, x: 0, y: 0, ports, properties, file }
 }
 
+/** A `union`-typed `sources[]` entry becomes its own node (Task 6) — kind/label resolved
+ * through `kindAndLabel` like every other kind, never hardcoded. Ports: one OUT port per
+ * DISTINCT `unionTables[].fieldMapping[].union` value (the field name the union exposes
+ * downstream — matches the `Union.<field>` dot-refs a consuming step's transformations
+ * already carry, so those edges fall out of the existing `deriveConnections` ref walk
+ * once this node exists; no new edge-derivation code needed for them). */
+function toUnionNode(source: RecipeSourceJson, file: string, typeAliases: Record<string, string>): ETLNode {
+  const { type, label } = kindAndLabel(source.type, typeAliases)
+  const id = source.name ?? ''
+  const properties: Record<string, string> = {}
+  collectScalarProps(properties, source as unknown as Record<string, unknown>)
+
+  const fieldNames = new Set<string>()
+  for (const table of source.unionTables ?? []) {
+    for (const mapping of table.fieldMapping ?? []) {
+      if (!isBlank(mapping.union)) fieldNames.add(mapping.union!)
+    }
+  }
+  const ports: Port[] = [...fieldNames].map(fieldName => ({ name: fieldName, dataType: '', direction: 'OUT' as const }))
+  return { id, type, label, name: id, x: 0, y: 0, ports, properties, file }
+}
+
+/** A `joiner`-typed `sources[]` entry becomes its own node (Task 6) — kind/label
+ * resolved through `kindAndLabel`, which already maps `joiner` to `NodeType 'joiner'`/
+ * `ABBR.joiner === 'JNR'` (same map `joinerInput` step targets use). Ports: the
+ * `joinerTables` entries (the joiner's own `<joiner>.MASTER`/`<joiner>.DETAIL`
+ * `joinerInput` step names), direction OUT. `joinerType`/`joinerCondition` are lifted
+ * into `properties` by `collectScalarProps`; `joinerTables` (array-valued) stays on the
+ * raw JSON for the Inspector, which resolves it independently by node id. */
+function toJoinerNode(source: RecipeSourceJson, file: string, typeAliases: Record<string, string>): ETLNode {
+  const { type, label } = kindAndLabel(source.type, typeAliases)
+  const id = source.name ?? ''
+  const properties: Record<string, string> = {}
+  collectScalarProps(properties, source as unknown as Record<string, unknown>)
+
+  const ports: Port[] = (source.joinerTables ?? []).map(tableName => ({ name: tableName, dataType: '', direction: 'OUT' as const }))
+  return { id, type, label, name: id, x: 0, y: 0, ports, properties, file }
+}
+
 // ─── Edge derivation ────────────────────────────────────────────────────────────
 
 /** Case-insensitive-fallback node-id resolver: exact node id first, else the (first)
@@ -275,12 +346,22 @@ function markLinked(nodeById: Map<string, ETLNode>, id: string, portName: string
  * `fromPort`/`toPort`) for every `sources[]` entry of a step that has ZERO field-level
  * edges landing on that step — deduped via the `fromNode|fromPort|toNode|toPort` key
  * set. Unresolvable ref tables are dropped silently (never a dangling endpoint).
+ *
+ * Task 6 adds a THIRD edge source with no dot-ref counterpart at all: a step whose
+ * target resolves (via `typeAliases`) to `unionInput`/`joinerInput` gets a node-center
+ * edge TO the union/joiner node it feeds. For joiners the owning joiner is the segment
+ * of the `joinerInput` step's own name before the first dot (`AbstractTargetFactory.
+ * scala:88`'s `<joiner>.<MASTER|DETAIL>` naming). For unions there's no such naming
+ * convention, so `unionInputOwner` (built while creating union nodes: every
+ * `unionTables[].name` -> the union's own node id) is consulted instead.
  */
 function deriveConnections(
   steps: RecipeStepJson[],
   refs: RecipeRef[],
   nodeIds: Set<string>,
   nodeById: Map<string, ETLNode>,
+  typeAliases: Record<string, string>,
+  unionInputOwner: Map<string, string>,
 ): Connection[] {
   const resolve = buildResolver(nodeIds)
   const connections: Connection[] = []
@@ -311,6 +392,20 @@ function deriveConnections(
       if (!fromNode) continue
       const hasFieldEdge = connections.some(c => c.fromNode === fromNode && c.toNode === toNode)
       if (!hasFieldEdge) add({ fromNode, fromPort: '', toNode: toNode!, toPort: '' })
+    }
+  }
+
+  for (const step of steps) {
+    const stepName = step.target?.name
+    if (isBlank(stepName) || !nodeIds.has(stepName!)) continue
+    const canonical = resolveCanonicalType(step.target?.type, typeAliases)
+    if (canonical === 'unionInput') {
+      const unionId = unionInputOwner.get(stepName!)
+      if (unionId && nodeIds.has(unionId)) add({ fromNode: stepName!, fromPort: '', toNode: unionId, toPort: '' })
+    } else if (canonical === 'joinerInput') {
+      const dot = stepName!.indexOf('.')
+      const joinerId = dot >= 0 ? stepName!.slice(0, dot) : stepName!
+      if (nodeIds.has(joinerId)) add({ fromNode: stepName!, fromPort: '', toNode: joinerId, toPort: '' })
     }
   }
 
@@ -347,18 +442,39 @@ export function recipeToCanvas(recipe: RecipeJson, recipePath: string, typeAlias
   }
 
   const refs = collectRefs(recipe)
+  // unionInput step target name -> owning union's node id, built alongside union nodes
+  // (Task 6) — consulted by deriveConnections to wire the unionInput -> union edge.
+  const unionInputOwner = new Map<string, string>()
   for (const step of steps) {
     for (const source of step.sources ?? []) {
-      if (source.type !== 'table') continue
-      const id = source.name
-      if (isBlank(id) || nodeIds.has(id!)) continue
-      nodeIds.add(id!)
-      nodes.push(toSourceNode(source, refs, basename))
+      const canonical = resolveCanonicalType(source.type, typeAliases)
+      if (canonical === 'table') {
+        const id = source.name
+        if (isBlank(id) || nodeIds.has(id!)) continue
+        nodeIds.add(id!)
+        nodes.push(toSourceNode(source, refs, basename))
+      } else if (canonical === 'union') {
+        const id = source.name
+        if (!isBlank(id)) {
+          if (!nodeIds.has(id!)) {
+            nodeIds.add(id!)
+            nodes.push(toUnionNode(source, basename, typeAliases))
+          }
+          for (const table of source.unionTables ?? []) {
+            if (!isBlank(table.name)) unionInputOwner.set(table.name!, id!)
+          }
+        }
+      } else if (canonical === 'joiner') {
+        const id = source.name
+        if (isBlank(id) || nodeIds.has(id!)) continue
+        nodeIds.add(id!)
+        nodes.push(toJoinerNode(source, basename, typeAliases))
+      }
     }
   }
 
   const nodeById = new Map(nodes.map(n => [n.id, n]))
-  const connections = deriveConnections(steps, refs, nodeIds, nodeById)
+  const connections = deriveConnections(steps, refs, nodeIds, nodeById, typeAliases, unionInputOwner)
 
   layoutNodes(nodes, connections)
 
