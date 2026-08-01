@@ -528,6 +528,40 @@ join the gate, never sit beside it), not as a new top-level target.
     `docs/ipc/` pointer), `docs/architecture.md` (four new/changed endpoints),
     `frontend/AGENTS.md`, ADR-0010 and ADR-0011.
 
+### Acceptance results (final)
+
+Recorded at the Task 18 acceptance walk (2026-08-01) with status updates from Task 19
+and the final-fix wave. Two criteria changed status after the walk: criterion 3 was FAIL
+at the walk but closed by Task 19 (fallback-label count: 146 → 0); the final-fix wave
+addressed validation-failure behavior but did not change any acceptance criterion status.
+
+| # | Criterion (abbreviated) | Status | Evidence |
+|---|---|---|---|
+| 1 | Populated banded canvas on `_ETL_*.json` | PASS (mechanical) | `recipe_sweep` 86/86, `IpcCanvas.test.tsx` bands, live adapter probes |
+| 2 | `docs/ipc/` wiki with README, model-map, rules, expressions per kind | PASS | `find docs/ipc -type f` 16 files, `IpcRulesContractTest` 9/9 green |
+| 3 | Alias table resolves all 4 tokens; canvas labels show canonical kinds (no fallback boxes) | PASS (mechanical) | `AliasWitnessContractTest` 5/5; Task 19 re-measured: **0** fallback labels (was 146 at walk) |
+| 4 | 86 corpus recipes validate with zero errors via `POST /api/recipes/validate` | PASS | `make validate-loop` `recipe_sweep: 86/86`, `IpcRulesContractTest.everyCorpusRecipeIsErrorFree` |
+| 5 | Every §4 key visible+editable in Inspector; unrecognized keys read-only | FAIL | Mechanism proven correct; two disclosed gaps remain: `unionTables[].fieldMapping` read-only (spec §13.2), union/joiner sources unreachable (spec §13.3) |
+| 6 | Drag + reload restores position; auto-layout clears; `/api/tree` excludes `_layout_*.json` | PASS (mechanical) | `LayoutControllerTest` 4/4, `ETLModifier.test.tsx` drag/restore/clear tests |
+| 7 | Conformance chip: green untouched, red broken dot-ref, green repaired | PASS (mechanical) | Live probe (BIZLINK baseline/mutated/repaired), `ConformanceChip.test.tsx` three states |
+| 8 | Tab 2 Explorer only `_ETL_*.json`; ⓘ explains; Tab 1 unchanged | PASS (mechanical) | `Sidebar.test.tsx` filter proof, `ETLModifier.test.tsx` scoping, Tab 1 tests unaffected |
+| 9 | Expression dock only `origin: "recipe"`; row draggable onto field | NEEDS HUMAN VISUAL SIGN-OFF | Origin filter proven (`ExpressionDock.test.tsx`), drag source proven; drop target untested |
+| 10 | `?focus=<recipePath>` opens isolated editor; cross-tab save returns 409 | NEEDS HUMAN VISUAL SIGN-OFF | Focus isolation proven, 409 precondition proven separately; cross-tab interaction untested |
+| 11 | Summary reads correctly in all tabs; Tab 3 follows selected date | PASS (mechanical) | `GET /api/summary` live response, `ETLOperational.test.tsx` date-following chip |
+| 12 | Every textual loading state shows shared spinner | PASS (mechanical) | `Spinner.test.tsx` component, `LoadingState` wrapper, grep confirms no raw loading strings |
+| 13 | `pnpm test`, `tsc --noEmit`, `make test`, `make check`, `make validate-loop` green | PASS | All five run successfully; `pnpm test` 239 passed, `tsc` clean, `validate-loop` PASS |
+| 14 | Docs: CLAUDE.md, `docs/architecture.md`, `frontend/AGENTS.md`, ADR-0010, ADR-0011 | PASS | All five present, targeted edits confirmed via `git diff --stat` |
+
+**Status counts: 4 PASS · 7 PASS (mechanical) · 2 NEEDS HUMAN VISUAL SIGN-OFF · 1 FAIL.**
+
+#### Still needs human sign-off
+
+Two acceptance criteria require browser-based visual verification or interaction patterns that no automated test covers:
+
+1. **Criterion 9: Expression dock drag-to-field** — Drop-target half has zero test coverage. Open Tab 2 with any recipe, drag an expression row from the dock onto a field in the Inspector, and verify the formula commits to that field. (Drag source and field mutation paths are proven by unit test; the drop interaction itself is not.)
+
+2. **Criterion 10: Cross-tab save race** — The `?focus=` mode and the 409 precondition are both individually proven, but the actual pattern (open two browser tabs, edit in one, save in one, observe 409 in the other) has never been exercised. Open `/app#/etl2?focus=CDM/m_DM_INFOHUB_BIZLINK` in one tab and the normal app in another pointing to the same recipe, make a change in one tab and save, then try to save stale edits in the other tab and confirm the 409 error appears in the UI.
+
 ## 11. ADRs
 
 - **ADR-0010 — IPC conformance ruleset.** Severity tiers and the empirical assignment
