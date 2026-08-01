@@ -112,9 +112,10 @@ bound to an upstream expression), not a bare transformation-tree node. The front
 `isFieldShaped` (`frontend/src/api/recipeAdapter.ts:130`, `'transformation' in param`)
 is exactly this discriminator: every walker that recurses into a transformation tree
 (`walkTransformation`/`collectRefs` in the frontend, `collectCallSites`/
-`checkOperatorLiterals`/`collectLookups` in `ExpressionRules.java`) checks
-`isFieldShaped`/`isFieldShaped` before deciding whether to recurse into
-`param.transformation` (Field-shaped) or `param` itself (bare transformation node).
+`checkOperatorLiterals`/`collectLookups` in `ExpressionRules.java`, via its own
+`isFieldShaped` helper) checks the same Field-shaped condition before deciding whether
+to recurse into `param.transformation` (Field-shaped) or `param` itself (bare
+transformation node).
 
 Verbatim corpus example — an unconnected Lookup (`LKP_LKP_CEDARBROOK`) nested inside a
 call tree, its own `parameters` array holding one Field-shaped bind variable
