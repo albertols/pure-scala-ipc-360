@@ -2471,20 +2471,20 @@ sidecar. Offsets reset on recipe change so a new recipe never inherits stale pos
 - Consumes: nothing new.
 - Produces: `export function SaveBar(props)` with today's exact prop list (`changes`, `wireFrom`, `onCancelWire`, `onSave`, `onDiscard`); `export function DDLViewer({ cols }: { cols: DdlColumnJson[] })`; `export interface DdlColumnJson { name?, type?, mode?, description? }`; and the shared style constants `dangerButtonStyle`, `ghostButtonStyle` re-exported from `SaveBar.tsx` (Task 12 and Task 13 both use them).
 
-- [ ] **Step 1: Move the code**
+- [x] **Step 1: Move the code**
 
 Cut `SaveBar` (`ETLModifier.tsx:60-124`) with `dangerButtonStyle`/`ghostButtonStyle`
 (`:46-55`) into `SaveBar.tsx`; cut `DDLViewer` (`:172-210`) and `DdlColumnJson` (`:34-39`)
 into `DDLViewer.tsx`. **Byte-identical bodies** — no restyling, no prop changes, no
 behavior change. Import them back into `ETLModifier.tsx`.
 
-- [ ] **Step 2: Verify nothing changed**
+- [x] **Step 2: Verify nothing changed**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS with **zero test edits**. If any Tab 2 test needed changing, the move was not
 pure — revert and redo.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add frontend/src/components/tab2/SaveBar.tsx frontend/src/components/tab2/DDLViewer.tsx \

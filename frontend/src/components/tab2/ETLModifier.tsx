@@ -29,6 +29,8 @@ import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
 import { Palette, SOURCE_TABLE_TYPE } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
+import { SaveBar, dangerButtonStyle, ghostButtonStyle } from './SaveBar'
+import { DDLViewer, type DdlColumnJson } from './DDLViewer'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
@@ -56,99 +58,6 @@ function toWireOffsets(offsets: Record<string, { x: number; y: number }>): Recor
 
 /** Debounce interval (ms) between a node drag settling and the layout PUT firing. */
 const LAYOUT_SAVE_DEBOUNCE_MS = 500
-
-/** Real DDL JSON shape (parser `<TABLE>.json` output) — BigQuery field list. */
-interface DdlColumnJson {
-  name?: string
-  type?: string
-  mode?: string
-  description?: string
-}
-
-// ─── Save Bar ─────────────────────────────────────────────────────────────────
-
-/** Delete idiom (Task 9): the SaveBar's existing "Save Changes"/"Discard" button
- * pair, recomposed with the `--red` token in place of the blue one — no new
- * tokens introduced. */
-const dangerButtonStyle: React.CSSProperties = {
-  padding: '5px 14px', borderRadius: 5,
-  background: 'rgba(248,113,113,0.15)', border: '1px solid var(--red)',
-  color: 'var(--red)', fontSize: 12, cursor: 'pointer', fontWeight: 600,
-}
-const ghostButtonStyle: React.CSSProperties = {
-  padding: '5px 14px', borderRadius: 5,
-  background: 'transparent', border: '1px solid var(--border)',
-  color: '#7b88aa', fontSize: 12, cursor: 'pointer',
-}
-
-/** Task 9: the wire-mode indicator lives in the same sticky row as the dirty
- * indicator/Save/Discard controls — the bar now also mounts while a wire is
- * in progress (dirty count 0), not only while there are unsaved changes. */
-function SaveBar({
-  changes,
-  wireFrom,
-  onCancelWire,
-  onSave,
-  onDiscard,
-}: {
-  changes: number
-  wireFrom: { nodeId: string; portName: string } | null
-  onCancelWire: () => void
-  onSave: () => void
-  onDiscard: () => void
-}) {
-  if (changes === 0 && !wireFrom) return null
-  return (
-    <div style={{
-      position: 'sticky', bottom: 0,
-      background: 'var(--surface)',
-      borderTop: '1px solid #fbbf2444',
-      padding: '10px 16px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 12,
-      zIndex: 10,
-    }}>
-      {wireFrom && (
-        <div
-          onClick={onCancelWire}
-          title="Click to cancel"
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '3px 10px', borderRadius: 5,
-            background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-            color: '#4f9cf9', fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
-            cursor: 'pointer',
-          }}
-        >{`wire: ${wireFrom.nodeId}.${wireFrom.portName} → click an IN port`}</div>
-      )}
-      {changes > 0 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          fontSize: 11, color: '#fbbf24',
-        }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="5" stroke="#fbbf24" strokeWidth="1.2" />
-            <line x1="6" y1="3.5" x2="6" y2="6.5" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" />
-            <circle cx="6" cy="8.5" r="0.8" fill="#fbbf24" />
-          </svg>
-          {changes} unsaved change{changes !== 1 ? 's' : ''}
-        </div>
-      )}
-      <div style={{ flex: 1 }} />
-      {changes > 0 && (
-        <>
-          <button onClick={onDiscard} style={ghostButtonStyle}>Discard</button>
-          <button onClick={onSave} style={{
-            padding: '5px 16px', borderRadius: 5,
-            background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-            color: '#4f9cf9', fontSize: 12, cursor: 'pointer', fontWeight: 600,
-          }}>Save Changes</button>
-        </>
-      )}
-    </div>
-  )
-}
 
 // ─── Editable Field ───────────────────────────────────────────────────────────
 
@@ -190,48 +99,6 @@ function EditableField({
         />
         <CopyButton value={value} />
       </div>
-    </div>
-  )
-}
-
-// ─── DDL Viewer ───────────────────────────────────────────────────────────────
-
-function DDLViewer({ cols }: { cols: DdlColumnJson[] }) {
-  if (cols.length === 0) return null
-
-  const modeColor: Record<string, string> = { REQUIRED: '#34d399', NULLABLE: '#4a5570', REPEATED: '#818cf8' }
-
-  return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr auto auto 2fr',
-        background: 'var(--surface-2)', padding: '6px 10px',
-        borderBottom: '1px solid var(--border)',
-        fontSize: 9, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.06em',
-      }}>
-        <span>Column</span>
-        <span style={{ textAlign: 'right', paddingRight: 12 }}>BQ Type</span>
-        <span style={{ textAlign: 'right', paddingRight: 12 }}>Mode</span>
-        <span>Description</span>
-      </div>
-      {cols.map((col, i) => (
-        <div key={i} className="port-row" style={{
-          display: 'grid', gridTemplateColumns: '1fr auto auto 2fr',
-          padding: '6px 10px', borderBottom: i < cols.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-          alignItems: 'center', gap: 4,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}>{col.name}</span>
-            <CopyButton value={col.name ?? ''} size={11} />
-          </div>
-          <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#4f9cf9', textAlign: 'right', paddingRight: 12 }}>{col.type}</span>
-          <span style={{
-            fontSize: 8, fontFamily: 'JetBrains Mono, monospace', textAlign: 'right', paddingRight: 12,
-            color: modeColor[col.mode ?? ''] ?? '#4a5570',
-          }}>{col.mode}</span>
-          <span style={{ fontSize: 10, color: '#4a5570', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{col.description || '—'}</span>
-        </div>
-      ))}
     </div>
   )
 }
