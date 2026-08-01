@@ -33,6 +33,7 @@ public class IpcCatalog {
     private final Map<String, List<IpcKeySpec>> keySchema = new LinkedHashMap<>();
     private final Map<String, String> typeAliases = new LinkedHashMap<>();
     private final Map<String, String> keyAliases = new LinkedHashMap<>();
+    private final Map<String, IpcConnectionRule> connections = new LinkedHashMap<>();
 
     public IpcCatalog() {
         ObjectMapper mapper = new ObjectMapper();
@@ -59,6 +60,16 @@ public class IpcCatalog {
                 .forEachRemaining(e -> typeAliases.put(e.getKey(), e.getValue().asText()));
             root.path("keyAliases").fields()
                 .forEachRemaining(e -> keyAliases.put(e.getKey(), e.getValue().asText()));
+            root.path("connections").fields().forEachRemaining(e -> {
+                JsonNode c = e.getValue();
+                List<String> mayFeed = new ArrayList<>();
+                c.path("mayFeed").forEach(n -> mayFeed.add(n.asText()));
+                List<String> namedInputs = new ArrayList<>();
+                c.path("namedInputs").forEach(n -> namedInputs.add(n.asText()));
+                Integer exactly = c.has("exactly") ? c.path("exactly").asInt() : null;
+                connections.put(e.getKey(), new IpcConnectionRule(
+                    e.getKey(), List.copyOf(mayFeed), exactly, List.copyOf(namedInputs)));
+            });
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -77,4 +88,5 @@ public class IpcCatalog {
     public Map<String, List<IpcKeySpec>> keySchema() { return Map.copyOf(keySchema); }
     public Map<String, String> typeAliases() { return Map.copyOf(typeAliases); }
     public Map<String, String> keyAliases() { return Map.copyOf(keyAliases); }
+    public Map<String, IpcConnectionRule> connections() { return Map.copyOf(connections); }
 }

@@ -759,7 +759,7 @@ public Map<String, IpcConnectionRule> connections()
 to contain, forbidding legal IPC constructions the sample never used. The corpus is the
 *validation* set instead.
 
-- [ ] **Step 1: Write the failing contract test**
+- [x] **Step 1: Write the failing contract test**
 
 ```java
 package io.pure360.etl360;
@@ -835,12 +835,12 @@ Note `joinerInput` is a *target* kind, not a source kind — it appears in `conn
 its cardinality constraint belongs with the adjacency model. `everySourceKindHasAConnectionRule`
 uses `containsAll`, so extra entries like this are permitted.
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `mvn -am -pl backend test -Dtest=IpcConnectionsContractTest -DfailIfNoTests=false`
 Expected: FAIL — `connections()` does not exist.
 
-- [ ] **Step 3: Author the matrix**
+- [x] **Step 3: Author the matrix**
 
 Add a `connections` object to `ipc-rules.json`. Author each source kind's `mayFeed` from what the
 kind *means* in IPC, then check it against spec §4's 30 observed pairings — every one must be
@@ -852,18 +852,18 @@ directly.
 
 Add the `joinerInput` cardinality entry (`exactly: 2`, `namedInputs: ["MASTER","DETAIL"]`).
 
-- [ ] **Step 4: Load it in `IpcCatalog`**
+- [x] **Step 4: Load it in `IpcCatalog`**
 
 Parse `connections` in the existing constructor alongside `rules`/`keySchema`/aliases; expose
 `connections()` returning an immutable copy, mirroring the existing accessors exactly.
 
-- [ ] **Step 5: Run to verify it passes**
+- [x] **Step 5: Run to verify it passes**
 
 Run: `mvn -am -pl backend clean test`
 Expected: PASS. If `everyPairingObservedInTheCorpusIsPermitted` fails, the matrix is too strict —
 widen it and record why in the task report; do **not** relax the test.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/resources/ipc/ipc-rules.json \

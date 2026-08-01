@@ -129,6 +129,52 @@
       { "key": "type", "parserType": "String", "required": true, "widget": "text" }
     ]
   },
+  "connections": {
+    "table": {
+      "mayFeed": ["sourceQualifier", "table", "normalizer"]
+    },
+    "sourceQualifier": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "union": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "joiner": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "router": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "filter": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "aggregator": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "normalizer": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "java": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "storedProcedure": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"]
+    },
+    "joinerInput": {
+      "mayFeed": [],
+      "exactly": 2,
+      "namedInputs": ["MASTER", "DETAIL"]
+    }
+  },
   "rules": [
     { "id": "IPC-STR-001", "severity": "error",
       "statement": "steps must be a non-empty array",
