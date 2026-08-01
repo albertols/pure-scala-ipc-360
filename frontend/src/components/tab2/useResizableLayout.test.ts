@@ -30,6 +30,18 @@ describe('useResizableLayout', () => {
     expect(result.current.sizes).toEqual(LAYOUT_DEFAULT)
   })
 
+  it('completes a partial stored object from the defaults', () => {
+    localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify({ inspectorW: 500 }))
+    const { result } = renderHook(() => useResizableLayout())
+    expect(result.current.sizes).toEqual({ ...LAYOUT_DEFAULT, inspectorW: 500 })
+  })
+
+  it('drops a non-numeric stored value and falls back to the default for that key', () => {
+    localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify({ canvasH: 'tall', inspectorW: 500 }))
+    const { result } = renderHook(() => useResizableLayout())
+    expect(result.current.sizes).toEqual({ ...LAYOUT_DEFAULT, inspectorW: 500 })
+  })
+
   it('resetSizes returns to defaults and clears storage', () => {
     const { result } = renderHook(() => useResizableLayout())
     act(() => result.current.setSize('canvasH', 700))

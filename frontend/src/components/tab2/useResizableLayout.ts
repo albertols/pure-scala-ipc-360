@@ -27,8 +27,19 @@ function readStoredSizes(): LayoutSizes {
   try {
     const raw = localStorage.getItem(LAYOUT_STORAGE_KEY)
     if (!raw) return LAYOUT_DEFAULT
-    const parsed = JSON.parse(raw) as Partial<LayoutSizes>
-    return { ...LAYOUT_DEFAULT, ...parsed }
+    const parsed = JSON.parse(raw) as Partial<Record<keyof LayoutSizes, unknown>>
+    const merged = { ...LAYOUT_DEFAULT }
+    for (const key of Object.keys(LAYOUT_DEFAULT) as (keyof LayoutSizes)[]) {
+      const value = parsed[key]
+      // A stored blob can carry a key of the wrong type (hand-edited devtools, a
+      // future schema change) — e.g. `{"canvasH":"tall"}`. That would flow straight
+      // into a CSS height/width in `EditorLayout` and break the layout, so keep only
+      // finite numbers per key and fall back to the default for anything else.
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        merged[key] = value
+      }
+    }
+    return merged
   } catch {
     return LAYOUT_DEFAULT
   }
