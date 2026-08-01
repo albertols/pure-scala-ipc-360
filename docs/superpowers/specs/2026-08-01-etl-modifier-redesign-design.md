@@ -560,7 +560,7 @@ Two acceptance criteria require browser-based visual verification or interaction
 
 1. **Criterion 9: Expression dock drag-to-field** — Drop-target half has zero test coverage. Open Tab 2 with any recipe, drag an expression row from the dock onto a field in the Inspector, and verify the formula commits to that field. (Drag source and field mutation paths are proven by unit test; the drop interaction itself is not.)
 
-2. **Criterion 10: Cross-tab save race** — The `?focus=` mode and the 409 precondition are both individually proven, but the actual pattern (open two browser tabs, edit in one, save in one, observe 409 in the other) has never been exercised. Open `/app#/etl2?focus=CDM/m_DM_INFOHUB_BIZLINK` in one tab and the normal app in another pointing to the same recipe, make a change in one tab and save, then try to save stale edits in the other tab and confirm the 409 error appears in the UI.
+2. **Criterion 10: Cross-tab save race** — The `?focus=` mode and the 409 precondition are both individually proven, but the actual pattern (open two browser tabs, edit in one, save in one, observe 409 in the other) has never been exercised. With `make dev` running, open `http://localhost:8443/?focus=CDM%2Fm_DM_INFOHUB_BIZLINK%2F_ETL_m_DM_INFOHUB_BIZLINK.json` in one browser tab (the `⤤` button in the recipe header produces exactly this URL) and `http://localhost:8443/` on the same recipe in another. Edit and save in one tab, then try to save the now-stale edits in the other and confirm the 409 surfaces as a save error in the UI. There is no hash routing — focus mode is a plain `?focus=` query parameter read in `App.tsx`.
 
 ## 11. ADRs
 
