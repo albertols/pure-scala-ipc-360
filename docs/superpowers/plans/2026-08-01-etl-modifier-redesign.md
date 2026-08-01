@@ -2077,7 +2077,7 @@ real file, and the PredefinedFunctions copy is size-checked against RecipeConsta
 - Consumes: nothing.
 - Produces: nothing — behavior-only fix. Tasks 8+ build on a canvas that is actually visible.
 
-- [ ] **Step 1: Write the failing regression test**
+- [x] **Step 1: Write the failing regression test**
 
 Append inside the existing top-level `describe` in `ETLModifier.test.tsx`:
 
@@ -2099,12 +2099,12 @@ Append inside the existing top-level `describe` in `ETLModifier.test.tsx`:
   })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `cd frontend && pnpm test src/components/tab2/ETLModifier.test.tsx`
 Expected: FAIL — `expect(host.style.display).toBe('flex')` receives `''`.
 
-- [ ] **Step 3: Apply the one-line fix**
+- [x] **Step 3: Apply the one-line fix**
 
 In `ETLModifier.tsx:926`, change:
 
@@ -2121,12 +2121,12 @@ to:
               <div style={{ height: 420, display: 'flex', border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `cd frontend && pnpm test src/components/tab2/ETLModifier.test.tsx`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab2/ETLModifier.tsx \

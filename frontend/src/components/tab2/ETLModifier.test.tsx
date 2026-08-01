@@ -605,4 +605,20 @@ describe('ETLModifier — expression registry (Task 11)', () => {
     expect(await screen.findByDisplayValue('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
   })
+
+  it('mounts the canvas inside a flex container so EtlCanvas flex:1 resolves to a real height', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    const nodeText = await screen.findByText('T', { selector: 'text' })
+
+    // Walk up from the rendered node to the fixed-height canvas host and assert every
+    // ancestor between them participates in flex layout. EtlCanvas's root is `flex: 1`
+    // with absolutely-positioned children, so a non-flex parent collapses it to 0px and
+    // the canvas renders invisibly (the original bug: "Canvas (2 nodes)" over an empty box).
+    const svg = nodeText.closest('svg')!
+    const canvasRoot = svg.parentElement!            // EtlCanvas root div (flex: 1)
+    const host = canvasRoot.parentElement!           // the height:420 wrapper
+    expect(host.style.height).toBe('420px')
+    expect(host.style.display).toBe('flex')
+  })
 })

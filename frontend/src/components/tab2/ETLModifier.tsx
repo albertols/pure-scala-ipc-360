@@ -923,7 +923,10 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
             {/* canvas */}
             <section>
               <SectionHeader icon="⇄" label={`Canvas (${graph.nodes.length} nodes)`} color="#818cf8" />
-              <div style={{ height: 420, border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
+              {/* display:flex is load-bearing: EtlCanvas's root is `flex: 1` with every
+                  child absolutely positioned, so a block parent collapses it to 0px and
+                  the canvas renders invisibly. */}
+              <div style={{ height: 420, display: 'flex', border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
                 <EtlCanvas
                   nodes={graph.nodes}
                   connections={graph.connections}
