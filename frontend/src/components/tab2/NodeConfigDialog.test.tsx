@@ -62,6 +62,22 @@ const MINI: RecipeJson = {
   table: { targetTableNames: ['T'], sourceTableNames: ['S'] },
 }
 
+// A draft carrying an upstream step target with real, named fields — used for
+// the "map fields" tests (fix round 1) so a step-target-derived field list
+// has something to offer.
+const DRAFT_WITH_FIELDS: RecipeJson = {
+  steps: [
+    {
+      target: {
+        name: 'SQ1', type: 'sourceQualifier',
+        fields: [{ name: 'A', dataType: 'String' }, { name: 'B', dataType: 'Long' }],
+      },
+      sources: [],
+    },
+  ],
+  table: { targetTableNames: [], sourceTableNames: [] },
+}
+
 let lastValidateBody: RecipeJson | null = null
 let validateResponse: { valid: boolean; errors: { path: string; message: string }[]; warnings: { path: string; message: string }[]; checks: unknown[] } = {
   valid: true, errors: [], warnings: [], checks: [],
@@ -101,6 +117,15 @@ function renderDialog(overrides: {
   return { ...utils, onCancel, onInsert }
 }
 
+/** Selects 'SQ1' as a "fed by" candidate and maps its field 'A' — the minimal
+ * "would otherwise be valid" baseline several gate-isolation tests build on
+ * top of (name-gate tests still need this so the NEW mapped-field gate,
+ * fix round 1, doesn't confound the condition each test means to isolate). */
+function selectSQ1AndMapFieldA() {
+  fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+  fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+}
+
 describe('NodeConfigDialog — schema-driven properties', () => {
   it('renders a toggle widget for sourceQualifier.selectDistinct (a required key)', () => {
     renderDialog({ kind: 'sourceQualifier' })
@@ -116,24 +141,27 @@ describe('NodeConfigDialog — schema-driven properties', () => {
 })
 
 describe('NodeConfigDialog — name gate', () => {
-  // Both tests wait for the debounced preview validate to SETTLE (the mock
-  // default is zero errors) before asserting — otherwise `isValidating`
-  // alone would keep Insert disabled during the debounce window regardless
-  // of the name, and the assertion would pass for the wrong reason.
+  // Both tests select a fed-by node AND map one of its fields (the fix-round-1
+  // gate, see below) before asserting, then wait for the debounced preview
+  // validate to SETTLE (the mock default is zero errors) — otherwise EITHER
+  // `isValidating` OR the empty-mapped-fields gate would keep Insert disabled
+  // regardless of the name, and the assertion would pass for the wrong reason.
   it('disables Insert while the name is empty', async () => {
-    renderDialog({ kind: 'filter' })
+    renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
+    selectSQ1AndMapFieldA()
     await waitFor(() => expect(lastValidateBody).not.toBeNull(), { timeout: 2000 })
 
     expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
   })
 
   it('disables Insert with a visible reason when the name duplicates an existing node', async () => {
-    renderDialog({ kind: 'filter' })
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'T' } })
+    renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'SQ1' } })
+    selectSQ1AndMapFieldA()
     await waitFor(() => expect(lastValidateBody).not.toBeNull(), { timeout: 2000 })
 
     expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
-    expect(screen.getByText(/"T" is already used in this recipe/)).toBeInTheDocument()
+    expect(screen.getByText(/"SQ1" is already used in this recipe/)).toBeInTheDocument()
   })
 })
 
@@ -160,27 +188,98 @@ describe('NodeConfigDialog — connection picker', () => {
   })
 })
 
-describe('NodeConfigDialog — validation gate', () => {
-  it('keeps Insert disabled while the previewed draft has validation errors', async () => {
-    validateResponse = {
-      valid: false,
-      errors: [{ path: '$.steps[1]', message: 'orphan step' }],
-      warnings: [],
-      checks: [{ ruleId: 'IPC-FLW-003', severity: 'error', status: 'fail', path: '$.steps[1]', message: 'orphan step' }],
-    }
-    renderDialog({ kind: 'filter' })
+// Fix round 1 (task-10-report.md): IPC-FLW-003 ("no orphan step") reads
+// outbound dot-refs off FIELD FORMULAS, not sources[] membership. A
+// `fields: []` step always failed it regardless of connections, so Insert
+// could never enable — the reviewer proved this with a JUnit probe against
+// the real IpcRuleEngine, for both a zero-connection AND a fully-connected
+// step. These tests cover the honest replacement: mapping at least one field
+// from a selected "fed by" node is what makes a step genuinely connected.
+describe('NodeConfigDialog — map fields', () => {
+  it("offers a step-target upstream's own fields with dataType; checking one adds it to the preview's fields[]", () => {
+    renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+
+    expect(screen.getByText('A')).toBeInTheDocument()
+    expect(screen.getByText('(String)')).toBeInTheDocument()
+    expect(screen.getByText('B')).toBeInTheDocument()
+    expect(screen.getByText('(Long)')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+
+    expect(screen.getByText(/"source": "SQ1\.A"/)).toBeInTheDocument()
+  })
+
+  it('mapped field name and dataType default to the upstream field\'s own and stay editable', () => {
+    renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+
+    expect(screen.getByDisplayValue('A')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('A mapped field name'), { target: { value: 'A_RENAMED' } })
+
+    expect(screen.getByText(/"name": "A_RENAMED"/)).toBeInTheDocument()
+    expect(screen.getByText(/"source": "SQ1\.A"/)).toBeInTheDocument()
+  })
+
+  it('an upstream step target with no fields yet shows an honest empty state, not a fabricated field', () => {
+    renderDialog({ kind: 'sourceQualifier', draft: MINI })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'T — table' }))
+
+    expect(screen.getByText('No fields on this node yet.')).toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  })
+
+  it('an upstream with no step target (a bare table source) offers free-text entry, never a fabricated name', () => {
+    renderDialog({ kind: 'sourceQualifier', draft: MINI })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'S — table' }))
+
+    // No field list exists to enumerate — nothing is invented.
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    const addInput = screen.getByPlaceholderText('add…')
+    fireEvent.change(addInput, { target: { value: 'CUSTOM_COL' } })
+    fireEvent.click(screen.getByText('+ add'))
+
+    expect(screen.getByText(/"source": "S\.CUSTOM_COL"/)).toBeInTheDocument()
+  })
+
+  it('keeps Insert disabled when no field is mapped, even with a valid unique name and a legal connection', async () => {
+    validateResponse = { valid: true, errors: [], warnings: [], checks: [] }
+    renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'FLT2' } })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
 
     await waitFor(() => expect(lastValidateBody).not.toBeNull(), { timeout: 2000 })
+
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+  })
+})
+
+describe('NodeConfigDialog — validation gate', () => {
+  it('keeps Insert disabled on a realistic IPC-FLW-003 orphan-step error even though the name, connection and a mapped field are otherwise satisfied', async () => {
+    validateResponse = {
+      valid: false,
+      errors: [{ path: '$.steps[1]', message: 'step "FLT2" has no outbound reference' }],
+      warnings: [],
+      checks: [{
+        ruleId: 'IPC-FLW-003', severity: 'error', status: 'fail', path: '$.steps[1]',
+        message: 'step "FLT2" has no outbound reference',
+      }],
+    }
+    renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'FLT2' } })
+    selectSQ1AndMapFieldA()
+
     await waitFor(() => expect(screen.getByText(/1 error/)).toBeInTheDocument(), { timeout: 2000 })
 
     expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
   })
 
-  it('onInsert fires with a draft containing the fully-formed step once the preview validates clean', async () => {
+  it('onInsert fires with a draft containing the fully-formed, field-mapped step once the preview validates clean', async () => {
     validateResponse = { valid: true, errors: [], warnings: [], checks: [] }
-    const { onInsert, onCancel } = renderDialog({ kind: 'filter' })
+    const { onInsert, onCancel } = renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'FLT2' } })
+    selectSQ1AndMapFieldA()
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
@@ -189,7 +288,8 @@ describe('NodeConfigDialog — validation gate', () => {
     const [next] = onInsert.mock.calls[0] as [RecipeJson]
     const added = next.steps!.find(s => s.target?.name === 'FLT2')!
     expect(added.target!.type).toBe('filter')
-    expect(added.target!.fields).toEqual([])
+    expect(added.target!.fields).toEqual([{ name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } }])
+    expect(added.sources).toEqual([{ name: 'SQ1', type: 'sourceQualifier' }])
     expect(onCancel).not.toHaveBeenCalled()
   })
 })

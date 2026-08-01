@@ -212,23 +212,55 @@ describe('addSourceTable', () => {
 })
 
 describe('buildStep / insertConfiguredStep', () => {
-  it('buildStep assembles target {name, type: kind, ...props, fields: []} and sources[] from fedBy', () => {
+  it('buildStep assembles target {name, type: kind, ...props, fields} and sources[] from fedBy', () => {
     const step = buildStep(
       'filter',
       'FLT2',
       { filterCondition: { source: 'S.A' } },
       [],
       [{ name: 'SQ1', kind: 'sourceQualifier' }],
+      [],
     )
     expect(step.target).toEqual({
-      name: 'FLT2', type: 'filter', fields: [], filterCondition: { source: 'S.A' },
+      name: 'FLT2', type: 'filter', filterCondition: { source: 'S.A' }, fields: [],
     })
     expect(step.sources).toEqual([{ name: 'SQ1', type: 'sourceQualifier' }])
   })
 
+  // Fix round 1: IPC-FLW-003 ("no orphan step") reads outbound dot-refs off
+  // FIELD FORMULAS, not sources[] membership — a fieldless step always failed
+  // it regardless of connections, so Insert could never enable. mappedFields
+  // is what makes a step genuinely connected.
+  it('mappedFields become real {name, dataType, transformation: {source}} field entries', () => {
+    const step = buildStep(
+      'filter',
+      'FLT2',
+      {},
+      [],
+      [],
+      [{ name: 'A', dataType: 'String', source: 'SQ1.A' }, { name: 'B_RENAMED', dataType: 'Long', source: 'SQ1.B' }],
+    )
+    expect(step.target!.fields).toEqual([
+      { name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } },
+      { name: 'B_RENAMED', dataType: 'Long', transformation: { source: 'SQ1.B' } },
+    ])
+  })
+
+  it('fields is spread in AFTER props, so a props.fields key can never silently override it', () => {
+    const step = buildStep(
+      'filter',
+      'FLT2',
+      { fields: 'should never survive' },
+      [],
+      [],
+      [{ name: 'A', dataType: 'String', source: 'SQ1.A' }],
+    )
+    expect(step.target!.fields).toEqual([{ name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } }])
+  })
+
   it('insertConfiguredStep appends the step immutably and never mutates its inputs', () => {
     const before = JSON.stringify(MINI)
-    const step = buildStep('filter', 'FLT2', {}, [], [{ name: 'T', kind: 'table' }])
+    const step = buildStep('filter', 'FLT2', {}, [], [{ name: 'T', kind: 'table' }], [{ name: 'X', dataType: 'String', source: 'T.X' }])
     const stepBefore = JSON.stringify(step)
 
     const out = insertConfiguredStep(MINI, step)
@@ -237,23 +269,26 @@ describe('buildStep / insertConfiguredStep', () => {
     expect(JSON.stringify(MINI)).toBe(before)
     expect(JSON.stringify(step)).toBe(stepBefore)
     expect(out.steps).toHaveLength(2)
-    expect(out.steps![1]).toEqual({ target: { name: 'FLT2', type: 'filter', fields: [] }, sources: [{ name: 'T', type: 'table' }] })
+    expect(out.steps![1]).toEqual({
+      target: { name: 'FLT2', type: 'filter', fields: [{ name: 'X', dataType: 'String', transformation: { source: 'T.X' } }] },
+      sources: [{ name: 'T', type: 'table' }],
+    })
   })
 
   it('appends the new name to table.targetTableNames when kind is table', () => {
-    const step = buildStep('table', 'NEWTGT', {}, [], [])
+    const step = buildStep('table', 'NEWTGT', {}, [], [], [])
     const out = insertConfiguredStep(MINI, step)
     expect(out.table!.targetTableNames).toContain('NEWTGT')
   })
 
   it('a non-table kind does not touch table.targetTableNames', () => {
-    const step = buildStep('filter', 'FLT2', {}, [], [])
+    const step = buildStep('filter', 'FLT2', {}, [], [], [])
     const out = insertConfiguredStep(MINI, step)
     expect(out.table!.targetTableNames).toEqual(['T'])
   })
 
   it('adds this node as a sources[] entry of every consuming step named in feeds', () => {
-    const step = buildStep('filter', 'FLT2', {}, ['T'], [])
+    const step = buildStep('filter', 'FLT2', {}, ['T'], [], [])
     const out = insertConfiguredStep(MINI, step)
     const consumer = out.steps!.find(s => s.target?.name === 'T')!
     expect(consumer.sources).toContainEqual({ name: 'FLT2', type: 'filter' })
@@ -262,7 +297,7 @@ describe('buildStep / insertConfiguredStep', () => {
   })
 
   it('a feeds name that does not resolve to a step target is a safe no-op', () => {
-    const step = buildStep('filter', 'FLT2', {}, ['GHOST'], [])
+    const step = buildStep('filter', 'FLT2', {}, ['GHOST'], [], [])
     const out = insertConfiguredStep(MINI, step)
     expect(out.steps).toHaveLength(2)
     expect(out.steps!.some(s => s.target?.name === 'GHOST')).toBe(false)

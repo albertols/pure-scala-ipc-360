@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { RecipeJson, RecipeTransformationJson } from '../../api/recipeAdapter'
+import { fieldsOf } from '../../api/recipeAdapter'
 import type { IpcConnections, IpcKeySpec } from '../../api/queries'
 import { useValidation } from '../../api/ipcRules'
 import { buildStep, insertConfiguredStep } from '../../api/recipeEdits'
-import type { RecipeNodeRef } from '../../api/recipeEdits'
+import type { MappedField, RecipeNodeRef } from '../../api/recipeEdits'
 import { ghostButtonStyle } from './SaveBar'
 import {
   FormulaWidget,
@@ -114,6 +115,73 @@ function toggleName(list: string[], name: string): string[] {
   return list.includes(name) ? list.filter(n => n !== name) : [...list, name]
 }
 
+function toggleInSet(set: Set<string>, item: string): Set<string> {
+  const next = new Set(set)
+  if (!next.delete(item)) next.add(item)
+  return next
+}
+
+/** `upstream.field` — the row key `included`/`overrides` are keyed by, and
+ * (unaliased) exactly the dot-ref the resulting `MappedField.source` carries. */
+function fieldRowKey(upstream: string, field: string): string {
+  return `${upstream}.${field}`
+}
+
+/** The step in `draft` whose target is named `name`, if any — shared by
+ * `mappedFieldsFrom` (what a mapping is BUILT from) and the dialog's own
+ * render (what UI to SHOW), so the two can never disagree about whether a
+ * given "fed by" upstream is a step target or a bare source occurrence. */
+function findStepTarget(draft: RecipeJson, name: string) {
+  return draft.steps?.find(s => s.target?.name === name)
+}
+
+/** Fix round 1 (task-10-report.md): `IPC-FLW-003` ("no orphan step") reads
+ * outbound dot-refs off FIELD FORMULAS, not `sources[]` membership — a
+ * `fields: []` step always failed it regardless of connections, so Insert
+ * could never enable. This is the honest replacement: field mappings drawn
+ * from each SELECTED "fed by" node.
+ *
+ * - Upstream resolves to a step target (has `steps[].target.name === name`,
+ *   even one with an empty `fields[]` today) — offer exactly `fieldsOf` that
+ *   target, each opt-in via `included`.
+ * - Upstream has NO step target (a bare `sources[]` occurrence — structurally
+ *   a `table` source in the real corpus, since every other kind's source
+ *   occurrence shares a name with its own step) — the recipe JSON carries no
+ *   field list for it at all, so free text is the only honest option; never
+ *   fabricate names.
+ */
+function mappedFieldsFrom(
+  fedBy: string[],
+  draft: RecipeJson,
+  included: Set<string>,
+  overrides: Record<string, { name?: string; dataType?: string }>,
+  freeTextNames: Record<string, string[]>,
+): MappedField[] {
+  const out: MappedField[] = []
+  for (const upstream of fedBy) {
+    const upstreamStep = findStepTarget(draft, upstream)
+    if (upstreamStep) {
+      for (const f of fieldsOf(upstreamStep.target)) {
+        if (!f.name) continue
+        const key = fieldRowKey(upstream, f.name)
+        if (!included.has(key)) continue
+        out.push({
+          name: overrides[key]?.name ?? f.name,
+          dataType: overrides[key]?.dataType ?? (f.dataType || 'String'),
+          source: key,
+        })
+      }
+    } else {
+      for (const f of freeTextNames[upstream] ?? []) {
+        if (f.trim() === '') continue
+        const key = fieldRowKey(upstream, f)
+        out.push({ name: f, dataType: overrides[key]?.dataType ?? 'String', source: key })
+      }
+    }
+  }
+  return out
+}
+
 export function NodeConfigDialog({
   kind,
   draft,
@@ -146,8 +214,14 @@ export function NodeConfigDialog({
   const [props, setProps] = useState<Record<string, unknown>>(() => defaultProps(propertySpecs))
   const [fedBy, setFedBy] = useState<string[]>([])
   const [feeds, setFeeds] = useState<string[]>([])
+  // Map-fields state (fix round 1) — see mappedFieldsFrom's doc comment.
+  const [includedFields, setIncludedFields] = useState<Set<string>>(new Set())
+  const [fieldOverrides, setFieldOverrides] = useState<Record<string, { name?: string; dataType?: string }>>({})
+  const [freeTextFields, setFreeTextFields] = useState<Record<string, string[]>>({})
 
   const commitProp = (key: string, value: unknown) => setProps(prev => ({ ...prev, [key]: value }))
+  const setFieldOverride = (key: string, patch: { name?: string; dataType?: string }) =>
+    setFieldOverrides(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }))
 
   const nodes = useMemo(() => draftNodes(draft), [draft])
   const targetNames = useMemo(() => stepTargetNames(draft), [draft])
@@ -168,14 +242,20 @@ export function NodeConfigDialog({
     [fedBy, nodes],
   )
 
+  const mappedFields = useMemo(
+    () => mappedFieldsFrom(fedBy, draft, includedFields, fieldOverrides, freeTextFields),
+    [fedBy, draft, includedFields, fieldOverrides, freeTextFields],
+  )
+  const hasMappedField = mappedFields.length > 0
+
   const step = useMemo(
-    () => buildStep(kind, trimmedName, props, feeds, fedByRefs),
-    [kind, trimmedName, props, feeds, fedByRefs],
+    () => buildStep(kind, trimmedName, props, feeds, fedByRefs, mappedFields),
+    [kind, trimmedName, props, feeds, fedByRefs, mappedFields],
   )
   const previewDraft = useMemo(() => insertConfiguredStep(draft, step), [draft, step])
   const validation = useValidation(previewDraft)
 
-  const canInsert = !nameEmpty && !nameDuplicate && requiredPresent
+  const canInsert = !nameEmpty && !nameDuplicate && requiredPresent && hasMappedField
     && !validation.isValidating && !validation.failed && validation.errors.length === 0
 
   const fedByCandidates = nodes.map(n => ({ ...n, legal: mayConnect(connections, n.kind, kind) }))
@@ -296,6 +376,74 @@ export function NodeConfigDialog({
             >{`${c.name} — ${c.kind}`}</button>
           ))}
         </div>
+
+        {fedBy.length > 0 && (
+          <div data-testid="node-config-fieldmap">
+            <div style={sectionTitleStyle}>Map fields</div>
+            <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>
+              At least one mapped field is required — an unmapped step moves no data and
+              cannot validate.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {fedBy.map(upstream => {
+                const upstreamStep = findStepTarget(draft, upstream)
+                const upstreamFields = upstreamStep ? fieldsOf(upstreamStep.target) : []
+                return (
+                  <div key={upstream}>
+                    <div style={{ fontSize: 10, color: '#7b88aa', marginBottom: 4 }}>{`From ${upstream}`}</div>
+                    {upstreamStep ? (
+                      upstreamFields.length === 0 ? (
+                        <div style={{ fontSize: 10, color: '#4a5570' }}>No fields on this node yet.</div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {upstreamFields.map(f => {
+                            if (!f.name) return null
+                            const key = fieldRowKey(upstream, f.name)
+                            const isIncluded = includedFields.has(key)
+                            return (
+                              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <input
+                                  type="checkbox"
+                                  aria-label={f.name}
+                                  checked={isIncluded}
+                                  onChange={() => setIncludedFields(prev => toggleInSet(prev, key))}
+                                />
+                                <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}>{f.name}</span>
+                                <span style={{ fontSize: 9, color: '#4a5570' }}>{`(${f.dataType || 'String'})`}</span>
+                                {isIncluded && (
+                                  <>
+                                    <input
+                                      aria-label={`${f.name} mapped field name`}
+                                      value={fieldOverrides[key]?.name ?? f.name}
+                                      onChange={e => setFieldOverride(key, { name: e.target.value })}
+                                      style={{ ...dialogInputStyle, width: 140 }}
+                                    />
+                                    <input
+                                      aria-label={`${f.name} mapped field dataType`}
+                                      value={fieldOverrides[key]?.dataType ?? (f.dataType || 'String')}
+                                      onChange={e => setFieldOverride(key, { dataType: e.target.value })}
+                                      style={{ ...dialogInputStyle, width: 100, fontFamily: 'JetBrains Mono, monospace' }}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    ) : (
+                      <StringListWidget
+                        label=""
+                        value={freeTextFields[upstream] ?? []}
+                        onChange={v => setFreeTextFields(prev => ({ ...prev, [upstream]: v }))}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <div>
           <div style={sectionTitleStyle}>Preview</div>

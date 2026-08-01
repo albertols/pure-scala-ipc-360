@@ -308,10 +308,40 @@ export interface RecipeNodeRef {
   kind: string
 }
 
+/** One field mapping the dialog's "map fields" section produces: `source` is
+ * the upstream dot-ref (`"UPSTREAM.FIELD"`), `name`/`dataType` describe the
+ * NEW step's own field (defaults to the upstream field's own name/dataType,
+ * user-editable — see `NodeConfigDialog`).
+ *
+ * (Fix round 1, task-10-report.md: `IPC-FLW-003` ("no orphan step") measures
+ * orphan-ness by dot-refs in field FORMULAS, not by `sources[]` membership —
+ * a `fields: []` step can carry no outbound dot-ref no matter how many
+ * `sources[]` entries it declares, so it always failed that check and Insert
+ * could never enable. At least one real field mapping is what makes a new
+ * step genuinely connected.) */
+export interface MappedField {
+  name: string
+  dataType: string
+  source: string
+}
+
+function mappedFieldToRecipeField(m: MappedField): RecipeFieldJson {
+  return { name: m.name, dataType: m.dataType, transformation: { source: m.source } }
+}
+
 /**
  * Builds the step a freshly-configured palette node inserts as:
- * `{target: {name, type: kind, ...props, fields: []}, sources: [...]}` — the
- * `sources[]` array is built from `fedBy`, each entry `{name, type: <that
+ * `{target: {name, type: kind, ...props, fields: [...]}, sources: [...]}` —
+ * `fields[]` is `mappedFields` rendered as real
+ * `{name, dataType, transformation: {source: "UPSTREAM.FIELD"}}` entries
+ * (never `[]` — see `MappedField`'s doc comment for why a fieldless step
+ * cannot pass validation regardless of its `sources[]`). `fields` is spread
+ * in AFTER `...props` so it always wins even if `props` happened to carry a
+ * `fields` key (unreachable today — the dialog filters out the
+ * `fieldTable`-widget key before building `props` — but the ordering itself
+ * should not depend on that).
+ *
+ * The `sources[]` array is built from `fedBy`, each entry `{name, type: <that
  * node's own kind>}` (a `sources[]` entry always records the UPSTREAM node's
  * kind, never this step's own).
  *
@@ -331,8 +361,11 @@ export function buildStep(
   props: Record<string, unknown>,
   feeds: string[],
   fedBy: RecipeNodeRef[],
+  mappedFields: MappedField[],
 ): RecipeStepJson {
-  const target = { name, type: kind, fields: [], ...props } as unknown as RecipeTargetJson
+  const target = {
+    name, type: kind, ...props, fields: mappedFields.map(mappedFieldToRecipeField),
+  } as unknown as RecipeTargetJson
   const sources: RecipeSourceJson[] = fedBy.map(f => ({ name: f.name, type: f.kind }))
   const step: RecipeStepJson = { target, sources }
   // Transient carrier consumed by insertConfiguredStep, see the doc comment above —
