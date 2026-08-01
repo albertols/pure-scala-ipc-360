@@ -1,5 +1,6 @@
 package io.pure360.etl360.api;
 
+import io.pure360.etl360.api.dto.IpcConnectionDto;
 import io.pure360.etl360.api.dto.IpcKeySpecDto;
 import io.pure360.etl360.api.dto.IpcRuleMetaDto;
 import io.pure360.etl360.api.dto.IpcRulesDto;
@@ -31,6 +32,9 @@ public class IpcController {
         catalog.keySchema().forEach((kind, specs) -> schema.put(kind, specs.stream()
             .map(s -> new IpcKeySpecDto(s.key(), s.parserType(), s.required(), s.widget(), s.ruleId()))
             .toList()));
-        return new IpcRulesDto(rules, catalog.typeAliases(), catalog.keyAliases(), schema);
+        Map<String, IpcConnectionDto> connections = new LinkedHashMap<>();
+        catalog.connections().forEach((kind, rule) -> connections.put(kind, new IpcConnectionDto(
+            rule.sourceKind(), rule.mayFeed(), rule.exactly(), rule.namedInputs(), rule.active())));
+        return new IpcRulesDto(rules, catalog.typeAliases(), catalog.keyAliases(), schema, connections);
     }
 }

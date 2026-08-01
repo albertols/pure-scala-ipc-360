@@ -931,23 +931,23 @@ all 86 recipes and expecting **zero `block` verdicts**.
   `IpcConnectionDto(String sourceKind, List<String> mayFeed, Integer exactly, List<String> namedInputs, Boolean active)`.
   Frontend type alias `IpcConnections = IpcRules['connections']`.
 
-- [ ] **Step 1: Extend the DTO and controller, with a MockMvc assertion**
+- [x] **Step 1: Extend the DTO and controller, with a MockMvc assertion**
 
 Add a test to the existing IPC controller test asserting `GET /api/ipc/rules` returns a
 `connections` object containing `sourceQualifier.mayFeed` as a non-empty array.
 
-- [ ] **Step 2: Run to verify it fails, then implement**
+- [x] **Step 2: Run to verify it fails, then implement**
 
 Run: `mvn -am -pl backend test -Dtest=IpcControllerTest -DfailIfNoTests=false` → FAIL, then map
 `catalog.connections()` into the DTO and re-run → PASS.
 
-- [ ] **Step 3: Regenerate the frontend types**
+- [x] **Step 3: Regenerate the frontend types**
 
 `mvn -am -pl backend install -DskipTests`, start `mvn -pl backend spring-boot:run` in the
 background, poll `http://localhost:8080/api/health`, run `make generate-api`, stop the server.
 Never hand-edit `types.gen.ts`.
 
-- [ ] **Step 4: Run all gates and commit**
+- [x] **Step 4: Run all gates and commit**
 
 Run: `mvn -q -am -pl backend clean test && cd frontend && pnpm test && npx tsc --noEmit`
 

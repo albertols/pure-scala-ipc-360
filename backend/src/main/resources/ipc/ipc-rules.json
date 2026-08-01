@@ -131,48 +131,59 @@
   },
   "connections": {
     "table": {
-      "mayFeed": ["sourceQualifier", "table", "normalizer"]
+      "mayFeed": ["sourceQualifier", "table", "normalizer"],
+      "active": null
     },
     "sourceQualifier": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
     },
     "union": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
     },
     "joiner": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
     },
     "router": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
     },
     "filter": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
     },
     "aggregator": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
     },
     "normalizer": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
     },
     "java": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": null
     },
     "storedProcedure": {
       "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
-                  "router", "normalizer", "java", "storedProcedure"]
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": false
     },
     "joinerInput": {
       "mayFeed": [],
       "exactly": 2,
-      "namedInputs": ["MASTER", "DETAIL"]
+      "namedInputs": ["MASTER", "DETAIL"],
+      "active": null
     }
   },
   "rules": [

@@ -72,6 +72,11 @@ export type IpcRules = components['schemas']['IpcRulesDto']
 export type IpcRuleMeta = components['schemas']['IpcRuleMetaDto']
 export type IpcKeySpec = components['schemas']['IpcKeySpecDto']
 export type IpcCheck = components['schemas']['IpcCheckDto']
+// Task 9: the connection adjacency matrix Task 8 authored, served through GET /api/ipc/rules
+// so the frontend holds no second copy of the recipe grammar — the same principle keySchema
+// follows. `active` classifies the kind's IPC active/passive-transformation status (nullable —
+// null means "cannot be determined") for the fan-in rule (spec §6.2).
+export type IpcConnections = IpcRules['connections']
 
 export const useIpcRules = () =>
   useQuery({ queryKey: ['ipcRules'], queryFn: () => apiGet<IpcRules>('/ipc/rules'), staleTime: Infinity })

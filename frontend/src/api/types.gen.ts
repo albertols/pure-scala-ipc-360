@@ -654,6 +654,14 @@ export interface components {
             text?: string;
             children?: components["schemas"]["XmlNodeDto"][];
         };
+        IpcConnectionDto: {
+            sourceKind?: string;
+            mayFeed?: string[];
+            /** Format: int32 */
+            exactly?: number;
+            namedInputs?: string[];
+            active?: boolean;
+        };
         IpcKeySpecDto: {
             key?: string;
             parserType?: string;
@@ -679,6 +687,9 @@ export interface components {
             };
             keySchema?: {
                 [key: string]: components["schemas"]["IpcKeySpecDto"][];
+            };
+            connections?: {
+                [key: string]: components["schemas"]["IpcConnectionDto"];
             };
         };
         ExpressionEntryDto: {

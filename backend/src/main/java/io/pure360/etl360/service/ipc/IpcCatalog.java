@@ -67,8 +67,11 @@ public class IpcCatalog {
                 List<String> namedInputs = new ArrayList<>();
                 c.path("namedInputs").forEach(n -> namedInputs.add(n.asText()));
                 Integer exactly = c.has("exactly") ? c.path("exactly").asInt() : null;
+                JsonNode activeNode = c.path("active");
+                Boolean active = activeNode.isMissingNode() || activeNode.isNull()
+                    ? null : activeNode.asBoolean();
                 connections.put(e.getKey(), new IpcConnectionRule(
-                    e.getKey(), List.copyOf(mayFeed), exactly, List.copyOf(namedInputs)));
+                    e.getKey(), List.copyOf(mayFeed), exactly, List.copyOf(namedInputs), active));
             });
         } catch (IOException e) {
             throw new UncheckedIOException(e);
