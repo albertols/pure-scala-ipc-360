@@ -689,7 +689,7 @@ from `sourceTableNames`". Task 6 makes sub-pattern (1) structurally resolvable. 
 at `warning` with stale evidence would be exactly the drift ADR-0010's procedure exists to
 prevent.
 
-- [ ] **Step 1: Re-derive the true violation set**
+- [x] **Step 1: Re-derive the true violation set**
 
 Write a temporary audit (deleted before commit) that runs `IpcRuleEngine` over all 86 corpus
 recipes and collects `IPC-REF-003` failures into a list — **counting from the list, never from an
@@ -698,7 +698,7 @@ evidence once already.
 
 Record the count and the per-sub-pattern breakdown in the task report.
 
-- [ ] **Step 2: Apply ADR-0010's procedure**
+- [x] **Step 2: Apply ADR-0010's procedure**
 
 Categorise the remaining violations structurally. If the residue is zero, restore
 `severity: "error"` and delete `corpusEvidence`. If a residue remains, keep `warning` and rewrite
@@ -710,17 +710,17 @@ recipes; if `IPC-REF-003` still fires on union/joiner names it is because those 
 do not resolve against step targets, which is a fact about the JSON, not about the canvas. Say so
 plainly in the evidence if that is the outcome.
 
-- [ ] **Step 3: Mirror into the wiki**
+- [x] **Step 3: Mirror into the wiki**
 
 Copy the corrected `corpusEvidence` verbatim into `docs/ipc/rules.md`'s `IPC-REF-003` section.
 The three-way parity test asserts ids match, not evidence text — so verify this by hand.
 
-- [ ] **Step 4: Run the gates**
+- [x] **Step 4: Run the gates**
 
 Run: `mvn -q -am -pl backend clean test`
 Expected: PASS, `everyCorpusRecipeIsErrorFree` still green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/resources/ipc/ipc-rules.json docs/ipc/rules.md \
