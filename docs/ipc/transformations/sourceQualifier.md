@@ -37,9 +37,11 @@ required boolean — `IPC-TYP-SOURCEQUALIFIER-001`, `rules.md#ipc-typ-sourcequal
 ## Recipe JSON shape
 
 Verbatim, both directions from the same recipe — the target
-(`CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json:561-573`) and, in a different
-step of the same file, the source-side reference to it (`:554-557`). `type` survives
-here under the anonymizer token `BERYLFALLS` (`README.md`'s alias table):
+(`CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json:561-573`, `fields[]` truncated
+to its first of many entries — the array and the enclosing `target` object both
+continue past line 573 in the real file) and, in a different step of the same file, the
+full `sources[]` entry that references it (`:553-558`). `type` survives here under the
+anonymizer token `BERYLFALLS` (`README.md`'s alias table):
 
 ```json
 "target" : {
@@ -52,13 +54,16 @@ here under the anonymizer token `BERYLFALLS` (`README.md`'s alias table):
       "name" : "FCH_DATAENTRY",
       "dataType" : "String",
       "transformation" : { "source" : "FF_BIZLINK.FCH_DATAENTRY" }
-    }
+    },
+    "…"
   ]
 }
 ```
 
 ```json
-"sources" : [ { "name" : "SQ_ff_BIZLINK", "type" : "BERYLFALLS" } ]
+"sources" : [
+  { "name" : "SQ_ff_BIZLINK", "type" : "BERYLFALLS" }
+]
 ```
 
 ## Corpus occurrences

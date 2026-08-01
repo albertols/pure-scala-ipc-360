@@ -31,7 +31,8 @@ string — `IPC-TYP-JAVA-001`, `rules.md#ipc-typ-java-001`).
 ## Recipe JSON shape
 
 Verbatim (code elided for length; the string is one escaped multi-line Java snippet),
-`ETL/m_DWH_E_MAPLEGROVE_CALLHUB_MAPLEBEND_OAKRIVER/_ETL_m_DWH_E_MAPLEGROVE_CALLHUB_MAPLEBEND_OAKRIVER.json:738-743`:
+`ETL/m_DWH_E_MAPLEGROVE_CALLHUB_MAPLEBEND_OAKRIVER/_ETL_m_DWH_E_MAPLEGROVE_CALLHUB_MAPLEBEND_OAKRIVER.json:739-743`
+(`fields[]` elided — the object continues past line 743 in the real file):
 
 ```json
 "target" : {

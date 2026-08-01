@@ -38,7 +38,9 @@ JSON keys: `name`, `type`, `fields[]` (target only — `fields[].name`, `fields[
 ## Recipe JSON shape
 
 A `table` target with `primaryKeys`, one call-tree field and one dot-ref field —
-`ODS/CLIENTMGR_ENGAGE_MEMBER_10049_2/m_ODS_ACT_GUIDE_AWAY_DAYS/_ETL_m_ODS_ACT_GUIDE_AWAY_DAYS.json:4-30`:
+`ODS/CLIENTMGR_ENGAGE_MEMBER_10049_2/m_ODS_ACT_GUIDE_AWAY_DAYS/_ETL_m_ODS_ACT_GUIDE_AWAY_DAYS.json:4-30`,
+truncated to the first two of many `fields[]` entries — the array and the enclosing
+`target` object both continue past line 30 in the real file:
 
 ```json
 "target" : {
@@ -61,16 +63,20 @@ A `table` target with `primaryKeys`, one call-tree field and one dot-ref field �
         "name" : "EXP_MAPLEVALE_VARCHAR2_NOT_NULL",
         "parameters" : [ { "source" : "SQ_STG_ACT_GUIDE_AWAY_DAYS.GUIDE_ID" } ]
       }
-    }
+    },
+    "…"
   ]
 }
 ```
 
-A `table` source, no field list — the same file's `sources[]` entry for that step's
-upstream table:
+A `table` source, no field list — the same file's full `sources[]` entry for that
+step's upstream table (`:104-109`; `type` survives here under the anonymizer token
+`BERYLFALLS` — see `README.md`'s alias table, and `sourceQualifier.md` for this kind):
 
 ```json
-"sources" : [ { "name" : "SQ_STG_ACT_GUIDE_AWAY_DAYS", "type" : "sourceQualifier" } ]
+"sources" : [
+  { "name" : "SQ_STG_ACT_GUIDE_AWAY_DAYS", "type" : "BERYLFALLS" }
+]
 ```
 
 ## Corpus occurrences

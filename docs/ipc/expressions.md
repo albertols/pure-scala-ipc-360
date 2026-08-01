@@ -46,7 +46,7 @@ literals) — recursion bottoms out at a `{source}` or `{value}` leaf.
 
 Verbatim corpus example — a nested `TO_DECIMAL(TO_CHAR(ADD_TO_DATE(TO_DATE(...), 'MM',
 -1), 'ROWANFIELD'))` call tree
-(`CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json:11-37`):
+(`CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json:11-45`):
 
 ```json
 "transformation" : {
@@ -119,7 +119,7 @@ transformation node).
 
 Verbatim corpus example — an unconnected Lookup (`LKP_LKP_CEDARBROOK`) nested inside a
 call tree, its own `parameters` array holding one Field-shaped bind variable
-(`DWH/m_OAKCOMBE3_ODS_TEZ52/_ETL_m_OAKCOMBE3_ODS_TEZ52.json:84-107`):
+(`DWH/m_OAKCOMBE3_ODS_TEZ52/_ETL_m_OAKCOMBE3_ODS_TEZ52.json:83-117`):
 
 ```json
 {
@@ -199,7 +199,7 @@ token embedded verbatim as the middle parameter — the shape `IPC-EXP-002`
 (`ExpressionRules.java`'s `OPERATOR_MARKERS` set has 3 entries, not 4).
 
 Verbatim corpus examples of the three checked markers — `EXP_ARITHMETIC`
-(`ODS/m_CAS_ODS_EVENTS/_ETL_m_CAS_ODS_EVENTS.json:29-40`):
+(`ODS/m_CAS_ODS_EVENTS/_ETL_m_CAS_ODS_EVENTS.json:28-41`):
 
 ```json
 {
@@ -212,7 +212,7 @@ Verbatim corpus examples of the three checked markers — `EXP_ARITHMETIC`
 }
 ```
 
-`EXP_COMPARISON` (`QDM/m_SYN_QDM_ORDERS_QUALITY/_ETL_m_SYN_QDM_ORDERS_QUALITY.json:22-33`):
+`EXP_COMPARISON` (`QDM/m_SYN_QDM_ORDERS_QUALITY/_ETL_m_SYN_QDM_ORDERS_QUALITY.json:21-34`):
 
 ```json
 {
@@ -235,7 +235,9 @@ sample — a future corpus addition that does trigger `EXP_LOGICAL` is covered w
 rule change.
 
 `EXP_CONCAT` (2 parameters, no operator token —
-`ODS/OUTERCROSS_WESTVAULT_10032_2/m_ODS_CEDARHOLLOW_12_DEALS/_ETL_m_ODS_CEDARHOLLOW_12_DEALS.json:304-…`):
+`ODS/OUTERCROSS_WESTVAULT_10032_2/m_ODS_CEDARHOLLOW_12_DEALS/_ETL_m_ODS_CEDARHOLLOW_12_DEALS.json:304-307`,
+both parameters' own nested call trees elided — the real ones run for several more
+levels each):
 
 ```json
 {
@@ -253,7 +255,7 @@ functions nor operators — `IPC-EXP-001` exempts both by name:
 - `SequenceGenerator` (`RecipeConstants.scala:33`) — emitted for a field referencing a
   Sequence Generator's `NEXTVAL` port (`RecipeGenerator.scala:314`); carries no
   `parameters` at all. Corpus example: `{ "name" : "SequenceGenerator" }`
-  (`ODS/SWIFTMILL_TEALPEAK_10056_1/m_ODS_MAPLECLIFF_HOLDINGS/_ETL_m_ODS_MAPLECLIFF_HOLDINGS.json:12`).
+  (`ODS/SWIFTMILL_TEALPEAK_10056_1/m_ODS_MAPLECLIFF_HOLDINGS/_ETL_m_ODS_MAPLECLIFF_HOLDINGS.json:11-13`).
 - `Undefined` (`RecipeConstants.scala:39`) — the parser's own can't-classify marker,
   emitted when an expression pattern matches none of the recognised shapes
   (`ExpressionParsing.scala:139-143`), logged as an error at generation time rather than

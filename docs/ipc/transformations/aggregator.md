@@ -25,7 +25,9 @@ required — `IPC-TYP-AGGREGATOR-001`, `rules.md#ipc-typ-aggregator-001`).
 
 ## Recipe JSON shape
 
-Verbatim, `DWH/m_LOAD_HIER_GRADING_MIS/_ETL_m_LOAD_HIER_GRADING_MIS.json:80-101`:
+Verbatim, `DWH/m_LOAD_HIER_GRADING_MIS/_ETL_m_LOAD_HIER_GRADING_MIS.json:81-101`
+(truncated after the second of many `fields[]` entries — the array and the enclosing
+`target` object both continue well past line 101 in the real file):
 
 ```json
 "target" : {
@@ -44,7 +46,8 @@ Verbatim, `DWH/m_LOAD_HIER_GRADING_MIS/_ETL_m_LOAD_HIER_GRADING_MIS.json:80-101`
       "name" : "ID_NUM_GRADING",
       "dataType" : "BigDecimal",
       "transformation" : { "source" : "SQ_LOAD_HIER_GRADING_MIS.ID_NUM_GRADING" }
-    }
+    },
+    "…"
   ]
 }
 ```

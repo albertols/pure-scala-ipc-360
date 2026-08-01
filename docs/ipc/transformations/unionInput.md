@@ -28,9 +28,10 @@ itself — see the `EARLYGLADE` witness in `README.md`, where
 
 ## Recipe JSON shape
 
-Verbatim, `CDM/m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR/_ETL_m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR.json:521-538`
-(`type` survives here under the anonymizer token `EARLYGLADE` — see `README.md`'s alias
-table):
+Verbatim, `CDM/m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR/_ETL_m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR.json:521-538`,
+truncated to the first two of many `fields[]` entries — the array and the enclosing
+`target` object both continue past line 538 in the real file (`type` survives here
+under the anonymizer token `EARLYGLADE` — see `README.md`'s alias table):
 
 ```json
 "target" : {
@@ -46,7 +47,8 @@ table):
       "name" : "DESC_HAZELFIELD_NETHUB6",
       "dataType" : "String",
       "transformation" : { "source" : "SQ_LKP_CEDARMOOR_NETHUB_ELMYARD.DESC_HAZELFIELD_NETHUB" }
-    }
+    },
+    "…"
   ]
 }
 ```

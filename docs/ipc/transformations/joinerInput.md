@@ -26,9 +26,11 @@ match `^.+\.(MASTER|DETAIL)$` (`rules.md#ipc-typ-joinerinput-001`). JSON keys: `
 
 ## Recipe JSON shape
 
-Verbatim, `DWH/m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES/_ETL_m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES.json:1518-1535`.
-`type` survives here under the anonymizer token `ASHPATH2` (`README.md`'s alias table);
-`name` is the real, unaliased `<joiner>.DETAIL` string:
+Verbatim, `DWH/m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES/_ETL_m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES.json:1518-1535`,
+truncated to the first two of many `fields[]` entries — the array and the enclosing
+`target` object both continue past line 1535 in the real file. `type` survives here
+under the anonymizer token `ASHPATH2` (`README.md`'s alias table); `name` is the real,
+unaliased `<joiner>.DETAIL` string:
 
 ```json
 "target" : {
@@ -44,7 +46,8 @@ Verbatim, `DWH/m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES/_ETL_m_DWH_MAPLEGROVE_ACT
       "name" : "DESC_LOCATION",
       "dataType" : "String",
       "transformation" : { "source" : "SQ_DWH_LKP_DIR_MAILCODE.DESC_LOCATION" }
-    }
+    },
+    "…"
   ]
 }
 ```

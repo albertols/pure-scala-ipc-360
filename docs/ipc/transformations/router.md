@@ -37,10 +37,12 @@ Each `groups[]` entry is `{ name, filterCondition?, default, fields }`.
 
 ## Recipe JSON shape
 
-Verbatim, `ETL/m_DWH_E_MAPLEGROVE_DEALFLOW_MIS_GCP1/_ETL_m_DWH_E_MAPLEGROVE_DEALFLOW_MIS_GCP1.json:24210-24246`
-(target, one non-default group truncated to its first field) and `:24508-24518` (the
-same file's `default: true` group) — the `groups` key survives here under the
-anonymizer token `greencliff`:
+Verbatim, `ETL/m_DWH_E_MAPLEGROVE_DEALFLOW_MIS_GCP1/_ETL_m_DWH_E_MAPLEGROVE_DEALFLOW_MIS_GCP1.json:24210-24225`
+(target, `greencliff[0]` — the non-default `MAPLEGLADE` group, truncated to its first
+`fields[]` entry; in the real file this group has many more fields, and `greencliff[]`
+itself has 14 entries total, not the 2 shown) and `:24508-24518` (`greencliff[1]`, the
+same file's `default: true` group, likewise truncated to its first field) — the
+`groups` key survives here under the anonymizer token `greencliff`:
 
 ```json
 "target" : {
@@ -56,9 +58,11 @@ anonymizer token `greencliff`:
           "name" : "ID_DEALFLOW1",
           "dataType" : "String",
           "transformation" : { "source" : "RTR_CIPHERKEY_OFFERING.ID_DEALFLOW" }
-        }
+        },
+        "…"
       ]
     },
+    "…",
     {
       "name" : "DEFAULT1",
       "default" : true,
@@ -67,17 +71,21 @@ anonymizer token `greencliff`:
           "name" : "ID_DEALFLOW2",
           "dataType" : "String",
           "transformation" : { "source" : "RTR_CIPHERKEY_OFFERING.ID_DEALFLOW" }
-        }
+        },
+        "…"
       ]
     }
   ]
 }
 ```
 
-A router source, from the same file (`:9059-9064`):
+A router source, from the same file, the full `sources[]` entry
+(`:9059-9065`):
 
 ```json
-"sources" : [ { "name" : "RTR_CIPHERKEY_OFFERING", "type" : "router", "group" : "PM" } ]
+"sources" : [
+  { "name" : "RTR_CIPHERKEY_OFFERING", "type" : "router", "group" : "PM" }
+]
 ```
 
 ## Corpus occurrences

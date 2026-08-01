@@ -37,9 +37,10 @@ connectivity flows the other direction, via downstream dot-refs into the paired
 
 ## Recipe JSON shape
 
-Verbatim, `DWH/m_DWH_E_LKP_DIR_PHONELIST/_ETL_m_DWH_E_LKP_DIR_PHONELIST.json:87-114`
-(truncated to the first `unionTables[]` entry and its first few `fieldMapping[]`
-entries):
+Verbatim, `DWH/m_DWH_E_LKP_DIR_PHONELIST/_ETL_m_DWH_E_LKP_DIR_PHONELIST.json:87-106`,
+truncated to the first `unionTables[]` entry's first three `fieldMapping[]` entries — in
+the real file, that entry's `fieldMapping[]` continues well past what's shown, and
+`unionTables[]` itself has further entries after this one:
 
 ```json
 "sources" : [
@@ -52,9 +53,11 @@ entries):
         "fieldMapping" : [
           { "origin" : "ID_LOCATION1", "union" : "ID_LOCATION" },
           { "origin" : "ID_MEMBER1", "union" : "ID_MEMBER" },
-          { "origin" : "NUM_ELMCROFT_OAKHOLLOW1", "union" : "NUM_ELMCROFT_OAKHOLLOW" }
+          { "origin" : "NUM_ELMCROFT_OAKHOLLOW1", "union" : "NUM_ELMCROFT_OAKHOLLOW" },
+          "…"
         ]
-      }
+      },
+      "…"
     ]
   }
 ]

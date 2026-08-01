@@ -28,7 +28,7 @@ required string — `IPC-TYP-STOREDPROCEDURE-001`, `rules.md#ipc-typ-storedproce
 
 ## Recipe JSON shape
 
-Verbatim, `QDM/m_GENERATE_ERROR_BRISKGROVE/_ETL_m_GENERATE_ERROR_BRISKGROVE.json:78-98`.
+Verbatim, `QDM/m_GENERATE_ERROR_BRISKGROVE/_ETL_m_GENERATE_ERROR_BRISKGROVE.json:78-99`.
 `type` survives here under the anonymizer token `CEDARWICK2` (`README.md`'s alias
 table):
 

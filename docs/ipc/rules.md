@@ -25,14 +25,27 @@ after an earlier draft (derived from a truncated AssertJ printout) had the count
 in one case, the dominant cause wrong. If a sentence elsewhere in this wiki ever
 disagrees with the JSON, **the JSON wins**.
 
-Two of the four warnings — `IPC-REF-002` and `IPC-EXP-001` — describe a rule whose
-*logic* was completed during that same fix round rather than left downgraded: read their
-Corpus evidence lines for what each rule now recognises and what provably can't be
-closed by rule logic alone (parser-level data loss, in `IPC-REF-002`'s case). The other
-two warnings, `IPC-REF-003` and `IPC-REF-006`, describe corpus patterns that are
-genuinely outside any single rule's reach; `IPC-FLW-001` is a pure downstream
-consequence of `IPC-REF-003` — fixing `IPC-REF-003`'s gap would clear `IPC-FLW-001` too,
-since `IPC-FLW-001`'s 8 offending recipes are a strict subset of `IPC-REF-003`'s 9.
+One of the four warnings, `IPC-REF-002`, shares a history with an `error`-severity rule
+elsewhere in this catalogue, `IPC-EXP-001` — both had their *logic* completed during
+that same fix round rather than being left downgraded (`IPC-EXP-001`'s completion is
+commit `e68ed2f`, "complete IPC-EXP-001's call-tree vocabulary instead of downgrading
+it"). But the two rules landed in different places, and that difference is the actual
+lesson: `IPC-EXP-001`'s completed logic drove its corpus violations to **zero**, so it
+ships `error` like any other rule the corpus already satisfies — it is not one of the
+four warnings, despite the shared history. `IPC-REF-002`'s completed logic (recognising
+router/normalizer/storedProcedure namespaces, not just plain target fields) took its
+violations from 1096 down to 28, but couldn't close the remaining 28, because they are
+parser-level data loss — names that never reach the recipe JSON at all, so no amount of
+additional rule logic can resolve them (`IPC-REF-002`'s own Corpus evidence line below
+has the three-way breakdown). Read a warning's Corpus evidence line to tell which case
+you're looking at: a rule whose logic is genuinely still incomplete, or one that's
+finished and blocked by something outside its own reach.
+
+The other two `IPC-REF-*` warnings, `IPC-REF-003` and `IPC-REF-006`, describe corpus
+patterns that are genuinely outside any single rule's reach; `IPC-FLW-001` is a pure
+downstream consequence of `IPC-REF-003` — fixing `IPC-REF-003`'s gap would clear
+`IPC-FLW-001` too, since `IPC-FLW-001`'s 8 offending recipes are a strict subset of
+`IPC-REF-003`'s 9.
 
 Each entry below carries the rule's `statement` verbatim, its `severity`, a **Parser**
 citation (`parserRef`, linked to the source file), an **IPC** citation (`ipcRef` linked,

@@ -90,8 +90,15 @@ both readings but the ruleset always follows `parser/src/main/scala`.
 - **`expressions.md`** — the `EXP_*` call-tree grammar, the `PredefinedFunctions` list,
   the four operator sets, and how `EXP_LOOKUP` differs from a plain call. Landed
   alongside the `IPC-EXP-*` rule family (Part 1, later tasks of this plan).
-- **`transformations/<kind>.md`** — one page per step target/source kind (20 pages,
-  `table` shared between target and source): what IPC says (cited), what the parser
-  emits (`file:line`), the recipe JSON shape, required/optional keys, corpus occurrence
-  count, a worked example from the corpus, and the rule ids that apply. Landed by Task 6
-  of this plan.
+- **`transformations/<kind>.md`** — one page per step target/source kind (**12** pages,
+  not 20 — of the 10 target kinds and 10 source kinds, 8 names appear on both sides:
+  `table`, `sourceQualifier`, `filter`, `aggregator`, `router`, `normalizer`, `java`,
+  `storedProcedure`. For all 8, the source side is just a bare `{name, type}` (`{name,
+  type, group}` for `router`) reference into the same transformation instance the
+  target side already fully describes, so one page serves both directions. The
+  remaining 2 target-only kinds (`unionInput`, `joinerInput`) and 2 source-only kinds
+  (`union`, `joiner`) each get their own page instead, because their target and source
+  forms carry disjoint keys rather than one being a bare reference to the other — 8 + 2
+  + 2 = 12): what IPC says (cited), what the parser emits (`file:line`), the recipe
+  JSON shape, required/optional keys, corpus occurrence count, a worked example from
+  the corpus, and the rule ids that apply. Landed by Task 6 of this plan.

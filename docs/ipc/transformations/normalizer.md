@@ -37,9 +37,10 @@ Each `normalizedFields[]` entry is `{ name, refSource, generatedColumnId, genera
 
 ## Recipe JSON shape
 
-Verbatim, `DWH/m_DWH_E_LKP_DIR_PHONELIST/_ETL_m_DWH_E_LKP_DIR_PHONELIST.json:503-539`,
+Verbatim, `DWH/m_DWH_E_LKP_DIR_PHONELIST/_ETL_m_DWH_E_LKP_DIR_PHONELIST.json:504-524`,
 showing both a single-`refSource` field (no occurrence-splitting) and a multi-`refSource`
-field with `generatedColumnId`/`generatedKey` both true:
+field with `generatedColumnId`/`generatedKey` both true — `normalizedFields[]` has more
+entries past line 524 in the real file:
 
 ```json
 "target" : {
@@ -57,7 +58,8 @@ field with `generatedColumnId`/`generatedKey` both true:
       "refSource" : [ "NUM_ELMCROFT_OAKHOLLOW_in1", "NUM_ELMCROFT_OAKHOLLOW_in2" ],
       "generatedColumnId" : true,
       "generatedKey" : true
-    }
+    },
+    "…"
   ]
 }
 ```

@@ -29,8 +29,9 @@ JSON keys: `name`, `type`, `fields[]` (target only), `filterCondition?` (target 
 
 ## Recipe JSON shape
 
-Verbatim, `DWH/m_OAKCOMBE3_ODS_TEZ52/_ETL_m_OAKCOMBE3_ODS_TEZ52.json:52-69` (target) and
-`:45-50` (a downstream step's `sources[]` reference to it):
+Verbatim, `DWH/m_OAKCOMBE3_ODS_TEZ52/_ETL_m_OAKCOMBE3_ODS_TEZ52.json:53-69` (target,
+`fields[]` elided — the object continues past line 69 in the real file) and `:45-50`
+(a downstream step's `sources[]` reference to it):
 
 ```json
 "target" : {
