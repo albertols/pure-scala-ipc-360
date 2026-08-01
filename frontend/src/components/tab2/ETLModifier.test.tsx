@@ -1046,3 +1046,76 @@ describe('ETLModifier — editor layout (Task 4)', () => {
     expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
   })
 })
+
+// ─── Task 5: undo/redo ──────────────────────────────────────────────────────
+
+describe('ETLModifier — undo/redo (Task 5)', () => {
+  it('starts with Undo and Redo both disabled', async () => {
+    await loadAndSelectT()
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Redo' })).toBeDisabled()
+  })
+
+  it('three edits, undo twice steps the field value and dirty count back; redo once steps forward', async () => {
+    const formula = await loadAndSelectT()
+
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.change(await screen.findByDisplayValue('2'), { target: { value: '3' } })
+    fireEvent.blur(screen.getByDisplayValue('3'))
+    expect(await screen.findByText('2 unsaved changes')).toBeInTheDocument()
+
+    fireEvent.change(await screen.findByDisplayValue('3'), { target: { value: '4' } })
+    fireEvent.blur(screen.getByDisplayValue('4'))
+    expect(await screen.findByText('3 unsaved changes')).toBeInTheDocument()
+
+    // Undo twice: field value AND dirty count both step back.
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByDisplayValue('3')).toBeInTheDocument()
+    expect(await screen.findByText('2 unsaved changes')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByDisplayValue('2')).toBeInTheDocument()
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    // Redo once: both step forward again.
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(await screen.findByDisplayValue('3')).toBeInTheDocument()
+    expect(await screen.findByText('2 unsaved changes')).toBeInTheDocument()
+  })
+
+  it('pushing a new edit after an undo truncates the redo branch (standard editor semantics)', async () => {
+    const formula = await loadAndSelectT()
+
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByDisplayValue('1')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Redo' })).not.toBeDisabled()
+
+    // A fresh edit from here must discard the redo branch rather than leaving
+    // '2' reachable via Redo.
+    fireEvent.change(await screen.findByDisplayValue('1'), { target: { value: '9' } })
+    fireEvent.blur(screen.getByDisplayValue('9'))
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    expect(screen.getByRole('button', { name: 'Redo' })).toBeDisabled()
+  })
+
+  it('Discard resets the history stack — Undo goes back to disabled', async () => {
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Undo' })).not.toBeDisabled()
+
+    fireEvent.click(screen.getByText('Discard'))
+
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+  })
+})

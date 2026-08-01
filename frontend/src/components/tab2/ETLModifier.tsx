@@ -36,6 +36,7 @@ import { ConformanceChip } from './ConformanceChip'
 import { ExpressionDock } from './ExpressionDock'
 import { EditorLayout } from './EditorLayout'
 import { EditorToolbar } from './EditorToolbar'
+import { useDraftHistory } from './useDraftHistory'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
@@ -214,6 +215,12 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // double-submitted. `finally` re-enables on both success AND failure.
   const [saving, setSaving] = useState(false)
 
+  // Undo/redo (Task 5): a bounded snapshot stack over `applyEdit` — the single
+  // funnel every draft mutation passes through, so this covers every edit
+  // path (Inspector, click-wire, delete, palette add, the expression dock's
+  // Insert) automatically.
+  const history = useDraftHistory()
+
   // Node drag offsets (Task 8) + the layout sidecar (Task 9/10): per-node pixel
   // deltas from IpcCanvas's default layout position, added at render time
   // (`n.x + offsets[n.id].x`). `layout` fetches the persisted sidecar for the
@@ -231,6 +238,20 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipePath, rec.data?.modifiedAt])
+
+  // History reset on recipe change (Task 5): a SEPARATE effect from the
+  // draft-reset effect above, not an addition to its dependency array —
+  // sub-project 8's Task 10 shipped a silent data-loss bug by folding an
+  // unrelated query's data into that effect's deps, so a background refetch
+  // re-ran the reset and wiped an in-progress edit. This effect's only
+  // trigger is `recipePath` itself (a genuinely new recipe opened), never
+  // `rec.data`/`modifiedAt` — a save's own history reset is handled
+  // explicitly in handleSave below, not by this effect noticing modifiedAt
+  // change.
+  useEffect(() => {
+    history.reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipePath])
 
   // Layout offsets (Task 9/10): a SEPARATE effect from the draft reset above —
   // review finding (fix round 1): folding `layout.data` into the draft-reset
@@ -365,8 +386,35 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   }
 
   const applyEdit = (fn: (d: RecipeJson) => RecipeJson) => {
+    // Task 5: push the PRE-edit draft before applying — the single funnel
+    // every draft mutation passes through, so undo/redo covers every edit
+    // path for free.
+    if (draft) history.push(draft)
     setDraft(d => (d ? fn(d) : d))
     setDirtyOps(n => n + 1)
+  }
+
+  // Undo/redo (Task 5): swap the draft and step `dirtyOps` back/forward in
+  // lockstep with it — both are bumped by the very same `applyEdit` call, so
+  // they stay in sync except once the history stack itself has capped out
+  // (dirtyOps keeps counting past HISTORY_CAP edits; the snapshot stack
+  // doesn't, by design).
+  const handleUndo = () => {
+    if (!draft) return
+    const prev = history.undo(draft)
+    if (prev) {
+      setDraft(prev)
+      setDirtyOps(n => Math.max(0, n - 1))
+    }
+  }
+
+  const handleRedo = () => {
+    if (!draft) return
+    const next = history.redo(draft)
+    if (next) {
+      setDraft(next)
+      setDirtyOps(n => n + 1)
+    }
   }
 
   // Inspector commit (Task 12): the Inspector owns picking WHICH mutator to run
@@ -507,6 +555,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     setDirtyOps(0)
     setValidationErrors([])
     setSaveError(null)
+    history.reset()
   }
 
   const handleSave = async () => {
@@ -523,6 +572,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
       await apiSend('PUT', `/recipes/${recipePath}`, { baseModified: rec.data.modifiedAt, content: draft })
       await queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
       setDirtyOps(0)
+      history.reset()
     } catch (e) {
       const err = e as ApiError
       setSaveError({ title: err.title ?? 'Save failed', detail: err.detail })
@@ -659,6 +709,14 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                 onSave={handleSave}
                 onDiscard={handleDiscard}
                 saving={saving}
+                // Task 5: undo/redo — disabled (not hidden, same as
+                // wireFrom/changes above) while viewing an archived version,
+                // since the buttons would act on the invisible live draft
+                // rather than the read-only content on screen.
+                canUndo={isViewing ? false : history.canUndo}
+                canRedo={isViewing ? false : history.canRedo}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
               />
               {(validationErrors.length > 0 || saveError) && (
                 <div style={{

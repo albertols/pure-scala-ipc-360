@@ -529,19 +529,19 @@ export function useDraftHistory(): {
 **Why capped at 25:** each entry is a `structuredClone` of an entire recipe and the largest
 corpus recipe is ~1000 lines. An unbounded stack is a real memory cost.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Cover: push/undo returns the prior draft; five consecutive edits undo in reverse order; redo
 returns forward; `canUndo`/`canRedo` are false at their respective ends; pushing after an undo
 truncates the redo branch (standard editor semantics — assert it explicitly); the stack caps at
 `HISTORY_CAP` with the oldest entry dropped; `reset()` clears both directions.
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `cd frontend && pnpm test src/components/tab2/useDraftHistory.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Two arrays (`past`, `future`) in a `useRef` plus a `useState` counter to trigger re-render, or a
 single `useState` holding `{past, future}` — either is fine, but `canUndo`/`canRedo` must be
@@ -549,7 +549,7 @@ derived state that re-renders the toolbar. `push` appends to `past` (slicing off
 `HISTORY_CAP`) and clears `future`. `undo(current)` pops `past`, pushes `current` onto `future`,
 returns the popped draft, or `null` when empty.
 
-- [ ] **Step 4: Wire into `ETLModifier` and the toolbar**
+- [x] **Step 4: Wire into `ETLModifier` and the toolbar**
 
 In `applyEdit` (`ETLModifier.tsx:365`), call `history.push(currentDraft)` before applying. Add
 `handleUndo`/`handleRedo` that swap the draft and adjust `dirtyOps`. Call `history.reset()` in
@@ -565,7 +565,7 @@ styled as the existing `ghostButtonStyle` ghost buttons with `opacity: 0.4` when
 Add an `ETLModifier` test: make three edits, undo twice, assert the field value and the dirty
 count both step back; redo once, assert forward.
 
-- [ ] **Step 5: Run every frontend gate and commit**
+- [x] **Step 5: Run every frontend gate and commit**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.

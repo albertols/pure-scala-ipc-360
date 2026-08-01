@@ -34,6 +34,10 @@ export function EditorToolbar({
   onSave,
   onDiscard,
   saving,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
 }: {
   fileName: string
   layerChip: string
@@ -59,6 +63,14 @@ export function EditorToolbar({
    * inline spinner and disables the Save button so a slow save can't be
    * double-submitted. */
   saving: boolean
+  /** Task 5: undo/redo — always rendered (not gated by `changes > 0` like
+   * Discard/Save), since redoing back to a dirty state must stay reachable
+   * even once an undo has walked `changes` back down to 0. Disabled state is
+   * the affordance instead of hiding. */
+  canUndo: boolean
+  canRedo: boolean
+  onUndo: () => void
+  onRedo: () => void
 }) {
   return (
     <div style={{
@@ -146,6 +158,26 @@ export function EditorToolbar({
           {changes} unsaved change{changes !== 1 ? 's' : ''}
         </div>
       )}
+
+      {/* Undo/redo (Task 5) — left of Discard, unconditionally rendered so
+          `canRedo` stays reachable even after undoing back to 0 unsaved
+          changes (which would hide a `changes > 0`-gated redo button along
+          with Discard/Save). Disabled via `opacity: 0.4` on the existing
+          ghost style — no new colour token (ADR-0005). */}
+      <button
+        onClick={onUndo}
+        disabled={!canUndo}
+        aria-label="Undo"
+        title="Undo"
+        style={{ ...ghostButtonStyle, opacity: canUndo ? 1 : 0.4, cursor: canUndo ? 'pointer' : 'default' }}
+      >{'↶'}</button>
+      <button
+        onClick={onRedo}
+        disabled={!canRedo}
+        aria-label="Redo"
+        title="Redo"
+        style={{ ...ghostButtonStyle, opacity: canRedo ? 1 : 0.4, cursor: canRedo ? 'pointer' : 'default' }}
+      >{'↷'}</button>
 
       {changes > 0 && (
         <>
