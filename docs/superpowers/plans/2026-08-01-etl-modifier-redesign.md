@@ -385,7 +385,7 @@ input-group name, not a transformation) and TRANSFORMATION@TYPE for the other th
   - `IpcRuleEngine.run(JsonNode recipe) -> List<IpcCheck>`.
 - Tasks 3–5 add rule classes implementing `IpcRule` and register them in `IpcRuleEngine`.
 
-- [ ] **Step 1: Write the failing structural-rules test**
+- [x] **Step 1: Write the failing structural-rules test**
 
 Create `backend/src/test/java/io/pure360/etl360/service/ipc/StructuralRulesTest.java`:
 
@@ -487,12 +487,12 @@ class StructuralRulesTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `mvn -am -pl backend test -Dtest=StructuralRulesTest -DfailIfNoTests=false`
 Expected: FAIL — compilation error, none of the `ipc` classes exist.
 
-- [ ] **Step 3: Write the records and interfaces**
+- [x] **Step 3: Write the records and interfaces**
 
 Create `backend/src/main/java/io/pure360/etl360/service/ipc/IpcCheck.java`:
 
@@ -617,7 +617,7 @@ public final class RuleContext {
 }
 ```
 
-- [ ] **Step 4: Write `IpcCatalog` and the initial `ipc-rules.json`**
+- [x] **Step 4: Write `IpcCatalog` and the initial `ipc-rules.json`**
 
 Create `backend/src/main/resources/ipc/ipc-rules.json`. Every rule this task implements gets
 an entry; Tasks 3–5 append theirs. `keySchema` starts empty and is filled in Task 3.
@@ -761,7 +761,7 @@ public class IpcCatalog {
 }
 ```
 
-- [ ] **Step 5: Write `StructuralRules` and `IpcRuleEngine`**
+- [x] **Step 5: Write `StructuralRules` and `IpcRuleEngine`**
 
 Create `backend/src/main/java/io/pure360/etl360/service/ipc/StructuralRules.java`:
 
@@ -970,12 +970,12 @@ public class IpcRuleEngine {
 }
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `mvn -am -pl backend test -Dtest=StructuralRulesTest -DfailIfNoTests=false`
 Expected: PASS, 10 tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/resources/ipc/ipc-rules.json \
