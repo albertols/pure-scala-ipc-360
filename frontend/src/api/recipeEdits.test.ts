@@ -3,10 +3,12 @@ import {
   addField,
   addSourceTable,
   addStep,
+  buildStep,
   deleteEdge,
   deleteNode,
   deleteTargetProperty,
   editFieldDataType,
+  insertConfiguredStep,
   parseFormulaText,
   refsInto,
   renameNode,
@@ -206,6 +208,64 @@ describe('addSourceTable', () => {
     expect(out.steps![0].target!.type).toBe('table')
     expect(out.steps![0].sources).toHaveLength(1)
     expect(out.table!.sourceTableNames).toHaveLength(1)
+  })
+})
+
+describe('buildStep / insertConfiguredStep', () => {
+  it('buildStep assembles target {name, type: kind, ...props, fields: []} and sources[] from fedBy', () => {
+    const step = buildStep(
+      'filter',
+      'FLT2',
+      { filterCondition: { source: 'S.A' } },
+      [],
+      [{ name: 'SQ1', kind: 'sourceQualifier' }],
+    )
+    expect(step.target).toEqual({
+      name: 'FLT2', type: 'filter', fields: [], filterCondition: { source: 'S.A' },
+    })
+    expect(step.sources).toEqual([{ name: 'SQ1', type: 'sourceQualifier' }])
+  })
+
+  it('insertConfiguredStep appends the step immutably and never mutates its inputs', () => {
+    const before = JSON.stringify(MINI)
+    const step = buildStep('filter', 'FLT2', {}, [], [{ name: 'T', kind: 'table' }])
+    const stepBefore = JSON.stringify(step)
+
+    const out = insertConfiguredStep(MINI, step)
+
+    expect(out).not.toBe(MINI)
+    expect(JSON.stringify(MINI)).toBe(before)
+    expect(JSON.stringify(step)).toBe(stepBefore)
+    expect(out.steps).toHaveLength(2)
+    expect(out.steps![1]).toEqual({ target: { name: 'FLT2', type: 'filter', fields: [] }, sources: [{ name: 'T', type: 'table' }] })
+  })
+
+  it('appends the new name to table.targetTableNames when kind is table', () => {
+    const step = buildStep('table', 'NEWTGT', {}, [], [])
+    const out = insertConfiguredStep(MINI, step)
+    expect(out.table!.targetTableNames).toContain('NEWTGT')
+  })
+
+  it('a non-table kind does not touch table.targetTableNames', () => {
+    const step = buildStep('filter', 'FLT2', {}, [], [])
+    const out = insertConfiguredStep(MINI, step)
+    expect(out.table!.targetTableNames).toEqual(['T'])
+  })
+
+  it('adds this node as a sources[] entry of every consuming step named in feeds', () => {
+    const step = buildStep('filter', 'FLT2', {}, ['T'], [])
+    const out = insertConfiguredStep(MINI, step)
+    const consumer = out.steps!.find(s => s.target?.name === 'T')!
+    expect(consumer.sources).toContainEqual({ name: 'FLT2', type: 'filter' })
+    // The original 'S' source survives untouched.
+    expect(consumer.sources).toContainEqual({ name: 'S', type: 'table' })
+  })
+
+  it('a feeds name that does not resolve to a step target is a safe no-op', () => {
+    const step = buildStep('filter', 'FLT2', {}, ['GHOST'], [])
+    const out = insertConfiguredStep(MINI, step)
+    expect(out.steps).toHaveLength(2)
+    expect(out.steps!.some(s => s.target?.name === 'GHOST')).toBe(false)
   })
 })
 

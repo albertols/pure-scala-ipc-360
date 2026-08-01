@@ -291,6 +291,90 @@ export function refsInto(d: RecipeJson, name: string): number {
   return fieldsReferencing(d, name).length
 }
 
+// ─── Configured-node insertion (Task 10) ─────────────────────────────────────
+//
+// `addStep` above emits an ORPHAN: {name: NEW_<TYPE>_<n>, type, fields: []} — no
+// sources, no fields, no refs — the floating NEW_TABLE_1 the user screenshotted.
+// `buildStep`/`insertConfiguredStep` are `NodeConfigDialog`'s write path: the
+// dialog gathers a name, schema-driven properties, and a legality-checked set of
+// "fed by"/"feeds" node names, then commits ONE fully-formed step through these
+// two pure helpers — same clone-then-mutate idiom as every other mutator here.
+
+/** A node already present in the draft, resolved to its name + kind (a step
+ * target's own `type`, or a `sources[]` entry's own `type`) — what
+ * `NodeConfigDialog`'s connection picker offers as "fed by"/"feeds" candidates. */
+export interface RecipeNodeRef {
+  name: string
+  kind: string
+}
+
+/**
+ * Builds the step a freshly-configured palette node inserts as:
+ * `{target: {name, type: kind, ...props, fields: []}, sources: [...]}` — the
+ * `sources[]` array is built from `fedBy`, each entry `{name, type: <that
+ * node's own kind>}` (a `sources[]` entry always records the UPSTREAM node's
+ * kind, never this step's own).
+ *
+ * `feeds` needs no per-node kind — the `sources[]` entry `insertConfiguredStep`
+ * adds to each CONSUMING step always has `type: kind`, this new step's own kind
+ * — so it travels as plain names. `RecipeStepJson` has no field for it though,
+ * so it rides along as a transient marker on the returned object, read and
+ * stripped by `insertConfiguredStep`; it is never written into the persisted
+ * target/sources JSON (see the task-10 report's deviation log: the plan's
+ * literal `fedBy: string[]` cannot carry the per-node kind this function's own
+ * prose requires without a draft lookup buildStep's signature has no room for,
+ * so `fedBy` is `RecipeNodeRef[]` instead).
+ */
+export function buildStep(
+  kind: string,
+  name: string,
+  props: Record<string, unknown>,
+  feeds: string[],
+  fedBy: RecipeNodeRef[],
+): RecipeStepJson {
+  const target = { name, type: kind, fields: [], ...props } as unknown as RecipeTargetJson
+  const sources: RecipeSourceJson[] = fedBy.map(f => ({ name: f.name, type: f.kind }))
+  const step: RecipeStepJson = { target, sources }
+  // Transient carrier consumed by insertConfiguredStep, see the doc comment above —
+  // never part of a real RecipeStepJson's own shape.
+  ;(step as unknown as { feeds?: string[] }).feeds = feeds
+  return step
+}
+
+/**
+ * Appends `step` (as built by `buildStep`) to `d.steps` immutably. When the
+ * step's kind is `table`, also appends its name to `table.targetTableNames`
+ * (mirrors `addStep`). For every name in `step`'s transient `feeds` list that
+ * resolves to an EXISTING step target, appends `{name, type: kind}` — this new
+ * step's own name/kind — onto that consuming step's `sources[]`; a `feeds`
+ * name that doesn't resolve to a step target is a safe no-op (nothing to
+ * attach to). Never mutates `d` or `step`.
+ */
+export function insertConfiguredStep(d: RecipeJson, step: RecipeStepJson): RecipeJson {
+  const draft = structuredClone(d)
+  const persisted: RecipeStepJson = structuredClone({ target: step.target, sources: step.sources })
+  const feeds = (step as unknown as { feeds?: string[] }).feeds ?? []
+
+  draft.steps = [...(draft.steps ?? []), persisted]
+
+  const name = persisted.target?.name
+  const kind = persisted.target?.type
+  if (kind === 'table' && name) {
+    draft.table = draft.table ?? {}
+    draft.table.targetTableNames = [...(draft.table.targetTableNames ?? []), name]
+  }
+
+  if (name && kind && feeds.length > 0) {
+    draft.steps = draft.steps.map(s => (
+      feeds.includes(s.target?.name ?? '')
+        ? { ...s, sources: [...(s.sources ?? []), { name, type: kind }] }
+        : s
+    ))
+  }
+
+  return draft
+}
+
 /** Clears (deletes) the `.transformation` of a single field — the edge from
  * whatever it referenced into `toStep.toField`.
  *

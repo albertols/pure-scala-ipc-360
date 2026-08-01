@@ -1003,7 +1003,7 @@ export function insertConfiguredStep(d: RecipeJson, step: RecipeStepJson): Recip
 fields and no refs — the orphan `NEW_TABLE_1` in the user's screenshot. Insertion must not be able
 to produce that.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Cover: the dialog renders one widget per `required` key of the chosen kind, using the schema
 (assert a `toggle` for `sourceQualifier.selectDistinct` and a `stringList` for
@@ -1013,12 +1013,12 @@ renders forbidden ones disabled with a reason; Insert stays disabled while the p
 has validation errors; `onInsert` fires with a draft containing the fully-formed step; Cancel
 calls `onCancel` and never `onInsert`.
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `cd frontend && pnpm test src/components/tab2/NodeConfigDialog.test.tsx`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `buildStep` / `insertConfiguredStep`**
+- [x] **Step 3: Implement `buildStep` / `insertConfiguredStep`**
 
 `buildStep` assembles `{target: {name, type: kind, ...props, fields: []}, sources: [...]}` from
 the `fedBy` node names (each becomes a `sources[]` entry whose `type` is that node's kind).
@@ -1026,7 +1026,7 @@ the `fedBy` node names (each becomes a `sources[]` entry whose `type` is that no
 `kind === 'table'`, and for each `feeds` entry adds this node as a `sources[]` entry of the
 consuming step. Both are pure and never mutate their input, matching the file's existing idiom.
 
-- [ ] **Step 4: Implement the dialog**
+- [x] **Step 4: Implement the dialog**
 
 A centered modal over a `rgba(0,0,0,0.5)` scrim (composition, not a new token), `var(--surface)`
 panel with `1px solid var(--border)`. Sections: **Name** (text input + live uniqueness),
@@ -1042,7 +1042,7 @@ and that contract is global.
 
 Escape and a scrim click both cancel. Focus the name input on mount.
 
-- [ ] **Step 5: Run every gate and commit**
+- [x] **Step 5: Run every gate and commit**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 
