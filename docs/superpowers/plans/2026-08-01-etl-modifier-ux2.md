@@ -994,10 +994,37 @@ export function NodeConfigDialog(props: {
 Plus in `recipeEdits.ts`:
 
 ```ts
+export interface MappedField { name: string; dataType: string; source: string }  // source = "UPSTREAM.FIELD"
 export function buildStep(kind: string, name: string, props: Record<string, unknown>,
-                          feeds: string[], fedBy: string[]): RecipeStepJson
+                          feeds: string[], fedBy: RecipeNodeRef[],
+                          mappedFields: MappedField[]): RecipeStepJson
 export function insertConfiguredStep(d: RecipeJson, step: RecipeStepJson): RecipeJson
 ```
+
+**AMENDED after Task 10's review (human ruling, 2026-08-02).** The first implementation built
+nodes with `fields: []`, and Insert could therefore *never* be enabled: `IPC-FLW-003` measures
+orphan-ness by **dot-refs in field formulas** (`ReferentialRules.collectRefs`), not by `sources[]`
+membership, so a fieldless step can carry no outbound ref and nothing pre-existing can reference a
+name that did not exist a moment ago. A reviewer proved this against the real `IpcRuleEngine` for
+both a zero-connection and a fully-connected step. The frontend suite missed it because MSW mocks
+validation to pass unconditionally.
+
+The rule is not wrong — a step with declared sources and no field mappings genuinely moves no
+data. **The dialog must map fields.** When the user picks an upstream node in "fed by", the dialog
+offers that node's fields and maps the selected ones, emitting real
+`transformation: { source: "UPSTREAM.FIELD" }` dot-refs. At least one mapped field is required for
+Insert, and that requirement is what makes the resulting node genuinely connected rather than
+merely declared.
+
+Where the upstream's field list comes from:
+- **Upstream is a step target** — read `step.target.fields[]` from the draft and offer those names
+  with their `dataType`s.
+- **Upstream is a `table` source** — the recipe JSON carries no field list for table sources, so
+  offer free-text entry (the operator names the columns). Do not invent names; an empty list with
+  a free-text row is honest, a fabricated one is not.
+
+Mapped field names default to the upstream field's name and stay editable; `dataType` defaults to
+the upstream's, or `String` when unknown (a legal `ScalaType`, `ScalaType.scala:7`).
 
 **Why:** `addStep` today emits `{name: "NEW_<TYPE>_<n>", type, fields: []}` with no sources, no
 fields and no refs — the orphan `NEW_TABLE_1` in the user's screenshot. Insertion must not be able
