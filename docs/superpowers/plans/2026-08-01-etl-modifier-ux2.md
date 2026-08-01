@@ -230,7 +230,7 @@ export function useResizableLayout(): {
 
 **Why `localStorage` and not the layout sidecar:** `_layout_*.json` holds *node positions*, which describe the recipe and are worth committing and sharing. Splitter sizes describe one person's screen. Keep that line sharp (spec §5.3).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `useResizableLayout.test.ts` using `renderHook` from `@testing-library/react`:
 
@@ -277,12 +277,12 @@ describe('useResizableLayout', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `cd frontend && pnpm test src/components/tab2/useResizableLayout.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement the hook**
+- [x] **Step 3: Implement the hook**
 
 Read stored JSON once in a lazy `useState` initializer, merge over `LAYOUT_DEFAULT` (so a
 stored object missing a key still yields a complete `LayoutSizes`), and guard the parse in a
@@ -291,12 +291,12 @@ writes the whole object back to `localStorage`, and returns the new state. Wrap 
 `localStorage` access in `try/catch` — a browser with storage disabled must degrade to
 in-memory sizes rather than throw.
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `cd frontend && pnpm test src/components/tab2/useResizableLayout.test.ts && npx tsc --noEmit`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab2/useResizableLayout.ts \
