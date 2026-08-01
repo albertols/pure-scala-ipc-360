@@ -1641,7 +1641,7 @@ Expression vocabulary is a documented copy of RecipeConstants.scala:48-57."
 - Consumes: `IpcRuleEngine.run`, `IpcCatalog`.
 - Produces: `RecipeValidationDto(boolean valid, List<RecipeValidationErrorDto> errors, List<RecipeValidationErrorDto> warnings, List<IpcCheckDto> checks)`; `GET /api/ipc/rules -> IpcRulesDto(List<IpcRuleMetaDto> rules, Map<String,String> typeAliases, Map<String,String> keyAliases, Map<String,List<IpcKeySpecDto>> keySchema)`; frontend aliases `IpcRules`, `IpcCheck`, `IpcKeySpec` in `queries.ts`.
 
-- [ ] **Step 1: Write the failing corpus-calibration contract test**
+- [x] **Step 1: Write the failing corpus-calibration contract test**
 
 Create `backend/src/test/java/io/pure360/etl360/IpcRulesContractTest.java`:
 
@@ -1731,13 +1731,13 @@ class IpcRulesContractTest {
 }
 ```
 
-- [ ] **Step 2: Run it and record the calibration output**
+- [x] **Step 2: Run it and record the calibration output**
 
 Run: `mvn -am -pl backend test -Dtest=IpcRulesContractTest -DfailIfNoTests=false`
 Expected: FAIL — `everyCorpusRecipeIsErrorFree` lists real corpus violations. **Capture the
 full offender list into the task's RED evidence; it is the input to the next step.**
 
-- [ ] **Step 3: Calibrate severities**
+- [x] **Step 3: Calibrate severities**
 
 For each distinct rule id in the offender list, apply spec §5.4's procedure:
 - If the violations are anonymizer damage that `IpcVocabulary` should resolve, extend the
@@ -1750,7 +1750,7 @@ For each distinct rule id in the offender list, apply spec §5.4's procedure:
 Re-run until `everyCorpusRecipeIsErrorFree` passes. Do **not** delete a rule to make the test
 pass — downgrade it.
 
-- [ ] **Step 4: Extend the validation DTO and wire the engine into `RecipeService.validate`**
+- [x] **Step 4: Extend the validation DTO and wire the engine into `RecipeService.validate`**
 
 Replace `RecipeValidationDto`:
 
@@ -1814,7 +1814,7 @@ still produces the same two error shapes, then map the engine's checks:
 Delete the now-dead private helpers `collectRefTargets` and `collectDotRefErrors` from
 `RecipeService` — `ReferentialRules` owns that logic now.
 
-- [ ] **Step 5: Add `IpcController` and its DTOs**
+- [x] **Step 5: Add `IpcController` and its DTOs**
 
 ```java
 package io.pure360.etl360.api;
@@ -1861,7 +1861,7 @@ parserType, boolean required, String widget, String ruleId)`, `IpcRulesDto(List<
 Map<String,String> typeAliases, Map<String,String> keyAliases,
 Map<String,List<IpcKeySpecDto>> keySchema)`).
 
-- [ ] **Step 6: Regenerate the frontend types and add the query hook**
+- [x] **Step 6: Regenerate the frontend types and add the query hook**
 
 Run in one terminal: `make dev` (or `mvn -am -pl backend install -DskipTests && mvn -pl backend spring-boot:run`).
 Then: `make generate-api`
@@ -1878,7 +1878,7 @@ export const useIpcRules = () =>
   useQuery({ queryKey: ['ipcRules'], queryFn: () => apiGet<IpcRules>('/ipc/rules'), staleTime: Infinity })
 ```
 
-- [ ] **Step 7: Run every gate and commit**
+- [x] **Step 7: Run every gate and commit**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS, including `IpcRulesContractTest`.

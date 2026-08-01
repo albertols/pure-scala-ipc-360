@@ -6,7 +6,8 @@ import static org.assertj.core.api.Assertions.*;
 
 class RecipeServiceTest {
     private final RecipeService service = new RecipeService(
-        new io.pure360.etl360.service.support.PathResolver(Path.of("src/test/resources/fixture-corpus")));
+        new io.pure360.etl360.service.support.PathResolver(Path.of("src/test/resources/fixture-corpus")),
+        new io.pure360.etl360.service.ipc.IpcRuleEngine(new io.pure360.etl360.service.ipc.IpcCatalog()));
 
     @Test
     void readsRecipeWithMetadata() {

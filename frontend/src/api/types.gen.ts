@@ -180,6 +180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ipc/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["rules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -261,9 +277,18 @@ export interface components {
             modifiedAt?: string;
             content?: components["schemas"]["JsonNode"];
         };
+        IpcCheckDto: {
+            ruleId?: string;
+            severity?: string;
+            status?: string;
+            path?: string;
+            message?: string;
+        };
         RecipeValidationDto: {
             valid?: boolean;
             errors?: components["schemas"]["RecipeValidationErrorDto"][];
+            warnings?: components["schemas"]["RecipeValidationErrorDto"][];
+            checks?: components["schemas"]["IpcCheckDto"][];
         };
         RecipeValidationErrorDto: {
             path?: string;
@@ -573,6 +598,33 @@ export interface components {
             text?: string;
             children?: components["schemas"]["XmlNodeDto"][];
         };
+        IpcKeySpecDto: {
+            key?: string;
+            parserType?: string;
+            required?: boolean;
+            widget?: string;
+            ruleId?: string;
+        };
+        IpcRuleMetaDto: {
+            id?: string;
+            severity?: string;
+            statement?: string;
+            parserRef?: string;
+            ipcRef?: string;
+            wikiRef?: string;
+        };
+        IpcRulesDto: {
+            rules?: components["schemas"]["IpcRuleMetaDto"][];
+            typeAliases?: {
+                [key: string]: string;
+            };
+            keyAliases?: {
+                [key: string]: string;
+            };
+            keySchema?: {
+                [key: string]: components["schemas"]["IpcKeySpecDto"][];
+            };
+        };
         ExpressionEntryDto: {
             mappingPath?: string;
             layer?: string;
@@ -862,6 +914,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["XmlNodeDto"];
+                };
+            };
+        };
+    };
+    rules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IpcRulesDto"];
                 };
             };
         };

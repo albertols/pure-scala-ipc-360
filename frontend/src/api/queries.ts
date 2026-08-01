@@ -60,3 +60,11 @@ export const useOperational = (date: string) =>
 
 export const useOperationalSummary = () =>
   useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS })
+
+export type IpcRules = components['schemas']['IpcRulesDto']
+export type IpcRuleMeta = components['schemas']['IpcRuleMetaDto']
+export type IpcKeySpec = components['schemas']['IpcKeySpecDto']
+export type IpcCheck = components['schemas']['IpcCheckDto']
+
+export const useIpcRules = () =>
+  useQuery({ queryKey: ['ipcRules'], queryFn: () => apiGet<IpcRules>('/ipc/rules'), staleTime: Infinity })
