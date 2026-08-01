@@ -91,4 +91,15 @@ class LayoutControllerTest {
     void sandboxEscapeReturns400() throws Exception {
         mvc.perform(get("/api/layouts/../../etc/passwd.json")).andExpect(status().isBadRequest());
     }
+
+    @Test
+    @Order(5)
+    void putAgainstNonexistentRecipeReturns404AndCreatesNothing() throws Exception {
+        String body = "{\"version\":1,\"nodes\":{\"n1\":{\"dx\":1.0,\"dy\":1.0}}}";
+        mvc.perform(put("/api/layouts/ZZZTEST/m_NOPE/_ETL_m_NOPE.json")
+                .contentType("application/json").content(body))
+            .andExpect(status().isNotFound());
+
+        assertThat(Files.exists(corpus.resolve("ZZZTEST"))).isFalse();
+    }
 }

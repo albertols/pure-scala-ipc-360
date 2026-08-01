@@ -589,13 +589,20 @@ Recorded here at implementation time, each traced to its task and commit.
    `aggregator` 6, `normalizer` 4, `java` 1, `storedProcedure` 1) happens to share a name
    with a step target, so its node exists and the Inspector reaches it. Only `union` (10)
    and `joiner` (5) have no matching step target — the same structural fact `IPC-REF-003`
-   already records as a warning (28/15 residue). Consequence: 2197 `fieldMapping` pairs
-   across 7 recipes, and `joinerTables`/`joinerType`/`joinerCondition` on 5 joiners, have
-   no clickable node — the Inspector widgets that render them are proven correct in
-   isolation (`Inspector.test.tsx`) but are never reachable via the canvas. Fixing this
-   means synthesizing canvas nodes for union/joiner sources — a change to the canvas
-   contract affecting the `recipe_sweep` gate, out of Task 12's scope — and would also
-   resolve `IPC-REF-003`'s 15 warnings. **User decision required**; not fixed by Task 18
+   already records as a warning: 23 violations across 9 recipes total, of which 15 (10
+   union + 5 joiner) are this exact bare-name gap (the other 8 are an unrelated
+   type:"table"-sources-outside-sourceTableNames pattern — see `IPC-REF-003`'s
+   `corpusEvidence` in `backend/src/main/resources/ipc/ipc-rules.json`, mirrored in
+   `docs/ipc/rules.md`; a prior draft of this deviation said "28/15 residue", conflating
+   this rule's 23 with `IPC-REF-002`'s unrelated 28 — corrected at the final
+   whole-branch review, 2026-08-01, verified against both files, which agree). Consequence:
+   2197 `fieldMapping` pairs across 7 recipes, and `joinerTables`/`joinerType`/
+   `joinerCondition` on 5 joiners, have no clickable node — the Inspector widgets that
+   render them are proven correct in isolation (`Inspector.test.tsx`) but are never
+   reachable via the canvas. Fixing this means synthesizing canvas nodes for union/joiner
+   sources — a change to the canvas contract affecting the `recipe_sweep` gate, out of
+   Task 12's scope — and would also resolve 15 of `IPC-REF-003`'s 23 warnings (the
+   union/joiner sub-pattern only). **User decision required**; not fixed by Task 18
    (out of its file scope — `scripts/recipe_sweep.mts`, docs, and two ADRs only).
 
 4. **Canvas node labels do not resolve the §5.3 alias table — found at the Task 18
@@ -669,8 +676,13 @@ Recorded here at implementation time, each traced to its task and commit.
 ### Deferred minor findings (rolled up from the execution ledger, Tasks 1–17)
 
 24 additional findings were disclosed and adjudicated non-blocking during Parts 1-3;
-none is a correctness defect in shipped behavior, and none was silently dropped. Full
-detail: `.superpowers/sdd/2026-08-01-etl-modifier-redesign/progress.md`.
+none is a correctness defect in shipped behavior, and none was silently dropped. The
+table below is the full, self-contained record — it does not summarize a longer
+account kept elsewhere. (An earlier draft of this section pointed at
+`.superpowers/sdd/2026-08-01-etl-modifier-redesign/progress.md` for "full detail";
+that path is git-ignored by `.superpowers/sdd/.gitignore` and will not exist for any
+reader of a fresh clone, so the pointer is removed rather than left dangling — final
+whole-branch review, 2026-08-01.)
 
 | Task | Finding |
 |---|---|

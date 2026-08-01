@@ -24,9 +24,26 @@ export interface ValidationState {
   errors: RecipeValidationError[]
   warnings: RecipeValidationError[]
   isValidating: boolean
+  /** True when the most recent `POST /api/recipes/validate` rejected (500,
+   * timeout, backend down) rather than settling. `checks`/`errors`/`warnings`
+   * are NOT to be trusted while this is true — they reflect either the empty
+   * state or a stale prior success, never the current draft. The caller
+   * (`ConformanceChip`) must render a neutral "unavailable" state, not fall
+   * through to its errors.length-driven green/amber/red — a failed check is
+   * not the same as a clean one (BLOCKER 2, final whole-branch review: this
+   * exact fallthrough used to render the chip green on a failed validate). */
+  failed: boolean
 }
 
-const EMPTY_STATE: ValidationState = { checks: [], errors: [], warnings: [], isValidating: false }
+const EMPTY_STATE: ValidationState = { checks: [], errors: [], warnings: [], isValidating: false, failed: false }
+
+/** Mirrors `ETLModifier.tsx`'s `reportLayoutSaveError` idiom: log-and-swallow,
+ * since a validate failure must not throw into the render tree — the caller
+ * degrades to a neutral chip instead. */
+function reportValidationError(e: unknown): void {
+  // eslint-disable-next-line no-console
+  console.error('[ipcRules] validate request failed', e)
+}
 
 /**
  * Debounced `POST /api/recipes/validate` against the current draft. This is
@@ -57,7 +74,11 @@ export function useValidation(draft: RecipeJson | null): ValidationState {
     }
 
     let cancelled = false
-    setState(s => ({ ...s, isValidating: true }))
+    // Optimistically clear a prior failure too: a fresh request is in flight
+    // and may well succeed, so the last thing we KNOW (a failure) shouldn't
+    // keep painting the chip neutral while we wait — it flips back to
+    // `failed: true` below only if this attempt also rejects.
+    setState(s => ({ ...s, isValidating: true, failed: false }))
 
     timer.current = setTimeout(() => {
       timer.current = null
@@ -69,11 +90,16 @@ export function useValidation(draft: RecipeJson | null): ValidationState {
             errors: result.errors ?? [],
             warnings: result.warnings ?? [],
             isValidating: false,
+            failed: false,
           })
         })
-        .catch(() => {
+        .catch(e => {
           if (cancelled) return
-          setState(s => ({ ...s, isValidating: false }))
+          reportValidationError(e)
+          // Drop any stale checks/errors/warnings from a prior success too —
+          // a failed request contributes nothing, so nothing it can't vouch
+          // for should linger in state for `failed` to accidentally unmask.
+          setState({ checks: [], errors: [], warnings: [], isValidating: false, failed: true })
         })
     }, VALIDATE_DEBOUNCE_MS)
 

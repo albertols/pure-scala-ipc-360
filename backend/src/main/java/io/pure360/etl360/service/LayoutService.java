@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.pure360.etl360.api.dto.LayoutDto;
 import io.pure360.etl360.service.support.InvalidCorpusPathException;
 import io.pure360.etl360.service.support.LayoutSidecar;
+import io.pure360.etl360.service.support.NotFoundException;
 import io.pure360.etl360.service.support.PathResolver;
 import org.springframework.stereotype.Service;
 
@@ -50,17 +51,28 @@ public class LayoutService {
     }
 
     /** Writes {@code body} to the sidecar atomically (temp file + {@code ATOMIC_MOVE}, mirroring
-     * {@code RecipeService.writeAtomic}), then returns the freshly-read result. */
+     * {@code RecipeService.writeAtomic}), then returns the freshly-read result. Rejects with
+     * {@link NotFoundException} (404) when the underlying recipe does not exist — a layout can
+     * only ever live beside a real recipe, never conjure one into existence (that would let a
+     * typo'd or stale {@code recipePath} create directories inside the protected corpus). */
     public LayoutDto save(String relRecipePath, LayoutDto body) {
-        Path sidecar = LayoutSidecar.layoutFileFor(recipeFile(relRecipePath));
+        Path recipe = recipeFile(relRecipePath);
+        if (!Files.isRegularFile(recipe)) {
+            throw new NotFoundException("No recipe file at " + relRecipePath);
+        }
+        Path sidecar = LayoutSidecar.layoutFileFor(recipe);
         writeAtomic(sidecar, body);
         return layout(relRecipePath);
     }
 
     /** Sandbox + shape gate shared by {@link #layout} and {@link #save}: {@code relRecipePath}
      * must end {@code .json}, resolve inside the corpus, and have an {@code _ETL_}-prefixed
-     * basename — otherwise {@link InvalidCorpusPathException} (400). Mirrors
-     * {@code RecipeService.writableRecipeFile}. */
+     * basename — otherwise {@link InvalidCorpusPathException} (400). Mirrors only the *sandbox*
+     * half of {@code RecipeService.writableRecipeFile} (path shape + escape check); it does
+     * NOT mirror that helper's existence check ({@code RecipeService.save} rejects a missing
+     * file with {@link NotFoundException}) — {@link #save} performs that check itself, on the
+     * returned {@code Path}, before writing anything, since {@link #layout} must keep returning
+     * an empty layout (never 404) for a recipe that has one but no sidecar yet. */
     private Path recipeFile(String relRecipePath) {
         if (!relRecipePath.endsWith(JSON_EXT)) {
             throw new InvalidCorpusPathException("Recipe path must end with .json: " + relRecipePath);
@@ -73,9 +85,12 @@ public class LayoutService {
         return file;
     }
 
+    /** No {@code createDirectories} here: {@link #save} has already verified the recipe file
+     * itself is a regular file, so its parent directory is guaranteed to exist — creating
+     * directories on demand was the bug (a typo'd or stale {@code recipePath} could stand up new
+     * directories inside the protected corpus; see the Blocker-1 fix note on {@link #save}). */
     private void writeAtomic(Path file, LayoutDto content) {
         try {
-            Files.createDirectories(file.getParent());
             Path tmp = file.resolveSibling("." + file.getFileName() + ".tmp");
             mapper.writerWithDefaultPrettyPrinter().writeValue(tmp.toFile(), content);
             Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);

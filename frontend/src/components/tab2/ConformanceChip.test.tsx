@@ -112,6 +112,45 @@ describe('ConformanceChip', () => {
     expect(onSelectNode).not.toHaveBeenCalled()
   })
 
+  // BLOCKER 2 (final whole-branch review): a failed validate (500/timeout/
+  // backend down) must render neither green nor red — we genuinely don't
+  // know the recipe's conformance, and green reads as "clean" when it isn't.
+  it('renders a neutral "conformance unavailable" chip when validate failed — neither green nor red', () => {
+    render(
+      <ConformanceChip
+        errors={[]}
+        warnings={[]}
+        checks={[]}
+        rules={[]}
+        failed
+        graph={GRAPH}
+        onSelectNode={vi.fn()}
+      />,
+    )
+
+    const chip = screen.getByRole('button', { name: /conformance unavailable/i })
+    expect(chip).not.toHaveStyle({ color: 'var(--green)' })
+    expect(chip).not.toHaveStyle({ color: 'var(--red)' })
+    expect(chip).toHaveStyle({ color: 'var(--text-dim)' })
+  })
+
+  it('a stale error count from before a failed re-validate does not leak into the neutral chip label', () => {
+    render(
+      <ConformanceChip
+        errors={[{ path: '$.steps[0]', message: 'bad' }]}
+        warnings={[]}
+        checks={[{ ruleId: 'IPC-STR-001', severity: 'error', status: 'fail', path: '$.steps[0]', message: 'bad' }]}
+        rules={[]}
+        failed
+        graph={GRAPH}
+        onSelectNode={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: /error/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /conformance unavailable/i })).toBeInTheDocument()
+  })
+
   it('a drawer row shows the rule statement from useIpcRules metadata when available', () => {
     render(
       <ConformanceChip

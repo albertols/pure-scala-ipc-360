@@ -15,8 +15,11 @@ platform-agnostic. A multi-module Maven repo:
   `backend/` tab by tab. **All four tabs are real now** — Tab 1 (IPC ETL Viewer)'s
   canvas/detail panel/search/zoom, Tab 2 (ETL Modifier)'s banded `IpcCanvas` (drag,
   auto-layout, per-node conformance dots), schema-driven Inspector covering every
-  recipe key across all 20 IPC kinds, a conformance chip + drawer against the IPC
-  ruleset (`docs/ipc/`), recipe-scoped Explorer/expression dock, focus mode
+  recipe key for the 18 of 20 IPC kinds that reach a canvas node — `union` (10) and
+  `joiner` (5) sources have none, leaving 2197 `fieldMapping` pairs and 5 joiner
+  configs unreachable in the GUI (spec `2026-08-01-etl-modifier-redesign-design.md`
+  §13 deviation 3) — a conformance chip + drawer against the IPC ruleset
+  (`docs/ipc/`), recipe-scoped Explorer/expression dock, focus mode
   (`?focus=<recipePath>`), and save/history/rollback (the backend's first write API,
   `PUT`/`validate`/`history`/`rollback` on `/api/recipes`), Tab 3 (ETL Operational)'s
   relationships graph + operational summary, and Tab 4 (ETL DAG)'s clusters/run

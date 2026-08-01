@@ -5,6 +5,15 @@
 // the brief pins: `--green` (zero errors AND zero warnings), `#fbbf24` (the
 // existing SaveBar warning amber — warnings but no errors, a distinct
 // non-alarming state), `--red` (any errors).
+//
+// A fourth, neutral state (`failed`, BLOCKER 2 final whole-branch review):
+// when the validate POST itself rejected, `errors`/`warnings` are NOT "0" in
+// any meaningful sense — they're unknown. Falling through to the green
+// branch would render a failed validate as a clean recipe, which is worse
+// than an obviously-broken chip. `failed` takes priority over every other
+// branch and renders `--text-dim`/`--border` (existing neutral tokens, no
+// new color per the Figma visual contract) with the label "conformance
+// unavailable" instead of an error/warning count.
 
 import { useState } from 'react'
 import type { RecipeValidationError, IpcCheck, IpcRuleMeta } from '../../api/queries'
@@ -21,6 +30,7 @@ export function ConformanceChip({
   checks,
   rules,
   isValidating,
+  failed,
   graph,
   onSelectNode,
 }: {
@@ -29,15 +39,21 @@ export function ConformanceChip({
   checks: IpcCheck[]
   rules: IpcRuleMeta[]
   isValidating?: boolean
+  failed?: boolean
   graph: CanvasGraph | null
   onSelectNode: (id: string) => void
 }) {
   const [open, setOpen] = useState(false)
 
-  const color = errors.length > 0 ? 'var(--red)' : warnings.length > 0 ? '#fbbf24' : 'var(--green)'
-  const bg = errors.length > 0
-    ? 'rgba(248,113,113,0.15)'
-    : warnings.length > 0 ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)'
+  const color = failed
+    ? 'var(--text-dim)'
+    : errors.length > 0 ? 'var(--red)' : warnings.length > 0 ? '#fbbf24' : 'var(--green)'
+  const bg = failed
+    ? 'transparent'
+    : errors.length > 0
+      ? 'rgba(248,113,113,0.15)'
+      : warnings.length > 0 ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)'
+  const border = failed ? 'var(--border)' : color
 
   const failing = checks.filter(c => c.status === 'fail')
   const ruleById = new Map(rules.map(r => [r.id, r]))
@@ -54,13 +70,17 @@ export function ConformanceChip({
     <div style={{ position: 'relative' }}>
       <button onClick={() => setOpen(o => !o)} style={{
         padding: '5px 12px', borderRadius: 5,
-        background: bg, border: `1px solid ${color}`,
+        background: bg, border: `1px solid ${border}`,
         color, fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
         display: 'flex', alignItems: 'center', gap: 6,
       }}>
         <span style={{ width: 6, height: 6, borderRadius: 3, background: color, flexShrink: 0 }} />
-        {`${errors.length} error${s(errors.length)}`}
-        {warnings.length > 0 && ` · ${warnings.length} warning${s(warnings.length)}`}
+        {failed
+          ? 'conformance unavailable'
+          : <>
+              {`${errors.length} error${s(errors.length)}`}
+              {warnings.length > 0 && ` · ${warnings.length} warning${s(warnings.length)}`}
+            </>}
         {isValidating && ' …'}
       </button>
 
@@ -72,7 +92,11 @@ export function ConformanceChip({
           borderRadius: 6, padding: 10,
           display: 'flex', flexDirection: 'column', gap: 6,
         }}>
-          {failing.length === 0 ? (
+          {failed ? (
+            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>
+              Conformance check failed to run. Try again shortly.
+            </div>
+          ) : failing.length === 0 ? (
             <div style={{ fontSize: 11, color: '#4a5570' }}>No conformance issues.</div>
           ) : (
             failing.map((check, i) => {

@@ -74,7 +74,28 @@ describe('useValidation', () => {
     await waitFor(() => expect(posts).toHaveLength(1), { timeout: 2000 })
 
     rerender({ draft: null })
-    expect(result.current).toEqual({ checks: [], errors: [], warnings: [], isValidating: false })
+    expect(result.current).toEqual({ checks: [], errors: [], warnings: [], isValidating: false, failed: false })
+  })
+
+  // BLOCKER 2 (final whole-branch review): a failed validate must not settle
+  // into "0 errors" — that reads as a clean recipe when conformance is
+  // actually unknown. `failed: true` is the caller's (ConformanceChip's)
+  // signal to render neutral rather than green.
+  it('sets failed:true and clears isValidating when the validate POST rejects (500/network)', async () => {
+    server.use(
+      http.post('/api/recipes/validate', () => new HttpResponse(null, { status: 500 })),
+    )
+    const { result } = renderHook(
+      ({ draft }: { draft: RecipeJson | null }) => useValidation(draft),
+      { initialProps: { draft: DRAFT_A as RecipeJson | null } },
+    )
+
+    await waitFor(() => expect(result.current.failed).toBe(true), { timeout: 2000 })
+    expect(result.current.isValidating).toBe(false)
+    // Stale settled data from before the failure must not masquerade as a
+    // fresh "0 errors" result — the failed request contributed nothing.
+    expect(result.current.errors).toHaveLength(0)
+    expect(result.current.warnings).toHaveLength(0)
   })
 })
 

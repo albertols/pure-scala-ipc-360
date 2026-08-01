@@ -337,7 +337,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // desync the index and mislabel nodes). No local rule mirror — the full
   // 35-rule catalogue runs debounced against POST /api/recipes/validate
   // (spec §6.5 ruling, recorded in ipcRules.ts).
-  const { checks, errors: ipcErrors, warnings: ipcWarnings, isValidating } = useValidation(content)
+  const { checks, errors: ipcErrors, warnings: ipcWarnings, isValidating, failed: validationFailed } = useValidation(content)
   const nodeStatus = useMemo(() => nodeStatusFrom(checks, graph), [checks, graph])
 
   const recipeSlash = recipePath ? recipePath.lastIndexOf('/') : -1
@@ -631,6 +631,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                     checks={checks}
                     rules={ipcRules.data?.rules ?? []}
                     isValidating={isValidating}
+                    failed={validationFailed}
                     graph={graph}
                     onSelectNode={handleSelectNode}
                   />
