@@ -37,6 +37,43 @@ const TREE = {
   ],
 }
 
+// Task 12: a slice of the real backend/src/main/resources/ipc/ipc-rules.json
+// keySchema covering exactly the kinds this suite's fixtures use (target:table —
+// MINI's "T" and every palette-added node; target:sourceQualifier — the
+// click-wire/delete fixtures' "S" step target; source:table — MINI's own "S"
+// sources[] entry). The Inspector takes keySchema as a prop rather than fetching
+// it itself, but ETLModifier.tsx DOES call useIpcRules() to produce that prop, so
+// this suite needs a real handler — without one, keySchema stays `{}` and the
+// Inspector renders nothing (no field table, no properties).
+const IPC_RULES = {
+  rules: [],
+  typeAliases: {},
+  keyAliases: {},
+  keySchema: {
+    'target:table': [
+      { key: 'name', parserType: 'String', required: true, widget: 'text' },
+      { key: 'type', parserType: 'String', required: true, widget: 'text' },
+      { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
+      { key: 'primaryKeys', parserType: 'List[String]', required: false, widget: 'stringList' },
+      { key: 'updateOverride', parserType: 'Option[String]', required: false, widget: 'textarea' },
+    ],
+    'target:sourceQualifier': [
+      { key: 'name', parserType: 'String', required: true, widget: 'text' },
+      { key: 'type', parserType: 'String', required: true, widget: 'text' },
+      { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
+      { key: 'selectDistinct', parserType: 'Boolean', required: true, widget: 'toggle', ruleId: 'IPC-TYP-SOURCEQUALIFIER-001' },
+      { key: 'sourceFilter', parserType: 'Option[String]', required: false, widget: 'textarea' },
+      { key: 'sqlQuery', parserType: 'Option[String]', required: false, widget: 'textarea' },
+      { key: 'userDefinedJoin', parserType: 'Option[String]', required: false, widget: 'textarea' },
+    ],
+    'source:table': [
+      { key: 'name', parserType: 'String', required: true, widget: 'text' },
+      { key: 'type', parserType: 'String', required: true, widget: 'text' },
+      { key: 'primaryKeys', parserType: 'List[String]', required: false, widget: 'stringList' },
+    ],
+  },
+}
+
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
   http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
@@ -49,6 +86,7 @@ const server = setupServer(
   http.get('/api/ddl/CDM/m_FIX', () => HttpResponse.json({})),
   http.post('/api/recipes/validate', () => HttpResponse.json({ valid: true, errors: [] })),
   http.get('/api/expressions', () => HttpResponse.json([])),
+  http.get('/api/ipc/rules', () => HttpResponse.json(IPC_RULES)),
   // Task 10: unsaved-layout default (`{version:1,nodes:{}}` never 404s) — every
   // suite above this one renders the canvas, so this default keeps them
   // green without knowing about the layout sidecar at all.

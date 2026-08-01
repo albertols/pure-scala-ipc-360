@@ -2514,20 +2514,20 @@ Bodies are byte-identical and no test changed."
   - In `InspectorWidgets.tsx`: `TextWidget`, `ToggleWidget`, `TextareaWidget`, `StringListWidget`, `RowTableWidget`, `FormulaWidget` — each `({ label, value, onChange })`.
   - In `Inspector.tsx`: `export function Inspector({ draft, node, keySchema, onChange, onDelete, onFocusFormula })`.
 
-- [ ] **Step 1: Write the failing mutator tests**
+- [x] **Step 1: Write the failing mutator tests**
 
 Append to `recipeEdits.test.ts`: `setTargetProperty` sets a scalar, an array and a nested
 object without mutating the input; `deleteTargetProperty` removes a key; `setSourceProperty`
 targets the right `sources[]` entry by name; each returns a new object (assert
 `result !== input` and `input` is unchanged).
 
-- [ ] **Step 2: Run to verify they fail, then implement the mutators**
+- [x] **Step 2: Run to verify they fail, then implement the mutators**
 
 Run: `cd frontend && pnpm test src/api/recipeEdits.test.ts` → FAIL.
 Implement following the file's existing immutable idiom (map/spread, never mutate). Then
 re-run → PASS.
 
-- [ ] **Step 3: Write the failing Inspector test**
+- [x] **Step 3: Write the failing Inspector test**
 
 Create `Inspector.test.tsx`. Feed it a fixed `keySchema` literal (do not hit the network —
 the component takes `keySchema` as a prop) and assert per widget class:
@@ -2543,12 +2543,12 @@ the component takes `keySchema` as a prop) and assert per widget class:
 - A `router` node whose groups live under the anonymized `greencliff` key still renders the
   row table (the Inspector resolves keys through `keyAliases` from `useIpcRules`).
 
-- [ ] **Step 4: Run to verify it fails**
+- [x] **Step 4: Run to verify it fails**
 
 Run: `cd frontend && pnpm test src/components/tab2/Inspector.test.tsx`
 Expected: FAIL — `Inspector` does not exist.
 
-- [ ] **Step 5: Write `InspectorWidgets.tsx` then `Inspector.tsx`**
+- [x] **Step 5: Write `InspectorWidgets.tsx` then `Inspector.tsx`**
 
 Widgets reuse the existing input styling from `EditableField`/`FieldEditor`
 (`ETLModifier.tsx:143-153, 286-298`) verbatim — `var(--surface-2)` background,
@@ -2564,19 +2564,19 @@ grid header/row styling as `DDLViewer`.
 unrecognized-keys group, then the delete control (moved from `DeleteNodeControl`). It commits
 through `onChange(next: RecipeJson)` — the parent keeps owning `draft` and the dirty counter.
 
-- [ ] **Step 6: Replace `EditPanel` in `ETLModifier.tsx`**
+- [x] **Step 6: Replace `EditPanel` in `ETLModifier.tsx`**
 
 Delete `EditPanel`, `FieldEditor`, `AddFieldControl` and `DeleteNodeControl` from
 `ETLModifier.tsx` once `Inspector` covers them, and render `<Inspector …>` in their place,
 passing `keySchema={ipcRules.data?.keySchema ?? {}}`.
 
-- [ ] **Step 7: Run every frontend gate**
+- [x] **Step 7: Run every frontend gate**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS. Existing Tab 2 tests that drove the old `EditPanel` will need their queries
 updated to the Inspector's labels — that is expected and in scope for this task.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add frontend/src/components/tab2/Inspector.tsx \

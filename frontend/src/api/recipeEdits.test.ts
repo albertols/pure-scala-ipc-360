@@ -5,11 +5,14 @@ import {
   addStep,
   deleteEdge,
   deleteNode,
+  deleteTargetProperty,
   editFieldDataType,
   parseFormulaText,
   refsInto,
   renameNode,
   setFieldTransformation,
+  setSourceProperty,
+  setTargetProperty,
 } from './recipeEdits'
 import { recipeToCanvas, renderFormula } from './recipeAdapter'
 import type { RecipeJson } from './recipeAdapter'
@@ -423,5 +426,105 @@ describe('parseFormulaText', () => {
 
   it('no-args call -> {name, parameters: []}', () => {
     expect(parseFormulaText('NOW()')).toEqual({ name: 'NOW', parameters: [] })
+  })
+})
+
+// ─── Task 12: generic property mutators (Inspector) ──────────────────────────
+
+// Not explicitly typed RecipeJson — `groups` isn't part of RecipeTargetJson's
+// closed interface (it's schema-driven, not hand-typed here), so this fixture
+// stays a plain object literal and reaches recipeEdits' `RecipeJson`-typed
+// parameters only by reference (no excess-property check on a variable).
+const PROPS = {
+  steps: [
+    {
+      target: {
+        name: 'RTR', type: 'router',
+        fields: [{ name: 'X', dataType: 'String' }],
+        groups: [{ name: 'A', filterCondition: 'X=1', default: false }],
+      },
+      sources: [{ name: 'S', type: 'table' }],
+    },
+    {
+      target: { name: 'T2', type: 'table', fields: [] },
+      sources: [{ name: 'S', type: 'table' }],
+    },
+  ],
+  table: { targetTableNames: ['RTR', 'T2'], sourceTableNames: ['S'] },
+}
+
+describe('setTargetProperty / deleteTargetProperty / setSourceProperty — every helper is pure', () => {
+  it('returns a new object per call and never mutates the input', () => {
+    const before = JSON.stringify(PROPS)
+    const outs = [
+      setTargetProperty(PROPS, 'RTR', 'selectDistinct', true),
+      deleteTargetProperty(PROPS, 'RTR', 'groups'),
+      setSourceProperty(PROPS, 'RTR', 'S', 'group', 'A'),
+    ]
+    for (const out of outs) expect(out).not.toBe(PROPS)
+    expect(JSON.stringify(PROPS)).toBe(before)
+  })
+})
+
+describe('setTargetProperty', () => {
+  it('sets a scalar (boolean) on the named step\'s target', () => {
+    const out = setTargetProperty(PROPS, 'T2', 'selectDistinct', true)
+    expect(out.steps![1].target).toMatchObject({ selectDistinct: true })
+  })
+
+  it('sets an array on the named step\'s target', () => {
+    const out = setTargetProperty(PROPS, 'RTR', 'groupByFields', ['A', 'B'])
+    expect((out.steps![0].target as unknown as Record<string, unknown>).groupByFields).toEqual(['A', 'B'])
+  })
+
+  it('sets a nested object on the named step\'s target', () => {
+    const out = setTargetProperty(PROPS, 'RTR', 'filterCondition', { source: 'S.A' })
+    expect((out.steps![0].target as unknown as Record<string, unknown>).filterCondition).toEqual({ source: 'S.A' })
+  })
+
+  it('replaces an existing key without touching sibling keys', () => {
+    const out = setTargetProperty(PROPS, 'RTR', 'groups', [{ name: 'B', filterCondition: 'X=2', default: true }])
+    expect((out.steps![0].target as unknown as Record<string, unknown>).groups).toEqual([
+      { name: 'B', filterCondition: 'X=2', default: true },
+    ])
+    // sibling field `fields` is untouched.
+    expect(out.steps![0].target!.fields).toEqual([{ name: 'X', dataType: 'String' }])
+  })
+
+  it('is a no-op (unchanged clone) when stepName does not resolve to a step target', () => {
+    const out = setTargetProperty(PROPS, 'NOPE', 'selectDistinct', true)
+    expect(out).toEqual(PROPS)
+  })
+})
+
+describe('deleteTargetProperty', () => {
+  it('removes a key from the named step\'s target', () => {
+    const out = deleteTargetProperty(PROPS, 'RTR', 'groups')
+    expect((out.steps![0].target as unknown as Record<string, unknown>).groups).toBeUndefined()
+    expect('groups' in (out.steps![0].target as unknown as Record<string, unknown>)).toBe(false)
+  })
+
+  it('is a no-op when the key is already absent', () => {
+    const out = deleteTargetProperty(PROPS, 'T2', 'selectDistinct')
+    expect(out.steps![1].target).toEqual(PROPS.steps![1].target)
+  })
+})
+
+describe('setSourceProperty', () => {
+  it('targets the right sources[] entry by (stepName, sourceName) — the SAME source name under a DIFFERENT step is untouched', () => {
+    const out = setSourceProperty(PROPS, 'RTR', 'S', 'group', 'A')
+    expect((out.steps![0].sources![0] as unknown as Record<string, unknown>).group).toBe('A')
+    // T2's own "S" source entry is a distinct object and stays untouched.
+    expect('group' in (out.steps![1].sources![0] as unknown as Record<string, unknown>)).toBe(false)
+  })
+
+  it('is a no-op when stepName resolves but sourceName does not', () => {
+    const out = setSourceProperty(PROPS, 'RTR', 'NOPE', 'group', 'A')
+    expect(out).toEqual(PROPS)
+  })
+
+  it('is a no-op when stepName does not resolve at all', () => {
+    const out = setSourceProperty(PROPS, 'NOPE', 'S', 'group', 'A')
+    expect(out).toEqual(PROPS)
   })
 })

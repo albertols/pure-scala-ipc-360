@@ -326,6 +326,62 @@ export function deleteEdge(d: RecipeJson, toStep: string, toField: string, fromN
   return draft
 }
 
+// ─── Generic property mutators (Task 12 — schema-driven Inspector) ──────────────
+//
+// The Inspector renders whatever GET /api/ipc/rules says a kind admits; it never
+// hardcodes a per-kind key list. These three mutators are its write path: given a
+// key name resolved by the Inspector (already alias-resolved against the wire's
+// keyAliases table, so a write lands on the SAME raw key — e.g. "greencliff" — the
+// node already carries, rather than growing a stray parallel "groups" key), they
+// set/delete that key on the target's or a specific sources[] entry's raw object.
+// Deliberately untyped (`Record<string, unknown>`) at the write site — same
+// `as unknown as Record<string, unknown>` idiom recipeAdapter.ts's
+// `collectScalarProps` already uses for the closed RecipeTargetJson/RecipeSourceJson
+// interfaces — since the recipe grammar the Inspector renders is exactly whatever
+// the backend's key schema says, not a second copy hand-typed here.
+
+/** Sets an arbitrary key on the named step's target (resolved by `target.name`).
+ * No-op (unchanged clone) if `stepName` doesn't resolve to a step target. */
+export function setTargetProperty(d: RecipeJson, stepName: string, key: string, value: unknown): RecipeJson {
+  const draft = structuredClone(d)
+  const step = draft.steps?.find(s => s.target?.name === stepName)
+  if (!step?.target) return draft
+  ;(step.target as unknown as Record<string, unknown>)[key] = value
+  return draft
+}
+
+/** Deletes an arbitrary key from the named step's target (resolved by
+ * `target.name`). No-op if the step doesn't exist or the key is already absent. */
+export function deleteTargetProperty(d: RecipeJson, stepName: string, key: string): RecipeJson {
+  const draft = structuredClone(d)
+  const step = draft.steps?.find(s => s.target?.name === stepName)
+  if (!step?.target) return draft
+  delete (step.target as unknown as Record<string, unknown>)[key]
+  return draft
+}
+
+/** Sets an arbitrary key on ONE `sources[]` entry: the step is resolved by
+ * `target.name` (`stepName`), then the entry within that step's `sources[]` by
+ * `sourceName` — the same source name can appear in more than one step's
+ * `sources[]` with genuinely different property values (a router's group
+ * consumers are the canonical case: same `name`, a different `group` per
+ * consuming step), so both coordinates are required to identify a single
+ * occurrence. No-op if either doesn't resolve. */
+export function setSourceProperty(
+  d: RecipeJson,
+  stepName: string,
+  sourceName: string,
+  key: string,
+  value: unknown,
+): RecipeJson {
+  const draft = structuredClone(d)
+  const step = draft.steps?.find(s => s.target?.name === stepName)
+  const source = step?.sources?.find(s => s.name === sourceName)
+  if (!source) return draft
+  ;(source as unknown as Record<string, unknown>)[key] = value
+  return draft
+}
+
 // ─── Formula text <-> transformation tree ────────────────────────────────────────
 
 /** Depth-0 comma split (parens tracked, no quote-awareness — matches the brief's
