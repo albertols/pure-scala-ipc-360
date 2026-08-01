@@ -10,6 +10,7 @@ import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
 import { OperationalCard } from '../shared/OperationalCard'
 import { CorpusSummary } from '../shared/CorpusSummary'
+import { LoadingState } from '../shared/Spinner'
 
 const STATUS_COLOR: Record<string, string> = {
   success: '#34d399',
@@ -497,8 +498,8 @@ export function ETLDag() {
       {/* body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       {rel.isLoading ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
-          Loading workflows…
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LoadingState label="Loading workflows…" />
         </div>
       ) : relError ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>

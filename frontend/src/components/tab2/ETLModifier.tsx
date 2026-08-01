@@ -26,6 +26,7 @@ import { IpcCanvas } from './IpcCanvas'
 import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
+import { LoadingState } from '../shared/Spinner'
 import { Palette, SOURCE_TABLE_TYPE } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
 import { SaveBar, dangerButtonStyle } from './SaveBar'
@@ -206,6 +207,10 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   const [dirtyOps, setDirtyOps] = useState(0)
   const [validationErrors, setValidationErrors] = useState<RecipeValidationError[]>([])
   const [saveError, setSaveError] = useState<{ title: string; detail?: string } | null>(null)
+  // Task 17: Save-in-flight state — drives the SaveBar's inline spinner and
+  // disables the button so a slow validate+PUT round trip can't be
+  // double-submitted. `finally` re-enables on both success AND failure.
+  const [saving, setSaving] = useState(false)
 
   // Node drag offsets (Task 8) + the layout sidecar (Task 9/10): per-node pixel
   // deltas from IpcCanvas's default layout position, added at render time
@@ -506,6 +511,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     if (!draft || !recipePath || !rec.data) return
     setValidationErrors([])
     setSaveError(null)
+    setSaving(true)
     try {
       const result = await apiSend<RecipeValidation>('POST', '/recipes/validate', draft)
       if (!result.valid) {
@@ -518,11 +524,13 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     } catch (e) {
       const err = e as ApiError
       setSaveError({ title: err.title ?? 'Save failed', detail: err.detail })
+    } finally {
+      setSaving(false)
     }
   }
 
   const sidebarExtra = loading ? (
-    <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 12 }}>Loading corpus…</div>
+    <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
   ) : error ? (
     <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
       <div>{error.title}</div>
@@ -578,8 +586,8 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
             </span>
           </div>
         ) : rec.isLoading ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
-            Loading recipe…
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <LoadingState label="Loading recipe…" />
           </div>
         ) : recError ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
@@ -801,6 +809,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
             onCancelWire={() => setWireFrom(null)}
             onSave={handleSave}
             onDiscard={handleDiscard}
+            saving={saving}
           />
         )}
       </div>

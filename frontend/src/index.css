@@ -71,3 +71,16 @@ html, body, #root {
   transition: background 0.1s ease;
 }
 .port-row:hover { background: var(--surface-3); }
+
+/* Task 17: shared loading spinner arc (animation utility, not a new design
+   token — ADR-0005) — rotates the SVG circle in Spinner.tsx. */
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+.spinner-arc {
+  animation: spinner-rotate 0.8s linear infinite;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner-arc { animation-duration: 2.4s; }
+}

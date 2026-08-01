@@ -2784,7 +2784,7 @@ Cross-tab save races are already covered by the existing baseModified 409."
 - Modify: `frontend/src/api/queries.ts`, `types.gen.ts`, and the four tab components
 
 **Interfaces:**
-- Consumes: `CorpusService`, `useOperational(selectedDate)` (already loaded by Tab 3, `ETLOperational.tsx:262`).
+- Consumes: `CorpusService`, `useOperational(selectedDate)` — **NOTE: this was NOT already loaded by Tab 3.** The plan originally claimed it was (citing `ETLOperational.tsx:262`, which is actually a `TimeSelection` object literal); Task 16's implementer verified the hook was neither imported nor called and added it.
 - Produces: `GET /api/summary -> SummaryDto(int xmlCount, int recipeCount, int ddlCount, int dirCount, List<String> layers)`; `useSummary()`; `<CorpusSummary items={[{label, value}]} />`.
 
 - [x] **Step 1: Write the failing backend test**
@@ -2847,17 +2847,26 @@ counts follow the selected date from the snapshot it already loads."
 
 **Files:**
 - Create: `frontend/src/components/shared/Spinner.tsx`, `Spinner.test.tsx`
-- Modify: all four tab components, `ETLModifier.tsx`, `main.tsx`
+- Modify: all four tab components, `ETLModifier.tsx`, `main.tsx` — **NOTE: a full
+  `grep -rn Loading frontend/src` (per the task brief's own instruction to verify
+  rather than trust this list) turned up two more sites Tasks 14/10 had added since
+  this plan was written — `ExpressionDock.tsx`'s "Loading expressions…" and
+  `HistoryDrawer.tsx`'s "Loading history…" — both swapped to `<LoadingState />` too.
+  Wiring the Save button's spinner also touched `SaveBar.tsx` (the button's owning
+  component since Task 9's extraction), not listed here either. `main.tsx` was NOT
+  touched — `<TopProgressBar />` mounts in `App.tsx` per Step 2 below and the Step 3
+  `git add` list, which never mentioned `main.tsx` in the first place; that bullet is
+  stale.**
 
 **Interfaces:**
 - Produces: `<Spinner size?: number />`, `<LoadingState label: string />`, `<TopProgressBar />` (driven by `useIsFetching()` from `@tanstack/react-query`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `Spinner.test.tsx`: `LoadingState` renders its label and an SVG with `role="status"`;
 `TopProgressBar` renders nothing when `useIsFetching()` is 0 and a bar when it is > 0.
 
-- [ ] **Step 2: Run to verify it fails, then implement**
+- [x] **Step 2: Run to verify it fails, then implement**
 
 An SVG arc rotating via CSS `@keyframes` added to `index.css` — an animation utility, not a
 new token. Replace every textual `Loading …` (`ETLModifier.tsx:808,841,498`,
@@ -2865,7 +2874,7 @@ new token. Replace every textual `Loading …` (`ETLModifier.tsx:808,841,498`,
 each label's current wording. Add an inline `<Spinner size={11} />` to the Save button while
 `handleSave` is in flight, and disable it. Mount `<TopProgressBar />` once in `App.tsx`.
 
-- [ ] **Step 3: Run all gates and commit**
+- [x] **Step 3: Run all gates and commit**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.

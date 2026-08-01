@@ -10,6 +10,7 @@ import { EtlCanvas } from '../shared/EtlCanvas'
 import { NODE_STYLES } from './NodeBox'
 import { DetailPanel } from './DetailPanel'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
+import { LoadingState } from '../shared/Spinner'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
@@ -78,7 +79,7 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   }
 
   const sidebarExtra = loading ? (
-    <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 12 }}>Loading corpus…</div>
+    <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
   ) : error ? (
     <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
       <div>{error.title}</div>
@@ -126,8 +127,8 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
           <span style={{ fontSize: 12 }}>Select an .xml mapping to view</span>
         </div>
       ) : model.isLoading ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
-          Loading mapping…
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LoadingState label="Loading mapping…" />
         </div>
       ) : modelError ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>

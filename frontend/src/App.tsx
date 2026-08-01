@@ -5,6 +5,7 @@ import { ETLModifier } from './components/tab2/ETLModifier'
 import { ETLOperational } from './components/tab3/ETLOperational'
 import { ETLDag } from './components/tab4/ETLDag'
 import { InfoTooltip } from './components/shared/InfoTooltip'
+import { TopProgressBar } from './components/shared/Spinner'
 
 // ─── Tab Config ───────────────────────────────────────────────────────────────
 
@@ -217,6 +218,10 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+      {/* Task 17: fetch-driven progress bar — mounted once here, above the
+          tab shell (and focus mode), so every corner of the app gets the
+          same top-of-viewport signal without per-tab wiring. */}
+      <TopProgressBar />
       {!focusRecipe && (
         <TopBar
           activeTab={activeTab}

@@ -220,6 +220,62 @@ describe('ETLModifier — editing state (Task 8)', () => {
     await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
   })
 
+  // Task 17: Save button spinner + disable while handleSave is in flight —
+  // re-enables on both success and failure so a save that errors can never
+  // leave the button permanently disabled.
+  it('disables Save Changes and shows an inline spinner while the save is in flight, then re-enables on success', async () => {
+    server.use(
+      http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', async () => {
+        await new Promise(resolve => setTimeout(resolve, 60))
+        return HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 340,
+          modifiedAt: '2026-07-31T00:05:00Z',
+          content: MINI,
+        })
+      }),
+    )
+
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    const saveButton = screen.getByText('Save Changes').closest('button')!
+    expect(saveButton).not.toBeDisabled()
+    fireEvent.click(saveButton)
+
+    await waitFor(() => expect(saveButton).toBeDisabled())
+    expect(within(saveButton).getByRole('status')).toBeInTheDocument()
+
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+    expect(saveButton).not.toBeInTheDocument() // SaveBar unmounts once changes === 0
+  })
+
+  it('re-enables Save Changes after a failed save — never stays disabled', async () => {
+    server.use(
+      http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', async () => {
+        await new Promise(resolve => setTimeout(resolve, 60))
+        return HttpResponse.json({ title: 'Conflict', detail: 'Recipe changed since you loaded it.' }, { status: 409 })
+      }),
+    )
+
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    const saveButton = screen.getByText('Save Changes').closest('button')!
+    fireEvent.click(saveButton)
+
+    await waitFor(() => expect(saveButton).toBeDisabled())
+
+    await screen.findByText('Recipe changed since you loaded it.')
+    await waitFor(() => expect(saveButton).not.toBeDisabled())
+    expect(within(saveButton).queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('Discard re-clones the draft from the loaded recipe, clearing dirty state', async () => {
     const formula = await loadAndSelectT()
     fireEvent.change(formula, { target: { value: '999' } })

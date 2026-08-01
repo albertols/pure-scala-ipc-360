@@ -1,6 +1,7 @@
 import type { ApiError } from '../../api/client'
 import type { ExpressionEntry } from '../../api/queries'
 import { CopyButton } from '../shared/CopyButton'
+import { LoadingState } from '../shared/Spinner'
 
 // ─── Expression dock (Task 14) ──────────────────────────────────────────────
 //
@@ -74,7 +75,7 @@ export function ExpressionDock({
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {isLoading ? (
-          <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Loading expressions…</div>
+          <LoadingState label="Loading expressions…" />
         ) : error ? (
           <div style={{ color: 'var(--red)', fontSize: 11 }}>{error.title}</div>
         ) : filtered.length === 0 ? (

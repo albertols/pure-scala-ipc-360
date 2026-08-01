@@ -9,6 +9,7 @@ import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
+import { LoadingState } from '../shared/Spinner'
 import { PreviewOverlay } from './PreviewOverlay'
 
 type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
@@ -314,7 +315,7 @@ export function ETLOperational() {
   ] : []
 
   if (rel.isLoading || summary.isLoading) {
-    return <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 16 }}>Loading relationships…</div>
+    return <div style={{ padding: 16 }}><LoadingState label="Loading relationships…" /></div>
   }
 
   const apiError = (rel.error ?? summary.error) as ApiError | null

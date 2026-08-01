@@ -1,3 +1,5 @@
+import { Spinner } from '../shared/Spinner'
+
 /** Delete idiom (Task 9): the SaveBar's existing "Save Changes"/"Discard" button
  * pair, recomposed with the `--red` token in place of the blue one — no new
  * tokens introduced. */
@@ -21,12 +23,18 @@ export function SaveBar({
   onCancelWire,
   onSave,
   onDiscard,
+  saving,
 }: {
   changes: number
   wireFrom: { nodeId: string; portName: string } | null
   onCancelWire: () => void
   onSave: () => void
   onDiscard: () => void
+  /** Task 17: true while `handleSave`'s validate+PUT round trip is in
+   * flight — drives the inline spinner and disables the button so a slow
+   * save can't be double-submitted. Re-enabled by the caller's `finally` on
+   * both success and failure. */
+  saving: boolean
 }) {
   if (changes === 0 && !wireFrom) return null
   return (
@@ -70,11 +78,17 @@ export function SaveBar({
       {changes > 0 && (
         <>
           <button onClick={onDiscard} style={ghostButtonStyle}>Discard</button>
-          <button onClick={onSave} style={{
+          <button onClick={onSave} disabled={saving} style={{
             padding: '5px 16px', borderRadius: 5,
             background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-            color: '#4f9cf9', fontSize: 12, cursor: 'pointer', fontWeight: 600,
-          }}>Save Changes</button>
+            color: '#4f9cf9', fontSize: 12, fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: 6,
+            cursor: saving ? 'default' : 'pointer',
+            opacity: saving ? 0.6 : 1,
+          }}>
+            {saving && <Spinner size={11} />}
+            Save Changes
+          </button>
         </>
       )}
     </div>
