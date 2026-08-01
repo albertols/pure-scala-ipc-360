@@ -880,15 +880,56 @@ validation set: all 30 observed pairings must be permitted."
 
 ---
 
-### Task 9: Serve `connections` to the frontend
+### Task 9: Active/passive classification + fan-in rule, and serve `connections`
 
 **Files:**
+- Modify: `backend/src/main/resources/ipc/ipc-rules.json`, `service/ipc/IpcConnectionRule.java`, `service/ipc/IpcCatalog.java`
+- Create: `backend/src/main/java/io/pure360/etl360/service/ipc/IpcConnections.java`
 - Modify: `backend/src/main/java/io/pure360/etl360/api/dto/IpcRulesDto.java`, `IpcController.java`
 - Create: `backend/src/main/java/io/pure360/etl360/api/dto/IpcConnectionDto.java`
+- Modify: `backend/src/test/java/io/pure360/etl360/IpcConnectionsContractTest.java`
 - Modify: `frontend/src/api/types.gen.ts` (regenerated), `frontend/src/api/queries.ts`
 
+**Added after Task 8's review (human ruling, 2026-08-01).** Task 8's matrix models *pairwise*
+source-kind → target-kind legality, but PowerCenter's Designer also enforces a **fan-in** rule
+that shape cannot express: it will not let you connect multiple **active** transformations, or an
+active and a passive one, to the same downstream transformation or input group. Task 8's reviewer
+found the gap; the user chose to close it now rather than ship a partial "playing safe" claim.
+
+**Classify each kind from IPC semantics.** An active transformation can change the number of rows,
+their order, or transaction boundaries; a passive one cannot.
+
+| kind | `active` | why |
+|---|---|---|
+| `table` | `null` | a source/target definition, not a transformation — the rule does not apply |
+| `sourceQualifier` | `true` | filters, joins, sorts and select-distincts via its SQL override |
+| `filter` | `true` | drops rows |
+| `joiner` | `true` | row count changes with the join |
+| `aggregator` | `true` | collapses groups |
+| `router` | `true` | partitions rows across groups |
+| `union` | `true` | merges pipelines |
+| `normalizer` | `true` | one input row yields many |
+| `storedProcedure` | `false` | a connected Stored Procedure is passive |
+| `java` | `null` | PowerCenter's Java transformation is active **or** passive as configured at creation, and the recipe JSON does not record which |
+
+**`null` means "cannot be determined", not "passive".** Where a participant is `null` the fan-in
+check must **warn, never block** — refusing a link we cannot prove illegal is worse than
+permitting one we cannot prove legal, and `java`/`table` are exactly where the model does not know.
+
+**A validation you get for free:** the corpus's only multi-source steps are 21 uniform `table`
+fan-ins, and `table` is `null` — so a correct rule leaves every existing recipe unflagged. If your
+implementation starts flagging corpus recipes, the classification or the check is wrong, not the
+corpus. Assert it: extend `IpcConnectionsContractTest` with a test running the fan-in check over
+all 86 recipes and expecting **zero `block` verdicts**.
+
 **Interfaces:**
-- Produces: `IpcRulesDto` gains `Map<String, IpcConnectionDto> connections`; `IpcConnectionDto(String sourceKind, List<String> mayFeed, Integer exactly, List<String> namedInputs)`. Frontend type alias `IpcConnections = IpcRules['connections']`.
+- Produces: `IpcConnectionRule` gains `Boolean active` (nullable — `null` = unknown).
+  `IpcConnections.fanInVerdict(List<String> existingSourceKinds, String candidateKind) -> String`
+  returning `"ok" | "warn" | "block"`: **block** when the candidate is active and at least one
+  existing input is active; **warn** when either side is `null`; **ok** otherwise.
+  `IpcRulesDto` gains `Map<String, IpcConnectionDto> connections`;
+  `IpcConnectionDto(String sourceKind, List<String> mayFeed, Integer exactly, List<String> namedInputs, Boolean active)`.
+  Frontend type alias `IpcConnections = IpcRules['connections']`.
 
 - [ ] **Step 1: Extend the DTO and controller, with a MockMvc assertion**
 
