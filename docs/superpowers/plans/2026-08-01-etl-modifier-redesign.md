@@ -46,7 +46,7 @@
 | `api/IpcController.java` | `GET /api/ipc/rules`. |
 | `api/LayoutController.java` | `GET`/`PUT /api/layouts/{*path}`. |
 | `api/SummaryController.java` | `GET /api/summary`. |
-| `api/dto/IpcCheckDto.java`, `IpcRuleMetaDto.java`, `IpcKeySpecDto.java`, `IpcRulesDto.java`, `LayoutDto.java`, `NodePositionDto.java`, `SummaryDto.java` | Wire records. |
+| `api/dto/IpcCheckDto.java`, `IpcRuleMetaDto.java`, `IpcKeySpecDto.java`, `IpcRulesDto.java`, `LayoutDto.java`, `NodeOffsetDto.java`, `SummaryDto.java` | Wire records. |
 | `resources/ipc/ipc-rules.json` | Rule metadata, alias table, per-kind key schema. |
 
 **Frontend — new, `frontend/src/`:**
@@ -2256,15 +2256,15 @@ which made the existing edge-delete affordance unreachable."
 - Create: `backend/src/main/java/io/pure360/etl360/service/support/LayoutSidecar.java`
 - Create: `backend/src/main/java/io/pure360/etl360/service/LayoutService.java`
 - Create: `backend/src/main/java/io/pure360/etl360/api/LayoutController.java`
-- Create: `backend/src/main/java/io/pure360/etl360/api/dto/LayoutDto.java`, `NodePositionDto.java`
+- Create: `backend/src/main/java/io/pure360/etl360/api/dto/LayoutDto.java`, `NodeOffsetDto.java`
 - Modify: `backend/src/main/java/io/pure360/etl360/service/CorpusService.java:34-45`
 - Create: `backend/src/test/java/io/pure360/etl360/api/LayoutControllerTest.java`
 
 **Interfaces:**
 - Consumes: `PathResolver.insideCorpus`, `HistorySidecar` (as the structural template).
-- Produces: `LayoutSidecar.PREFIX = "_layout_"`, `LayoutSidecar.isLayoutFile(String fileName) -> boolean`, `LayoutSidecar.layoutFileFor(Path recipeFile) -> Path`; `GET`/`PUT /api/layouts/{*path}` returning `LayoutDto(int version, Map<String, NodePositionDto> nodes)`.
+- Produces: `LayoutSidecar.PREFIX = "_layout_"`, `LayoutSidecar.isLayoutFile(String fileName) -> boolean`, `LayoutSidecar.layoutFileFor(Path recipeFile) -> Path`; `GET`/`PUT /api/layouts/{*path}` returning `LayoutDto(int version, Map<String, NodeOffsetDto> nodes)`.
 
-- [ ] **Step 1: Write the failing controller test**
+- [x] **Step 1: Write the failing controller test**
 
 Create `backend/src/test/java/io/pure360/etl360/api/LayoutControllerTest.java`, modelled on
 `RecipeWriteControllerTest`'s `@DynamicPropertySource` temp-corpus idiom. Cover: `GET` for a
@@ -2273,12 +2273,12 @@ recipe with no sidecar returns 200 with `{"version":1,"nodes":{}}` (never 404); 
 never lists it; `GET /api/ddl/CDM/m_FIX` does not include it; a sandbox-escaping path
 (`../../etc/passwd.json`) returns 400.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `mvn -am -pl backend test -Dtest=LayoutControllerTest -DfailIfNoTests=false`
 Expected: FAIL — classes missing.
 
-- [ ] **Step 3: Write `LayoutSidecar`**
+- [x] **Step 3: Write `LayoutSidecar`**
 
 ```java
 package io.pure360.etl360.service.support;
@@ -2314,9 +2314,17 @@ public final class LayoutSidecar {
 }
 ```
 
-- [ ] **Step 4: Write `LayoutService`, `LayoutController` and the DTOs**
+- [x] **Step 4: Write `LayoutService`, `LayoutController` and the DTOs**
 
-`LayoutDto(int version, Map<String, NodePositionDto> nodes)`, `NodePositionDto(double x, double y)`.
+`LayoutDto(int version, Map<String, NodeOffsetDto> nodes)`, `NodeOffsetDto(double dx, double dy)`.
+
+> **The stored values are OFFSETS, not absolute coordinates** — deltas added to whatever
+> `layoutNodes` computes for a node (`IpcCanvas` renders each node at `n.x + offsets[id].dx`).
+> This is deliberate: the auto-layout algorithm stays authoritative for structure and a drag is
+> a nudge on top of it, so adding a node to a recipe re-layouts cleanly while the user's tweaks
+> survive. The fields are named `dx`/`dy` rather than `x`/`y` precisely so nobody reads them as
+> canvas coordinates — Task 8's implementer flagged that exact ambiguity. Say this in
+> `NodeOffsetDto`'s Javadoc too, and in ADR-0011 (Task 18).
 `LayoutService.layout(String relRecipePath)` resolves via `paths.insideCorpus`, derives the
 sidecar with `LayoutSidecar.layoutFileFor`, and returns `new LayoutDto(1, Map.of())` when the
 file is absent. `LayoutService.save(String relRecipePath, LayoutDto body)` writes atomically
@@ -2329,7 +2337,7 @@ basename doesn't start `_ETL_` with `InvalidCorpusPathException`, mirroring
 `@PutMapping("/{*path}")`, both calling `MappingController.stripLeadingSlash(path)` exactly as
 `RecipeController` does.
 
-- [ ] **Step 5: Exclude the sidecar from the tree walk**
+- [x] **Step 5: Exclude the sidecar from the tree walk**
 
 In `CorpusService.dirNode`, change the `.json` leaf branch:
 
@@ -2346,12 +2354,12 @@ Add the import. `RecipeService.ddls` (`RecipeService.java:77`) already skips eve
 `_`-prefixed name, and `allRecipePaths()` matches `_ETL_`, so neither needs a change — the
 Step 1 test asserts both rather than assuming them.
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `mvn -am -pl backend test -Dtest=LayoutControllerTest -DfailIfNoTests=false`
 Expected: PASS.
 
-- [ ] **Step 7: Run the whole backend suite and commit**
+- [x] **Step 7: Run the whole backend suite and commit**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS — `TreeControllerTest`, `CorpusContractTest` and `RecipeAndDdlControllerTest` all still green.
@@ -2361,7 +2369,7 @@ git add backend/src/main/java/io/pure360/etl360/service/support/LayoutSidecar.ja
         backend/src/main/java/io/pure360/etl360/service/LayoutService.java \
         backend/src/main/java/io/pure360/etl360/api/LayoutController.java \
         backend/src/main/java/io/pure360/etl360/api/dto/LayoutDto.java \
-        backend/src/main/java/io/pure360/etl360/api/dto/NodePositionDto.java \
+        backend/src/main/java/io/pure360/etl360/api/dto/NodeOffsetDto.java \
         backend/src/main/java/io/pure360/etl360/service/CorpusService.java \
         backend/src/test/java/io/pure360/etl360/api/LayoutControllerTest.java \
         docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md
@@ -2384,7 +2392,7 @@ byte-identical (ADR-0011). GET never 404s — an absent sidecar is an empty layo
 
 **Interfaces:**
 - Consumes: `GET`/`PUT /api/layouts/{*path}` (Task 9), `IpcCanvas`'s `offsets`/`onMoveNode`/`onAutoLayout` (Task 8).
-- Produces: `useLayout(recipePath: string)` (TanStack query, `enabled: !!recipePath`), `putLayout(recipePath: string, offsets: Record<string, {x: number; y: number}>): Promise<Layout>`, and `type Layout = components['schemas']['LayoutDto']`.
+- Produces: `useLayout(recipePath: string)` (TanStack query, `enabled: !!recipePath`), `putLayout(recipePath: string, offsets: Record<string, {dx: number; dy: number}>): Promise<Layout>`, and `type Layout = components['schemas']['LayoutDto']`.
 
 - [ ] **Step 1: Regenerate types and write the failing tests**
 
@@ -2408,7 +2416,7 @@ import { apiGet, apiSend } from './client'
 import type { components } from './types.gen'
 
 export type Layout = components['schemas']['LayoutDto']
-export type NodePosition = components['schemas']['NodePositionDto']
+export type NodeOffset = components['schemas']['NodeOffsetDto']
 
 /** Node positions for a recipe. An unsaved layout is `{version:1,nodes:{}}`, never a 404 —
  * see LayoutService, so this hook has no "missing" state to handle. */
@@ -2420,7 +2428,7 @@ export const useLayout = (recipePath: string) =>
     enabled: !!recipePath,
   })
 
-export const putLayout = (recipePath: string, nodes: Record<string, { x: number; y: number }>) =>
+export const putLayout = (recipePath: string, nodes: Record<string, { dx: number; dy: number }>) =>
   apiSend<Layout>('PUT', `/layouts/${recipePath}`, { version: 1, nodes })
 ```
 

@@ -3,6 +3,7 @@ package io.pure360.etl360.service;
 import io.pure360.etl360.api.dto.TreeNodeDto;
 import io.pure360.etl360.config.Etl360Properties;
 import io.pure360.etl360.service.support.HistorySidecar;
+import io.pure360.etl360.service.support.LayoutSidecar;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -40,6 +41,9 @@ public class CorpusService {
                 } else if (hasXmlExtension(name)) {
                     children.add(xmlNode(p));
                 } else if (name.endsWith(".json")) {
+                    // Canvas-layout sidecar (see LayoutSidecar): editor state, never a
+                    // browsable corpus entry — same exclusion contract as _history/.
+                    if (LayoutSidecar.isLayoutFile(name)) continue;
                     children.add(leaf(p, "json"));
                 }
             }
