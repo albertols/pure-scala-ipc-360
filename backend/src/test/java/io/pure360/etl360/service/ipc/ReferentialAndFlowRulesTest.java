@@ -1,0 +1,109 @@
+package io.pure360.etl360.service.ipc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class ReferentialAndFlowRulesTest {
+    private static final ObjectMapper M = new ObjectMapper();
+    private final IpcRuleEngine engine = new IpcRuleEngine(new IpcCatalog());
+
+    private List<String> failedIds(String json) throws Exception {
+        return engine.run(M.readTree(json)).stream()
+            .filter(c -> "fail".equals(c.status())).map(IpcCheck::ruleId).toList();
+    }
+
+    /** Source table S -> sourceQualifier SQ -> target table T. Clean on every family. */
+    private static final String CHAIN = """
+        {"steps":[
+          {"target":{"name":"SQ","type":"sourceQualifier","selectDistinct":false,"fields":[
+              {"name":"A","dataType":"String","transformation":{"source":"S.A"}}]},
+           "sources":[{"name":"S","type":"table"}]},
+          {"target":{"name":"T","type":"table","fields":[
+              {"name":"A","dataType":"String","transformation":{"source":"SQ.A"}}]},
+           "sources":[{"name":"SQ","type":"sourceQualifier"}]}],
+         "table":{"targetTableNames":["T"],"sourceTableNames":["S"]}}""";
+
+    @Test
+    void aCleanChainHasNoReferentialOrFlowFailures() throws Exception {
+        assertThat(failedIds(CHAIN)).noneMatch(id -> id.startsWith("IPC-REF-") || id.startsWith("IPC-FLW-"));
+    }
+
+    @Test
+    void unresolvableRefTableFails() throws Exception {
+        assertThat(failedIds(CHAIN.replace("\"source\":\"S.A\"", "\"source\":\"NOPE.A\"")))
+            .contains("IPC-REF-001");
+    }
+
+    @Test
+    void refToAMissingFieldOfAKnownStepFails() throws Exception {
+        assertThat(failedIds(CHAIN.replace("\"source\":\"SQ.A\"", "\"source\":\"SQ.ZZZ\"")))
+            .contains("IPC-REF-002");
+    }
+
+    @Test
+    void selfReferenceFails() throws Exception {
+        assertThat(failedIds(CHAIN.replace("\"source\":\"SQ.A\"", "\"source\":\"T.A\"")))
+            .contains("IPC-REF-004");
+    }
+
+    @Test
+    void targetTableMissingFromTargetTableNamesFails() throws Exception {
+        assertThat(failedIds(CHAIN.replace("\"targetTableNames\":[\"T\"]", "\"targetTableNames\":[]")))
+            .contains("IPC-REF-005");
+    }
+
+    @Test
+    void aTwoStepCycleFails() throws Exception {
+        String cyclic = """
+            {"steps":[
+              {"target":{"name":"A","type":"filter","fields":[
+                  {"name":"X","dataType":"String","transformation":{"source":"B.X"}}]},"sources":[]},
+              {"target":{"name":"B","type":"filter","fields":[
+                  {"name":"X","dataType":"String","transformation":{"source":"A.X"}}]},"sources":[]}],
+             "table":{"targetTableNames":[],"sourceTableNames":[]}}""";
+        assertThat(failedIds(cyclic)).contains("IPC-REF-006");
+    }
+
+    @Test
+    void unknownExpressionFunctionFails() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"NOT_A_FUNCTION\",\"parameters\":[{\"source\":\"S.A\"}]}");
+        assertThat(failedIds(json)).contains("IPC-EXP-001");
+    }
+
+    @Test
+    void knownPredefinedFunctionPasses() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"SUBSTR\",\"parameters\":[{\"source\":\"S.A\"}]}");
+        assertThat(failedIds(json)).doesNotContain("IPC-EXP-001");
+    }
+
+    @Test
+    void expMarkerNamesPass() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"EXP_DECODE\",\"parameters\":[{\"source\":\"S.A\"}]}");
+        assertThat(failedIds(json)).doesNotContain("IPC-EXP-001");
+    }
+
+    @Test
+    void badLookupMatchPolicyFails() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}", """
+            "transformation":{"name":"EXP_LOOKUP","outputField":"O","table":"L",
+              "condition":"K = in_K","matchPolicy":"Maybe",
+              "parameters":[{"name":"in_K","dataType":"String","transformation":{"source":"S.A"}}]}""");
+        assertThat(failedIds(json)).contains("IPC-EXP-003");
+    }
+
+    @Test
+    void lookupConditionNotReferencingABindVariableFails() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}", """
+            "transformation":{"name":"EXP_LOOKUP","outputField":"O","table":"L",
+              "condition":"K = 1","matchPolicy":"First",
+              "parameters":[{"name":"in_K","dataType":"String","transformation":{"source":"S.A"}}]}""");
+        assertThat(failedIds(json)).contains("IPC-FLW-004");
+    }
+}

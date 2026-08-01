@@ -21,6 +21,9 @@ public class IpcRuleEngine {
         List<IpcRule> all = new ArrayList<>();
         all.addAll(StructuralRules.all(catalog));
         all.addAll(TypeShapeRules.all(catalog));
+        all.addAll(ReferentialRules.all(catalog));
+        all.addAll(DataflowRules.all(catalog));
+        all.addAll(ExpressionRules.all(catalog));
         this.rules = List.copyOf(all);
     }
 

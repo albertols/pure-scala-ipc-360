@@ -381,7 +381,7 @@ input-group name, not a transformation) and TRANSFORMATION@TYPE for the other th
   - `record IpcCheck(String ruleId, String severity, String status, String path, String message)` — `status` is `"pass"` or `"fail"`.
   - `interface IpcRule { String id(); void check(RuleContext ctx, List<IpcCheck> out); }`
   - `RuleContext` with `JsonNode recipe()`, `List<JsonNode> steps()`, `JsonNode fieldsOf(JsonNode target)`, `String fieldsKey(JsonNode target)`, `String targetType(JsonNode target)`, `String sourceType(JsonNode source)`, `String stepPath(int i)`, `Set<String> targetNames()`, `Set<String> sourceNames()`, `Set<String> tableSourceNames()`, `boolean resolvesAsRefTarget(String)`.
-  - `IpcCatalog.meta(String ruleId) -> IpcRuleMeta`, `IpcCatalog.rules() -> List<IpcRuleMeta>`, `IpcCatalog.keySchema() -> Map<String,List<IpcKeySpec>>`, plus nested records `IpcRuleMeta(String id, String severity, String statement, String parserRef, String ipcRef, String wikiRef)` and `IpcKeySpec(String key, String parserType, boolean required, String widget)`.
+  - `IpcCatalog.meta(String ruleId) -> IpcRuleMeta`, `IpcCatalog.rules() -> List<IpcRuleMeta>`, `IpcCatalog.keySchema() -> Map<String,List<IpcKeySpec>>`, plus nested records `IpcRuleMeta(String id, String severity, String statement, String parserRef, String ipcRef, String wikiRef)` and `IpcKeySpec(String key, String parserType, boolean required, String widget, String ruleId)`.
   - `IpcRuleEngine.run(JsonNode recipe) -> List<IpcCheck>`.
 - Tasks 3–5 add rule classes implementing `IpcRule` and register them in `IpcRuleEngine`.
 
@@ -1441,7 +1441,7 @@ Task 5 calibrates them against the corpus and downgrades whatever the corpus vio
 | `IPC-EXP-002` | bare `{value}` operator literals belong to the arithmetic/comparison/logical/string operator sets |
 | `IPC-EXP-003` | `EXP_LOOKUP.matchPolicy` ∈ `Any \| First \| Last` |
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `backend/src/test/java/io/pure360/etl360/service/ipc/ReferentialAndFlowRulesTest.java`:
 
@@ -1557,12 +1557,12 @@ class ReferentialAndFlowRulesTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `mvn -am -pl backend test -Dtest=ReferentialAndFlowRulesTest -DfailIfNoTests=false`
 Expected: FAIL — the three rule classes don't exist.
 
-- [ ] **Step 3: Implement the three rule classes**
+- [x] **Step 3: Implement the three rule classes**
 
 Each follows `StructuralRules`' shape: a `static List<IpcRule> all(IpcCatalog)` returning
 `rule(id, catalog, (ctx, sev, out) -> …)` lambdas.
@@ -1593,7 +1593,7 @@ Scala constants and must be updated together; Task 6's contract test asserts the
 same cardinality as the Scala source by counting the quoted literals in
 `RecipeConstants.scala`.
 
-- [ ] **Step 4: Register all three families in `IpcRuleEngine`**
+- [x] **Step 4: Register all three families in `IpcRuleEngine`**
 
 ```java
         all.addAll(ReferentialRules.all(catalog));
@@ -1601,12 +1601,12 @@ same cardinality as the Scala source by counting the quoted literals in
         all.addAll(ExpressionRules.all(catalog));
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `mvn -am -pl backend test -Dtest=ReferentialAndFlowRulesTest -DfailIfNoTests=false`
 Expected: PASS, 11 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/ipc/ReferentialRules.java \
