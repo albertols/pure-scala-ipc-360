@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { ETLNode, Connection, Port } from '../../types'
 import type { FSFile, FSDir } from '../../types'
 import type { ApiError } from '../../api/client'
 import { apiGet, apiSend } from '../../api/client'
 import { useRecipe, useDdl, useExpressions } from '../../api/queries'
+import { useLayout, putLayout } from '../../api/layoutQueries'
+import type { NodeOffset } from '../../api/layoutQueries'
 import type { RecipeFile, RecipeValidation, RecipeValidationError, ExpressionEntry } from '../../api/queries'
 import { recipeToCanvas, renderFormula, fieldsOf } from '../../api/recipeAdapter'
 import type { RecipeJson, RecipeFieldJson } from '../../api/recipeAdapter'
@@ -29,6 +31,31 @@ import { Palette, SOURCE_TABLE_TYPE } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
+
+// ─── Layout offsets ⇄ wire DTO (Task 10) ───────────────────────────────────────
+// Two vocabularies meet at this boundary and nowhere else: IpcCanvas's in-memory
+// `offsets` map is keyed `{x, y}` (Task 8's existing shape, unchanged), while the
+// `LayoutDto` wire format is keyed `{dx, dy}` (deliberately named that way so
+// nobody reads them as absolute canvas coordinates — see NodeOffsetDto's Javadoc).
+
+/** `LayoutDto.nodes` (dx/dy) -> IpcCanvas's `offsets` prop shape (x/y). Missing
+ * dx/dy (an empty/partial sidecar) fall back to 0, matching "no offset". */
+function toCanvasOffsets(nodes: Record<string, NodeOffset> | undefined): Record<string, { x: number; y: number }> {
+  if (!nodes) return {}
+  return Object.fromEntries(
+    Object.entries(nodes).map(([id, off]) => [id, { x: off.dx ?? 0, y: off.dy ?? 0 }]),
+  )
+}
+
+/** IpcCanvas's `offsets` prop shape (x/y) -> the `putLayout` wire body (dx/dy). */
+function toWireOffsets(offsets: Record<string, { x: number; y: number }>): Record<string, { dx: number; dy: number }> {
+  return Object.fromEntries(
+    Object.entries(offsets).map(([id, { x, y }]) => [id, { dx: x, dy: y }]),
+  )
+}
+
+/** Debounce interval (ms) between a node drag settling and the layout PUT firing. */
+const LAYOUT_SAVE_DEBOUNCE_MS = 500
 
 /** Real DDL JSON shape (parser `<TABLE>.json` output) — BigQuery field list. */
 interface DdlColumnJson {
@@ -589,11 +616,13 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
   const [validationErrors, setValidationErrors] = useState<RecipeValidationError[]>([])
   const [saveError, setSaveError] = useState<{ title: string; detail?: string } | null>(null)
 
-  // Node drag offsets (Task 8): per-node pixel deltas from IpcCanvas's default
-  // layout position, added at render time (`n.x + offsets[n.id].x`). Reset
-  // alongside the draft on every fresh recipe/save load — a saved layout
-  // (Task 9/10's sidecar) will replace this reset with a fetched value.
+  // Node drag offsets (Task 8) + the layout sidecar (Task 9/10): per-node pixel
+  // deltas from IpcCanvas's default layout position, added at render time
+  // (`n.x + offsets[n.id].x`). `layout` fetches the persisted sidecar for the
+  // CURRENT recipePath (an unsaved recipe resolves to `{version:1,nodes:{}}`,
+  // never a "missing" state — see LayoutService).
   const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({})
+  const layout = useLayout(recipePath ?? '')
 
   useEffect(() => {
     if (rec.data) {
@@ -601,10 +630,57 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
       setDirtyOps(0)
       setValidationErrors([])
       setSaveError(null)
-      setOffsets({})
     }
+    // Offsets reset here on every recipe change (recipePath / rec.data), THEN
+    // this same effect re-fires once `layout.data` lands (its own query, so it
+    // can resolve after rec.data) and re-seeds from the fetched sidecar. A
+    // fresh recipe therefore never inherits the previous one's positions: the
+    // window between the reset and the seed renders with offsets:{}, same as
+    // the recipe having no saved layout at all.
+    setOffsets(toCanvasOffsets(layout.data?.nodes))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipePath, rec.data?.modifiedAt])
+  }, [recipePath, rec.data?.modifiedAt, layout.data])
+
+  // Debounce cleanup (Task 10): the timer lives in a ref so a drag mid-flight
+  // when the user switches recipes doesn't fire its PUT against the path
+  // they've navigated away from — this effect's cleanup runs on every
+  // recipePath change AND on unmount (React calls a cleanup function on both).
+  const layoutSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (layoutSaveTimer.current) {
+      clearTimeout(layoutSaveTimer.current)
+      layoutSaveTimer.current = null
+    }
+  }, [recipePath])
+
+  // Drag (Task 10): updates local state immediately (unchanged Task 8
+  // behavior — the canvas must track the pointer with no round-trip latency)
+  // and debounces a putLayout of the FULL current offsets map, translated to
+  // the dx/dy wire shape at this boundary only.
+  const handleMoveNode = (id: string, x: number, y: number) => {
+    setOffsets(o => {
+      const next = { ...o, [id]: { x, y } }
+      if (layoutSaveTimer.current) clearTimeout(layoutSaveTimer.current)
+      const path = recipePath
+      layoutSaveTimer.current = setTimeout(() => {
+        layoutSaveTimer.current = null
+        if (path) void putLayout(path, toWireOffsets(next))
+      }, LAYOUT_SAVE_DEBOUNCE_MS)
+      return next
+    })
+  }
+
+  // Auto-layout (Task 10): clears local state AND the sidecar immediately (not
+  // debounced — a discrete action, not a drag in progress) — and cancels any
+  // pending drag-save so a stale timer can't resurrect the offsets it just cleared.
+  const handleAutoLayout = () => {
+    if (layoutSaveTimer.current) {
+      clearTimeout(layoutSaveTimer.current)
+      layoutSaveTimer.current = null
+    }
+    setOffsets({})
+    if (recipePath) void putLayout(recipePath, {})
+  }
 
   // Canvas + panels derive from whichever content is "current" — the live
   // draft normally, or the archived version while viewing (spec §6: "canvas +
@@ -940,8 +1016,8 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                   selectedNode={selectedNodeId}
                   onSelectNode={handleSelectNode}
                   offsets={offsets}
-                  onMoveNode={(id, x, y) => setOffsets(o => ({ ...o, [id]: { x, y } }))}
-                  onAutoLayout={() => setOffsets({})}
+                  onMoveNode={handleMoveNode}
+                  onAutoLayout={handleAutoLayout}
                   onPortClick={isViewing ? undefined : handlePortClick}
                   onSelectEdge={isViewing ? undefined : handleSelectEdge}
                   selectedEdge={selectedEdge}

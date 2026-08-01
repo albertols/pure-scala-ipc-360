@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/layouts/{*path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["layout"];
+        put: operations["save_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/recipes/validate": {
         parameters: {
             query?: never;
@@ -276,6 +292,19 @@ export interface components {
             sizeBytes?: number;
             modifiedAt?: string;
             content?: components["schemas"]["JsonNode"];
+        };
+        LayoutDto: {
+            /** Format: int32 */
+            version?: number;
+            nodes?: {
+                [key: string]: components["schemas"]["NodeOffsetDto"];
+            };
+        };
+        NodeOffsetDto: {
+            /** Format: double */
+            dx?: number;
+            /** Format: double */
+            dy?: number;
         };
         IpcCheckDto: {
             ruleId?: string;
@@ -696,6 +725,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RecipeDto"];
+                };
+            };
+        };
+    };
+    layout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LayoutDto"];
+                };
+            };
+        };
+    };
+    save_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayoutDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LayoutDto"];
                 };
             };
         };

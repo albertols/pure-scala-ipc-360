@@ -49,6 +49,10 @@ const server = setupServer(
   http.get('/api/ddl/CDM/m_FIX', () => HttpResponse.json({})),
   http.post('/api/recipes/validate', () => HttpResponse.json({ valid: true, errors: [] })),
   http.get('/api/expressions', () => HttpResponse.json([])),
+  // Task 10: unsaved-layout default (`{version:1,nodes:{}}` never 404s) — every
+  // suite above this one renders the canvas, so this default keeps them
+  // green without knowing about the layout sidecar at all.
+  http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({ version: 1, nodes: {} })),
 )
 beforeAll(() => server.listen())
 afterEach(() => { server.resetHandlers(); cleanup() })
@@ -545,6 +549,65 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/999/)).toBeInTheDocument()
+  })
+})
+
+// ─── Task 10: layout sidecar wiring — drag persists, saved layout re-renders ──
+
+describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
+  it('dragging a node fires a debounced PUT of its snapped position (as dx/dy) to the layout sidecar', async () => {
+    type CapturedLayout = { version?: number; nodes?: Record<string, { dx: number; dy: number }> }
+    let capturedBody: CapturedLayout | null = null
+    server.use(
+      http.put('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', async ({ request }) => {
+        capturedBody = await request.json() as CapturedLayout
+        return HttpResponse.json(capturedBody)
+      }),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    const nodeGroup = screen.getByTestId('ipc-node-T')
+    const canvasRoot = screen.getByTestId('ipc-canvas-root')
+
+    fireEvent.pointerDown(nodeGroup, { clientX: 100, clientY: 100, pointerId: 1 })
+    fireEvent.pointerMove(canvasRoot, { clientX: 120, clientY: 140, pointerId: 1 })
+    fireEvent.pointerUp(canvasRoot, { clientX: 120, clientY: 140, pointerId: 1 })
+
+    // Debounced 500ms — the PUT isn't immediate.
+    expect(capturedBody).toBeNull()
+
+    await waitFor(() => expect(capturedBody).not.toBeNull(), { timeout: 2000 })
+    expect(capturedBody).toEqual({ version: 1, nodes: { T: { dx: 20, dy: 40 } } })
+  })
+
+  it('seeds offsets from a saved layout: the node renders shifted by its dx/dy from where it renders with no saved layout', async () => {
+    // First render with the default (unsaved, {}) layout to capture node T's
+    // un-offset base position.
+    const first = renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+    const baseRect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
+    const baseX = Number(baseRect.getAttribute('x'))
+    const baseY = Number(baseRect.getAttribute('y'))
+    first.unmount()
+    cleanup()
+
+    server.use(http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      version: 1, nodes: { T: { dx: 30, dy: -15 } },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    await waitFor(() => {
+      const rect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
+      expect(rect.getAttribute('x')).toBe(String(baseX + 30))
+      expect(rect.getAttribute('y')).toBe(String(baseY - 15))
+    })
   })
 })
 

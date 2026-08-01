@@ -22,6 +22,7 @@
 - **Staging discipline:** every commit stages explicit paths. **NEVER `git add -A`** — the working tree carries user-local untracked files (`.claude/settings.json`, `first_prompt.md`).
 - **Ledger:** tick this plan's checkboxes and stage this plan file in the same commit as the task's changes. Resume point = first unticked checkbox.
 - **`types.gen.ts` is generated**, never hand-edited. Refresh with `make generate-api` against a running backend.
+- **Report backend test counts from `mvn clean test`, never a warm build.** `backend/target/surefire-reports/` accumulates reports from deleted test classes, so a warm run silently counts tests that no longer exist. This produced a ~6-test inflation across Tasks 5–9 (reported 167, true 161) before Task 9's reviewer caught it. Cross-check `ls backend/target/surefire-reports/*.txt | wc -l` against `find backend/src/test/java -name '*Test.java' | wc -l` — they must match.
 - Dot-refs (`TABLE.FIELD`) are preserved verbatim everywhere (CLAUDE.md hard rule 3).
 
 ## File Structure
@@ -2394,7 +2395,7 @@ byte-identical (ADR-0011). GET never 404s — an absent sidecar is an empty layo
 - Consumes: `GET`/`PUT /api/layouts/{*path}` (Task 9), `IpcCanvas`'s `offsets`/`onMoveNode`/`onAutoLayout` (Task 8).
 - Produces: `useLayout(recipePath: string)` (TanStack query, `enabled: !!recipePath`), `putLayout(recipePath: string, offsets: Record<string, {dx: number; dy: number}>): Promise<Layout>`, and `type Layout = components['schemas']['LayoutDto']`.
 
-- [ ] **Step 1: Regenerate types and write the failing tests**
+- [x] **Step 1: Regenerate types and write the failing tests**
 
 With the backend running, `make generate-api`. Then write `layoutQueries.test.ts` (MSW:
 `useLayout` returns `{version:1,nodes:{}}` for an unsaved recipe; `putLayout` PUTs the offsets
@@ -2403,12 +2404,12 @@ captures a `PUT /api/layouts/CDM/m_FIX/_ETL_m_FIX.json` whose body carries that 
 snapped position; and a recipe whose `GET /api/layouts/...` returns saved positions renders its
 node at the offset position.
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `cd frontend && pnpm test src/api/layoutQueries.test.ts src/components/tab2/ETLModifier.test.tsx`
 Expected: FAIL — `layoutQueries` missing.
 
-- [ ] **Step 3: Write `layoutQueries.ts`**
+- [x] **Step 3: Write `layoutQueries.ts`**
 
 ```ts
 import { useQuery } from '@tanstack/react-query'
@@ -2432,7 +2433,7 @@ export const putLayout = (recipePath: string, nodes: Record<string, { dx: number
   apiSend<Layout>('PUT', `/layouts/${recipePath}`, { version: 1, nodes })
 ```
 
-- [ ] **Step 4: Wire it into `ETLModifier`**
+- [x] **Step 4: Wire it into `ETLModifier`**
 
 Seed `offsets` from `useLayout(recipePath ?? '')` when its data lands (same `useEffect` that
 resets on recipe change, so a fresh recipe never inherits the previous one's positions).
@@ -2440,12 +2441,12 @@ resets on recipe change, so a fresh recipe never inherits the previous one's pos
 clears state and PUTs `{}`. Keep the debounce timer in a `useRef` and clear it on unmount so a
 pending write can't fire against a stale path.
 
-- [ ] **Step 5: Run to verify they pass**
+- [x] **Step 5: Run to verify they pass**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/api/layoutQueries.ts frontend/src/api/layoutQueries.test.ts \
