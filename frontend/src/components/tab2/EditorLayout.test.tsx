@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { EditorLayout } from './EditorLayout'
+import { EditorLayout, DRAWER_EXPAND_DEFAULT_H } from './EditorLayout'
 import { LAYOUT_DEFAULT, LAYOUT_MIN, CANVAS_MIN_W, LAYOUT_STORAGE_KEY } from './useResizableLayout'
 
 afterEach(() => {
@@ -101,12 +101,18 @@ describe('EditorLayout', () => {
     expect(splitter.style.background).toBe('var(--border)')
   })
 
-  it('clicking a drawer tab reveals its content, and clicking it again collapses it', () => {
+  it('clicking a drawer tab reveals its content at a genuinely non-zero height, and clicking it again collapses it', () => {
     renderLayout()
     expect(screen.queryByTestId('drawer-source')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Source'))
     expect(screen.getByTestId('drawer-source')).toBeInTheDocument()
+    // Presence in the DOM alone can't distinguish a real reveal from a 0px
+    // panel with invisible content — assert the actual observable height.
+    // sizes.drawerH starts at LAYOUT_DEFAULT.drawerH (0), so this only holds
+    // if the first expand bumped it to DRAWER_EXPAND_DEFAULT_H.
+    const contentWrapper = screen.getByTestId('drawer-source').parentElement as HTMLElement
+    expect(contentWrapper.style.height).toBe(`${DRAWER_EXPAND_DEFAULT_H}px`)
 
     fireEvent.click(screen.getByText('Source'))
     expect(screen.queryByTestId('drawer-source')).not.toBeInTheDocument()
@@ -137,6 +143,38 @@ describe('EditorLayout', () => {
 
     const inspectorRegion = screen.getByTestId('slot-inspector').parentElement as HTMLElement
     expect(inspectorRegion.style.minWidth).toBe(`${LAYOUT_MIN.inspectorW}px`)
+  })
+
+  it('detaches window pointer listeners on unmount mid-drag, so a later pointermove cannot fire from a dead component', () => {
+    // A direct localStorage-write assertion can't distinguish "cleaned up" from
+    // "not cleaned up" here: React 19 silently drops a functional setState
+    // update queued against an already-unmounted fiber, so setSize's updater
+    // never runs post-unmount regardless of whether the window listener was
+    // removed — verified empirically (this exact test still passed with the
+    // cleanup effect gutted to a no-op). The real, always-observable leak is
+    // the dangling `window` listener itself: every un-cleaned drag leaves a
+    // pointermove/pointerup pair permanently attached, each holding a closure
+    // over the unmounted component's refs — spying on `removeEventListener`
+    // asserts our own cleanup code path actually runs, independent of that
+    // React-internals nuance.
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+    const { container, unmount } = renderLayout()
+    const splitter = container.querySelector('[data-splitter="horizontal"]')!
+
+    fireEvent.pointerDown(splitter, { clientX: 300, clientY: 600, pointerId: 1 })
+    unmount()
+
+    expect(removeSpy).toHaveBeenCalledWith('pointermove', expect.any(Function))
+    expect(removeSpy).toHaveBeenCalledWith('pointerup', expect.any(Function))
+
+    // And the behavioural half of the same guarantee: a pointermove dispatched
+    // after unmount must not throw or touch storage, whether or not React's
+    // own unmounted-update guard would also have caught it.
+    fireEvent.pointerMove(window, { clientX: 300, clientY: 900, pointerId: 1 })
+    fireEvent.pointerUp(window, { clientX: 300, clientY: 900, pointerId: 1 })
+    expect(localStorage.getItem(LAYOUT_STORAGE_KEY)).toBeNull()
+
+    removeSpy.mockRestore()
   })
 
   it('closes the Task 2 finding: a corrupted, below-floor stored canvasH still renders at least LAYOUT_MIN.canvasH tall', () => {

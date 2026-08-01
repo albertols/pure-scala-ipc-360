@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useResizableLayout, LAYOUT_MIN, CANVAS_MIN_W } from './useResizableLayout'
 
 /** A drawer tab currently only ever gets expanded from a fully-collapsed rest
@@ -6,8 +6,10 @@ import { useResizableLayout, LAYOUT_MIN, CANVAS_MIN_W } from './useResizableLayo
  * gives this shell no other number to reach for). Rendering the freshly-
  * revealed content at literally 0px would make "reveals" a DOM-only fiction,
  * so the first expand nudges `drawerH` up to a usable height; every drag
- * after that is the user's own preference and is left alone. */
-const DRAWER_EXPAND_DEFAULT_H = 220
+ * after that is the user's own preference and is left alone. Exported so the
+ * regression test can assert the exact observable height rather than merely
+ * "not 0px" (which a partial fix could satisfy by accident). */
+export const DRAWER_EXPAND_DEFAULT_H = 220
 
 type SplitterKind = 'vertical' | 'horizontal' | 'corner'
 
@@ -32,6 +34,25 @@ export function EditorLayout(props: {
   const [dragging, setDragging] = useState<SplitterKind | null>(null)
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
   const dragStart = useRef<DragStart | null>(null)
+  // The currently-attached window listeners for an in-progress drag, if any —
+  // lets the unmount effect below detach them even when the gesture never
+  // reaches its own pointerup (e.g. a tab switch unmounts EditorLayout while
+  // a splitter is still held).
+  const activeDragListeners = useRef<{ onMove: (ev: PointerEvent) => void; endDrag: () => void } | null>(null)
+  // "Has the drawer ever been expanded", not "is sizes.drawerH currently at
+  // its floor" — the latter would re-force-open a drawer the user just
+  // dragged shut (once a later task wires up a drag control for drawerH).
+  const hasExpandedDrawer = useRef(false)
+
+  useEffect(() => {
+    return () => {
+      const listeners = activeDragListeners.current
+      if (!listeners) return
+      window.removeEventListener('pointermove', listeners.onMove)
+      window.removeEventListener('pointerup', listeners.endDrag)
+      activeDragListeners.current = null
+    }
+  }, [])
 
   // Drag math mirrors IpcCanvas's node-drag idiom (tab2/IpcCanvas.tsx): the
   // start size is captured once at pointerdown, and every move recomputes
@@ -64,9 +85,11 @@ export function EditorLayout(props: {
       const endDrag = () => {
         dragStart.current = null
         setDragging(null)
+        activeDragListeners.current = null
         window.removeEventListener('pointermove', onMove)
         window.removeEventListener('pointerup', endDrag)
       }
+      activeDragListeners.current = { onMove, endDrag }
       window.addEventListener('pointermove', onMove)
       window.addEventListener('pointerup', endDrag)
     },
@@ -76,7 +99,10 @@ export function EditorLayout(props: {
   const toggleDrawerTab = (id: string) => {
     setActiveTabId((current) => {
       if (current === id) return null
-      if (sizes.drawerH <= LAYOUT_MIN.drawerH) setSize('drawerH', DRAWER_EXPAND_DEFAULT_H)
+      if (!hasExpandedDrawer.current) {
+        hasExpandedDrawer.current = true
+        setSize('drawerH', DRAWER_EXPAND_DEFAULT_H)
+      }
       return id
     })
   }
