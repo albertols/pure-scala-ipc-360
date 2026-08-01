@@ -43,10 +43,32 @@ explicit ask. New UI states (loading, error, empty) reuse existing tokens
 - Tab 1 (IPC ETL Viewer): `src/api/filesystemAdapter.ts` + `useFilesystem`;
   `src/api/mappingAdapter.ts` + `useMappingModel`/`useMappingDom`.
 - Tab 2 (ETL Modifier): `src/api/recipeAdapter.ts` + `useRecipe`/`useDdl`, editing via
-  `src/api/recipeEdits.ts` against the recipe write API.
+  `src/api/recipeEdits.ts` against the recipe write API; a real IPC-style designer as
+  of sub-project 8 (`docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md`)
+  — see "Tab 2 components" below.
 - Tab 3 (ETL Operational): `src/api/relationshipsAdapter.ts`'s `toOperationalGraph` over
   `useRelationships` + `useOperationalSummary` + `useOperationalDates`.
 - Tab 4 (ETL DAG): `src/api/dagAdapter.ts` + `useRelationships`/`useOperationalSnapshots`.
+
+### Tab 2 components (`src/components/tab2/`)
+
+`ETLModifier.tsx` is state + composition; the body it composes lives in sibling files
+(sub-project 8, Parts 1–2 of `docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md`):
+
+| File | Role |
+|---|---|
+| `IpcCanvas.tsx` | Tab-2-only banded canvas (Sources/Transformations/Target bands, hand-rolled pointer-event drag snapped to a 10px grid, `⌗ auto-layout`, wide invisible edge-hit paths). Reuses `NodeBox`/`getNodeHeight`/`getPortY`/`buildPath`/`NODE_WIDTH`/`NODE_STYLES` from `tab1/NodeBox.tsx`. `EtlCanvas.tsx` (Tab 1) is never imported or modified — the two canvases are deliberately isolated so Tab 1 stays byte-identical. |
+| `Inspector.tsx` | Right-hand panel driven entirely by `GET /api/ipc/rules`'s `keySchema` — renders every key a node's kind admits, with the widget its schema entry names. No per-kind branching; a JSON key absent from the schema renders read-only under "unrecognized keys" rather than disappearing. |
+| `InspectorWidgets.tsx` | The seven widget primitives Inspector.tsx picks from by `keySchema[...].widget`: text, toggle, textarea, string-list, row-table, formula, field-table. |
+| `ConformanceChip.tsx` | Header chip (green/amber/red with counts) + drawer, purely presentational over `ipcRules.ts`'s `useValidation` output — makes no network call of its own. |
+| `ExpressionDock.tsx` | Right-side dock (was the inline `ExpressionRegistry`), filtered to `origin === 'recipe'` only; rows are drag sources onto Inspector field rows and canvas nodes. |
+| `HistoryDrawer.tsx` | Version list (`GET /recipes/history/{path}`) + rollback (`POST /recipes/rollback/{path}`); loading an archived version's content into the canvas stays the parent's job. |
+| `SaveBar.tsx` | Save/discard controls, extracted verbatim from `ETLModifier.tsx` (pure move, Task 11). |
+| `DDLViewer.tsx` | DDL column table, extracted verbatim (pure move, Task 11). |
+| `Palette.tsx` | Right-side vertical strip of IPC primitives, click-to-add and drag-to-drop. |
+
+Focus mode (`?focus=<recipePath>`, read in `App.tsx`) renders `ETLModifier` alone, full
+viewport, no tab bar or Explorer — no new component, no router dependency.
 
 `MAPPINGS`, `ETL_RECIPES`/`DDL_SCHEMAS` and `DAG_CLUSTERS`/`DAG_RUNS` are gone (zero
 importers, grep-verified at each retirement). `OPERATIONAL_CARDS` still exists but has
@@ -74,6 +96,19 @@ in `ETLDag.tsx`.
   `deleteNode`, `deleteEdge`, …) behind Tab 2's editing state: `import type` only,
   runtime imports use explicit `.ts` extensions so `node --experimental-strip-types`
   can load the chain for `scripts/recipe_sweep.mts`.
+- `ipcRules.ts` — Tab 2's conformance-chip data layer: `useValidation(draft)` (debounced
+  `POST /api/recipes/validate`, the SOLE source of conformance state — no local
+  TypeScript mirror of the IPC rules, per spec §13 deviation 1), `nodeIdFromPath`
+  (`$.steps[N]…` → canvas node id) and `nodeStatusFrom` (per-node ok/warn/error, error
+  always wins over warning on the same node). The catalogue fetch itself —
+  `useIpcRules()`, `GET /api/ipc/rules`, `staleTime: Infinity` since the catalogue is
+  static per backend build — lives in `queries.ts` alongside the other TanStack hooks;
+  `Inspector.tsx` consumes its `keySchema` and `ETLModifier.tsx` threads it down.
+- `layoutQueries.ts` — the canvas layout sidecar: `useLayout(recipePath)`
+  (`GET /api/layouts/{*path}`, no "missing" state to handle since an unsaved layout is
+  `{version:1,nodes:{}}`, never a 404) and `putLayout(recipePath, nodes)`
+  (`PUT`, `{dx,dy}` offsets keyed by node id — see `docs/adr/0011-canvas-layout-sidecar.md`
+  for why offsets rather than absolute coordinates).
 
 ## Key files
 

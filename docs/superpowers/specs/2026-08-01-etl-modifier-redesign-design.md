@@ -571,3 +571,96 @@ Recorded here at implementation time, each traced to its task and commit.
    implementations together, buying a latency saving that is single-digit milliseconds
    against a localhost backend. The conformance chip runs solely off the debounced
    `POST /api/recipes/validate`.
+
+2. **`unionTables[].fieldMapping` per-pair editing is deferred** (spec §6.4 / acceptance
+   criterion 5; found during Task 12, carried to the Task 18 acceptance walk for a user
+   decision). Editable today: row scalars on every row-table kind, including `union`'s
+   own row list. Visible read-only: the origin/union pairs nested inside each
+   `unionTables[]` entry (`Inspector.test.tsx`'s
+   `'a source:union node renders unionTables' nested fieldMapping pairs read-only'`).
+   Round-trip integrity is preserved — shallow-spread row edits never touch the nested
+   array, so no data is lost on save; the gap is editing convenience, not correctness.
+
+3. **Union and joiner source metadata is unreachable in the GUI, not merely
+   uneditable** (found during Task 12 while verifying deviation 2; affects acceptance
+   criteria 1 and 5). `recipeToCanvas` (`frontend/src/api/recipeAdapter.ts:317`) only
+   turns `type === 'table'` sources into canvas nodes. Measured across the corpus: every
+   other non-table source kind (`sourceQualifier` 95, `filter` 23, `router` 14,
+   `aggregator` 6, `normalizer` 4, `java` 1, `storedProcedure` 1) happens to share a name
+   with a step target, so its node exists and the Inspector reaches it. Only `union` (10)
+   and `joiner` (5) have no matching step target — the same structural fact `IPC-REF-003`
+   already records as a warning (28/15 residue). Consequence: 2197 `fieldMapping` pairs
+   across 7 recipes, and `joinerTables`/`joinerType`/`joinerCondition` on 5 joiners, have
+   no clickable node — the Inspector widgets that render them are proven correct in
+   isolation (`Inspector.test.tsx`) but are never reachable via the canvas. Fixing this
+   means synthesizing canvas nodes for union/joiner sources — a change to the canvas
+   contract affecting the `recipe_sweep` gate, out of Task 12's scope — and would also
+   resolve `IPC-REF-003`'s 15 warnings. **User decision required**; not fixed by Task 18
+   (out of its file scope — `scripts/recipe_sweep.mts`, docs, and two ADRs only).
+
+4. **Canvas node labels do not resolve the §5.3 alias table — found at the Task 18
+   acceptance walk, contradicting this spec's own §5.3 claim** ("This directly fixes a
+   live defect… the 49 `EARLYGLADE` union-input steps currently render as generic `EAR`
+   expression boxes…"). The alias table (`IpcVocabulary`, `GET /api/ipc/rules`'s
+   `typeAliases`) is wired into the backend rule engine (so validation treats an
+   alias-typed node as its canonical kind) and into `Inspector.tsx`'s schema lookup
+   (`typeAliases[rawType] ?? rawType`, `Inspector.tsx:265`) — but `ETLModifier.tsx:313`
+   calls `recipeToCanvas(content, recipePath)` with no alias map, and
+   `recipeAdapter.ts`'s `kindAndLabel` (`:117-124`) has no alias awareness at all; its
+   `RECIPE_KIND`/`FIXED_LABEL` maps are keyed on canonical type strings only. Verified
+   live against the running backend + the real adapter code (not a fixture): of the 86
+   corpus recipes, canvas nodes still render `BER` (86), `EAR` (49), `ASH` (10), `CED`
+   (1) — 146 nodes total — as generic purple `expression`-kind boxes instead of their
+   canonical `sourceQualifier`/`unionInput`/`joinerInput`/`storedProcedure` kind color
+   and abbreviation. `recipeAdapter.test.ts:13-14` is a *currently-passing* test that
+   locks this in as expected behavior (`expect(byId.get('SQ_ff_BIZLINK')!.label).toBe('BER')`,
+   commented "corrupted type 'BERYLFALLS' -> unknown rule"), so this is not a flake —
+   it is a genuinely unimplemented half of §5.3. This directly fails acceptance criterion
+   3's second clause ("canvas node labels show canonical kinds (no EAR/BER/ASH boxes
+   remain)"). The first clause (the alias table itself, backend-side) is unaffected and
+   passes. **User decision required**; not fixed by Task 18 (`recipeAdapter.ts` is
+   outside this task's file scope).
+
+5. **Explorer-header ⓘ placement needs human visual sign-off** (Task 14, flagged for
+   Task 18 acceptance under ADR-0005). The info affordance is an absolutely-positioned
+   overlay (`right: 34`) composed in `ETLModifier.tsx` rather than a `Sidebar` header
+   slot. Geometry is self-consistent by the numbers (240px sidebar, ~12-30px chevron)
+   but was never pixel-verified in a browser — see acceptance criterion 8.
+
+### Deferred minor findings (rolled up from the execution ledger, Tasks 1–17)
+
+24 additional findings were disclosed and adjudicated non-blocking during Parts 1-3;
+none is a correctness defect in shipped behavior, and none was silently dropped. Full
+detail: `.superpowers/sdd/2026-08-01-etl-modifier-redesign/progress.md`.
+
+| Task | Finding |
+|---|---|
+| 1 | `docs/ipc/00-model-map.md:14` cites `Recipe.scala:9` for three fields that actually span `:9-11`. |
+| 2 | `weststoneFieldsKeyIsStillTolerated` (`StructuralRulesTest`) is a vacuous regression guard for the `weststone` fallback — the reviewer independently proved the fallback itself works via a standalone probe; only the *test's* power to catch a future regression is weak. |
+| 2 | `StructuralRules` IPC-STR-005 calls `IpcVocabulary.canonical*Type` directly rather than `RuleContext`'s helpers (it also needs the raw string for the message) — harmless duplication. |
+| 4 | `isFieldShaped` is duplicated verbatim across three rule files; `collectLookups` across two. |
+| 4 | `IPC-REF-006` is boolean-correct on cycles but under-localizes: in a 3+-node cycle only the first back-edge's two endpoints get individual fail entries. |
+| 4 | `literalValueOutsideAnOperatorPositionNeverFailsExp002`'s first fixture duplicates another test's fixture; only its second block adds coverage. |
+| 5 | `ReferentialRules.groupsOf` duplicates `TypeShapeRules.keyOf`'s alias resolution (a private 6-line method), acknowledged in its own doc comment. |
+| 6 | Spec §11 (historical record) still said "20 pages" where the real count is 12 — corrected at Task 6 fix-round, spec kept as a historical artifact by convention elsewhere. |
+| 8 | Pan/zoom/dot-grid scaffold and `sameConnection` are duplicated between `EtlCanvas` and `IpcCanvas` — a deliberate cost of keeping Tab 1 byte-identical; worth extracting if the two ever diverge further. |
+| 8 | `ETLModifier.test.tsx:609-619` still says "EtlCanvas" in test titles (stale terminology, pre-existing). |
+| 9 | A `_layout_*.json` can be `PUT` for a recipe that doesn't exist (sandbox+shape gate only, same scope as `RecipeService.writableRecipeFile`). Inert. |
+| 9 | Malformed sidecar JSON 500s via the catch-all rather than 422 the way `RecipeService.readJson` does; these files are only ever machine-written. |
+| 9 | `LayoutSidecar`'s Javadoc says "excluded from every corpus walk" by analogy to `HistorySidecar` rather than enumerating call sites the way `HistorySidecar`'s does. |
+| 10 | No test for the `putLayout` failure/`.catch` path. |
+| 10 | `layoutQueries.test.ts`'s `React.createElement`-for-provider-wrapper pattern has no prior instance in this codebase (the `.ts`/`.tsx` extension rule does; the pattern itself doesn't). |
+| 13 | A top-of-effect `clearTimeout` in `useValidation` is dead code (React always runs the previous cleanup first before a new effect). |
+| 13 | `ConformanceChip` uses the `rgba(248,113,113,0.15)` idiom where `SaveBar` uses hex+alpha — same colors, inconsistent syntax. |
+| 13 | Inert `eslint-disable` comments remain (no ESLint config exists in `frontend/`). |
+| 13 | `useValidation`'s `catch` swallows validate failures with no log, unlike the layout-save path's `reportLayoutSaveError`. |
+| 14 | Dock visibility gates on `draft` alone while its comment claims "same gating as Palette" (Palette also requires `!isViewing`) — preserves the pre-existing registry's behavior exactly, no regression, but the comment misleads. |
+| 14 | No isolated unit test for the two new drop targets (canvas-wide drop, `FormulaWidget` drop) — confirmed still absent at the Task 18 acceptance walk (`grep -rn "onDrop\|fireEvent.drop" frontend/src/components/tab2/*.test.tsx` returns nothing); the underlying mutator path (`parseFormulaText` → `setFieldTransformation`) is shared with the tested Insert-button path, but the drop interaction itself is untested — see acceptance criterion 9. |
+| 16 | `CorpusService.isDdlPath` re-derives the `!startsWith("_")` DDL convention that `xmlNode()` already encodes inline — could hoist into one named predicate. |
+| 17 | `ConformanceChip`'s `{isValidating && ' …'}` is a real network-driven busy indicator a "Loading" grep can't surface; left alone deliberately rather than risk a visual change to a component the brief didn't name. |
+
+The plan brief for this task states the ledger carries "25 deferred/flagged items"; a
+literal re-count at the Task 18 acceptance walk found **24** distinct entries (23 tagged
+`minor (deferred…)` or `deferred (final-review triage)`, plus the one `FLAG FOR VISUAL
+SIGN-OFF` item promoted into deviation 5 above). Flagged here per this plan's own
+instruction to flag a number mismatch rather than silently adjust the count to match.

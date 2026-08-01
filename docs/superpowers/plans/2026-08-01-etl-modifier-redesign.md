@@ -2904,19 +2904,19 @@ in flight, and a top progress bar driven by useIsFetching()."
 - Create: `docs/adr/0010-ipc-conformance-ruleset.md`, `docs/adr/0011-canvas-layout-sidecar.md`
 - Modify: `docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md` (§13)
 
-- [ ] **Step 1: Extend `recipe_sweep.mts`**
+- [x] **Step 1: Extend `recipe_sweep.mts`**
 
 After the existing `if (!v.valid) throw …` line, add: fail when any `checks[]` entry's
 `ruleId` is absent from `GET /api/ipc/rules`, and print a per-run tally of warning-severity
 checks so a severity regression is visible in the gate output without failing it. Update the
 final `console.log` to report both renders and warning count.
 
-- [ ] **Step 2: Run the full gate**
+- [x] **Step 2: Run the full gate**
 
 Run: `make dev` in one terminal, then `make validate-loop` in another.
 Expected: all four sweeps green, `recipe_sweep: 86/86 recipes render+validate`.
 
-- [ ] **Step 3: Write ADR-0010 and ADR-0011**
+- [x] **Step 3: Write ADR-0010 and ADR-0011**
 
 Follow `docs/adr/0000-template.md`. ADR-0010 records: severity tiers and the empirical
 assignment procedure; the corpus-error-free invariant; the alias table as
@@ -2926,7 +2926,7 @@ ADR-0011 records: why positions live in `_layout_*.json` (parser byte-identity, 
 the exclusion contract shared with `_history/`, and why a committed sidecar beats
 localStorage here.
 
-- [ ] **Step 4: Update the docs**
+- [x] **Step 4: Update the docs**
 
 `CLAUDE.md`: Tab 2's description in the module list; a corpus caveat for the alias table
 pointing at `docs/ipc/README.md`; a `docs/ipc/` line in the "More" section; the new endpoints
@@ -2937,7 +2937,7 @@ response.
 `frontend/AGENTS.md`: the new Tab 2 component ledger and the `api/ipcRules.ts` /
 `api/layoutQueries.ts` entries.
 
-- [ ] **Step 5: Acceptance walk**
+- [x] **Step 5: Acceptance walk**
 
 Work spec §10's 14 criteria in order. For each, record PASS/FAIL with the command run and its
 output, or the exact UI interaction and what was observed. Any criterion that cannot pass is
@@ -2945,7 +2945,7 @@ recorded as an implementation deviation in spec §13 with its reason — never s
 Criteria 1, 3, 5, 6, 7, 8, 9, 10, 11, 12 are manual UI checks against `make dev`; 2, 4, 13, 14
 are command-verifiable.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/recipe_sweep.mts CLAUDE.md docs/architecture.md frontend/AGENTS.md \
