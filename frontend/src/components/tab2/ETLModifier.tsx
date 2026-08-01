@@ -7,7 +7,7 @@ import { apiGet, apiSend } from '../../api/client'
 import { useRecipe, useDdl, useExpressions, useIpcRules } from '../../api/queries'
 import { useLayout, putLayout } from '../../api/layoutQueries'
 import type { NodeOffset } from '../../api/layoutQueries'
-import type { RecipeFile, RecipeValidation, RecipeValidationError, ExpressionEntry } from '../../api/queries'
+import type { RecipeFile, RecipeValidation, RecipeValidationError } from '../../api/queries'
 import { recipeToCanvas } from '../../api/recipeAdapter'
 import type { RecipeJson } from '../../api/recipeAdapter'
 import {
@@ -21,6 +21,7 @@ import {
 import { useValidation, nodeStatusFrom } from '../../api/ipcRules'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
+import { InfoTooltip } from '../shared/InfoTooltip'
 import { IpcCanvas } from './IpcCanvas'
 import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
@@ -30,8 +31,18 @@ import { SaveBar, dangerButtonStyle } from './SaveBar'
 import { DDLViewer, type DdlColumnJson } from './DDLViewer'
 import { Inspector } from './Inspector'
 import { ConformanceChip } from './ConformanceChip'
+import { ExpressionDock } from './ExpressionDock'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
+
+// ─── Explorer scoping + info copy (Task 14) ────────────────────────────────────
+//
+// The Modifier's whole premise is the platform-agnostic `_ETL_*.json` model
+// XMLParser derives from native IPC `.xml` exports — so Tab 2's Explorer keeps
+// only recipes (`fileFilter`, spec §6.8) and explains the omission (both here
+// and in the empty state below) rather than silently hiding the XML.
+const RECIPE_ONLY_FILTER = (f: FSFile) => f.name.startsWith('_ETL_') && f.name.endsWith('.json')
+const EXPLORER_INFO_COPY = 'The Modifier edits the platform-agnostic _ETL_*.json recipes XMLParser produces from native IPC .xml exports. The source XML lives in the IPC ETL Viewer tab.'
 
 // ─── Layout offsets ⇄ wire DTO (Task 10) ───────────────────────────────────────
 // Two vocabularies meet at this boundary and nowhere else: IpcCanvas's in-memory
@@ -132,122 +143,6 @@ function TableNameList({ names, emptyLabel }: { names: string[]; emptyLabel: str
         </div>
       ))}
     </div>
-  )
-}
-
-// ─── Expression registry (Task 11) ─────────────────────────────────────────────
-
-/** Origin chip — reuses the header layer-badge idiom (mono, small, tinted
- * background/border in the origin's own token color): `xml` -> `--cyan`
- * (#67e8f9), `recipe` -> `--green` (#34d399), same rgba-tint pattern as the
- * layer badge above (tokens duplicated as rgb() triples, matching the rest
- * of this file's inline styles — see `dangerButtonStyle`). */
-const ORIGIN_STYLE: Record<string, { color: string; bg: string; border: string }> = {
-  xml: { color: 'var(--cyan)', bg: 'rgba(103,232,249,0.15)', border: 'rgba(103,232,249,0.35)' },
-  recipe: { color: 'var(--green)', bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.35)' },
-}
-const DEFAULT_ORIGIN_STYLE = { color: '#7b88aa', bg: 'rgba(123,136,170,0.15)', border: 'rgba(123,136,170,0.35)' }
-
-function OriginBadge({ origin }: { origin: string }) {
-  const s = ORIGIN_STYLE[origin] ?? DEFAULT_ORIGIN_STYLE
-  return (
-    <span style={{
-      fontSize: 9, padding: '2px 7px', borderRadius: 4, fontWeight: 600,
-      background: s.bg, color: s.color, border: `1px solid ${s.border}`,
-      fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', letterSpacing: '0.04em',
-    }}>{origin}</span>
-  )
-}
-
-const exprFilterInputStyle: React.CSSProperties = {
-  background: 'var(--surface-2)', border: '1px solid var(--border)',
-  borderRadius: 5, color: '#c8d3e8', fontSize: 11, padding: '4px 9px',
-  outline: 'none', width: 200, fontFamily: 'Inter, sans-serif',
-}
-
-/** Corpus-wide expression archive (Task 11): merges xml- and recipe-origin
- * entries from `useExpressions()` (was: only the currently open recipe's own
- * `port.expression`s, Task 6-10's interim collector). A substring filter
- * narrows the list across every field; when a formula textarea in the edit
- * panel has focus (`canInsert`), each row grows an Insert button that writes
- * that entry's formula into the focused field via `onInsert`. */
-function ExpressionRegistry({
-  entries,
-  isLoading,
-  error,
-  filter,
-  onFilterChange,
-  canInsert,
-  onInsert,
-}: {
-  entries: ExpressionEntry[]
-  isLoading: boolean
-  error: ApiError | null
-  filter: string
-  onFilterChange: (v: string) => void
-  canInsert: boolean
-  onInsert: (formula: string) => void
-}) {
-  const q = filter.trim().toLowerCase()
-  const filtered = q === '' ? entries : entries.filter(e =>
-    [e.mappingPath, e.layer, e.transformation, e.port, e.formula, e.origin]
-      .some(v => (v ?? '').toLowerCase().includes(q)))
-
-  return (
-    <section>
-      <SectionHeader icon="ƒ" label="All Expressions" color="#a78bfa" extra={
-        <input
-          value={filter}
-          onChange={e => onFilterChange(e.target.value)}
-          placeholder="Filter expressions…"
-          style={exprFilterInputStyle}
-        />
-      } />
-      {isLoading ? (
-        <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Loading expressions…</div>
-      ) : error ? (
-        <div style={{ color: 'var(--red)', fontSize: 11 }}>{error.title}</div>
-      ) : filtered.length === 0 ? (
-        <div style={{ color: '#4a5570', fontSize: 11 }}>No expressions match.</div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {filtered.map((e, i) => (
-            <div key={i} style={{ border: '1px solid rgba(167,139,250,0.2)', borderRadius: 5, overflow: 'hidden' }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '5px 10px', background: 'rgba(167,139,250,0.05)',
-                borderBottom: '1px solid rgba(167,139,250,0.15)',
-              }}>
-                <OriginBadge origin={e.origin ?? ''} />
-                <span style={{ fontSize: 9, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{e.layer}</span>
-                <span style={{
-                  fontSize: 10, color: '#c8d3e8', fontFamily: 'JetBrains Mono, monospace', flex: 1,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>{e.transformation}.{e.port}</span>
-                <CopyButton value={e.formula ?? ''} size={11} />
-                {canInsert && (
-                  <button onClick={() => onInsert(e.formula ?? '')} style={{
-                    padding: '2px 8px', borderRadius: 4,
-                    background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-                    color: '#4f9cf9', fontSize: 9, cursor: 'pointer', fontWeight: 600,
-                  }}>Insert</button>
-                )}
-              </div>
-              <div style={{
-                fontSize: 9, color: '#4a5570', padding: '3px 10px 0',
-                fontFamily: 'JetBrains Mono, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>{e.mappingPath}</div>
-              <pre style={{
-                margin: 0, padding: '6px 10px',
-                fontSize: 10, color: '#a78bfa',
-                fontFamily: 'JetBrains Mono, monospace',
-                whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-              }}>{e.formula}</pre>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
   )
 }
 
@@ -613,15 +508,28 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-      <Sidebar
-        searchQuery={searchQuery}
-        selectedPath={selectedPath}
-        onSelectFile={handleSelectFile}
-        filesystem={fs ?? EMPTY_FS}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(c => !c)}
-        extraContent={sidebarExtra}
-      />
+      <div style={{ position: 'relative', display: 'flex', flexShrink: 0 }}>
+        <Sidebar
+          searchQuery={searchQuery}
+          selectedPath={selectedPath}
+          onSelectFile={handleSelectFile}
+          filesystem={fs ?? EMPTY_FS}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(c => !c)}
+          extraContent={sidebarExtra}
+          fileFilter={RECIPE_ONLY_FILTER}
+        />
+        {/* Explorer scoping info affordance (Task 14, spec §6.8) — an overlay
+            rather than a Sidebar prop, since Sidebar's header markup itself
+            stays untouched beyond the opt-in fileFilter/footer additions
+            (Tabs 1/4 unaffected). Positioned clear of the collapse chevron
+            (which sits flush right in Sidebar's own header). */}
+        {!sidebarCollapsed && (
+          <div style={{ position: 'absolute', top: 11, right: 34 }}>
+            <InfoTooltip text={EXPLORER_INFO_COPY} placement="right" />
+          </div>
+        )}
+      </div>
 
       <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
         {!recipePath ? (
@@ -633,6 +541,9 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
               <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <span style={{ fontSize: 12 }}>Select an _ETL_*.json recipe to edit</span>
+            <span style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.5 }}>
+              {EXPLORER_INFO_COPY}
+            </span>
           </div>
         ) : rec.isLoading ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
@@ -746,6 +657,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                   onSelectEdge={isViewing ? undefined : handleSelectEdge}
                   selectedEdge={selectedEdge}
                   onDropType={isViewing ? undefined : handlePaletteAdd}
+                  onDropFormula={isViewing ? undefined : handleInsertExpression}
                   nodeStatus={nodeStatus}
                 />
               </div>
@@ -795,17 +707,6 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                 </div>
               </section>
             )}
-
-            {/* expression registry (Task 11): corpus-wide, merged xml+recipe origins */}
-            <ExpressionRegistry
-              entries={expr.data ?? []}
-              isLoading={expr.isLoading}
-              error={expr.error as ApiError | null}
-              filter={exprFilter}
-              onFilterChange={setExprFilter}
-              canInsert={focusedFormula !== null && !isViewing}
-              onInsert={handleInsertExpression}
-            />
 
             {/* DDL — hidden entirely when the map is empty or errored */}
             {!ddl.error && ddlEntries.length > 0 && (
@@ -860,6 +761,22 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
         )}
       </div>
 
+      {/* Expression dock (Task 11/14): corpus-wide, filtered to recipe-origin
+          only. Relocated here (beside the Palette) from its old spot inline
+          below the canvas — same gating as Palette (shown once a recipe is
+          loaded), Insert stays available while viewing (row Insert buttons
+          just hide via `canInsert`, same as before the move). */}
+      {draft && (
+        <ExpressionDock
+          entries={expr.data ?? []}
+          isLoading={expr.isLoading}
+          error={expr.error as ApiError | null}
+          filter={exprFilter}
+          onFilterChange={setExprFilter}
+          canInsert={focusedFormula !== null && !isViewing}
+          onInsert={handleInsertExpression}
+        />
+      )}
       {draft && !isViewing && <Palette onAdd={handlePaletteAdd} />}
       {recipePath && historyOpen && (
         <HistoryDrawer

@@ -2670,7 +2670,7 @@ select the offending node on the canvas."
 - Consumes: `useExpressions()`, `InfoTooltip`, `Inspector`'s `onFocusFormula`.
 - Produces: `Sidebar` gains `fileFilter?: (f: FSFile) => boolean` and `footer?: React.ReactNode` (the latter consumed by Task 16); `ExpressionDock` exposes drag payload `text/etl-formula`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `Sidebar.test.tsx`: with a `fileFilter` keeping only `_ETL_*.json`, XML entries are absent and
 a directory whose every child was filtered out is not rendered; with no `fileFilter`, today's
@@ -2682,12 +2682,12 @@ narrows the list; Insert fires `onInsert` only when a formula field has focus.
 Explorer header exposes the info affordance whose text names both `_ETL_*.json` and the IPC
 ETL Viewer tab.
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `cd frontend && pnpm test src/components/shared/Sidebar.test.tsx src/components/tab2/ExpressionDock.test.tsx src/components/tab2/ETLModifier.test.tsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `Sidebar.tsx`, thread `fileFilter` through `TreeItem`: a file returns `null` when
 `fileFilter?.(file) === false`; a directory returns `null` when every child rendered `null`
@@ -2706,7 +2706,7 @@ Tab 2 passes `fileFilter={f => f.name.startsWith('_ETL_') && f.name.endsWith('.j
 `InfoTooltip` in the Explorer header with the spec §6.8 copy. Use the same copy in the
 "Select an _ETL_*.json recipe to edit" empty state (`ETLModifier.tsx:837`).
 
-- [ ] **Step 4: Run every frontend gate and commit**
+- [x] **Step 4: Run every frontend gate and commit**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS — Tab 1's `Sidebar` tests unchanged.

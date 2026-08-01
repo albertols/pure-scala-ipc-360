@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
@@ -25,6 +25,9 @@ const MINI = {
   table: { targetTableNames: ['T'], sourceTableNames: ['S'] },
 }
 
+// Task 14: a sibling native XML export (and a non-recipe .json, e.g. a
+// generated DDL file) alongside the recipe — the Explorer's fileFilter must
+// keep only `_ETL_*.json` entries, so both siblings are exercised here.
 const TREE = {
   name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
   children: [
@@ -32,6 +35,8 @@ const TREE = {
       name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
       children: [
         { name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' },
+        { name: 'm_FIX.xml', path: 'CDM/m_FIX/m_FIX.xml', kind: 'xml' },
+        { name: 'BIZLINK.json', path: 'CDM/m_FIX/BIZLINK.json', kind: 'json' },
       ],
     },
   ],
@@ -148,27 +153,11 @@ describe('ETLModifier — real recipes on the shared canvas', () => {
     expect(screen.queryByText('BigQuery DDL Schema')).not.toBeInTheDocument()
   })
 
-  it('clicking a non-recipe json leaf does nothing harmful (no recipe fetch, no crash)', async () => {
-    server.use(http.get('/api/tree', () => HttpResponse.json({
-      name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
-      children: [
-        {
-          name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
-          children: [
-            { name: 'BIZLINK.json', path: 'CDM/m_FIX/BIZLINK.json', kind: 'json' },
-          ],
-        },
-      ],
-    })))
-
-    renderModifier()
-
-    const file = await screen.findByText('BIZLINK.json')
-    fireEvent.click(file)
-
-    // Still on the empty-hint state — no recipe was activated.
-    expect(await screen.findByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
-  })
+  // Superseded by Task 14's Explorer scoping (below): a non-recipe .json leaf
+  // like BIZLINK.json is now excluded from Tab 2's tree entirely by
+  // `fileFilter`, so "click it and confirm nothing crashes" is no longer a
+  // reachable scenario — there's nothing to click. See "ETLModifier — Explorer
+  // scoping + info copy (Task 14)" for the coverage that replaces it.
 })
 
 // ─── Task 8: draft editing state — mutations, SaveBar validate+PUT ────────────
@@ -747,7 +736,12 @@ describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
   })
 })
 
-// ─── Task 11: expression registry — merged XML + recipe origins ──────────────
+// ─── Task 11/14: expression dock — recipe-origin only, relocated ─────────────
+//
+// Task 14 moved `ExpressionRegistry` into `ExpressionDock` (its own unit
+// suite: `ExpressionDock.test.tsx`) and scoped it to `origin === 'recipe'`.
+// What's left here is integration coverage through the real `/api/expressions`
+// wiring + the Insert round-trip into the Inspector's formula field.
 
 const REGISTRY_ENTRIES = [
   {
@@ -759,20 +753,23 @@ const REGISTRY_ENTRIES = [
     transformation: 'ODS_SYN_ORDERS', port: 'AMOUNT',
     formula: 'ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)', origin: 'recipe',
   },
+  {
+    mappingPath: 'CDM/m_FIX/_ETL_m_FIX.json', layer: 'CDM',
+    transformation: 'FIX_STEP', port: 'B', formula: 'UPPER(S.B)', origin: 'recipe',
+  },
 ]
 
-describe('ETLModifier — expression registry (Task 11)', () => {
-  it('renders both xml- and recipe-origin entries corpus-wide, with origin badges', async () => {
+describe('ETLModifier — expression dock (Task 11/14)', () => {
+  it('renders only recipe-origin entries corpus-wide — the xml-origin entry is excluded', async () => {
     server.use(http.get('/api/expressions', () => HttpResponse.json(REGISTRY_ENTRIES)))
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
 
-    expect(await screen.findByText('LTRIM(COL_A)')).toBeInTheDocument()
-    expect(screen.getByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
-    expect(screen.getByText('xml')).toBeInTheDocument()
-    expect(screen.getByText('recipe')).toBeInTheDocument()
+    expect(await screen.findByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
+    expect(screen.getByText('UPPER(S.B)')).toBeInTheDocument()
+    expect(screen.queryByText('LTRIM(COL_A)')).not.toBeInTheDocument()
   })
 
   it('filter box narrows the registry by substring', async () => {
@@ -781,11 +778,11 @@ describe('ETLModifier — expression registry (Task 11)', () => {
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
-    await screen.findByText('LTRIM(COL_A)')
+    await screen.findByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')
 
     fireEvent.change(screen.getByPlaceholderText('Filter expressions…'), { target: { value: 'AMOUNT' } })
 
-    expect(screen.queryByText('LTRIM(COL_A)')).not.toBeInTheDocument()
+    expect(screen.queryByText('UPPER(S.B)')).not.toBeInTheDocument()
     expect(screen.getByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
   })
 
@@ -797,9 +794,10 @@ describe('ETLModifier — expression registry (Task 11)', () => {
 
     fireEvent.focus(formula)
     const inserts = await screen.findAllByText('Insert')
-    expect(inserts).toHaveLength(REGISTRY_ENTRIES.length)
+    // Only the two recipe-origin entries offer Insert — the xml-origin one never rendered.
+    expect(inserts).toHaveLength(2)
 
-    fireEvent.click(inserts[1]) // the recipe-origin ROUND(...) entry
+    fireEvent.click(inserts[0]) // the recipe-origin ROUND(...) entry
 
     expect(await screen.findByDisplayValue('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
@@ -819,5 +817,40 @@ describe('ETLModifier — expression registry (Task 11)', () => {
     const host = canvasRoot.parentElement!           // the height:420 wrapper
     expect(host.style.height).toBe('420px')
     expect(host.style.display).toBe('flex')
+  })
+})
+
+// ─── Task 14: Explorer scoping + info copy ────────────────────────────────────
+
+describe('ETLModifier — Explorer scoping + info copy (Task 14)', () => {
+  it('Explorer tree shows the recipe and excludes its sibling XML and non-recipe json', async () => {
+    renderModifier()
+
+    expect(await screen.findByText('_ETL_m_FIX.json')).toBeInTheDocument()
+    expect(screen.queryByText('m_FIX.xml')).not.toBeInTheDocument()
+    expect(screen.queryByText('BIZLINK.json')).not.toBeInTheDocument()
+  })
+
+  it('the Explorer header exposes an info affordance naming both _ETL_*.json and the IPC ETL Viewer tab', async () => {
+    const { container } = renderModifier()
+    // Load the recipe first so the empty state (which carries the SAME copy,
+    // per the brief) isn't also on screen, keeping the tooltip's own text
+    // assertion unambiguous.
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    const infoIcon = container.querySelector('span[style*="cursor"][style*="help"]')
+    expect(infoIcon).toBeTruthy()
+
+    fireEvent.mouseEnter(infoIcon!)
+    const tooltip = await within(infoIcon!.parentElement as HTMLElement).findByText(/_ETL_\*\.json/)
+    expect(tooltip.textContent).toMatch(/IPC ETL Viewer/)
+  })
+
+  it('the empty state names both _ETL_*.json and the IPC ETL Viewer tab', async () => {
+    renderModifier()
+
+    expect(await screen.findByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
+    expect(await screen.findByText(/IPC ETL Viewer/)).toBeInTheDocument()
   })
 })

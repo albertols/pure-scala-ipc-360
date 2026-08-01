@@ -149,9 +149,15 @@ export function TextareaWidget({
 /** A `RecipeTransformationJson` rendered/edited as formula text, via the same
  * `renderFormula`/`parseFormulaText` round-trip the field-level formula editor
  * uses. `onFocus` is optional — the field-table's per-field formula editor
- * (Inspector.tsx) supplies it to drive the "All Expressions" registry's Insert
- * affordance; a property-level formula field (e.g. filter's `filterCondition`)
- * omits it. */
+ * (Inspector.tsx) supplies it to drive the expression dock's Insert affordance
+ * (`ExpressionDock.tsx`, Task 14); a property-level formula field (e.g.
+ * filter's `filterCondition`) omits it.
+ *
+ * Also a drop target for the dock's `text/etl-formula` drag payload (Task 14,
+ * spec §6.6): dropping commits straight through the same
+ * `parseFormulaText` -> `onChange` path a manual edit's blur already uses, so
+ * every FormulaWidget in the Inspector — field-level and property-level alike
+ * — is a precise, per-field drop target without any new wiring per caller. */
 export function FormulaWidget({
   label,
   value,
@@ -175,6 +181,12 @@ export function FormulaWidget({
         onChange={e => setText(e.target.value)}
         onFocus={onFocus}
         onBlur={() => { if (text !== original) onChange(parseFormulaText(text)) }}
+        onDragOver={e => e.preventDefault()}
+        onDrop={e => {
+          e.preventDefault()
+          const formula = e.dataTransfer.getData('text/etl-formula')
+          if (formula) { setText(formula); onChange(parseFormulaText(formula)) }
+        }}
         rows={2}
         style={{
           width: '100%', resize: 'vertical',

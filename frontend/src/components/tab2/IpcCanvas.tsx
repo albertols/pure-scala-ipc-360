@@ -60,6 +60,13 @@ export function IpcCanvas(props: {
   onSelectEdge?: (conn: Connection) => void
   selectedEdge?: Connection | null
   onDropType?: (type: string) => void
+  /** Expression-dock drop target (Task 14): a `text/etl-formula` payload
+   * dropped anywhere on the canvas routes through the SAME handler the
+   * Inspector's "Insert" button uses (`ETLModifier.handleInsertExpression`)
+   * — it writes into whichever field last focused a formula textarea. Node
+   * boxes themselves stay untouched (`NodeBox.tsx` is never modified — see
+   * task-14-report.md), so this is canvas-wide rather than per-field. */
+  onDropFormula?: (formula: string) => void
   /** Per-node conformance status (Task 13): renders a 6px dot in the node's
    * header, colored by severity — `--red` (error) beats `#fbbf24` (warn)
    * beats `--green` (ok); a node absent from the map gets no dot at all. */
@@ -67,7 +74,7 @@ export function IpcCanvas(props: {
 }) {
   const {
     nodes, connections, selectedNode, onSelectNode, offsets,
-    onMoveNode, onAutoLayout, onPortClick, onSelectEdge, selectedEdge, onDropType, nodeStatus,
+    onMoveNode, onAutoLayout, onPortClick, onSelectEdge, selectedEdge, onDropType, onDropFormula, nodeStatus,
   } = props
 
   const [pan, setPan] = useState({ x: 30, y: 30 })
@@ -148,11 +155,13 @@ export function IpcCanvas(props: {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
-      onDragOver={onDropType ? (e: React.DragEvent) => e.preventDefault() : undefined}
-      onDrop={onDropType ? (e: React.DragEvent) => {
+      onDragOver={(onDropType || onDropFormula) ? (e: React.DragEvent) => e.preventDefault() : undefined}
+      onDrop={(onDropType || onDropFormula) ? (e: React.DragEvent) => {
         e.preventDefault()
         const type = e.dataTransfer.getData('text/etl-type')
-        if (type) onDropType(type)
+        if (type && onDropType) { onDropType(type); return }
+        const formula = e.dataTransfer.getData('text/etl-formula')
+        if (formula && onDropFormula) onDropFormula(formula)
       } : undefined}
     >
       {/* dot grid */}
