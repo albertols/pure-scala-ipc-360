@@ -148,9 +148,16 @@ function TableNameList({ names, emptyLabel }: { names: string[]; emptyLabel: str
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function ETLModifier({ searchQuery }: { searchQuery: string }) {
+export function ETLModifier({ searchQuery, focusRecipe }: {
+  searchQuery: string
+  /** Focus mode (Task 15): when set, this recipe seeds `recipePath` directly
+   * (no click-through-the-tree) and the whole Explorer disappears — the
+   * component renders as a single isolated editor, matching the `?focus=`
+   * deep link `App.tsx` reads once at mount. */
+  focusRecipe?: string
+}) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const [recipePath, setRecipePath] = useState<string | null>(null)
+  const [recipePath, setRecipePath] = useState<string | null>(focusRecipe ?? null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdge, setSelectedEdge] = useState<Connection | null>(null)
   const [wireFrom, setWireFrom] = useState<{ nodeId: string; portName: string } | null>(null)
@@ -508,28 +515,33 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-      <div style={{ position: 'relative', display: 'flex', flexShrink: 0 }}>
-        <Sidebar
-          searchQuery={searchQuery}
-          selectedPath={selectedPath}
-          onSelectFile={handleSelectFile}
-          filesystem={fs ?? EMPTY_FS}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(c => !c)}
-          extraContent={sidebarExtra}
-          fileFilter={RECIPE_ONLY_FILTER}
-        />
-        {/* Explorer scoping info affordance (Task 14, spec §6.8) — an overlay
-            rather than a Sidebar prop, since Sidebar's header markup itself
-            stays untouched beyond the opt-in fileFilter/footer additions
-            (Tabs 1/4 unaffected). Positioned clear of the collapse chevron
-            (which sits flush right in Sidebar's own header). */}
-        {!sidebarCollapsed && (
-          <div style={{ position: 'absolute', top: 11, right: 34 }}>
-            <InfoTooltip text={EXPLORER_INFO_COPY} placement="right" />
-          </div>
-        )}
-      </div>
+      {/* Focus mode (Task 15): no Explorer at all — the recipe is seeded
+          directly from the `focusRecipe` prop, so there's nothing to browse
+          and no tree to click through. */}
+      {!focusRecipe && (
+        <div style={{ position: 'relative', display: 'flex', flexShrink: 0 }}>
+          <Sidebar
+            searchQuery={searchQuery}
+            selectedPath={selectedPath}
+            onSelectFile={handleSelectFile}
+            filesystem={fs ?? EMPTY_FS}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(c => !c)}
+            extraContent={sidebarExtra}
+            fileFilter={RECIPE_ONLY_FILTER}
+          />
+          {/* Explorer scoping info affordance (Task 14, spec §6.8) — an overlay
+              rather than a Sidebar prop, since Sidebar's header markup itself
+              stays untouched beyond the opt-in fileFilter/footer additions
+              (Tabs 1/4 unaffected). Positioned clear of the collapse chevron
+              (which sits flush right in Sidebar's own header). */}
+          {!sidebarCollapsed && (
+            <div style={{ position: 'absolute', top: 11, right: 34 }}>
+              <InfoTooltip text={EXPLORER_INFO_COPY} placement="right" />
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
         {!recipePath ? (
@@ -599,6 +611,18 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                     background: historyOpen ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
                     color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
                   }}>{'{ history }'}</button>
+                  {/* Focus mode deep link (Task 15) — opens THIS recipe alone,
+                      full-viewport, in a new tab (encodeURIComponent: recipe
+                      paths carry '/' and are user-visible corpus paths, so an
+                      unencoded one would produce a malformed URL). */}
+                  <button
+                    onClick={() => recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')}
+                    title="Open in a new tab, isolated"
+                    style={{
+                      padding: '5px 12px', borderRadius: 5,
+                      background: 'transparent', border: '1px solid var(--border)',
+                      color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+                    }}>{'⤢'}</button>
                   <button onClick={() => setShowRaw(r => !r)} style={{
                     padding: '5px 12px', borderRadius: 5,
                     background: showRaw ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',

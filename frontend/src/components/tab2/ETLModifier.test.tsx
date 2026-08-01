@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeAll, afterAll, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
@@ -852,5 +852,40 @@ describe('ETLModifier — Explorer scoping + info copy (Task 14)', () => {
 
     expect(await screen.findByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
     expect(await screen.findByText(/IPC ETL Viewer/)).toBeInTheDocument()
+  })
+})
+
+// ─── Task 15: Focus mode ───────────────────────────────────────────────────────
+
+describe('ETLModifier — focus mode (Task 15)', () => {
+  it('focusRecipe seeds recipePath directly: no Sidebar, no "select a recipe" empty state, the recipe loads', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <ETLModifier searchQuery="" focusRecipe="CDM/m_FIX/_ETL_m_FIX.json" />
+      </QueryClientProvider>,
+    )
+
+    // Recipe header renders — no click-through-the-tree needed.
+    expect(await screen.findByRole('heading', { name: '_ETL_m_FIX.json' })).toBeInTheDocument()
+
+    // No Sidebar/Explorer, and its info-tooltip overlay is gone with it.
+    expect(screen.queryByText('Explorer')).not.toBeInTheDocument()
+    // No "select a recipe" empty state either.
+    expect(screen.queryByText('Select an _ETL_*.json recipe to edit')).not.toBeInTheDocument()
+  })
+
+  it('a ⤢ button beside { history } opens ?focus=<encoded recipePath> in a new tab', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('⤢'))
+
+    expect(openSpy).toHaveBeenCalledWith('?focus=CDM%2Fm_FIX%2F_ETL_m_FIX.json', '_blank')
+
+    openSpy.mockRestore()
   })
 })

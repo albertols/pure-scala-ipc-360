@@ -199,24 +199,44 @@ function TopBar({
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
+// Focus mode (Task 15): `?focus=<recipePath>` renders a single recipe's
+// editor full-viewport — no TopBar, no tab strip, no Explorer — so a second
+// browser tab can sit side by side with the first. Deliberately NOT a router:
+// this is a single query parameter read once at mount, not a routing system
+// (frontend/package.json's dependencies stay exactly @tanstack/react-query,
+// react, react-dom — see the ⤢ button in ETLModifier's recipe header, which
+// opens this same URL shape via `window.open`).
+function readFocusRecipe(): string | null {
+  return new URLSearchParams(window.location.search).get('focus')
+}
+
 export default function App() {
+  const [focusRecipe] = useState<string | null>(readFocusRecipe)
   const [activeTab, setActiveTab] = useState<TabId>('viewer')
   const [searchQuery, setSearchQuery] = useState('')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
-      <TopBar
-        activeTab={activeTab}
-        onTabChange={tab => { setActiveTab(tab); setSearchQuery('') }}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+      {!focusRecipe && (
+        <TopBar
+          activeTab={activeTab}
+          onTabChange={tab => { setActiveTab(tab); setSearchQuery('') }}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+      )}
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
-        {activeTab === 'viewer' && <ETLViewer searchQuery={searchQuery} />}
-        {activeTab === 'modifier' && <ETLModifier searchQuery={searchQuery} />}
-        {activeTab === 'operational' && <ETLOperational />}
-        {activeTab === 'dag' && <ETLDag />}
+        {focusRecipe ? (
+          <ETLModifier searchQuery="" focusRecipe={focusRecipe} />
+        ) : (
+          <>
+            {activeTab === 'viewer' && <ETLViewer searchQuery={searchQuery} />}
+            {activeTab === 'modifier' && <ETLModifier searchQuery={searchQuery} />}
+            {activeTab === 'operational' && <ETLOperational />}
+            {activeTab === 'dag' && <ETLDag />}
+          </>
+        )}
       </div>
     </div>
   )

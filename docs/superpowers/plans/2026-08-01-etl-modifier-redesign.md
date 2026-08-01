@@ -2738,13 +2738,13 @@ so Tabs 1 and 4 are untouched."
 - Consumes: `ETLModifier`.
 - Produces: `ETLModifier` gains `focusRecipe?: string` — when set it skips the Explorer and the tab chrome and loads that recipe directly.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Set `window.history.replaceState({}, '', '/?focus=CDM/m_FIX/_ETL_m_FIX.json')`, render `App`,
 and assert: the tab bar is absent, the Explorer is absent, and the recipe header renders
 `_ETL_m_FIX.json`. A second test with no query param asserts the normal four-tab shell.
 
-- [ ] **Step 2: Run to verify it fails, then implement**
+- [x] **Step 2: Run to verify it fails, then implement**
 
 In `App.tsx`, read `new URLSearchParams(window.location.search).get('focus')` once into
 state. When non-null, render `<ETLModifier searchQuery="" focusRecipe={focus} />` alone inside
@@ -2755,7 +2755,7 @@ the existing app shell div, skipping `TopBar` and the tab strip. In `ETLModifier
 Add a `⤢` button beside `{ history }` in the recipe header calling
 `window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')`.
 
-- [ ] **Step 3: Run every frontend gate and commit**
+- [x] **Step 3: Run every frontend gate and commit**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.
