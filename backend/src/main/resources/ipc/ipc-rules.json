@@ -7,7 +7,128 @@
     "CEDARWICK2": "storedProcedure"
   },
   "keyAliases": { "greencliff": "groups", "weststone": "fields" },
-  "keySchema": {},
+  "keySchema": {
+    "target:table": [
+      { "key": "name",           "parserType": "String",         "required": true,  "widget": "text" },
+      { "key": "type",           "parserType": "String",         "required": true,  "widget": "text" },
+      { "key": "fields",         "parserType": "List[Field]",    "required": true,  "widget": "fieldTable" },
+      { "key": "primaryKeys",    "parserType": "List[String]",   "required": false, "widget": "stringList" },
+      { "key": "updateOverride", "parserType": "Option[String]", "required": false, "widget": "textarea" }
+    ],
+    "target:unionInput": [
+      { "key": "name",   "parserType": "String",      "required": true, "widget": "text" },
+      { "key": "type",   "parserType": "String",      "required": true, "widget": "text" },
+      { "key": "fields", "parserType": "List[Field]", "required": true, "widget": "fieldTable" }
+    ],
+    "target:sourceQualifier": [
+      { "key": "name",            "parserType": "String",         "required": true,  "widget": "text" },
+      { "key": "type",            "parserType": "String",         "required": true,  "widget": "text" },
+      { "key": "fields",          "parserType": "List[Field]",    "required": true,  "widget": "fieldTable" },
+      { "key": "selectDistinct",  "parserType": "Boolean",        "required": true,  "widget": "toggle",
+        "ruleId": "IPC-TYP-SOURCEQUALIFIER-001" },
+      { "key": "sourceFilter",    "parserType": "Option[String]", "required": false, "widget": "textarea" },
+      { "key": "sqlQuery",        "parserType": "Option[String]", "required": false, "widget": "textarea" },
+      { "key": "userDefinedJoin", "parserType": "Option[String]", "required": false, "widget": "textarea" }
+    ],
+    "target:filter": [
+      { "key": "name",            "parserType": "String",               "required": true,  "widget": "text" },
+      { "key": "type",            "parserType": "String",               "required": true,  "widget": "text" },
+      { "key": "fields",          "parserType": "List[Field]",          "required": true,  "widget": "fieldTable" },
+      { "key": "filterCondition", "parserType": "RecipeTransformation", "required": false, "widget": "formula" }
+    ],
+    "target:joinerInput": [
+      { "key": "name",   "parserType": "String",      "required": true, "widget": "text" },
+      { "key": "type",   "parserType": "String",      "required": true, "widget": "text" },
+      { "key": "fields", "parserType": "List[Field]", "required": true, "widget": "fieldTable" }
+    ],
+    "target:aggregator": [
+      { "key": "name",          "parserType": "String",        "required": true, "widget": "text" },
+      { "key": "type",          "parserType": "String",        "required": true, "widget": "text" },
+      { "key": "fields",        "parserType": "List[Field]",   "required": true, "widget": "fieldTable" },
+      { "key": "groupByFields", "parserType": "List[String]",  "required": true, "widget": "stringList",
+        "ruleId": "IPC-TYP-AGGREGATOR-001" }
+    ],
+    "target:router": [
+      { "key": "name",   "parserType": "String",            "required": true, "widget": "text" },
+      { "key": "type",   "parserType": "String",            "required": true, "widget": "text" },
+      { "key": "fields", "parserType": "List[Field]",       "required": true, "widget": "fieldTable" },
+      { "key": "groups", "parserType": "List[RouterGroup]", "required": true, "widget": "rowTable",
+        "ruleId": "IPC-TYP-ROUTER-001" }
+    ],
+    "target:normalizer": [
+      { "key": "name",             "parserType": "String",                "required": true, "widget": "text" },
+      { "key": "type",             "parserType": "String",                "required": true, "widget": "text" },
+      { "key": "fields",           "parserType": "List[Field]",           "required": true, "widget": "fieldTable" },
+      { "key": "normalizedFields", "parserType": "List[NormalizedField]", "required": true, "widget": "rowTable",
+        "ruleId": "IPC-TYP-NORMALIZER-001" }
+    ],
+    "target:java": [
+      { "key": "name",     "parserType": "String",      "required": true, "widget": "text" },
+      { "key": "type",     "parserType": "String",      "required": true, "widget": "text" },
+      { "key": "fields",   "parserType": "List[Field]", "required": true, "widget": "fieldTable" },
+      { "key": "javaCode", "parserType": "String",      "required": true, "widget": "textarea",
+        "ruleId": "IPC-TYP-JAVA-001" }
+    ],
+    "target:storedProcedure": [
+      { "key": "name",          "parserType": "String",         "required": true,  "widget": "text" },
+      { "key": "type",          "parserType": "String",         "required": true,  "widget": "text" },
+      { "key": "fields",        "parserType": "List[Field]",    "required": true,  "widget": "fieldTable" },
+      { "key": "procedureName", "parserType": "String",         "required": true,  "widget": "text",
+        "ruleId": "IPC-TYP-STOREDPROCEDURE-001" },
+      { "key": "returnField",   "parserType": "Option[String]", "required": false, "widget": "text" }
+    ],
+    "source:table": [
+      { "key": "name",        "parserType": "String",       "required": true,  "widget": "text" },
+      { "key": "type",        "parserType": "String",       "required": true,  "widget": "text" },
+      { "key": "primaryKeys", "parserType": "List[String]", "required": false, "widget": "stringList" }
+    ],
+    "source:union": [
+      { "key": "name",        "parserType": "String",             "required": true, "widget": "text" },
+      { "key": "type",        "parserType": "String",             "required": true, "widget": "text" },
+      { "key": "unionTables", "parserType": "List[UnionTable]",   "required": true, "widget": "rowTable",
+        "ruleId": "IPC-TYP-UNION-001" }
+    ],
+    "source:joiner": [
+      { "key": "name",            "parserType": "String",         "required": true,  "widget": "text" },
+      { "key": "type",            "parserType": "String",         "required": true,  "widget": "text" },
+      { "key": "joinerTables",    "parserType": "List[String]",   "required": true,  "widget": "stringList",
+        "ruleId": "IPC-TYP-JOINER-001" },
+      { "key": "joinerType",      "parserType": "String",         "required": true,  "widget": "text",
+        "ruleId": "IPC-TYP-JOINER-001" },
+      { "key": "joinerCondition", "parserType": "String",         "required": true,  "widget": "textarea",
+        "ruleId": "IPC-TYP-JOINER-001" }
+    ],
+    "source:router": [
+      { "key": "name",  "parserType": "String", "required": true, "widget": "text" },
+      { "key": "type",  "parserType": "String", "required": true, "widget": "text" },
+      { "key": "group", "parserType": "String", "required": true, "widget": "text",
+        "ruleId": "IPC-TYP-ROUTER-003" }
+    ],
+    "source:sourceQualifier": [
+      { "key": "name", "parserType": "String", "required": true, "widget": "text" },
+      { "key": "type", "parserType": "String", "required": true, "widget": "text" }
+    ],
+    "source:filter": [
+      { "key": "name", "parserType": "String", "required": true, "widget": "text" },
+      { "key": "type", "parserType": "String", "required": true, "widget": "text" }
+    ],
+    "source:aggregator": [
+      { "key": "name", "parserType": "String", "required": true, "widget": "text" },
+      { "key": "type", "parserType": "String", "required": true, "widget": "text" }
+    ],
+    "source:normalizer": [
+      { "key": "name", "parserType": "String", "required": true, "widget": "text" },
+      { "key": "type", "parserType": "String", "required": true, "widget": "text" }
+    ],
+    "source:java": [
+      { "key": "name", "parserType": "String", "required": true, "widget": "text" },
+      { "key": "type", "parserType": "String", "required": true, "widget": "text" }
+    ],
+    "source:storedProcedure": [
+      { "key": "name", "parserType": "String", "required": true, "widget": "text" },
+      { "key": "type", "parserType": "String", "required": true, "widget": "text" }
+    ]
+  },
   "rules": [
     { "id": "IPC-STR-001", "severity": "error",
       "statement": "steps must be a non-empty array",
@@ -46,6 +167,60 @@
     { "id": "IPC-STR-009", "severity": "error",
       "statement": "every field must have a non-blank name",
       "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/Recipe.scala:9",
-      "ipcRef": "", "wikiRef": "docs/ipc/rules.md#ipc-str-009" }
+      "ipcRef": "", "wikiRef": "docs/ipc/rules.md#ipc-str-009" },
+    { "id": "IPC-TYP-REQUIRED-KEYS", "severity": "error",
+      "statement": "no per-kind required key (per keySchema) is missing from a step target or source — the umbrella id the generic driver reports when it finds zero violations; each actual violation is reported under the specific IPC-TYP-<KIND>-NNN id from the key's ruleId",
+      "parserRef": "backend/src/main/java/io/pure360/etl360/service/ipc/TypeShapeRules.java:81",
+      "ipcRef": "", "wikiRef": "docs/ipc/rules.md#ipc-typ-required-keys" },
+    { "id": "IPC-TYP-SOURCEQUALIFIER-001", "severity": "error",
+      "statement": "source qualifier target must specify selectDistinct as a boolean",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractTarget.scala:25",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/sourceQualifier.md" },
+    { "id": "IPC-TYP-ROUTER-001", "severity": "error",
+      "statement": "router target must specify groups as an array of RouterGroup",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractTarget.scala:44",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/router.md" },
+    { "id": "IPC-TYP-ROUTER-002", "severity": "error",
+      "statement": "router groups may include at most one default group (default: true)",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractTarget.scala:47",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/router.md" },
+    { "id": "IPC-TYP-ROUTER-003", "severity": "error",
+      "statement": "router source must specify group, the upstream output group name it reads from",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractSource.scala:37",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/router.md" },
+    { "id": "IPC-TYP-AGGREGATOR-001", "severity": "error",
+      "statement": "aggregator target must specify groupByFields as an array",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractTarget.scala:39",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/aggregator.md" },
+    { "id": "IPC-TYP-NORMALIZER-001", "severity": "error",
+      "statement": "normalizer target must specify normalizedFields as an array",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractTarget.scala:60",
+      "ipcRef": "https://docs.informatica.com/integration-cloud/data-integration/current-version/transformations/normalizer-transformation.html",
+      "wikiRef": "docs/ipc/transformations/normalizer.md" },
+    { "id": "IPC-TYP-NORMALIZER-002", "severity": "error",
+      "statement": "every normalized field's refSource must reference at least one input field",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractTarget.scala:76",
+      "ipcRef": "https://docs.informatica.com/integration-cloud/data-integration/current-version/transformations/normalizer-transformation/normalized-fields/generated-keys.html",
+      "wikiRef": "docs/ipc/transformations/normalizer.md" },
+    { "id": "IPC-TYP-JAVA-001", "severity": "error",
+      "statement": "java target must specify javaCode",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractTarget.scala:82",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/java.md" },
+    { "id": "IPC-TYP-STOREDPROCEDURE-001", "severity": "error",
+      "statement": "stored procedure target must specify procedureName",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractTarget.scala:87",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/storedProcedure.md" },
+    { "id": "IPC-TYP-JOINER-001", "severity": "error",
+      "statement": "joiner source must specify joinerTables, joinerType and joinerCondition",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractSource.scala:28-30",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/joiner.md" },
+    { "id": "IPC-TYP-JOINERINPUT-001", "severity": "error",
+      "statement": "joiner input target name must be <joiner>.MASTER or <joiner>.DETAIL",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/xmltojson/recipe/transformation/AbstractTargetFactory.scala:88",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/joinerInput.md" },
+    { "id": "IPC-TYP-UNION-001", "severity": "error",
+      "statement": "union source must specify unionTables, and every fieldMapping entry must carry both origin and union",
+      "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractSource.scala:8-14",
+      "ipcRef": "", "wikiRef": "docs/ipc/transformations/union.md" }
   ]
 }

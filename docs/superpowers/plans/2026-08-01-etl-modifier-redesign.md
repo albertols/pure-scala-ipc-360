@@ -380,7 +380,7 @@ input-group name, not a transformation) and TRANSFORMATION@TYPE for the other th
 - Produces:
   - `record IpcCheck(String ruleId, String severity, String status, String path, String message)` — `status` is `"pass"` or `"fail"`.
   - `interface IpcRule { String id(); void check(RuleContext ctx, List<IpcCheck> out); }`
-  - `RuleContext` with `JsonNode recipe()`, `JsonNode steps()`, `List<JsonNode> targets()`, `JsonNode fieldsOf(JsonNode target)`, `String targetType(JsonNode target)`, `Set<String> targetNames()`, `Set<String> sourceNames()`, `Set<String> tableSourceNames()`.
+  - `RuleContext` with `JsonNode recipe()`, `List<JsonNode> steps()`, `JsonNode fieldsOf(JsonNode target)`, `String fieldsKey(JsonNode target)`, `String targetType(JsonNode target)`, `String sourceType(JsonNode source)`, `String stepPath(int i)`, `Set<String> targetNames()`, `Set<String> sourceNames()`, `Set<String> tableSourceNames()`, `boolean resolvesAsRefTarget(String)`.
   - `IpcCatalog.meta(String ruleId) -> IpcRuleMeta`, `IpcCatalog.rules() -> List<IpcRuleMeta>`, `IpcCatalog.keySchema() -> Map<String,List<IpcKeySpec>>`, plus nested records `IpcRuleMeta(String id, String severity, String statement, String parserRef, String ipcRef, String wikiRef)` and `IpcKeySpec(String key, String parserType, boolean required, String widget)`.
   - `IpcRuleEngine.run(JsonNode recipe) -> List<IpcCheck>`.
 - Tasks 3–5 add rule classes implementing `IpcRule` and register them in `IpcRuleEngine`.
@@ -1003,7 +1003,7 @@ pass, unknown types and duplicate names fail."
 - Consumes: `IpcCatalog.keySchema()`, `RuleContext`, `StructuralRules.rule(...)` helper (package-private).
 - Produces: `TypeShapeRules.all(IpcCatalog) -> List<IpcRule>`. The `keySchema` map (kind → `IpcKeySpec[]`) is consumed by Task 5's `GET /api/ipc/rules` and by Task 12's Inspector — this task is where the widget assignment per key is decided once.
 
-- [ ] **Step 1: Write the failing type-shape test**
+- [x] **Step 1: Write the failing type-shape test**
 
 Create `backend/src/test/java/io/pure360/etl360/service/ipc/TypeShapeRulesTest.java`:
 
@@ -1126,12 +1126,12 @@ class TypeShapeRulesTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `mvn -am -pl backend test -Dtest=TypeShapeRulesTest -DfailIfNoTests=false`
 Expected: FAIL — `TypeShapeRules` missing, `keySchema` empty.
 
-- [ ] **Step 3: Fill `keySchema` in `ipc-rules.json`**
+- [x] **Step 3: Fill `keySchema` in `ipc-rules.json`**
 
 Keys are namespaced `target:<kind>` / `source:<kind>` because `table`, `filter`,
 `sourceQualifier`, `aggregator`, `router`, `normalizer`, `java` and `storedProcedure` exist
@@ -1214,7 +1214,7 @@ the tests above are: `IPC-TYP-SOURCEQUALIFIER-001` (selectDistinct present and b
 joinerType and joinerCondition all present), `IPC-TYP-UNION-001` (unionTables present, every
 `fieldMapping` entry carrying both `origin` and `union`).
 
-- [ ] **Step 4: Write `TypeShapeRules`**
+- [x] **Step 4: Write `TypeShapeRules`**
 
 Create `backend/src/main/java/io/pure360/etl360/service/ipc/TypeShapeRules.java`. It has two
 halves: a **generic** half that walks `IpcCatalog.keySchema()` and emits a
@@ -1367,7 +1367,7 @@ final class TypeShapeRules {
 > `rules[]` catalogue entry, and vice versa. Task 5's `everyCatalogueRuleIdIsRegistered` checks
 > exactly this, so a typo surfaces there rather than at runtime.
 
-- [ ] **Step 5: Register the family in `IpcRuleEngine`**
+- [x] **Step 5: Register the family in `IpcRuleEngine`**
 
 In `IpcRuleEngine`'s constructor, after `all.addAll(StructuralRules.all(catalog));` add:
 
@@ -1375,12 +1375,12 @@ In `IpcRuleEngine`'s constructor, after `all.addAll(StructuralRules.all(catalog)
         all.addAll(TypeShapeRules.all(catalog));
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `mvn -am -pl backend test -Dtest=TypeShapeRulesTest -DfailIfNoTests=false`
 Expected: PASS, 12 tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/resources/ipc/ipc-rules.json \

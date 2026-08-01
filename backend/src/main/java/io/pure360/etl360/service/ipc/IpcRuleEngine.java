@@ -20,6 +20,7 @@ public class IpcRuleEngine {
         this.catalog = catalog;
         List<IpcRule> all = new ArrayList<>();
         all.addAll(StructuralRules.all(catalog));
+        all.addAll(TypeShapeRules.all(catalog));
         this.rules = List.copyOf(all);
     }
 
