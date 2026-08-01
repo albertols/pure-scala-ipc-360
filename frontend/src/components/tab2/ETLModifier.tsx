@@ -631,15 +631,26 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
       setValidationErrors([])
       setSaveError(null)
     }
-    // Offsets reset here on every recipe change (recipePath / rec.data), THEN
-    // this same effect re-fires once `layout.data` lands (its own query, so it
-    // can resolve after rec.data) and re-seeds from the fetched sidecar. A
-    // fresh recipe therefore never inherits the previous one's positions: the
-    // window between the reset and the seed renders with offsets:{}, same as
-    // the recipe having no saved layout at all.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipePath, rec.data?.modifiedAt])
+
+  // Layout offsets (Task 9/10): a SEPARATE effect from the draft reset above —
+  // review finding (fix round 1): folding `layout.data` into the draft-reset
+  // effect's deps meant ANY layout refetch (window refocus after staleTime, an
+  // invalidated `['layout', ...]` query, anything) re-ran that whole effect and
+  // silently wiped in-progress recipe edits, since the reset code inside it is
+  // unconditional on why the effect fired. Keeping offsets in their own effect
+  // means a layout refetch only ever touches `offsets`, never `draft`/`dirtyOps`.
+  //
+  // This still resets on every recipe change (recipePath) THEN re-fires once
+  // `layout.data` lands (its own query, can resolve after rec.data) to re-seed
+  // from the fetched sidecar — a fresh recipe never inherits the previous
+  // one's positions: the window between the reset and the seed renders with
+  // offsets:{}, same as the recipe having no saved layout at all.
+  useEffect(() => {
     setOffsets(toCanvasOffsets(layout.data?.nodes))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipePath, rec.data?.modifiedAt, layout.data])
+  }, [recipePath, layout.data])
 
   // Debounce cleanup (Task 10): the timer lives in a ref so a drag mid-flight
   // when the user switches recipes doesn't fire its PUT against the path
@@ -653,6 +664,17 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     }
   }, [recipePath])
 
+  // Best-effort layout persistence (review finding, fix round 1): a failed PUT
+  // (network error, 5xx) must not block editing — layout is a nudge, not a
+  // recipe edit — but leaving the rejection unhandled would silently swallow
+  // it AND produce an unhandled-promise-rejection warning. Log, don't surface
+  // into `saveError` — that state is scoped to the recipe validate/save flow
+  // (SaveBar's --red banner) and a background layout-save failure isn't that.
+  const reportLayoutSaveError = (e: unknown) => {
+    // eslint-disable-next-line no-console
+    console.error('[ETLModifier] failed to persist canvas layout', e)
+  }
+
   // Drag (Task 10): updates local state immediately (unchanged Task 8
   // behavior — the canvas must track the pointer with no round-trip latency)
   // and debounces a putLayout of the FULL current offsets map, translated to
@@ -664,7 +686,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
       const path = recipePath
       layoutSaveTimer.current = setTimeout(() => {
         layoutSaveTimer.current = null
-        if (path) void putLayout(path, toWireOffsets(next))
+        if (path) putLayout(path, toWireOffsets(next)).catch(reportLayoutSaveError)
       }, LAYOUT_SAVE_DEBOUNCE_MS)
       return next
     })
@@ -679,7 +701,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
       layoutSaveTimer.current = null
     }
     setOffsets({})
-    if (recipePath) void putLayout(recipePath, {})
+    if (recipePath) putLayout(recipePath, {}).catch(reportLayoutSaveError)
   }
 
   // Canvas + panels derive from whichever content is "current" — the live

@@ -609,6 +609,104 @@ describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
       expect(rect.getAttribute('y')).toBe(String(baseY - 15))
     })
   })
+
+  // Critical fix (review round 1): a layout refetch (window refocus after
+  // staleTime, an invalidated ['layout', ...] query, anything) must touch
+  // ONLY `offsets` — the draft-reset effect it used to share a dependency
+  // array with must stay keyed to recipePath/rec.data alone (Task 8's
+  // original invariant), or an in-progress edit silently vanishes with no
+  // recipe switch involved at all.
+  it('a layout refetch updates offsets but never wipes an in-progress recipe edit or its dirty count', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ETLModifier searchQuery="" />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    fireEvent.click(await screen.findByText('T', { selector: 'text' }))
+    const formula = await screen.findByDisplayValue('1')
+    fireEvent.change(formula, { target: { value: '999' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    const baseRect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
+    const baseX = Number(baseRect.getAttribute('x'))
+
+    server.use(http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      version: 1, nodes: { T: { dx: 40, dy: 0 } },
+    })))
+    await queryClient.invalidateQueries({ queryKey: ['layout', 'CDM/m_FIX/_ETL_m_FIX.json'] })
+
+    // Offsets DO update to the refetched layout...
+    await waitFor(() => {
+      const rect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
+      expect(rect.getAttribute('x')).toBe(String(baseX + 40))
+    })
+
+    // ...but the in-progress edit and its dirty count survive untouched.
+    expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('999')).toBeInTheDocument()
+  })
+
+  // IMPORTANT finding (review round 1): the debounce-cancel-on-recipe-switch
+  // logic (layoutSaveTimer's cleanup effect, keyed [recipePath]) was correct
+  // by inspection only — no test exercised it. Regression coverage: drag a
+  // node on recipe 1, switch to recipe 2 well before the 500ms debounce
+  // elapses, and assert recipe 1's PUT never fires.
+  it('switching recipes while a drag-debounce is pending cancels it — no stale PUT for the abandoned path', async () => {
+    let fix1PutCalled = false
+    server.use(
+      http.get('/api/tree', () => HttpResponse.json({
+        name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
+        children: [
+          {
+            name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
+            children: [
+              { name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' },
+              { name: '_ETL_m_FIX2.json', path: 'CDM/m_FIX2/_ETL_m_FIX2.json', kind: 'json' },
+            ],
+          },
+        ],
+      })),
+      http.get('/api/recipes/CDM/m_FIX2/_ETL_m_FIX2.json', () => HttpResponse.json({
+        path: 'CDM/m_FIX2/_ETL_m_FIX2.json',
+        fileName: '_ETL_m_FIX2.json',
+        sizeBytes: 50,
+        modifiedAt: '2026-07-31T01:00:00Z',
+        content: {
+          steps: [{ target: { name: 'T2', type: 'table', fields: [] }, sources: [] }],
+          table: { targetTableNames: ['T2'], sourceTableNames: [] },
+        },
+      })),
+      http.get('/api/ddl/CDM/m_FIX2', () => HttpResponse.json({})),
+      http.get('/api/layouts/CDM/m_FIX2/_ETL_m_FIX2.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+      http.put('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => {
+        fix1PutCalled = true
+        return HttpResponse.json({ version: 1, nodes: {} })
+      }),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    const nodeGroup = screen.getByTestId('ipc-node-T')
+    const canvasRoot = screen.getByTestId('ipc-canvas-root')
+    fireEvent.pointerDown(nodeGroup, { clientX: 100, clientY: 100, pointerId: 1 })
+    fireEvent.pointerMove(canvasRoot, { clientX: 120, clientY: 140, pointerId: 1 })
+    fireEvent.pointerUp(canvasRoot, { clientX: 120, clientY: 140, pointerId: 1 })
+
+    // Switch recipes immediately — well before the 500ms debounce elapses.
+    fireEvent.click(screen.getByText('_ETL_m_FIX2.json'))
+    await screen.findByText('T2', { selector: 'text' })
+
+    // Wait comfortably past the debounce window: the abandoned path's PUT
+    // must never fire.
+    await new Promise(resolve => setTimeout(resolve, 700))
+    expect(fix1PutCalled).toBe(false)
+  })
 })
 
 // ─── Task 11: expression registry — merged XML + recipe origins ──────────────
