@@ -44,6 +44,81 @@ class ReferentialAndFlowRulesTest {
             .contains("IPC-REF-002");
     }
 
+    /** IPC-REF-002's three kind-specific namespaces (spec §5.4 fix-round): a router's
+     * group-qualified port, a normalizer's normalizedFields output, a storedProcedure's
+     * returnField — each resolves even though none is in the target's plain {@code fields}. */
+    @Test
+    void routerGroupQualifiedRefResolvesAgainstThatGroupsOwnFields() throws Exception {
+        String json = """
+            {"steps":[
+              {"target":{"name":"RTR","type":"router","fields":[
+                  {"name":"X","dataType":"String","transformation":{"source":"S.X"}}],
+                  "groups":[{"name":"G1","default":false,"fields":[
+                      {"name":"PORT1","dataType":"String","transformation":{"source":"RTR.X"}}]}]},
+               "sources":[{"name":"S","type":"table"}]},
+              {"target":{"name":"T","type":"table","fields":[
+                  {"name":"A","dataType":"String","transformation":{"source":"RTR.G1.PORT1"}}]},"sources":[]}],
+             "table":{"targetTableNames":["T"],"sourceTableNames":["S"]}}""";
+        assertThat(failedIds(json)).doesNotContain("IPC-REF-002");
+    }
+
+    @Test
+    void routerGroupQualifiedRefToAnUnknownPortInAKnownGroupStillFails() throws Exception {
+        String json = """
+            {"steps":[
+              {"target":{"name":"RTR","type":"router","fields":[
+                  {"name":"X","dataType":"String","transformation":{"source":"S.X"}}],
+                  "groups":[{"name":"G1","default":false,"fields":[
+                      {"name":"PORT1","dataType":"String","transformation":{"source":"RTR.X"}}]}]},
+               "sources":[{"name":"S","type":"table"}]},
+              {"target":{"name":"T","type":"table","fields":[
+                  {"name":"A","dataType":"String","transformation":{"source":"RTR.G1.NOPE"}}]},"sources":[]}],
+             "table":{"targetTableNames":["T"],"sourceTableNames":["S"]}}""";
+        assertThat(failedIds(json)).contains("IPC-REF-002");
+    }
+
+    @Test
+    void normalizerOutputPortRefResolvesAgainstNormalizedFields() throws Exception {
+        String json = """
+            {"steps":[
+              {"target":{"name":"NRM","type":"normalizer",
+                  "fields":[{"name":"X_in","dataType":"String","transformation":{"source":"S.X"}}],
+                  "normalizedFields":[{"name":"X","refSource":["X_in"],"generatedColumnId":false,"generatedKey":false}]},
+               "sources":[{"name":"S","type":"table"}]},
+              {"target":{"name":"T","type":"table","fields":[
+                  {"name":"A","dataType":"String","transformation":{"source":"NRM.X"}}]},"sources":[]}],
+             "table":{"targetTableNames":["T"],"sourceTableNames":["S"]}}""";
+        assertThat(failedIds(json)).doesNotContain("IPC-REF-002");
+    }
+
+    @Test
+    void storedProcedureReturnFieldRefResolves() throws Exception {
+        String json = """
+            {"steps":[
+              {"target":{"name":"SP","type":"storedProcedure","procedureName":"P","returnField":"RV","fields":[]},
+               "sources":[]},
+              {"target":{"name":"T","type":"table","fields":[
+                  {"name":"A","dataType":"String","transformation":{"source":"SP.RV"}}]},"sources":[]}],
+             "table":{"targetTableNames":["T"],"sourceTableNames":[]}}""";
+        assertThat(failedIds(json)).doesNotContain("IPC-REF-002");
+    }
+
+    /** The important negative case, mirroring
+     * {@code ExpressionRulesTest.aBogusNameNeitherMarkerNorFunctionNorLookupStillFails}: a
+     * genuinely unresolvable field ref still fails IPC-REF-002 even after the router/
+     * normalizer/storedProcedure exemptions — proves the rule kept its teeth. */
+    @Test
+    void aGenuinelyUnresolvableStoredProcedureFieldRefStillFails() throws Exception {
+        String json = """
+            {"steps":[
+              {"target":{"name":"SP","type":"storedProcedure","procedureName":"P","returnField":"RV","fields":[]},
+               "sources":[]},
+              {"target":{"name":"T","type":"table","fields":[
+                  {"name":"A","dataType":"String","transformation":{"source":"SP.NOPE"}}]},"sources":[]}],
+             "table":{"targetTableNames":["T"],"sourceTableNames":[]}}""";
+        assertThat(failedIds(json)).contains("IPC-REF-002");
+    }
+
     @Test
     void selfReferenceFails() throws Exception {
         assertThat(failedIds(CHAIN.replace("\"source\":\"SQ.A\"", "\"source\":\"T.A\"")))

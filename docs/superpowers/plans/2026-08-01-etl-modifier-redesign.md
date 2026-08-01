@@ -1739,16 +1739,52 @@ full offender list into the task's RED evidence; it is the input to the next ste
 
 - [x] **Step 3: Calibrate severities**
 
-For each distinct rule id in the offender list, apply spec §5.4's procedure:
-- If the violations are anonymizer damage that `IpcVocabulary` should resolve, extend the
-  alias table (with a witness, and extend `AliasWitnessContractTest`) and keep `severity:
-  "error"`.
-- Otherwise set that rule's `severity` to `"warning"` in `ipc-rules.json` and record, in the
-  rule's entry, a `"corpusEvidence"` string of the form `"<count> violations, e.g.
-  <recipePath> @<jsonPath>"`. Task 6 copies this into `docs/ipc/rules.md`.
+For each distinct rule id in the offender list, first **categorise the violations
+structurally** — group them by what construct they actually landed on, and count how many
+resist any explanation, by collecting offenders into a list and counting/printing it
+directly (never by reading an AssertJ assertion-failure printout: its default
+`maxElementsForPrinting` silently truncates at 1000 elements with no "…and N more" marker,
+and this task's first pass was fooled by exactly that). That count is what decides the
+branch, and skipping this step is how a rule bug gets mistaken for a loose corpus — it
+happened TWICE on this task, and the second time invalidated an already-shipped decision
+that had looked sound on a coarser check:
+
+- **The rule is WRONG — fix the logic, keep `severity: "error"`.** Symptom: the violations
+  decompose cleanly into one or more legitimate constructs the rule simply does not model,
+  with ~zero unexplained residue. The rule is firing on things it was never meant to judge.
+  Completing its vocabulary is not weakening it, and the fix must ship with a test proving a
+  genuinely bad input still fails. Worked example: `IPC-EXP-001` flagged 569 call-tree names,
+  but categorising them gave 1326 Lookup nodes (identifiable by carrying `outputField` —
+  `RecipeTransformation.scala:15`), 32 `SequenceGenerator` and 2 `Undefined` (both
+  `RecipeConstants.scala` markers), and **zero** genuinely unknown functions. Fixed, not
+  downgraded.
+- **Anonymizer damage — extend the alias table, keep `severity: "error"`.** Extend
+  `IpcVocabulary` with an XML witness and cover it in `AliasWitnessContractTest`.
+- **The corpus is genuinely loose — downgrade to `severity: "warning"`, with an evidence
+  string that describes only what actually remains.** Symptom: a real unexplained residue
+  after fixing whatever the rule turns out to be missing — not before. `IPC-REF-002` is the
+  cautionary tale here: an initial spot-check (working from the SAME truncated 1000-element
+  printout) reported ~1037 "unexplained" misses and the downgrade looked sound. A structural
+  re-analysis found the opposite — the check had compared a Router's group-qualified field
+  half against group/port names WITHOUT splitting it into `<group>.<port>` first, so every
+  Router case (the actual dominant pattern, ~92% of the true 1096-violation total) fell
+  through to "unexplained" by construction. Fixing `IPC-REF-002` to resolve Router
+  group-qualified ports, Normalizer `normalizedFields`, and storedProcedure `returnField`
+  (the same "complete the vocabulary" move as `IPC-EXP-001`) collapsed 1096 violations to 28
+  — and THAT smaller residue (a paired-Lookup encoding quirk shared with `IPC-REF-006`, two
+  Normalizer GENERATED KEY/COLUMN ID name losses, one parser-dropped java output field) is
+  genuine: each is data the parser itself never put in the recipe JSON, not a key this rule
+  wasn't checking. `IPC-REF-002` stayed at `warning`, but for a different and much smaller
+  reason than first believed. Moral: categorise BEFORE deciding, re-verify a
+  reviewer-or-self-supplied count before enshrining it in `corpusEvidence` (Task 6 copies
+  that string verbatim into permanent documentation), and treat your own earlier
+  acceptance of a downgrade as non-binding once better evidence exists.
 
 Re-run until `everyCorpusRecipeIsErrorFree` passes. Do **not** delete a rule to make the test
-pass — downgrade it.
+pass, and do **not** weaken a rule's logic so it stops firing — the logic describes what IPC
+means, the severity describes what this corpus happens to contain. If you find yourself
+downgrading most of the catalogue, stop and escalate: that means the rules are wrong, not the
+corpus.
 
 - [x] **Step 4: Extend the validation DTO and wire the engine into `RecipeService.validate`**
 

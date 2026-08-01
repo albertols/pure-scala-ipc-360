@@ -95,18 +95,10 @@ final class ReferentialRules {
             for (Ref ref : collectRefs(ctx)) {
                 JsonNode target = targetsByLowerName.get(ref.table().toLowerCase(Locale.ROOT));
                 if (target == null) continue; // not a step target — IPC-REF-001/003 own resolution
-                JsonNode fields = ctx.fieldsOf(target);
-                boolean found = false;
-                if (fields.isArray()) {
-                    for (JsonNode f : fields) {
-                        if (ref.field().equalsIgnoreCase(f.path("name").asText(""))) { found = true; break; }
-                    }
-                }
-                if (!found) {
-                    out.add(IpcCheck.fail("IPC-REF-002", sev, ref.path(),
-                        "dot-ref \"" + ref.table() + "." + ref.field() + "\" field \"" + ref.field()
-                            + "\" not found among target \"" + ref.table() + "\"'s fields"));
-                }
+                if (resolvesAgainstTargetField(ctx, target, ref.field())) continue;
+                out.add(IpcCheck.fail("IPC-REF-002", sev, ref.path(),
+                    "dot-ref \"" + ref.table() + "." + ref.field() + "\" field \"" + ref.field()
+                        + "\" not found among target \"" + ref.table() + "\"'s fields"));
             }
         }));
 
@@ -174,6 +166,76 @@ final class ReferentialRules {
         }));
 
         return rules;
+    }
+
+    /**
+     * True if {@code fieldName} resolves against {@code target}'s downstream-visible port
+     * namespace. Most kinds expose that as plain {@code fields} ({@link RuleContext#fieldsOf}),
+     * but three kinds have a SEPARATE namespace a dot-ref may legitimately name instead:
+     * <ul>
+     *   <li>{@code router} — a group-qualified port {@code <group>.<port>}
+     *       ({@code AbstractTarget.scala:42-47}, {@code RouterGroup(name, ..., fields)}): split
+     *       {@code fieldName} on its FIRST dot ({@code port} may itself contain further dots),
+     *       find that group in {@code groups} (alias {@code greencliff}), then {@code port} in
+     *       THAT GROUP's own {@code fields} — not the router target's top-level {@code fields},
+     *       which hold the pre-routing INPUT ports the groups' own fields source FROM.</li>
+     *   <li>{@code normalizer} — its {@code normalizedFields[].name} (OUTPUT ports); the
+     *       target's plain {@code fields} holds the {@code _in}-suffixed INPUT ports instead
+     *       ({@code AbstractTarget.scala:60-76}).</li>
+     *   <li>{@code storedProcedure} — its {@code returnField}, a single output value that is
+     *       not part of {@code fields} ({@code AbstractTarget.scala:87}).</li>
+     * </ul>
+     */
+    private static boolean resolvesAgainstTargetField(RuleContext ctx, JsonNode target, String fieldName) {
+        if (containsFieldNamed(ctx.fieldsOf(target), fieldName)) return true;
+        switch (ctx.targetType(target)) {
+            case "router" -> {
+                int dot = fieldName.indexOf('.');
+                if (dot <= 0) return false;
+                String groupName = fieldName.substring(0, dot);
+                String portName = fieldName.substring(dot + 1);
+                JsonNode groups = groupsOf(target);
+                if (!groups.isArray()) return false;
+                for (JsonNode group : groups) {
+                    if (groupName.equalsIgnoreCase(group.path("name").asText(""))) {
+                        return containsFieldNamed(ctx.fieldsOf(group), portName);
+                    }
+                }
+                return false;
+            }
+            case "normalizer" -> {
+                return containsFieldNamed(target.path("normalizedFields"), fieldName);
+            }
+            case "storedProcedure" -> {
+                return fieldName.equalsIgnoreCase(target.path("returnField").asText(""));
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    private static boolean containsFieldNamed(JsonNode fields, String name) {
+        if (!fields.isArray()) return false;
+        for (JsonNode f : fields) {
+            if (name.equalsIgnoreCase(f.path("name").asText(""))) return true;
+        }
+        return false;
+    }
+
+    /** {@code target.groups}, alias-resolved ({@code greencliff} -> {@code groups}) — mirrors
+     * {@code TypeShapeRules.keyOf}. */
+    private static JsonNode groupsOf(JsonNode target) {
+        JsonNode direct = target.path("groups");
+        if (direct.isArray()) return direct;
+        var it = target.fields();
+        while (it.hasNext()) {
+            var e = it.next();
+            if ("groups".equals(IpcVocabulary.canonicalKey(e.getKey())) && e.getValue().isArray()) {
+                return e.getValue();
+            }
+        }
+        return com.fasterxml.jackson.databind.node.MissingNode.getInstance();
     }
 
     private static Map<String, JsonNode> targetsByLowerName(RuleContext ctx) {
