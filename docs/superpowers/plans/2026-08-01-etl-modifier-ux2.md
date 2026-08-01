@@ -632,7 +632,12 @@ the Inspector to render.
 
 Edges: a step whose target is a `unionInput`/`joinerInput` gets an edge **to** the union/joiner
 node it belongs to. For joiners, `joinerInput` names are `<joiner>.<MASTER|DETAIL>`
-(`AbstractTargetFactory.scala:88`), so the owning joiner is the segment before the first dot. For
+(`AbstractTargetFactory.scala:88` builds `s"${joiner.name}.$inputType"`), so the owning joiner is
+everything before the **LAST** dot — the joiner's own name comes first and the fixed
+`MASTER`/`DETAIL` suffix is dot-free. **This plan originally said "first dot", which is wrong**
+whenever a joiner's own name contains a dot; corrected in Task 6's fix round after an implementer
+wrote the fixture, ran it against the unmodified code, and found it failed. Today's corpus has no
+dotted joiner name, so both splits agree and nothing caught it until that fixture existed. For
 unions, the owning union is the `sources[]` entry of type `union` in the step that consumes it.
 
 - [x] **Step 4: Extend the sweep and re-verify counts**
