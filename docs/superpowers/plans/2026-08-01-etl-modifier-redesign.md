@@ -2613,7 +2613,7 @@ vanishing on save."
 > latency saving that is single-digit milliseconds against a localhost backend. The chip runs
 > solely off the debounced `POST /api/recipes/validate`. Record this in spec §13.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `ipcRules.test.ts`: `useValidation` debounces — two rapid draft changes produce one POST;
 `nodeStatusFrom` maps `$.steps[1].target.name` to the second step's target node id and picks
@@ -2622,7 +2622,7 @@ vanishing on save."
 with the error count when validate returns errors; clicking opens a drawer listing rule id,
 path and message; clicking a drawer row calls `onSelectNode` with the resolved node id.
 
-- [ ] **Step 2: Run to verify they fail, then implement**
+- [x] **Step 2: Run to verify they fail, then implement**
 
 Run: `cd frontend && pnpm test src/api/ipcRules.test.ts src/components/tab2/ConformanceChip.test.tsx` → FAIL, then implement and re-run → PASS.
 
@@ -2630,14 +2630,14 @@ Chip colors: `--green` for zero errors and zero warnings, `#fbbf24` (the existin
 warning amber, `ETLModifier.tsx:101`) when warnings but no errors, `--red` when errors —
 all three already in use in this file.
 
-- [ ] **Step 3: Wire the chip into the recipe header and node dots into the canvas**
+- [x] **Step 3: Wire the chip into the recipe header and node dots into the canvas**
 
 Render `<ConformanceChip …>` in the header button row beside `{ history }` and
 `{ raw JSON }`. Pass `nodeStatus={nodeStatusFrom(checks, graph)}` to `IpcCanvas`, and in
 `IpcCanvas` render a 6px status dot in each node header (`--green`/`#fbbf24`/`--red`),
 omitted entirely when the node has no status.
 
-- [ ] **Step 4: Run every frontend gate and commit**
+- [x] **Step 4: Run every frontend gate and commit**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.

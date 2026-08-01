@@ -21,6 +21,14 @@ export function bandOf(node: ETLNode): Band {
 const BAND_ORDER: Band[] = ['sources', 'transformations', 'target']
 const BAND_LABEL: Record<Band, string> = { sources: 'Sources', transformations: 'Transformations', target: 'Target' }
 
+/** Task 13's three fixed status colors — no new tokens (ADR-0005): `--red`
+ * (error) / `#fbbf24` (the existing SaveBar warning amber) / `--green` (ok). */
+const STATUS_DOT_COLOR: Record<'ok' | 'warn' | 'error', string> = {
+  ok: 'var(--green)',
+  warn: '#fbbf24',
+  error: 'var(--red)',
+}
+
 const zoomButtonStyle: React.CSSProperties = {
   width: 28, height: 28, background: 'var(--surface)', border: '1px solid var(--border)',
   borderRadius: 5, color: '#7b88aa', cursor: 'pointer',
@@ -52,13 +60,14 @@ export function IpcCanvas(props: {
   onSelectEdge?: (conn: Connection) => void
   selectedEdge?: Connection | null
   onDropType?: (type: string) => void
-  /** Per-node conformance status — plumbed through for Task 13's chip/drawer;
-   * this task defines the contract only, nothing here reads it yet. */
+  /** Per-node conformance status (Task 13): renders a 6px dot in the node's
+   * header, colored by severity — `--red` (error) beats `#fbbf24` (warn)
+   * beats `--green` (ok); a node absent from the map gets no dot at all. */
   nodeStatus?: Record<string, 'ok' | 'warn' | 'error'>
 }) {
   const {
     nodes, connections, selectedNode, onSelectNode, offsets,
-    onMoveNode, onAutoLayout, onPortClick, onSelectEdge, selectedEdge, onDropType,
+    onMoveNode, onAutoLayout, onPortClick, onSelectEdge, selectedEdge, onDropType, nodeStatus,
   } = props
 
   const [pan, setPan] = useState({ x: 30, y: 30 })
@@ -215,17 +224,28 @@ export function IpcCanvas(props: {
         })}
 
         {/* nodes — every position derives from `positioned`, computed once above */}
-        {positioned.map(n => (
-          <g key={n.id} data-testid={`ipc-node-${n.id}`} onPointerDown={startNodeDrag(n.id)} style={{ touchAction: 'none' }}>
-            <NodeBox
-              node={n}
-              isSelected={selectedNode === n.id}
-              onClick={() => onSelectNode(n.id)}
-              compact={compact}
-              onPortClick={onPortClick}
-            />
-          </g>
-        ))}
+        {positioned.map(n => {
+          const status = nodeStatus?.[n.id]
+          return (
+            <g key={n.id} data-testid={`ipc-node-${n.id}`} onPointerDown={startNodeDrag(n.id)} style={{ touchAction: 'none' }}>
+              <NodeBox
+                node={n}
+                isSelected={selectedNode === n.id}
+                onClick={() => onSelectNode(n.id)}
+                compact={compact}
+                onPortClick={onPortClick}
+              />
+              {status && (
+                <circle
+                  data-testid={`ipc-node-status-${n.id}`}
+                  cx={n.x + NODE_WIDTH - 10} cy={n.y + 10} r={3}
+                  fill={STATUS_DOT_COLOR[status]}
+                  stroke="rgba(0,0,0,0.4)" strokeWidth={0.5}
+                />
+              )}
+            </g>
+          )
+        })}
       </svg>
 
       {/* zoom controls + auto-layout */}

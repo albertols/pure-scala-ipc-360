@@ -18,6 +18,7 @@ import {
   parseFormulaText,
   setFieldTransformation,
 } from '../../api/recipeEdits'
+import { useValidation, nodeStatusFrom } from '../../api/ipcRules'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
 import { IpcCanvas } from './IpcCanvas'
@@ -28,6 +29,7 @@ import { HistoryDrawer } from './HistoryDrawer'
 import { SaveBar, dangerButtonStyle } from './SaveBar'
 import { DDLViewer, type DdlColumnJson } from './DDLViewer'
 import { Inspector } from './Inspector'
+import { ConformanceChip } from './ConformanceChip'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
@@ -404,6 +406,16 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
     [content, recipePath],
   )
 
+  // Conformance chip (Task 13): validates whichever content is CURRENT — the
+  // same swap `content`/`graph` above follow — so a check's `$.steps[i]…`
+  // path always indexes the SAME steps array `graph.nodes` was built from
+  // (validating the live draft while viewing an archived version would
+  // desync the index and mislabel nodes). No local rule mirror — the full
+  // 35-rule catalogue runs debounced against POST /api/recipes/validate
+  // (spec §6.5 ruling, recorded in ipcRules.ts).
+  const { checks, errors: ipcErrors, warnings: ipcWarnings, isValidating } = useValidation(content)
+  const nodeStatus = useMemo(() => nodeStatusFrom(checks, graph), [checks, graph])
+
   const recipeSlash = recipePath ? recipePath.lastIndexOf('/') : -1
   const recipeDir = recipeSlash >= 0 ? recipePath!.slice(0, recipeSlash) : ''
   const ddl = useDdl(recipeDir)
@@ -662,6 +674,15 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <ConformanceChip
+                    errors={ipcErrors}
+                    warnings={ipcWarnings}
+                    checks={checks}
+                    rules={ipcRules.data?.rules ?? []}
+                    isValidating={isValidating}
+                    graph={graph}
+                    onSelectNode={handleSelectNode}
+                  />
                   <button onClick={handleToggleHistory} style={{
                     padding: '5px 12px', borderRadius: 5,
                     background: historyOpen ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
@@ -725,6 +746,7 @@ export function ETLModifier({ searchQuery }: { searchQuery: string }) {
                   onSelectEdge={isViewing ? undefined : handleSelectEdge}
                   selectedEdge={selectedEdge}
                   onDropType={isViewing ? undefined : handlePaletteAdd}
+                  nodeStatus={nodeStatus}
                 />
               </div>
             </section>

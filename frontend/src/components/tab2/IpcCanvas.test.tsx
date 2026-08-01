@@ -82,4 +82,20 @@ describe('IpcCanvas', () => {
     fireEvent.click(hitAreas[0])
     expect(onSelectEdge).toHaveBeenCalledWith(CONNECTIONS[0])
   })
+
+  // Task 13: nodeStatus's per-node dot. A node with an entry gets a colored
+  // dot in its header; a node absent from the map gets none at all (not an
+  // 'ok'-colored dot — the prop's whole point is "no status = no dot").
+  it('renders a 6px status dot for nodes present in nodeStatus, colored by severity, and omits it for nodes absent from the map', () => {
+    const { container } = renderCanvas({ nodeStatus: { exp1: 'error', src1: 'warn' } })
+
+    const errorDot = container.querySelector('[data-testid="ipc-node-status-exp1"]')
+    expect(errorDot).toHaveAttribute('fill', 'var(--red)')
+    expect(errorDot).toHaveAttribute('r', '3')
+
+    const warnDot = container.querySelector('[data-testid="ipc-node-status-src1"]')
+    expect(warnDot).toHaveAttribute('fill', '#fbbf24')
+
+    expect(container.querySelector('[data-testid="ipc-node-status-tgt1"]')).not.toBeInTheDocument()
+  })
 })
