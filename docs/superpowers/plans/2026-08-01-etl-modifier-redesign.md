@@ -1201,9 +1201,20 @@ statement covers them jointly — the catalogue entry is per rule, not per key.
 
 Append one `IPC-TYP-<KIND>-NNN` rule entry per required key and per structural constraint
 below, each with `severity: "error"`, a `parserRef` pointing at the exact `AbstractTarget.scala`
-/ `AbstractSource.scala` line from spec §4's tables, the matching `ipcRef` from spec §14's
-source list where one exists (router default group, aggregator group-by, joiner condition,
-union groups), and a `wikiRef` of `docs/ipc/transformations/<kind>.md`. The ids referenced by
+/ `AbstractSource.scala` line from spec §4's tables, and a `wikiRef` of
+`docs/ipc/transformations/<kind>.md`. For `ipcRef`, use these verified URLs; leave `ipcRef`
+blank for any rule not listed here rather than inventing one — spec §10 criterion 2 requires a
+citation only "where an IPC equivalent exists":
+
+| rule | `ipcRef` |
+|---|---|
+| `IPC-TYP-ROUTER-002` | `https://docs.informatica.com/data-integration/powercenter/10-4-0/transformation-guide/router-transformation/working-with-groups/output-groups/the-default-group.html` |
+| `IPC-TYP-ROUTER-001`, `IPC-TYP-ROUTER-003` | `https://docs.informatica.com/data-integration/powercenter/10-5/transformation-guide/router-transformation/working-with-groups/adding-groups.html` |
+| `IPC-TYP-AGGREGATOR-001` | `https://docs.informatica.com/data-integration/powercenter/10-4-0/transformation-guide/aggregator-transformation/group-by-ports.html` |
+| `IPC-TYP-JOINER-001` | `https://docs.informatica.com/data-integration/powercenter/10-4-0/transformation-guide/joiner-transformation/defining-a-join-condition.html` |
+| `IPC-TYP-JOINERINPUT-001` | `https://docs.informatica.com/data-integration/powercenter/10-5/transformation-guide/joiner-transformation/joiner-transformation-overview.html` |
+| `IPC-TYP-UNION-001` | `https://docs.informatica.com/data-integration/powercenter/10-5/transformation-guide/union-transformation/working-with-groups-and-ports.html` |
+| `IPC-TYP-STOREDPROCEDURE-001` | `https://docs.informatica.com/data-integration/powercenter/10-5/transformation-guide/stored-procedure-transformation/stored-procedure-transformation-overview/connected-and-unconnected.html` | The ids referenced by
 the tests above are: `IPC-TYP-SOURCEQUALIFIER-001` (selectDistinct present and boolean),
 `IPC-TYP-ROUTER-001` (groups present and an array), `IPC-TYP-ROUTER-002` (at most one
 `default: true`), `IPC-TYP-AGGREGATOR-001` (groupByFields present and an array),
