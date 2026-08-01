@@ -925,8 +925,14 @@ all 86 recipes and expecting **zero `block` verdicts**.
 **Interfaces:**
 - Produces: `IpcConnectionRule` gains `Boolean active` (nullable — `null` = unknown).
   `IpcConnections.fanInVerdict(List<String> existingSourceKinds, String candidateKind) -> String`
-  returning `"ok" | "warn" | "block"`: **block** when the candidate is active and at least one
-  existing input is active; **warn** when either side is `null`; **ok** otherwise.
+  returning `"ok" | "warn" | "block"`. The complete PowerCenter rule: a downstream input group may
+  hold **either** any number of passive inputs, **or** exactly one active input and nothing beside
+  it. In precedence order — **warn** when either side is `null` (this wins before both block
+  clauses); **block** when the candidate is active and `existingSourceKinds` is non-empty, whatever
+  those kinds are; **block** when the candidate is passive and any existing input is active;
+  **ok** otherwise. (An earlier draft of this line specified only the active-plus-active half,
+  contradicting the prose above it; corrected in Task 9's fix round after the implementer
+  implemented the literal contract and flagged the gap rather than silently widening it.)
   `IpcRulesDto` gains `Map<String, IpcConnectionDto> connections`;
   `IpcConnectionDto(String sourceKind, List<String> mayFeed, Integer exactly, List<String> namedInputs, Boolean active)`.
   Frontend type alias `IpcConnections = IpcRules['connections']`.
