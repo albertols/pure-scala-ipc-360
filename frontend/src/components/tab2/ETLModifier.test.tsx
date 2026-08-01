@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import { ETLModifier } from './ETLModifier'
+import { LAYOUT_DEFAULT } from './useResizableLayout'
 
 // MINI = Task-5's field-less-source recipe literal (recipeAdapter.test.ts
 // "field-less source entry gets a single node-center edge") plus one field
@@ -137,21 +138,37 @@ describe('ETLModifier — real recipes on the shared canvas', () => {
     const targetName = await screen.findByText('T', { selector: 'text' })
     expect(targetName).toBeInTheDocument()
 
-    // Header card: fileName as title (also still present in the tree), real
-    // RecipeDto metadata (Path / Size bytes / Modified) as read-only fields.
+    // Toolbar identity: fileName as title (also still present in the tree).
     expect(screen.getAllByText('_ETL_m_FIX.json').length).toBeGreaterThanOrEqual(2)
+
+    // Source / Target lists (Task 4: moved into the drawer, not the page body)
+    // don't render their table names until their own tab is opened.
+    expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
+
+    // Raw JSON — and the Path / Size bytes / Modified metadata that now lives
+    // inside its panel (Task 4 moved it out of the always-visible header card,
+    // spec §5.2) — is not shown until toggled.
+    expect(screen.queryByText('S.B')).not.toBeInTheDocument()
+    expect(screen.queryByDisplayValue('CDM/m_FIX/_ETL_m_FIX.json')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(await screen.findByText(/S\.B/)).toBeInTheDocument()
+
+    // RecipeDto metadata (Path / Size bytes / Modified) as read-only fields,
+    // now inside the { raw JSON } panel (Task 4).
     expect(screen.getByDisplayValue('CDM/m_FIX/_ETL_m_FIX.json')).toBeInTheDocument()
     expect(screen.getByDisplayValue('321')).toBeInTheDocument()
     expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
 
-    // Source / Target lists driven from table.sourceTableNames/targetTableNames.
-    expect(screen.getAllByText('S').length).toBeGreaterThan(0)
-
-    // Raw JSON is not shown until toggled.
-    expect(screen.queryByText('S.B')).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByText('{ raw JSON }'))
-    expect(await screen.findByText(/S\.B/)).toBeInTheDocument()
+    // Source / Target lists driven from table.sourceTableNames/targetTableNames
+    // — still real values once their drawer tab is opened (Task 4 re-target of
+    // the original "Source / Target lists" assertion, which used to be visible
+    // inline with no tab to open at all).
+    fireEvent.click(screen.getByRole('button', { name: /^Source$/ }))
+    expect(screen.getByText('S', { selector: 'span' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /^Target$/ }))
+    expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
+    expect(screen.getByText('T', { selector: 'span' })).toBeInTheDocument()
 
     // DDL section absent for an empty /api/ddl map.
     expect(screen.queryByText('BigQuery DDL Schema')).not.toBeInTheDocument()
@@ -573,7 +590,14 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
 
-    // Baseline: the header card shows the LIVE recipe's own metadata.
+    // Task 4: Path/Size bytes/Modified now live in the { raw JSON } panel
+    // rather than an always-visible header card — open it once and leave it
+    // open for the rest of this test (an independent toggle from the history
+    // drawer below), so the same metadata assertions still hold from their
+    // new location, live-updating as `headerRecipe` follows the archive.
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+
+    // Baseline: the raw JSON panel shows the LIVE recipe's own metadata.
     expect(screen.getByDisplayValue('321')).toBeInTheDocument()
     expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
 
@@ -587,7 +611,7 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
     expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
 
-    // Review finding: the header card must follow the archive too — showing
+    // Review finding: the raw JSON panel must follow the archive too — showing
     // the read-only banner next to the LIVE modifiedAt/sizeBytes is misleading.
     expect(screen.getByDisplayValue('100')).toBeInTheDocument()
     expect(screen.getByDisplayValue('2026-07-31T12:00:00Z')).toBeInTheDocument()
@@ -604,9 +628,10 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     await waitFor(() => expect(capturedRollbackVersion).toBe('20260731-120000-000'))
     await waitFor(() => expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument())
 
-    // The header card's LIVE values are back (the recipe query was invalidated
-    // and refetched — the base GET handler's own values, since this MSW
-    // fixture doesn't simulate the rollback mutating the live file on disk).
+    // The raw JSON panel's LIVE values are back (the recipe query was
+    // invalidated and refetched — the base GET handler's own values, since
+    // this MSW fixture doesn't simulate the rollback mutating the live file
+    // on disk).
     await waitFor(() => expect(screen.getByDisplayValue('321')).toBeInTheDocument())
     expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
   })
@@ -882,20 +907,27 @@ describe('ETLModifier — expression dock (Task 11/14)', () => {
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
   })
 
-  it('mounts the canvas inside a flex container so EtlCanvas flex:1 resolves to a real height', async () => {
+  it('mounts the canvas inside a flex container so IpcCanvas flex:1 resolves to a real height', async () => {
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     const nodeText = await screen.findByText('T', { selector: 'text' })
 
-    // Walk up from the rendered node to the fixed-height canvas host and assert every
-    // ancestor between them participates in flex layout. EtlCanvas's root is `flex: 1`
-    // with absolutely-positioned children, so a non-flex parent collapses it to 0px and
-    // the canvas renders invisibly (the original bug: "Canvas (2 nodes)" over an empty box).
+    // Walk up from the rendered node to the EditorLayout-owned canvas region and
+    // assert every ancestor between them participates in flex layout. IpcCanvas's
+    // root is `flex: 1` with absolutely-positioned children, so a non-flex parent
+    // collapses it to 0px and the canvas renders invisibly (the original bug: a
+    // canvas rendered above an empty box). Task 4 re-target: the old fixed
+    // `height: 420` wrapper is gone — `EditorLayout`'s own `data-region="canvas"`
+    // region now owns the real (dynamic, Task 2/3) height via `sizes.canvasH`,
+    // so the exact-height assertion moves there instead of disappearing.
     const svg = nodeText.closest('svg')!
-    const canvasRoot = svg.parentElement!            // EtlCanvas root div (flex: 1)
-    const host = canvasRoot.parentElement!           // the height:420 wrapper
-    expect(host.style.height).toBe('420px')
+    const canvasRoot = svg.parentElement!            // IpcCanvas root div (flex: 1)
+    const host = canvasRoot.parentElement!           // ETLModifier's own data-region="canvas" wrapper
     expect(host.style.display).toBe('flex')
+
+    const editorRegion = host.parentElement!         // EditorLayout's own data-region="canvas" region
+    expect(editorRegion.getAttribute('data-region')).toBe('canvas')
+    expect(editorRegion.style.minHeight).toBe(`${LAYOUT_DEFAULT.canvasH}px`)
   })
 })
 
@@ -966,5 +998,51 @@ describe('ETLModifier — focus mode (Task 15)', () => {
     expect(openSpy).toHaveBeenCalledWith('?focus=CDM%2Fm_FIX%2F_ETL_m_FIX.json', '_blank')
 
     openSpy.mockRestore()
+  })
+})
+
+// ─── Task 4: editor layout — Inspector docked beside the canvas, drawer ──────
+//
+// Fix for "I click a node and nothing pops up" (spec §1 defect 2): the body
+// used to be a scrolling document (header/Source/canvas/Target/Inspector/
+// Edge/DDL), so clicking a canvas node updated a panel ~500px below the fold.
+// `ETLModifier` now composes `EditorLayout` (Task 3): the canvas is the
+// dominant region, the Inspector docks beside it, and Source/Target/DDL/Edge
+// move into the collapsible drawer.
+
+describe('ETLModifier — editor layout (Task 4)', () => {
+  it('renders the Inspector docked beside the canvas, not below the page fold', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    fireEvent.click(await screen.findByText('T', { selector: 'text' }))
+
+    // The Inspector must be a sibling of the canvas inside the editor row — NOT
+    // a later section of a scrolling document. Walk up from the Inspector to
+    // the shared flex row and assert the canvas lives in the same row.
+    //
+    // Deviation from the brief's literal one-`parentElement` walk: `EditorLayout`
+    // (Task 3, already committed) wraps its `inspector` slot in its OWN
+    // width-styled sizing div (`EditorLayout.tsx`'s `sizes.inspectorW` region) —
+    // confirmed empirically (a standalone probe against the committed
+    // `EditorLayout` before writing this test) — so `inspector-dock`'s
+    // IMMEDIATE parent is that sizing div, not the shared flex row; the row
+    // (display:flex, containing both the canvas region and the inspector
+    // sizing div as direct children) is one level further up. The two
+    // assertions below are unchanged from the brief — only the number of
+    // `parentElement` hops needed to reach them.
+    const inspector = await screen.findByTestId('inspector-dock')
+    const row = inspector.parentElement!.parentElement!
+    expect(row.querySelector('[data-region="canvas"]')).not.toBeNull()
+    expect(row.style.display).toBe('flex')
+  })
+
+  it('moves Source, Target and DDL into the drawer rather than the page body', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    // Drawer tabs are present…
+    expect(await screen.findByRole('button', { name: /^Source$/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Target$/ })).toBeInTheDocument()
+    // …and their content is not rendered until the tab is opened.
+    expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
   })
 })

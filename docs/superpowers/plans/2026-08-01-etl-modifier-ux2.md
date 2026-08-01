@@ -407,7 +407,7 @@ window so a fast drag can't strand the gesture."
 Inspector currently renders ~500 px below the fold, past the Target section
 (`ETLModifier.tsx:598` scrolling column, `:735` Inspector).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `ETLModifier.test.tsx`:
 
@@ -437,12 +437,12 @@ it('moves Source, Target and DDL into the drawer rather than the page body', asy
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `cd frontend && pnpm test src/components/tab2/ETLModifier.test.tsx`
 Expected: FAIL — no `inspector-dock` testid, no drawer tabs.
 
-- [ ] **Step 3: Write `EditorToolbar`**
+- [x] **Step 3: Write `EditorToolbar`**
 
 A single row: filename + layer chip on the left, then a flexible spacer, then the conformance
 chip, then the action buttons. Move the existing `{ history }` / `{ raw JSON }` / `⤢` buttons here
@@ -454,7 +454,7 @@ The header card's `Path` / `Size bytes` / `Modified` fields move into the `{ raw
 they are reference metadata, not per-second information, and the canvas needs the vertical space
 (spec §5.2).
 
-- [ ] **Step 4: Rewire `ETLModifier`**
+- [x] **Step 4: Rewire `ETLModifier`**
 
 Replace the `<div style={{ padding: 24, … }}>` document body with `<EditorLayout>`:
 
@@ -472,19 +472,19 @@ component itself, updating its tests).
 
 Focus mode (`?focus=`) renders the same layout minus the Explorer — no separate branch.
 
-- [ ] **Step 5: Run every frontend gate**
+- [x] **Step 5: Run every frontend gate**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS. Existing Tab 2 tests that queried sections by their old page position will need
 re-targeting at the drawer — that is expected and in scope. **Do not weaken any assertion**; if a
 test asserted a value, it must still assert that value from its new location.
 
-- [ ] **Step 6: Verify Tabs 1, 3 and 4 are untouched**
+- [x] **Step 6: Verify Tabs 1, 3 and 4 are untouched**
 
 Run: `git diff --stat frontend/src/components/tab1/ frontend/src/components/tab3/ frontend/src/components/tab4/ frontend/src/components/shared/EtlCanvas.tsx`
 Expected: empty output.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/components/tab2/EditorToolbar.tsx \

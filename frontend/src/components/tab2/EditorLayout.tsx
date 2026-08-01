@@ -127,6 +127,19 @@ export function EditorLayout(props: {
         <div
           data-region="canvas"
           style={{
+            // Task 4 finding: this region is a flex ITEM of the row above (so it
+            // gets a real, stretched height), but its own CHILD is the opaque
+            // `canvas` slot content — a block-display child of a block-display
+            // parent does not inherit that stretched height (only flex/grid
+            // parents stretch their own children). Without `display: 'flex'`
+            // here too, a `canvas` slot wrapper following the sibling trap
+            // warning verbatim (`{ display: 'flex', flex: 1, minHeight: 0 }`)
+            // still collapses to 0px — the exact bug Task 7 of sub-project 8
+            // fixed, recurring one level higher once real content (not the
+            // placeholder `slot-canvas` div Task 3's own tests use) fills this
+            // slot. See ETLModifier.tsx's own canvas wrapper for the other half
+            // of this chain.
+            display: 'flex',
             flex: 1,
             minWidth: CANVAS_MIN_W,
             // `sizes.canvasH` is what the horizontal splitter/corner grip

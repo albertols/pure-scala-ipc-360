@@ -29,11 +29,13 @@ import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { LoadingState } from '../shared/Spinner'
 import { Palette, SOURCE_TABLE_TYPE } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
-import { SaveBar, dangerButtonStyle } from './SaveBar'
+import { dangerButtonStyle } from './SaveBar'
 import { DDLViewer, type DdlColumnJson } from './DDLViewer'
 import { Inspector } from './Inspector'
 import { ConformanceChip } from './ConformanceChip'
 import { ExpressionDock } from './ExpressionDock'
+import { EditorLayout } from './EditorLayout'
+import { EditorToolbar } from './EditorToolbar'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 
@@ -571,60 +573,36 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
         </div>
       )}
 
-      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-        {!recipePath ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <rect x="8" y="4" width="24" height="32" rx="3" stroke="#2a3050" strokeWidth="1.5" fill="none" />
-              <line x1="13" y1="12" x2="27" y2="12" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="13" y1="18" x2="27" y2="18" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span style={{ fontSize: 12 }}>Select an _ETL_*.json recipe to edit</span>
-            <span style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.5 }}>
-              {EXPLORER_INFO_COPY}
-            </span>
-          </div>
-        ) : rec.isLoading ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <LoadingState label="Loading recipe…" />
-          </div>
-        ) : recError ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
-            <div>{recError.title}</div>
-            {recError.detail && <div>{recError.detail}</div>}
-          </div>
-        ) : rec.data && graph ? (
-          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-            {/* recipe header */}
-            <div style={{
-              display: 'flex', alignItems: 'flex-start', gap: 16,
-              padding: '16px 20px',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 8,
-              flexDirection: 'column',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, width: '100%' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#e2e8f8' }}>{headerRecipe?.fileName}</h2>
-                    <span style={{
-                      fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 600,
-                      background: 'rgba(79,156,249,0.15)',
-                      color: '#4f9cf9',
-                      border: '1px solid rgba(79,156,249,0.3)',
-                      fontFamily: 'JetBrains Mono, monospace',
-                    }}>{(headerRecipe?.path ?? '').split('/')[0]}</span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-                    <EditableField label="Path" value={headerRecipe?.path ?? ''} onChange={() => {}} mono />
-                    <EditableField label="Size bytes" value={String(headerRecipe?.sizeBytes ?? '')} onChange={() => {}} mono />
-                    <EditableField label="Modified" value={headerRecipe?.modifiedAt ?? ''} onChange={() => {}} mono />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+      {!recipePath ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="8" y="4" width="24" height="32" rx="3" stroke="#2a3050" strokeWidth="1.5" fill="none" />
+            <line x1="13" y1="12" x2="27" y2="12" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="13" y1="18" x2="27" y2="18" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontSize: 12 }}>Select an _ETL_*.json recipe to edit</span>
+          <span style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.5 }}>
+            {EXPLORER_INFO_COPY}
+          </span>
+        </div>
+      ) : rec.isLoading ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LoadingState label="Loading recipe…" />
+        </div>
+      ) : recError ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
+          <div>{recError.title}</div>
+          {recError.detail && <div>{recError.detail}</div>}
+        </div>
+      ) : rec.data && graph ? (
+        <EditorLayout
+          toolbar={
+            <>
+              <EditorToolbar
+                fileName={headerRecipe?.fileName ?? ''}
+                layerChip={(headerRecipe?.path ?? '').split('/')[0]}
+                conformance={
                   <ConformanceChip
                     errors={ipcErrors}
                     warnings={ipcWarnings}
@@ -635,185 +613,185 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                     graph={graph}
                     onSelectNode={handleSelectNode}
                   />
-                  <button onClick={handleToggleHistory} style={{
-                    padding: '5px 12px', borderRadius: 5,
-                    background: historyOpen ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
-                    color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                  }}>{'{ history }'}</button>
-                  {/* Focus mode deep link (Task 15) — opens THIS recipe alone,
-                      full-viewport, in a new tab (encodeURIComponent: recipe
-                      paths carry '/' and are user-visible corpus paths, so an
-                      unencoded one would produce a malformed URL). */}
-                  <button
-                    onClick={() => recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')}
-                    title="Open in a new tab, isolated"
-                    style={{
-                      padding: '5px 12px', borderRadius: 5,
-                      background: 'transparent', border: '1px solid var(--border)',
-                      color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                    }}>{'⤢'}</button>
-                  <button onClick={() => setShowRaw(r => !r)} style={{
-                    padding: '5px 12px', borderRadius: 5,
-                    background: showRaw ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
-                    color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                  }}>{'{ raw JSON }'}</button>
-                </div>
-              </div>
-
-              {showRaw && (
-                <div style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '5px 10px', background: 'var(--surface-2)',
-                    borderBottom: '1px solid var(--border)',
-                  }}>
-                    <span style={{ fontSize: 10, color: '#4a5570', flex: 1 }}>Raw JSON</span>
-                    <CopyButton value={JSON.stringify(content ?? rec.data.content, null, 2)} size={11} />
+                }
+                historyOpen={historyOpen}
+                onToggleHistory={handleToggleHistory}
+                // Focus mode deep link (Task 15) — opens THIS recipe alone,
+                // full-viewport, in a new tab (encodeURIComponent: recipe paths
+                // carry '/' and are user-visible corpus paths, so an unencoded
+                // one would produce a malformed URL).
+                onOpenFocus={() => recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')}
+                showRaw={showRaw}
+                onToggleRaw={() => setShowRaw(r => !r)}
+                rawContent={
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {/* Path / Size bytes / Modified (Task 4): moved out of the
+                        always-visible header card — reference metadata, not
+                        per-second information, and the canvas needs the
+                        vertical space (spec §5.2). */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, borderBottom: '1px solid var(--border)' }}>
+                      <EditableField label="Path" value={headerRecipe?.path ?? ''} onChange={() => {}} mono />
+                      <EditableField label="Size bytes" value={String(headerRecipe?.sizeBytes ?? '')} onChange={() => {}} mono />
+                      <EditableField label="Modified" value={headerRecipe?.modifiedAt ?? ''} onChange={() => {}} mono />
+                    </div>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '5px 10px', background: 'var(--surface-2)',
+                      borderBottom: '1px solid var(--border)',
+                    }}>
+                      <span style={{ fontSize: 10, color: '#4a5570', flex: 1 }}>Raw JSON</span>
+                      <CopyButton value={JSON.stringify(content ?? rec.data.content, null, 2)} size={11} />
+                    </div>
+                    <pre style={{
+                      margin: 0, padding: '10px 12px', maxHeight: 400, overflow: 'auto',
+                      fontSize: 10, color: '#c8d3e8',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
+                    }}>{JSON.stringify(content ?? rec.data.content, null, 2)}</pre>
                   </div>
-                  <pre style={{
-                    margin: 0, padding: '10px 12px', maxHeight: 400, overflow: 'auto',
-                    fontSize: 10, color: '#c8d3e8',
-                    fontFamily: 'JetBrains Mono, monospace',
-                    whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-                  }}>{JSON.stringify(content ?? rec.data.content, null, 2)}</pre>
-                </div>
-              )}
-            </div>
-
-            {/* source */}
-            <section>
-              <SectionHeader icon="→" label="Source" color="#34d399" />
-              <div style={{
-                padding: '16px', background: 'var(--surface)',
-                border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
-              }}>
-                <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
-              </div>
-            </section>
-
-            {/* canvas */}
-            <section>
-              <SectionHeader icon="⇄" label={`Canvas (${graph.nodes.length} nodes)`} color="#818cf8" />
-              {/* display:flex is load-bearing: IpcCanvas's root is `flex: 1` with every
-                  child absolutely positioned, so a block parent collapses it to 0px and
-                  the canvas renders invisibly. */}
-              <div style={{ height: 420, display: 'flex', border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
-                <IpcCanvas
-                  nodes={graph.nodes}
-                  connections={graph.connections}
-                  selectedNode={selectedNodeId}
-                  onSelectNode={handleSelectNode}
-                  offsets={offsets}
-                  onMoveNode={handleMoveNode}
-                  onAutoLayout={handleAutoLayout}
-                  onPortClick={isViewing ? undefined : handlePortClick}
-                  onSelectEdge={isViewing ? undefined : handleSelectEdge}
-                  selectedEdge={selectedEdge}
-                  onDropType={isViewing ? undefined : handlePaletteAdd}
-                  onDropFormula={isViewing ? undefined : handleInsertExpression}
-                  nodeStatus={nodeStatus}
-                />
-              </div>
-            </section>
-
-            {/* target */}
-            <section>
-              <SectionHeader icon="⬡" label="Target" color="#f87171" extra={<GCPIcon service="bigquery" size={16} />} />
-              <div style={{
-                padding: '16px', background: 'var(--surface)',
-                border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7,
-              }}>
-                <TableNameList names={content?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
-              </div>
-            </section>
-
-            {/* Inspector — schema-driven per-node property editor (Task 12) for
-                whichever canvas node is selected; hidden entirely while viewing an
-                archived version (Task 10: "all editing affordances disabled while
-                viewing"). */}
-            {selectedNode && draft && !isViewing && (
-              <Inspector
-                draft={draft}
-                node={selectedNode}
-                keySchema={ipcRules.data?.keySchema ?? {}}
-                typeAliases={ipcRules.data?.typeAliases ?? {}}
-                keyAliases={ipcRules.data?.keyAliases ?? {}}
-                onChange={handleInspectorChange}
-                onDelete={handleDeleteNode}
-                onFocusFormula={handleFocusFormula}
+                }
+                // The dirty count/wire chip/Discard/Save are themselves editing
+                // affordances — hidden while viewing an archived version, same
+                // as the old SaveBar's own `{!isViewing && <SaveBar .../>}` gate.
+                changes={isViewing ? 0 : dirtyOps}
+                wireFrom={isViewing ? null : wireFrom}
+                onCancelWire={() => setWireFrom(null)}
+                onSave={handleSave}
+                onDiscard={handleDiscard}
+                saving={saving}
               />
-            )}
-
-            {/* selected-edge delete control (Task 9) — also disabled while viewing */}
-            {selectedEdge && !isViewing && (
-              <section>
-                <SectionHeader icon="⌫" label="Edge" color="var(--red)" />
+              {(validationErrors.length > 0 || saveError) && (
                 <div style={{
-                  padding: 16, background: 'var(--surface)',
-                  border: '1px solid var(--border)', borderRadius: 7,
-                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 16px', background: 'var(--surface)',
+                  borderTop: '1px solid var(--red)', color: 'var(--red)', fontSize: 11,
+                  display: 'flex', flexDirection: 'column', gap: 4,
                 }}>
-                  <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', flex: 1 }}>
-                    {`${selectedEdge.fromNode}.${selectedEdge.fromPort || '·'} → ${selectedEdge.toNode}.${selectedEdge.toPort || '·'}`}
-                  </span>
-                  <button onClick={() => handleDeleteEdge(selectedEdge)} style={dangerButtonStyle}>Delete</button>
-                </div>
-              </section>
-            )}
-
-            {/* DDL — hidden entirely when the map is empty or errored */}
-            {!ddl.error && ddlEntries.length > 0 && (
-              <section>
-                <SectionHeader icon="⬡" label="BigQuery DDL Schema" color="#4f9cf9" extra={<GCPIcon service="bigquery" size={16} />} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {ddlEntries.map(([table, cols]) => (
-                    <div key={table}>
-                      <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>{table}</div>
-                      <DDLViewer cols={cols} />
+                  {validationErrors.map((e, i) => (
+                    <div key={i}>
+                      {e.path && <div style={{ fontSize: 9, opacity: 0.7 }}>{e.path}</div>}
+                      <div>{e.message}</div>
                     </div>
                   ))}
+                  {saveError && (
+                    <div>
+                      <div>{saveError.title}</div>
+                      {saveError.detail && <div>{saveError.detail}</div>}
+                    </div>
+                  )}
                 </div>
-              </section>
-            )}
-
-            <div style={{ height: 60 }} />
-          </div>
-        ) : null}
-
-        {(validationErrors.length > 0 || saveError) && (
-          <div style={{
-            padding: '10px 16px', background: 'var(--surface)',
-            borderTop: '1px solid var(--red)', color: 'var(--red)', fontSize: 11,
-            display: 'flex', flexDirection: 'column', gap: 4,
-          }}>
-            {validationErrors.map((e, i) => (
-              <div key={i}>
-                {e.path && <div style={{ fontSize: 9, opacity: 0.7 }}>{e.path}</div>}
-                <div>{e.message}</div>
+              )}
+            </>
+          }
+          canvas={
+            // display:flex is load-bearing: IpcCanvas's root is `flex: 1` with every
+            // child absolutely positioned, so a block parent collapses it to 0px and
+            // the canvas renders invisibly (the bug Task 7 of sub-project 8 fixed).
+            <div data-region="canvas" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+              <IpcCanvas
+                nodes={graph.nodes}
+                connections={graph.connections}
+                selectedNode={selectedNodeId}
+                onSelectNode={handleSelectNode}
+                offsets={offsets}
+                onMoveNode={handleMoveNode}
+                onAutoLayout={handleAutoLayout}
+                onPortClick={isViewing ? undefined : handlePortClick}
+                onSelectEdge={isViewing ? undefined : handleSelectEdge}
+                selectedEdge={selectedEdge}
+                onDropType={isViewing ? undefined : handlePaletteAdd}
+                onDropFormula={isViewing ? undefined : handleInsertExpression}
+                nodeStatus={nodeStatus}
+              />
+            </div>
+          }
+          inspector={
+            // Inspector — schema-driven per-node property editor (Task 12) for
+            // whichever canvas node is selected; hidden entirely while viewing
+            // an archived version (Task 10: "all editing affordances disabled
+            // while viewing").
+            selectedNode && draft && !isViewing ? (
+              <div data-testid="inspector-dock">
+                <Inspector
+                  draft={draft}
+                  node={selectedNode}
+                  keySchema={ipcRules.data?.keySchema ?? {}}
+                  typeAliases={ipcRules.data?.typeAliases ?? {}}
+                  keyAliases={ipcRules.data?.keyAliases ?? {}}
+                  onChange={handleInspectorChange}
+                  onDelete={handleDeleteNode}
+                  onFocusFormula={handleFocusFormula}
+                />
               </div>
-            ))}
-            {saveError && (
-              <div>
-                <div>{saveError.title}</div>
-                {saveError.detail && <div>{saveError.detail}</div>}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* SaveBar is itself an editing affordance (Save/Discard mutate the
-            draft) — hidden while viewing an archived version. */}
-        {!isViewing && (
-          <SaveBar
-            changes={dirtyOps}
-            wireFrom={wireFrom}
-            onCancelWire={() => setWireFrom(null)}
-            onSave={handleSave}
-            onDiscard={handleDiscard}
-            saving={saving}
-          />
-        )}
-      </div>
+            ) : null
+          }
+          drawer={[
+            {
+              id: 'source', label: 'Source',
+              content: (
+                <section>
+                  <SectionHeader icon="→" label="Source" color="#34d399" />
+                  <div style={{
+                    padding: '16px', background: 'var(--surface)',
+                    border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
+                  }}>
+                    <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
+                  </div>
+                </section>
+              ),
+            },
+            {
+              id: 'target', label: 'Target',
+              content: (
+                <section>
+                  <SectionHeader icon="⬡" label="Target" color="#f87171" extra={<GCPIcon service="bigquery" size={16} />} />
+                  <div style={{
+                    padding: '16px', background: 'var(--surface)',
+                    border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7,
+                  }}>
+                    <TableNameList names={content?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
+                  </div>
+                </section>
+              ),
+            },
+            {
+              id: 'ddl', label: 'BigQuery DDL',
+              // hidden entirely when the map is empty or errored
+              content: !ddl.error && ddlEntries.length > 0 ? (
+                <section>
+                  <SectionHeader icon="⬡" label="BigQuery DDL Schema" color="#4f9cf9" extra={<GCPIcon service="bigquery" size={16} />} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {ddlEntries.map(([table, cols]) => (
+                      <div key={table}>
+                        <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>{table}</div>
+                        <DDLViewer cols={cols} />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null,
+            },
+            {
+              id: 'edge', label: 'Edge',
+              // selected-edge delete control (Task 9) — also disabled while viewing
+              content: selectedEdge && !isViewing ? (
+                <section>
+                  <SectionHeader icon="⌫" label="Edge" color="var(--red)" />
+                  <div style={{
+                    padding: 16, background: 'var(--surface)',
+                    border: '1px solid var(--border)', borderRadius: 7,
+                    display: 'flex', alignItems: 'center', gap: 12,
+                  }}>
+                    <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', flex: 1 }}>
+                      {`${selectedEdge.fromNode}.${selectedEdge.fromPort || '·'} → ${selectedEdge.toNode}.${selectedEdge.toPort || '·'}`}
+                    </span>
+                    <button onClick={() => handleDeleteEdge(selectedEdge)} style={dangerButtonStyle}>Delete</button>
+                  </div>
+                </section>
+              ) : null,
+            },
+          ]}
+        />
+      ) : null}
 
       {/* Expression dock (Task 11/14): corpus-wide, filtered to recipe-origin
           only. Relocated here (beside the Palette) from its old spot inline
