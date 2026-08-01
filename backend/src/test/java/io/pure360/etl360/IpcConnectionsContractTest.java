@@ -96,13 +96,24 @@ class IpcConnectionsContractTest {
         assertThat(connections.fanInVerdict(List.of("filter"), "aggregator")).isEqualTo("block");
     }
 
-    /** A passive existing input among the mix must not mask an active one — the block
-     * condition is "at least one existing input is active", not "every existing input is
-     * active". */
+    /** A downstream input group may hold exactly one active input and nothing else alongside
+     * it — an active candidate joining a NON-EMPTY existing group blocks regardless of whether
+     * those existing members are themselves active or passive; a passive existing member does
+     * not "dilute" the violation, because the rule is "nothing else alongside it", not "no
+     * other active thing alongside it" (human ruling, fix round 1). */
     @Test
-    void fanInVerdictBlocksWhenAnyExistingInputIsActiveRegardlessOfOtherPassiveInputs() {
+    void fanInVerdictBlocksAnActiveCandidateJoiningAnyNonEmptyExistingGroupRegardlessOfComposition() {
         assertThat(connections.fanInVerdict(List.of("storedProcedure", "filter"), "aggregator"))
             .isEqualTo("block");
+    }
+
+    /** The other half of the same rule: an active candidate joining an existing group whose
+     * only members are KNOWN passive still blocks — "exactly one active input and nothing else
+     * alongside it" forbids the group from growing past one member at all once an active one is
+     * involved, even if every other member is passive. */
+    @Test
+    void fanInVerdictBlocksAnActiveCandidateJoiningAPassiveOnlyExistingGroup() {
+        assertThat(connections.fanInVerdict(List.of("storedProcedure"), "filter")).isEqualTo("block");
     }
 
     /** Two passive transformations (or a passive one alone) never trip the rule. */
@@ -111,17 +122,14 @@ class IpcConnectionsContractTest {
         assertThat(connections.fanInVerdict(List.of("storedProcedure"), "storedProcedure")).isEqualTo("ok");
     }
 
-    /** Per the exact contract ("block when the candidate is active AND at least one existing
-     * input is active"), a PASSIVE candidate joining a group whose only known input is active
-     * is "ok", not "block" — the literal formula screens the transformation being newly
-     * connected, not every pairing within the resulting group. Documented explicitly so this
-     * reads as an intentional, spec-literal scoping decision rather than an oversight; see the
-     * task report's "concerns" for the gap this leaves against the fuller Designer rule quoted
-     * in the brief's narrative (an active-then-passive connection order is not itself
-     * re-flagged by this function). */
+    /** The symmetric case a narrower, candidate-only-active reading of the contract would miss
+     * (fix round 1, human ruling): a PASSIVE candidate joining a group that already has a KNOWN
+     * active input is equally forbidden — "an active transformation and a passive transformation
+     * to the same downstream input group" is illegal regardless of which one connects second.
+     * Drawing order must not matter. */
     @Test
-    void fanInVerdictDoesNotBlockAPassiveCandidateJoiningAnAlreadyActiveGroup() {
-        assertThat(connections.fanInVerdict(List.of("filter"), "storedProcedure")).isEqualTo("ok");
+    void fanInVerdictBlocksAPassiveCandidateJoiningAnActiveExistingInput() {
+        assertThat(connections.fanInVerdict(List.of("filter"), "storedProcedure")).isEqualTo("block");
     }
 
     /** A single new source with nothing already connected is trivially fine regardless of
