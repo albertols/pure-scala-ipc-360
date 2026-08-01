@@ -89,6 +89,43 @@ class ReferentialAndFlowRulesTest {
         assertThat(failedIds(json)).doesNotContain("IPC-EXP-001");
     }
 
+    /** A lookup call-tree node's {@code name} is the Lookup transformation's own instance name
+     * (e.g. {@code "LKP_CUSTOM_LOOKUP"}, deliberately NOT an {@code EXP_} marker here so this
+     * exercises the {@code outputField}-shaped exemption, not the {@code EXP_} prefix one). */
+    @Test
+    void lookupShapedCallSitePasses() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}", """
+            "transformation":{"name":"LKP_CUSTOM_LOOKUP","outputField":"O","table":"L",
+              "condition":"K = in_K","matchPolicy":"First",
+              "parameters":[{"source":"S.A"}]}""");
+        assertThat(failedIds(json)).doesNotContain("IPC-EXP-001");
+    }
+
+    @Test
+    void sequenceGeneratorMarkerPasses() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"SequenceGenerator\"}");
+        assertThat(failedIds(json)).doesNotContain("IPC-EXP-001");
+    }
+
+    @Test
+    void undefinedMarkerPasses() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"Undefined\",\"parameters\":[{\"source\":\"S.A\"}]}");
+        assertThat(failedIds(json)).doesNotContain("IPC-EXP-001");
+    }
+
+    /** The important negative case: a genuinely bogus call-tree name still fails IPC-EXP-001
+     * even after the lookup/SequenceGenerator/Undefined exemptions — proves the rule kept its
+     * teeth. ({@code unknownExpressionFunctionFails} above already covers this with
+     * {@code "NOT_A_FUNCTION"}; restated here for clarity next to the new exemption tests.) */
+    @Test
+    void aBogusNameNeitherMarkerNorFunctionNorLookupStillFails() throws Exception {
+        String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}",
+            "\"transformation\":{\"name\":\"NOT_A_FUNCTION\",\"parameters\":[{\"source\":\"S.A\"}]}");
+        assertThat(failedIds(json)).contains("IPC-EXP-001");
+    }
+
     @Test
     void badLookupMatchPolicyFails() throws Exception {
         String json = CHAIN.replace("\"transformation\":{\"source\":\"S.A\"}", """

@@ -67,6 +67,16 @@ public final class ExpressionRules {
 
     private static final Set<String> VALID_MATCH_POLICIES = Set.of("Any", "First", "Last");
 
+    /** {@code RecipeConstants.scala:33} — emitted verbatim as a call-tree {@code name} by
+     * {@code RecipeGenerator.scala:314} for a field referencing a Sequence Generator's
+     * {@code NEXTVAL} port. Not a function call. */
+    private static final String SEQUENCE_GENERATOR_MARKER = "SequenceGenerator";
+
+    /** {@code RecipeConstants.scala:39} — the parser's own can't-classify marker, emitted as a
+     * call-tree {@code name} by {@code ExpressionParsing.scala:139-143} when an expression
+     * pattern doesn't match any recognised shape. Not a function call. */
+    private static final String UNDEFINED_MARKER = "Undefined";
+
     static List<IpcRule> all(IpcCatalog catalog) {
         List<IpcRule> rules = new ArrayList<>();
 
@@ -84,9 +94,20 @@ public final class ExpressionRules {
                     for (CallSite call : calls) {
                         if (call.name().startsWith("EXP_")) continue;
                         if (PREDEFINED_FUNCTIONS.contains(call.name())) continue;
+                        // RecipeTransformationLookup (RecipeTransformation.scala:15-16) always
+                        // carries `outputField` (a required, non-Option field) and its `name` is
+                        // legitimately the Lookup transformation's own instance name (connected
+                        // or unconnected — ExpressionParsing.scala:62-73's
+                        // buildLookupTransformation always overrides the "EXP_LOOKUP" default
+                        // with `transformation.name`). A node carrying `outputField` is a lookup
+                        // reference, not a function call — exempt it.
+                        if (call.isLookupShaped()) continue;
+                        if (SEQUENCE_GENERATOR_MARKER.equals(call.name())) continue;
+                        if (UNDEFINED_MARKER.equals(call.name())) continue;
                         out.add(IpcCheck.fail("IPC-EXP-001", sev, call.path(),
                             "call-tree name \"" + call.name()
-                                + "\" is neither an EXP_* marker nor a predefined function"));
+                                + "\" is neither an EXP_* marker, a predefined function, a lookup"
+                                + " reference, nor the parser's SequenceGenerator/Undefined markers"));
                     }
                 }
             }
@@ -131,8 +152,12 @@ public final class ExpressionRules {
         return rules;
     }
 
-    /** One call-tree node's {@code name}, tagged with its JSON path for error reporting. */
-    private record CallSite(String name, String path) {}
+    /** One call-tree node's {@code name}, tagged with its JSON path for error reporting.
+     * {@code isLookupShaped} is true when the node carries {@code outputField} — the
+     * required, non-Option field unique to {@code RecipeTransformationLookup}
+     * ({@code RecipeTransformation.scala:15-16}) — so IPC-EXP-001 can recognise a lookup
+     * reference regardless of what its {@code name} happens to be. */
+    private record CallSite(String name, String path, boolean isLookupShaped) {}
 
     /** Walks every node of a transformation tree (not just dot-refs) and records every non-blank
      * {@code name}, recursing into {@code parameters} with the same Field-shaped unwrapping
@@ -140,7 +165,7 @@ public final class ExpressionRules {
     private static void collectCallSites(JsonNode t, String path, List<CallSite> out) {
         if (t == null || !t.isObject()) return;
         String name = t.path("name").asText("");
-        if (!name.isBlank()) out.add(new CallSite(name, path));
+        if (!name.isBlank()) out.add(new CallSite(name, path, !t.path("outputField").isMissingNode()));
         JsonNode params = t.path("parameters");
         if (!params.isArray()) return;
         for (int k = 0; k < params.size(); k++) {
