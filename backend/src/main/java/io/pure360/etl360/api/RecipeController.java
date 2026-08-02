@@ -6,6 +6,8 @@ import io.pure360.etl360.api.dto.RecipeHistoryEntryDto;
 import io.pure360.etl360.api.dto.RecipeSaveRequestDto;
 import io.pure360.etl360.api.dto.RecipeValidationDto;
 import io.pure360.etl360.service.RecipeService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,14 @@ public class RecipeController {
     @GetMapping("/{*path}")
     public RecipeDto recipe(@PathVariable("path") String path) {
         return service.recipe(MappingController.stripLeadingSlash(path));
+    }
+
+    // 201 on success — this is a create, never an upsert (409 if the file already exists, see
+    // RecipeService.create's javadoc for the full guard rationale).
+    @PostMapping("/{*path}")
+    public ResponseEntity<RecipeDto> create(@PathVariable("path") String path, @RequestBody JsonNode content) {
+        RecipeDto dto = service.create(MappingController.stripLeadingSlash(path), content);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @PutMapping("/{*path}")

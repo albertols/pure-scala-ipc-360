@@ -1261,14 +1261,14 @@ so the guards are the whole point:
 - Creates the `<mapping>` directory only. **Never creates a layer.**
 - Writes atomically (temp + `ATOMIC_MOVE`), like `RecipeService.writeAtomic`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 One test per guard, against a `@DynamicPropertySource` temp corpus: create succeeds and the file
 lands at the right path; a second create returns 409; a path outside a layer returns 400 and
 creates nothing; a malformed path shape returns 400; an invalid body returns 400 and creates
 nothing; and after each failure case, assert the temp corpus tree is byte-unchanged.
 
-- [ ] **Step 2: Run to verify they fail, then implement**
+- [x] **Step 2: Run to verify they fail, then implement**
 
 Run: `mvn -am -pl backend test -Dtest=RecipeWriteControllerTest -DfailIfNoTests=false`
 Expected: FAIL — no `POST` mapping, the create attempts 404/405.
@@ -1279,12 +1279,12 @@ list. Validate with the injected `IpcRuleEngine` before touching the filesystem.
 
 Re-run the same command; expected PASS.
 
-- [ ] **Step 3: Confirm no corpus pollution from your own testing**
+- [x] **Step 3: Confirm no corpus pollution from your own testing**
 
 Run: `git status --porcelain -- parser/`
 Expected: empty. Delete any stray directory your testing created before committing.
 
-- [ ] **Step 4: Run backend gates and commit**
+- [x] **Step 4: Run backend gates and commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/RecipeController.java \

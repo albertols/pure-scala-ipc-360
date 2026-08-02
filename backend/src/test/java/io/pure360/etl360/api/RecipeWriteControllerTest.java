@@ -20,6 +20,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -228,6 +231,102 @@ class RecipeWriteControllerTest {
         if (!Files.isDirectory(dir)) return 0;
         try (var s = Files.list(dir)) {
             return s.count();
+        }
+    }
+
+    // --- Task 14: POST /api/recipes/{*path} — create -----------------------------------------
+    //
+    // Deliberately creates a directory inside the corpus (sub-project 8's final review caught
+    // LayoutService doing this as an *accidental* side effect of a missing existence check — see
+    // its javadoc). Every guard below is tested for its negative case, and each failure test
+    // snapshots the whole temp corpus tree before and after to prove a rejected create leaves no
+    // partial directory behind — a guard that rejects but litters is barely better than none.
+
+    private static final String VALID_BODY =
+        "{\"steps\":[{\"target\":{\"name\":\"T\",\"type\":\"table\",\"fields\":[{\"name\":\"A\",\"dataType\":\"String\",\"transformation\":{\"source\":\"S.A\"}}]},\"sources\":[{\"name\":\"S\",\"type\":\"table\"}]}],\"table\":{\"targetTableNames\":[\"T\"],\"sourceTableNames\":[\"S\"]}}";
+
+    @Test
+    @Order(8)
+    void createWritesNewRecipeAtLayerMappingPath() throws Exception {
+        mvc.perform(post("/api/recipes/CDM/m_NEW_CREATE/_ETL_m_NEW_CREATE.json")
+                .contentType("application/json").content(VALID_BODY))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.path").value("CDM/m_NEW_CREATE/_ETL_m_NEW_CREATE.json"))
+            .andExpect(jsonPath("$.fileName").value("_ETL_m_NEW_CREATE.json"))
+            .andExpect(jsonPath("$.content.table.targetTableNames[0]").value("T"));
+
+        Path created = corpus.resolve("CDM/m_NEW_CREATE/_ETL_m_NEW_CREATE.json");
+        assertThat(Files.isRegularFile(created)).isTrue();
+        assertThat(om.readTree(Files.readString(created))).isEqualTo(om.readTree(VALID_BODY));
+    }
+
+    @Test
+    @Order(9)
+    void createAtExistingPathReturns409AndLeavesFileByteUnchanged() throws Exception {
+        Path existing = corpus.resolve("CDM/m_NEW_CREATE/_ETL_m_NEW_CREATE.json");
+        String before = Files.readString(existing);
+        Set<String> beforeTree = snapshotTree(corpus);
+
+        String differentBody =
+            "{\"steps\":[{\"target\":{\"name\":\"Z\",\"type\":\"table\",\"fields\":[]},\"sources\":[]}],\"table\":{\"targetTableNames\":[\"Z\"],\"sourceTableNames\":[]}}";
+        mvc.perform(post("/api/recipes/CDM/m_NEW_CREATE/_ETL_m_NEW_CREATE.json")
+                .contentType("application/json").content(differentBody))
+            .andExpect(status().isConflict());
+
+        assertThat(Files.readString(existing)).isEqualTo(before); // never overwritten
+        assertThat(snapshotTree(corpus)).isEqualTo(beforeTree);
+    }
+
+    @Test
+    @Order(10)
+    void createOutsideEnumeratedLayerReturns400AndCreatesNothing() throws Exception {
+        Set<String> before = snapshotTree(corpus);
+
+        mvc.perform(post("/api/recipes/BOGUS/m_GHOST/_ETL_m_GHOST.json")
+                .contentType("application/json").content(VALID_BODY))
+            .andExpect(status().isBadRequest());
+
+        assertThat(Files.exists(corpus.resolve("BOGUS"))).isFalse(); // never even stood up
+        assertThat(snapshotTree(corpus)).isEqualTo(before);
+    }
+
+    @Test
+    @Order(11)
+    void createWithMalformedPathShapeReturns400AndCreatesNothing() throws Exception {
+        Set<String> before = snapshotTree(corpus);
+
+        // CDM is a real, existing layer; the filename just doesn't match the <mapping> segment.
+        mvc.perform(post("/api/recipes/CDM/m_SHAPE_BAD/_ETL_WRONG_NAME.json")
+                .contentType("application/json").content(VALID_BODY))
+            .andExpect(status().isBadRequest());
+
+        assertThat(Files.exists(corpus.resolve("CDM/m_SHAPE_BAD"))).isFalse();
+        assertThat(snapshotTree(corpus)).isEqualTo(before);
+    }
+
+    @Test
+    @Order(12)
+    void createWithInvalidBodyReturns400AndCreatesNothing() throws Exception {
+        Set<String> before = snapshotTree(corpus);
+
+        String invalidBody =
+            "{\"steps\":[{\"target\":{\"name\":\"T\",\"type\":\"table\",\"weststone\":[{\"name\":\"A\",\"transformation\":{\"source\":\"GHOST.A\"}}]},\"sources\":[]}],\"table\":{\"targetTableNames\":[\"T\"],\"sourceTableNames\":[]}}";
+        mvc.perform(post("/api/recipes/CDM/m_INVALID_BODY/_ETL_m_INVALID_BODY.json")
+                .contentType("application/json").content(invalidBody))
+            .andExpect(status().isBadRequest());
+
+        assertThat(Files.exists(corpus.resolve("CDM/m_INVALID_BODY"))).isFalse();
+        assertThat(snapshotTree(corpus)).isEqualTo(before);
+    }
+
+    /** Every file and directory under {@code root}, as paths relative to it — a full-tree
+     * snapshot cheap enough to diff before/after a rejected create to prove it left nothing
+     * behind (not just that one expected path is absent). */
+    private static Set<String> snapshotTree(Path root) throws IOException {
+        try (var walk = Files.walk(root)) {
+            return walk.filter(p -> !p.equals(root))
+                .map(p -> root.relativize(p).toString())
+                .collect(Collectors.toCollection(TreeSet::new));
         }
     }
 }
