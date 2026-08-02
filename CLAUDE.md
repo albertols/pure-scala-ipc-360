@@ -24,7 +24,10 @@ platform-agnostic. A multi-module Maven repo:
   (nested-object editing is still unbuilt) — a conformance chip + drawer against the
   IPC ruleset (`docs/ipc/`), a pre-add configuration dialog gated on the `connections`
   adjacency matrix (`docs/adr/0012-ipc-connection-matrix.md`) so the palette cannot
-  insert an orphan, registry-backed authoring of a recipe from scratch, a recipe-scoped
+  insert an orphan into any non-empty draft (the one exception: a *source table* on a
+  still-blank canvas skips the gate — it adds a `table.sourceTableNames` entry, never a
+  step, so `IPC-FLW-003` has nothing to orphan; spec §12 deviation 5),
+  registry-backed authoring of a recipe from scratch, a recipe-scoped
   Explorer/expression dock (formulas clamped, list capped at 150 with an honest count),
   focus mode (`?focus=<recipePath>`), and save/history/rollback (the backend's write
   API, `PUT`/`POST`/`validate`/`history`/`rollback` on `/api/recipes`), Tab 3 (ETL

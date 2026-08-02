@@ -28,10 +28,18 @@ class IpcConnectionsContractTest {
 
     /** Spec §6.2: the matrix is authored, the corpus validates it. Every pairing that
      * actually occurs across the 86 recipes must be permitted — an over-strict matrix
-     * fails here, and so does an invented one. */
+     * fails here, and so does an invented one.
+     *
+     * <p>The observed-pairing COUNT is pinned too (Task 17 review): spec §4's table,
+     * acceptance criterion 6 and {@code docs/adr/0012-ipc-connection-matrix.md} all say
+     * "all 30 observed pairings", and an emptiness assertion alone would keep passing if
+     * the corpus lost pairings — a silently shrinking validation set is exactly the way an
+     * over-strict matrix would stop being caught. Same idiom as
+     * {@code multiSourceSteps == 21} below. */
     @Test
     void everyPairingObservedInTheCorpusIsPermitted() throws Exception {
         Set<String> unpermitted = new LinkedHashSet<>();
+        Set<String> observed = new LinkedHashSet<>();
         for (String rel : corpus.allRecipePaths()) {
             JsonNode d = mapper.readTree(
                 Files.readString(Path.of("../parser/src/main/resources/xmltobq").resolve(rel)));
@@ -39,6 +47,7 @@ class IpcConnectionsContractTest {
                 String tgt = IpcVocabulary.canonicalTargetType(step.path("target").path("type").asText(""));
                 for (JsonNode src : step.path("sources")) {
                     String s = IpcVocabulary.canonicalSourceType(src.path("type").asText(""));
+                    observed.add(s + " -> " + tgt);
                     var rule = catalog.connections().get(s);
                     if (rule == null || !rule.mayFeed().contains(tgt)) {
                         unpermitted.add(s + " -> " + tgt + "  (e.g. " + rel + ")");
@@ -47,6 +56,7 @@ class IpcConnectionsContractTest {
             }
         }
         assertThat(unpermitted).as("corpus pairings the authored matrix forbids").isEmpty();
+        assertThat(observed).as("distinct kind-to-kind pairings the corpus exhibits (spec §4)").hasSize(30);
     }
 
     @Test

@@ -863,17 +863,6 @@ Run: `mvn -am -pl backend clean test`
 Expected: PASS. If `everyPairingObservedInTheCorpusIsPermitted` fails, the matrix is too strict —
 widen it and record why in the task report; do **not** relax the test.
 
-**Outcome (2026-08-02).** Step 1's union/joiner node assertion was already live — Task 6 added it
-to `recipe_sweep.mts` when the nodes landed — so the genuinely new assertion is `connections`
-coverage of every source kind the corpus uses. RED was captured against a proxy that strips
-`connections` from `GET /api/ipc/rules` (the pre-change sweep passed 86/86 on a catalogue with
-no matrix at all); GREEN rejects both the stripped catalogue and a single dropped kind, and
-passes 10/10 against the real backend. Non-vacuity of the union/joiner half was measured
-separately: 15 occurrences (10 union, 5 joiner) across 8 recipes, all resolving. Acceptance walk
-tally (spec §9): **5 PASS · 5 PASS (mechanical) · 2 NEEDS HUMAN VISUAL SIGN-OFF · 0 FAIL**;
-deviations recorded in spec §12 (6 entries — the coordinator's proposed 7th, `localStorage`
-persistence, is not a deviation: §5.3 specifies it).
-
 - [x] **Step 6: Commit**
 
 ```bash
@@ -1523,6 +1512,28 @@ git commit -m "chore: UX round 2 acceptance walk — sweep, ADR-0012, docs
 Task 17. Spec §9's criteria verified with evidence and recorded in the spec itself;
 deviations in §12."
 ```
+
+**Outcome (2026-08-02).** Step 1's union/joiner node assertion was already live — Task 6 added it
+to `recipe_sweep.mts` when the nodes landed — so the genuinely new assertion is `connections`
+coverage of every source kind the corpus uses. RED was captured against a proxy that strips
+`connections` from `GET /api/ipc/rules` (the pre-change sweep passed 86/86 on a catalogue with
+no matrix at all); GREEN rejects both the stripped catalogue and a single dropped kind, and
+passes 10/10 against the real backend. Non-vacuity of the union/joiner half was measured
+separately: 15 occurrences (10 union, 5 joiner) across 8 recipes, all resolving. Acceptance walk
+tally (spec §9): **5 PASS · 5 PASS (mechanical) · 2 NEEDS HUMAN VISUAL SIGN-OFF · 0 FAIL**;
+deviations recorded in spec §12 (6 entries — the coordinator's proposed 7th, `localStorage`
+persistence, is not a deviation: §5.3 specifies it).
+
+**Fix round 1 (2026-08-02).** Four review fixes: this Outcome block was committed inside
+**Task 8**'s section (a `replace(anchor, …)` on `- [x] **Step 6: Commit**` matched the first
+occurrence in the file, not Task 17's) and is moved here verbatim; `CLAUDE.md`'s "cannot insert
+an orphan" now names the blank-canvas source-table exception ADR-0012 and spec §12 deviation 5
+already disclose; `frontend/AGENTS.md` quotes the toolbar's literal `{ raw JSON }` label
+(`{ history }` and `⤢` were already correct); and `IpcConnectionsContractTest` now pins the
+observed-pairing count — `assertThat(observed).hasSize(30)`, verified failing as
+`Expected size: 29 but was: 30` before restoring — so ADR-0012's and criterion 6's "all 30
+observed pairings" is literally test-backed. Backend stays 189 tests / 35 classes (the new
+assertion lives inside an existing `@Test`).
 
 ---
 
