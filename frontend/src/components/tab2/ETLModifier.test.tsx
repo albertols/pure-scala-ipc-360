@@ -1373,6 +1373,81 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
   })
 
+  it('a second save after the first successful create PUTs (never POSTs again) with the freshly-created baseModified', async () => {
+    let capturedPost: unknown = null
+    let postCallCount = 0
+    let capturedPut: { baseModified?: string; content?: unknown } | null = null
+    server.use(
+      http.post('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
+        postCallCount += 1
+        capturedPost = await request.json()
+        return HttpResponse.json({
+          path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+          fileName: '_ETL_m_NEW_ONE.json',
+          sizeBytes: 80,
+          modifiedAt: '2026-08-01T00:00:00Z',
+          content: capturedPost,
+        }, { status: 201 })
+      }),
+      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({
+        path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+        fileName: '_ETL_m_NEW_ONE.json',
+        sizeBytes: 80,
+        modifiedAt: '2026-08-01T00:00:00Z',
+        content: capturedPost ?? { steps: [], table: { targetTableNames: [], sourceTableNames: [] } },
+      })),
+      http.put('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
+        capturedPut = await request.json() as { baseModified?: string; content?: unknown }
+        return HttpResponse.json({
+          path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+          fileName: '_ETL_m_NEW_ONE.json',
+          sizeBytes: 120,
+          modifiedAt: '2026-08-01T00:05:00Z',
+          content: capturedPut.content,
+        })
+      }),
+      http.get('/api/ddl/CDM/m_NEW_ONE', () => HttpResponse.json({})),
+      http.get('/api/layouts/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_NEW_ONE' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    await screen.findByRole('heading', { name: '_ETL_m_NEW_ONE.json' })
+
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Save Changes'))
+    await waitFor(() => expect(capturedPost).not.toBeNull())
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+    expect(postCallCount).toBe(1)
+
+    // The recipe is real now — an ordinary open recipe. A second edit + Save
+    // must PUT, carrying the `modifiedAt` the create response (re-fetched via
+    // the GET that re-enabled once `authoring` flipped off) actually returned
+    // — never POST again.
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC2' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Save Changes'))
+
+    await waitFor(() => expect(capturedPut).not.toBeNull())
+    expect(capturedPut!.baseModified).toBe('2026-08-01T00:00:00Z')
+    expect(postCallCount).toBe(1)
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+  })
+
   it('a 409 from a colliding name surfaces as a visible error, not a silent failure', async () => {
     server.use(
       http.post('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>

@@ -1324,8 +1324,11 @@ silent failure.
 `recipePath` is the target path, and the save path uses `POST` instead of `PUT` until the first
 successful create — after which it behaves exactly like any other open recipe.
 
-**Deviation 1 (authorized by the task-15 brief's "if it turns out the dialog needs a small
-accommodation... make it"):** the ordering problem is a genuine deadlock, not just a UX gap — a
+**Deviation 1 (authorized by the coordinator's Task 15 dispatch message, not by
+`task-15-brief.md` itself — the brief did not anticipate the empty-draft case; the dispatch
+said: "If it turns out the dialog needs a small accommodation for the empty-draft case, make
+it — but do not weaken the orphan gate for non-empty drafts to get there."):** the ordering
+problem is a genuine deadlock, not just a UX gap — a
 blank draft's `steps` is empty, so `NodeConfigDialog`'s "fed by"/"feeds" pickers (built off
 `draft.steps`) offer nothing, meaning NEITHER a non-source kind (needs a mapped field from an
 existing upstream) NOR source-table mode itself (needs an existing consuming step) can pass its
