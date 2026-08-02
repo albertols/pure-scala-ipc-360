@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/registry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["registry"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/recipes/history/{*path}": {
         parameters: {
             query?: never;
@@ -392,6 +408,17 @@ export interface components {
             nodes?: components["schemas"]["NodeDto"][];
             edges?: components["schemas"]["EdgeDto"][];
             meta?: components["schemas"]["MetaDto"];
+        };
+        RegistryDto: {
+            sourceTables?: components["schemas"]["RegistryTableDto"][];
+            targetTables?: components["schemas"]["RegistryTableDto"][];
+            ddlTables?: components["schemas"]["RegistryTableDto"][];
+            layers?: string[];
+        };
+        RegistryTableDto: {
+            name?: string;
+            columns?: string[];
+            usedByRecipes?: string[];
         };
         RecipeHistoryEntryDto: {
             version?: string;
@@ -919,6 +946,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RelationshipsDto"];
+                };
+            };
+        };
+    };
+    registry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistryDto"];
                 };
             };
         };

@@ -1194,19 +1194,19 @@ them; exclusions asserted, not assumed."
 **Interfaces:**
 - Produces: `useRegistry()` (TanStack, `staleTime: Infinity`); `RegistrySearch({ kind, onPick })` where `kind` is `'source' | 'target' | 'ddl'`.
 
-- [ ] **Step 1: Regenerate types, write the failing test**
+- [x] **Step 1: Regenerate types, write the failing test**
 
 Cover: typing filters the list across name and column names; picking calls `onPick` with the
 table; an empty result renders an explicit empty state, not a blank panel; the list is capped the
 same way the expression dock is (reuse the same cap constant idiom rather than inventing a
 second) with a truthful count.
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `cd frontend && pnpm test src/components/tab2/RegistrySearch.test.tsx`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement, then re-run**
+- [x] **Step 3: Implement, then re-run**
 
 `useRegistry()` mirrors `useIpcRules()` exactly (`staleTime: Infinity`, same `apiGet` call shape)
 — the registry is static per backend build. `RegistrySearch` is a filter input over a capped
@@ -1216,13 +1216,13 @@ both the table name and its column names, so searching a column finds its table.
 Run: `cd frontend && pnpm test src/components/tab2/RegistrySearch.test.tsx && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 4: Use it in the dialog**
+- [x] **Step 4: Use it in the dialog**
 
 When the chosen kind is a source or target table, the Name field gains a "pick from registry"
 affordance that opens `RegistrySearch` and fills the name — free text stays allowed for new
 tables, since authoring a target that does not exist yet is the point.
 
-- [ ] **Step 5: Run all gates and commit**
+- [x] **Step 5: Run all gates and commit**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 

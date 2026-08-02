@@ -7,6 +7,7 @@ import { buildStep, insertConfiguredStep, insertSourceTable } from '../../api/re
 import type { MappedField, RecipeNodeRef } from '../../api/recipeEdits'
 import { SOURCE_TABLE_TYPE } from './Palette'
 import { ghostButtonStyle } from './SaveBar'
+import { RegistrySearch } from './RegistrySearch'
 import {
   FormulaWidget,
   RowTableWidget,
@@ -39,6 +40,19 @@ import {
 // EXISTING step consumes the table, required non-empty, and Insert commits
 // via `insertSourceTable` — a `sources[]` entry on each selected consumer
 // plus the name in `table.sourceTableNames`, never a new `steps[]` entry.
+//
+// Task 13: the Name field gains a "Pick from registry" affordance for the two
+// kinds whose `name` IS a physical table name — source-table mode and a
+// `table`-kind step target (the palette's "target table"). Every other kind's
+// `name` is a transformation instance ("FLT2", "AGG1", …), which `GET
+// /api/registry` never indexes, so no affordance renders for those. Picking a
+// row only SETS the name field, same as typing — free text stays the primary
+// path (authoring a target that doesn't exist yet is the point of "from
+// scratch", Task 15), so `RegistrySearch` mounts lazily behind the toggle
+// rather than unconditionally: it calls `useRegistry()` (a TanStack query),
+// and this file's own test suite renders most cases with no
+// `QueryClientProvider` in scope, so an eagerly-mounted `RegistrySearch`
+// would throw on every one of them.
 
 type KeySchemaMap = Record<string, IpcKeySpec[]>
 
@@ -230,6 +244,13 @@ export function NodeConfigDialog({
   const propertySpecs = specs.filter(s => s.key !== 'name' && s.key !== 'type' && s.widget !== 'fieldTable')
 
   const [name, setName] = useState('')
+  // Task 13: `undefined` when `kind` isn't one of the two table kinds — the
+  // affordance itself doesn't render in that case, so there's nothing to
+  // toggle. `RegistrySearch` only mounts while this is a real kind, never
+  // eagerly (see the file-header comment).
+  const registryKind: 'source' | 'target' | undefined =
+    isSourceTable ? 'source' : recipeKind === 'table' ? 'target' : undefined
+  const [showRegistrySearch, setShowRegistrySearch] = useState(false)
   const [props, setProps] = useState<Record<string, unknown>>(() => defaultProps(propertySpecs))
   const [fedBy, setFedBy] = useState<string[]>([])
   const [feeds, setFeeds] = useState<string[]>([])
@@ -321,7 +342,16 @@ export function NodeConfigDialog({
         <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f8' }}>{isSourceTable ? 'Add source table' : `Add ${kind}`}</div>
 
         <div>
-          <label htmlFor="node-config-name" style={dialogLabelStyle}>Name</label>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <label htmlFor="node-config-name" style={dialogLabelStyle}>Name</label>
+            {registryKind && (
+              <button
+                type="button"
+                onClick={() => setShowRegistrySearch(v => !v)}
+                style={{ ...ghostButtonStyle, padding: '2px 8px', fontSize: 10 }}
+              >{showRegistrySearch ? 'Close registry' : 'Pick from registry'}</button>
+            )}
+          </div>
           <input
             id="node-config-name"
             ref={nameInputRef}
@@ -332,6 +362,17 @@ export function NodeConfigDialog({
           {nameDuplicate && (
             <div style={{ fontSize: 10, color: 'var(--red)', marginTop: 3 }}>
               {`"${trimmedName}" is already used in this recipe`}
+            </div>
+          )}
+          {registryKind && showRegistrySearch && (
+            <div style={{ marginTop: 8, padding: 8, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 5 }}>
+              <RegistrySearch
+                kind={registryKind}
+                onPick={t => {
+                  setName(t.name ?? '')
+                  setShowRegistrySearch(false)
+                }}
+              />
             </div>
           )}
         </div>

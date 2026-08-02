@@ -1,9 +1,11 @@
 import { describe, expect, it, vi, beforeAll, afterEach, afterAll } from 'vitest'
 import { render, screen, fireEvent, cleanup, waitFor, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import type { RecipeJson } from '../../api/recipeAdapter'
 import type { IpcConnections, IpcKeySpec } from '../../api/queries'
+import type { Registry } from '../../api/registryQueries'
 import { NodeConfigDialog } from './NodeConfigDialog'
 import { SOURCE_TABLE_TYPE } from './Palette'
 
@@ -101,17 +103,29 @@ let lastValidateBody: RecipeJson | null = null
 let validateResponse: { valid: boolean; errors: { path: string; message: string }[]; warnings: { path: string; message: string }[]; checks: unknown[] } = {
   valid: true, errors: [], warnings: [], checks: [],
 }
+// Task 13: the registry picker's fixture — deliberately distinct source vs.
+// target names so a test can prove the dialog asks RegistrySearch for the
+// right kind rather than whichever list happens to render first.
+const REGISTRY_FIXTURE: Registry = {
+  sourceTables: [{ name: 'STG_L_ORDERS', columns: [], usedByRecipes: ['STG/m_A/_ETL_m_A.json'] }],
+  targetTables: [{ name: 'DWH_ORDERS_FACT', columns: [], usedByRecipes: ['DWH/m_C/_ETL_m_C.json'] }],
+  ddlTables: [],
+  layers: [],
+}
+let registryResponse: Registry = REGISTRY_FIXTURE
 const server = setupServer(
   http.post('/api/recipes/validate', async ({ request }) => {
     lastValidateBody = (await request.json()) as RecipeJson
     return HttpResponse.json(validateResponse)
   }),
+  http.get('/api/registry', () => HttpResponse.json(registryResponse)),
 )
 beforeAll(() => server.listen())
 afterEach(() => {
   server.resetHandlers()
   lastValidateBody = null
   validateResponse = { valid: true, errors: [], warnings: [], checks: [] }
+  registryResponse = REGISTRY_FIXTURE
 })
 afterAll(() => server.close())
 
@@ -132,6 +146,37 @@ function renderDialog(overrides: {
       onCancel={onCancel}
       onInsert={onInsert}
     />,
+  )
+  return { ...utils, onCancel, onInsert }
+}
+
+/** Same render as `renderDialog`, but wrapped in a `QueryClientProvider` —
+ * needed only by the registry-picker tests (Task 13), since `RegistrySearch`
+ * calls `useRegistry()` (a TanStack query) once mounted. Every other
+ * `renderDialog` call in this file deliberately has NO provider: the "Pick
+ * from registry" affordance must stay unmounted until clicked, or every
+ * existing test in this file (none of which supply a QueryClient) would
+ * throw the instant the dialog renders. */
+function renderDialogWithQuery(overrides: {
+  kind: string
+  draft?: RecipeJson
+  keySchema?: Record<string, IpcKeySpec[]>
+  connections?: IpcConnections
+}) {
+  const onCancel = vi.fn()
+  const onInsert = vi.fn()
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const utils = render(
+    <QueryClientProvider client={client}>
+      <NodeConfigDialog
+        kind={overrides.kind}
+        draft={overrides.draft ?? MINI}
+        keySchema={overrides.keySchema ?? KEY_SCHEMA}
+        connections={overrides.connections ?? CONNECTIONS}
+        onCancel={onCancel}
+        onInsert={onInsert}
+      />
+    </QueryClientProvider>,
   )
   return { ...utils, onCancel, onInsert }
 }
@@ -412,5 +457,46 @@ describe('NodeConfigDialog — focus', () => {
   it('focuses the name input on mount', () => {
     renderDialog({ kind: 'filter' })
     expect(document.activeElement).toBe(screen.getByLabelText('Name'))
+  })
+})
+
+// Task 13: the Name field gains a "pick from registry" affordance — but only
+// for the two kinds whose `name` IS a physical table name (a target table
+// step, and source-table mode). Every other kind's `name` is a transformation
+// instance ("FLT2", "AGG1", …), which the registry (Task 12) never indexes,
+// so the affordance would offer nothing honest to pick from.
+describe('NodeConfigDialog — registry picker (Task 13)', () => {
+  it('kind "table" (target table) shows the affordance; picking a row fills Name from targetTables', async () => {
+    renderDialogWithQuery({ kind: 'table' })
+
+    fireEvent.click(screen.getByRole('button', { name: /pick from registry/i }))
+    await waitFor(() => expect(screen.getByText('DWH_ORDERS_FACT')).toBeInTheDocument())
+    // sourceTables entries must not leak into the target picker.
+    expect(screen.queryByText('STG_L_ORDERS')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('DWH_ORDERS_FACT'))
+    expect(screen.getByLabelText('Name')).toHaveValue('DWH_ORDERS_FACT')
+  })
+
+  it('source-table mode picks from sourceTables, not targetTables', async () => {
+    renderDialogWithQuery({ kind: SOURCE_TABLE_TYPE, draft: SOURCE_MODE_DRAFT })
+
+    fireEvent.click(screen.getByRole('button', { name: /pick from registry/i }))
+    await waitFor(() => expect(screen.getByText('STG_L_ORDERS')).toBeInTheDocument())
+    expect(screen.queryByText('DWH_ORDERS_FACT')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('STG_L_ORDERS'))
+    expect(screen.getByLabelText('Name')).toHaveValue('STG_L_ORDERS')
+  })
+
+  it('a non-table kind (e.g. filter) has no registry affordance at all', () => {
+    renderDialogWithQuery({ kind: 'filter' })
+    expect(screen.queryByRole('button', { name: /pick from registry/i })).not.toBeInTheDocument()
+  })
+
+  it('free text stays allowed — typing a name directly works without ever opening the registry picker (and without a QueryClient in scope)', () => {
+    renderDialog({ kind: 'table' })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'BRAND_NEW_TABLE' } })
+    expect(screen.getByLabelText('Name')).toHaveValue('BRAND_NEW_TABLE')
   })
 })
