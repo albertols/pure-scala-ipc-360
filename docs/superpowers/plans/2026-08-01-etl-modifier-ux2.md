@@ -1153,20 +1153,20 @@ through a dialog that will not insert an invalid one."
 
 Expected magnitudes from spec §4: 108 source tables, 87 target tables, 212 DDL tables, 8 layers.
 
-- [ ] **Step 1: Write the failing MockMvc test**
+- [x] **Step 1: Write the failing MockMvc test**
 
 Assert 200; `sourceTables` size ≥ 100 and `targetTables` ≥ 80; `layers` contains `CDM` and `DWH`;
 a known DDL table carries a non-empty `columns`; and — reusing the exclusion pattern already
 proven for `/api/summary` — a `_layout_*.json` and a `_history/` entry seeded into a temp corpus
 appear nowhere in the response.
 
-- [ ] **Step 2: Run to verify it fails, then implement**
+- [x] **Step 2: Run to verify it fails, then implement**
 
 Walk the corpus once, reusing `CorpusService.allRecipePaths()` and the existing
 `HistorySidecar`/`LayoutSidecar` exclusion predicates — do not re-implement either. DDL columns
 come from each `<TABLE>.json`'s field list, the same files `RecipeService.ddls` reads.
 
-- [ ] **Step 3: Run backend gates and commit**
+- [x] **Step 3: Run backend gates and commit**
 
 Run: `mvn -q -am -pl backend clean test`
 
