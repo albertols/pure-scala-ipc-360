@@ -1350,8 +1350,23 @@ Task 15. Layer + mapping picker, empty draft, POST on first save then PUT therea
 
 - [ ] **Step 1: Write the failing test**
 
-When the configured kind is a target `table` and the entered name matches a registry DDL table,
-the dialog offers that table's columns as fields, and accepting them produces a step whose
+**AMENDED after Task 12's review (2026-08-02).** 212 raw `<TABLE>.json` files collapse to **180**
+distinct names: 25 recur, and **11 of those carry genuinely different column sets** across mapping
+directories. Task 12's registry dedupes by name and **unions** the columns, so for those 11 the
+list matches no real DDL file. Measured examples: `DWH_MAPLESHORE_MAPLEBARN_MEMBERS` is 110 and 99
+columns in its two files — union 116, intersect 93, and **neither variant is a subset of the
+other**; `DWH_SYN_ORDERS_FACT` is 5/7/2 — union 8, intersect 1. So intersecting is not a safer
+default either; the honest fact is that those names have no canonical DDL in this corpus.
+
+**The dialog must not present a flattened list as authoritative.** When a matched name resolves to
+more than one underlying definition, say so and let the operator choose — surface the variants
+with their provenance (`usedByRecipes` already carries it) rather than silently offering a superset
+that would create fields absent from the DDL they are actually targeting. A single-definition match
+behaves as before, with no extra ceremony. Two of the 11 affected names are real corpus tables, not
+`SYN`/`CAS` fixtures, so this is not a mock-data corner case.
+
+When the configured kind is a target `table` and the entered name matches a **single** registry DDL
+definition, the dialog offers that table's columns as fields, and accepting them produces a step whose
 `fields[]` carry those names with their DDL types mapped to `ScalaType` values. Declining leaves
 `fields: []`. A name matching no DDL offers nothing and shows no error.
 
