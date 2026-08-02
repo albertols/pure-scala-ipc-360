@@ -1,18 +1,22 @@
 // ─── Palette — designer strip (Task 9) ──────────────────────────────────────
 //
 // Right-side vertical strip of IPC primitives. Every entry is both click-to-add
-// (onAdd) and HTML5-draggable (drop target lives on EtlCanvas via onDropType,
+// (onAdd) and HTML5-draggable (drop target lives on IpcCanvas via onDropType,
 // reading the same 'text/etl-type' payload). `type` is the raw recipe `type`
-// string ETLModifier hands to `addStep`/`addSourceTable` — see recipeAdapter's
-// RECIPE_KIND/FIXED_LABEL maps for how each resolves to a canvas kind, and
-// recipeEdits' addStep/addSourceTable for how each becomes a draft mutation.
+// string ETLModifier hands to `NodeConfigDialog` (Task 11: neither a click nor a
+// drop inserts anything directly anymore — both only open the dialog, which
+// gathers the rest and commits via recipeEdits' `buildStep`/`insertConfiguredStep`,
+// or, for `SOURCE_TABLE_TYPE`, `insertSourceTable`) — see recipeAdapter's
+// RECIPE_KIND/FIXED_LABEL maps for how each `type` resolves to a canvas kind.
 // Colors are read straight from NodeBox's NODE_STYLES tokens — no new palette
 // introduced (Figma contract §6/§9).
 
 import { NODE_STYLES } from '../tab1/NodeBox'
 
-/** Sentinel `type` handled specially by ETLModifier (addSourceTable, not
- * addStep) — everything else is a literal recipe step `type` string. */
+/** Sentinel `type` `NodeConfigDialog` switches into its source-table mode for
+ * — a root with no upstream and no step of its own (`insertSourceTable`, not
+ * `insertConfiguredStep`) — everything else is a literal recipe step `type`
+ * string. */
 export const SOURCE_TABLE_TYPE = 'sourceTable'
 
 export const PALETTE: { type: string; label: string; color: string }[] = [

@@ -1096,13 +1096,13 @@ now gated on a validated preview, so an orphan is unreachable by construction."
 - Consumes: `NodeConfigDialog` (Task 10).
 - Produces: nothing new.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Clicking a palette entry opens the dialog and inserts **nothing** until Insert is pressed;
 dragging a palette entry onto the canvas opens the same dialog rather than inserting directly;
 Cancel leaves the draft and the dirty count unchanged.
 
-- [ ] **Step 2: Run to verify it fails, then implement**
+- [x] **Step 2: Run to verify it fails, then implement**
 
 Replace `handlePaletteAdd`'s direct `addStep`/`addSourceTable` calls with
 `setPendingKind(type)`, render `<NodeConfigDialog>` when `pendingKind !== null`, and have its
@@ -1111,7 +1111,7 @@ conformance chip all follow automatically.
 
 `IpcCanvas`'s `onDropType` handler does the same — it must open the dialog, not insert.
 
-- [ ] **Step 3: Delete the superseded mutators**
+- [x] **Step 3: Delete the superseded mutators**
 
 `addStep` and `addSourceTable` exist solely to serve the direct-add path this task removes, and
 `buildStep`/`insertConfiguredStep` supersede them with a shape that carries sources, properties
@@ -1128,7 +1128,7 @@ Then verify nothing reaches them:
 Run: `grep -rn 'addStep\|addSourceTable' frontend/src`
 Expected: no hits at all outside this task's own deletions.
 
-- [ ] **Step 4: Run all gates and commit**
+- [x] **Step 4: Run all gates and commit**
 
 ```bash
 git add frontend/src/components/tab2/ETLModifier.tsx frontend/src/components/tab2/Palette.tsx \

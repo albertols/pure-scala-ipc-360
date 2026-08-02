@@ -5,6 +5,7 @@ import { http, HttpResponse } from 'msw'
 import type { RecipeJson } from '../../api/recipeAdapter'
 import type { IpcConnections, IpcKeySpec } from '../../api/queries'
 import { NodeConfigDialog } from './NodeConfigDialog'
+import { SOURCE_TABLE_TYPE } from './Palette'
 
 afterEach(cleanup)
 
@@ -29,6 +30,13 @@ const KEY_SCHEMA: Record<string, IpcKeySpec[]> = {
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
     { key: 'filterCondition', parserType: 'RecipeTransformation', required: false, widget: 'formula' },
+  ],
+  // Task 11: a source table's schema is `source:table`, not `target:table` — no
+  // `fields` key at all (a bare `sources[]` entry carries no field list).
+  'source:table': [
+    { key: 'name', parserType: 'String', required: true, widget: 'text' },
+    { key: 'type', parserType: 'String', required: true, widget: 'text' },
+    { key: 'primaryKeys', parserType: 'List[String]', required: false, widget: 'stringList' },
   ],
 }
 
@@ -76,6 +84,17 @@ const DRAFT_WITH_FIELDS: RecipeJson = {
     },
   ],
   table: { targetTableNames: [], sourceTableNames: [] },
+}
+
+// Task 11: a draft with two consuming-step CANDIDATES for a source table's
+// "feeds" picker — SQ1 (sourceQualifier, a legal consumer per CONNECTIONS'
+// `table.mayFeed`) and FLT1 (filter, not in that list — the forbidden case).
+const SOURCE_MODE_DRAFT: RecipeJson = {
+  steps: [
+    { target: { name: 'SQ1', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+    { target: { name: 'FLT1', type: 'filter', fields: [] }, sources: [] },
+  ],
+  table: { targetTableNames: ['SQ1', 'FLT1'], sourceTableNames: [] },
 }
 
 let lastValidateBody: RecipeJson | null = null
@@ -291,6 +310,76 @@ describe('NodeConfigDialog — validation gate', () => {
     expect(added.target!.fields).toEqual([{ name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } }])
     expect(added.sources).toEqual([{ name: 'SQ1', type: 'sourceQualifier' }])
     expect(onCancel).not.toHaveBeenCalled()
+  })
+})
+
+// Task 11 design ruling: a source table is a ROOT (reads a physical table, no
+// upstream of its own) and structurally isn't even a step — the dialog switches
+// into a distinct MODE for the palette's SOURCE_TABLE_TYPE sentinel: no "fed
+// by", no "map fields"; "feeds" instead asks which EXISTING step consumes the
+// table, required non-empty, and commits via `insertSourceTable` — a
+// `sources[]` entry on the chosen step(s) plus `table.sourceTableNames`, never
+// a new `steps[]` entry (the shape `buildStep`/`insertConfiguredStep` produce
+// for every other kind).
+describe('NodeConfigDialog — source-table mode (Task 11)', () => {
+  it('renders the source:table schema (primaryKeys), never target:table\'s name/type/fields widgets', () => {
+    renderDialog({ kind: SOURCE_TABLE_TYPE, draft: SOURCE_MODE_DRAFT })
+    expect(screen.getByText('Add source table')).toBeInTheDocument()
+    expect(screen.getByText('primaryKeys')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('add…')).toBeInTheDocument()
+  })
+
+  it('has no "fed by" or "map fields" section at all — a source table is a root with no upstream', () => {
+    renderDialog({ kind: SOURCE_TABLE_TYPE, draft: SOURCE_MODE_DRAFT })
+    expect(screen.queryByTestId('node-config-fedby')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('node-config-fieldmap')).not.toBeInTheDocument()
+  })
+
+  it('"feeds" lists only nodes the matrix permits, and renders forbidden ones disabled with a reason', () => {
+    renderDialog({ kind: SOURCE_TABLE_TYPE, draft: SOURCE_MODE_DRAFT })
+    const feedsSection = within(screen.getByTestId('node-config-feeds'))
+
+    const legal = feedsSection.getByRole('button', { name: /SQ1/ })
+    const forbidden = feedsSection.getByRole('button', { name: /FLT1/ })
+
+    expect(legal).not.toBeDisabled()
+    expect(forbidden).toBeDisabled()
+    expect(forbidden).toHaveAttribute('title', expect.stringContaining('table may not feed filter'))
+  })
+
+  it('keeps Insert disabled until at least one consuming step is selected — no mapped field required at all', async () => {
+    renderDialog({ kind: SOURCE_TABLE_TYPE, draft: SOURCE_MODE_DRAFT })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    // Wait for the preview validate to SETTLE before asserting — otherwise
+    // `isValidating` alone would keep Insert disabled and this assertion would
+    // pass for the wrong reason, masking whether the "at least one feeds"
+    // gate itself is doing any work.
+    await waitFor(() => expect(lastValidateBody).not.toBeNull(), { timeout: 2000 })
+
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+
+    fireEvent.click(within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: /SQ1/ }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+  })
+
+  it('onInsert commits via insertSourceTable: appends to the chosen step\'s sources[] and table.sourceTableNames, never a new step', async () => {
+    const { onInsert } = renderDialog({ kind: SOURCE_TABLE_TYPE, draft: SOURCE_MODE_DRAFT })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    fireEvent.click(within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: /SQ1/ }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    expect(onInsert).toHaveBeenCalledTimes(1)
+    const [next] = onInsert.mock.calls[0] as [RecipeJson]
+    // Same step count as the input draft — a source table never appends to steps[].
+    expect(next.steps).toHaveLength(SOURCE_MODE_DRAFT.steps!.length)
+    const consumer = next.steps!.find(s => s.target?.name === 'SQ1')!
+    // primaryKeys: [] rides along too — the Properties section's own
+    // stringList default (defaultPropValue), spread in via `...props` same as
+    // every other kind's schema-driven properties.
+    expect(consumer.sources).toEqual([{ name: 'NEWSRC', type: 'table', primaryKeys: [] }])
+    expect(next.table!.sourceTableNames).toContain('NEWSRC')
   })
 })
 

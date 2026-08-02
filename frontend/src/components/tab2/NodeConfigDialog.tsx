@@ -3,8 +3,9 @@ import type { RecipeJson, RecipeTransformationJson } from '../../api/recipeAdapt
 import { fieldsOf } from '../../api/recipeAdapter'
 import type { IpcConnections, IpcKeySpec } from '../../api/queries'
 import { useValidation } from '../../api/ipcRules'
-import { buildStep, insertConfiguredStep } from '../../api/recipeEdits'
+import { buildStep, insertConfiguredStep, insertSourceTable } from '../../api/recipeEdits'
 import type { MappedField, RecipeNodeRef } from '../../api/recipeEdits'
+import { SOURCE_TABLE_TYPE } from './Palette'
 import { ghostButtonStyle } from './SaveBar'
 import {
   FormulaWidget,
@@ -27,6 +28,17 @@ import {
 // backend catalogue. Producing an orphan through this dialog is structurally
 // unreachable: Insert stays disabled until the previewed draft has zero
 // validation errors.
+//
+// A source table (the palette's `SOURCE_TABLE_TYPE` sentinel) is the one
+// exception to "gathers fed-by / requires a mapped field": it is a ROOT —
+// reads a physical table, has no upstream — and structurally isn't even a
+// step (`IPC-FLW-003` iterates `steps[]` only, so a bare `sources[]`
+// occurrence never reaches it — see `recipeEdits.insertSourceTable`'s doc
+// comment). This dialog switches into a source-table MODE for that one kind:
+// no "fed by", no "map fields" section at all; "feeds" instead asks which
+// EXISTING step consumes the table, required non-empty, and Insert commits
+// via `insertSourceTable` — a `sources[]` entry on each selected consumer
+// plus the name in `table.sourceTableNames`, never a new `steps[]` entry.
 
 type KeySchemaMap = Record<string, IpcKeySpec[]>
 
@@ -207,7 +219,14 @@ export function NodeConfigDialog({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [onCancel])
 
-  const specs = keySchema[`target:${kind}`] ?? []
+  // Source-table mode (Task 11 design ruling — see the file-header comment):
+  // `kind` is the palette's `SOURCE_TABLE_TYPE` sentinel, never a real recipe
+  // type. `recipeKind` is what actually gets PERSISTED and looked up against
+  // the schema/connections matrix — a source table's own `type` is genuinely
+  // `table`, same as a full target-table step's.
+  const isSourceTable = kind === SOURCE_TABLE_TYPE
+  const recipeKind = isSourceTable ? 'table' : kind
+  const specs = keySchema[isSourceTable ? 'source:table' : `target:${recipeKind}`] ?? []
   const propertySpecs = specs.filter(s => s.key !== 'name' && s.key !== 'type' && s.widget !== 'fieldTable')
 
   const [name, setName] = useState('')
@@ -248,20 +267,39 @@ export function NodeConfigDialog({
   )
   const hasMappedField = mappedFields.length > 0
 
+  // `step` is `null` in source-table mode — there is no step to build at all
+  // (see `insertSourceTable`'s doc comment: a source table never enters
+  // `d.steps`), so `previewDraft` branches to the sibling mutator instead.
   const step = useMemo(
-    () => buildStep(kind, trimmedName, props, feeds, fedByRefs, mappedFields),
-    [kind, trimmedName, props, feeds, fedByRefs, mappedFields],
+    () => (isSourceTable ? null : buildStep(recipeKind, trimmedName, props, feeds, fedByRefs, mappedFields)),
+    [isSourceTable, recipeKind, trimmedName, props, feeds, fedByRefs, mappedFields],
   )
-  const previewDraft = useMemo(() => insertConfiguredStep(draft, step), [draft, step])
+  const previewDraft = useMemo(
+    () => (isSourceTable
+      ? insertSourceTable(draft, trimmedName, props, feeds)
+      : insertConfiguredStep(draft, step!)),
+    [isSourceTable, draft, trimmedName, props, feeds, step],
+  )
   const validation = useValidation(previewDraft)
 
-  const canInsert = !nameEmpty && !nameDuplicate && requiredPresent && hasMappedField
+  // A source table needs no mapped field (it has no upstream to map FROM) but
+  // DOES need at least one consuming step selected — otherwise it would never
+  // reach the canvas at all (recipeAdapter's recipeToCanvas only derives a
+  // source-table node from a `sources[]` occurrence, never from
+  // `table.sourceTableNames` alone). Every other kind keeps Task 10's gate:
+  // at least one mapped field, feeds optional.
+  const canInsert = !nameEmpty && !nameDuplicate && requiredPresent
+    && (isSourceTable ? feeds.length > 0 : hasMappedField)
     && !validation.isValidating && !validation.failed && validation.errors.length === 0
 
-  const fedByCandidates = nodes.map(n => ({ ...n, legal: mayConnect(connections, n.kind, kind) }))
+  const fedByCandidates = nodes.map(n => ({ ...n, legal: mayConnect(connections, n.kind, recipeKind) }))
   const feedsCandidates = nodes
     .filter(n => targetNames.has(n.name))
-    .map(n => ({ ...n, legal: mayConnect(connections, kind, n.kind) }))
+    .map(n => ({ ...n, legal: mayConnect(connections, recipeKind, n.kind) }))
+
+  const previewJson = isSourceTable
+    ? { source: { name: trimmedName, type: 'table', ...props }, feeds }
+    : { target: step!.target, sources: step!.sources }
 
   return (
     <div
@@ -280,7 +318,7 @@ export function NodeConfigDialog({
           padding: 20, display: 'flex', flexDirection: 'column', gap: 16,
         }}
       >
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f8' }}>{`Add ${kind}`}</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f8' }}>{isSourceTable ? 'Add source table' : `Add ${kind}`}</div>
 
         <div>
           <label htmlFor="node-config-name" style={dialogLabelStyle}>Name</label>
@@ -331,31 +369,41 @@ export function NodeConfigDialog({
           </div>
         )}
 
-        <div data-testid="node-config-fedby">
-          <div style={sectionTitleStyle}>Fed by</div>
-          {fedByCandidates.length === 0 ? (
-            <div style={{ fontSize: 11, color: '#4a5570' }}>No existing nodes.</div>
-          ) : fedByCandidates.map(c => (
-            <button
-              key={c.name}
-              type="button"
-              disabled={!c.legal}
-              title={c.legal ? undefined : `${c.kind} may not feed ${kind}`}
-              onClick={() => setFedBy(prev => toggleName(prev, c.name))}
-              style={{
-                ...candidateButtonStyle,
-                cursor: c.legal ? 'pointer' : 'not-allowed',
-                opacity: c.legal ? 1 : 0.4,
-                background: fedBy.includes(c.name) ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
-                border: `1px solid ${fedBy.includes(c.name) ? '#4f9cf9' : 'var(--border)'}`,
-                color: fedBy.includes(c.name) ? '#4f9cf9' : '#7b88aa',
-              }}
-            >{`${c.name} — ${c.kind}`}</button>
-          ))}
-        </div>
+        {/* A source table is a root — no upstream, so nothing "feeds" it (Task 11
+            design ruling, see the file-header comment). */}
+        {!isSourceTable && (
+          <div data-testid="node-config-fedby">
+            <div style={sectionTitleStyle}>Fed by</div>
+            {fedByCandidates.length === 0 ? (
+              <div style={{ fontSize: 11, color: '#4a5570' }}>No existing nodes.</div>
+            ) : fedByCandidates.map(c => (
+              <button
+                key={c.name}
+                type="button"
+                disabled={!c.legal}
+                title={c.legal ? undefined : `${c.kind} may not feed ${recipeKind}`}
+                onClick={() => setFedBy(prev => toggleName(prev, c.name))}
+                style={{
+                  ...candidateButtonStyle,
+                  cursor: c.legal ? 'pointer' : 'not-allowed',
+                  opacity: c.legal ? 1 : 0.4,
+                  background: fedBy.includes(c.name) ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
+                  border: `1px solid ${fedBy.includes(c.name) ? '#4f9cf9' : 'var(--border)'}`,
+                  color: fedBy.includes(c.name) ? '#4f9cf9' : '#7b88aa',
+                }}
+              >{`${c.name} — ${c.kind}`}</button>
+            ))}
+          </div>
+        )}
 
         <div data-testid="node-config-feeds">
           <div style={sectionTitleStyle}>Feeds</div>
+          {isSourceTable && (
+            <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>
+              A source table has no upstream — select at least one existing step that
+              reads from it.
+            </div>
+          )}
           {feedsCandidates.length === 0 ? (
             <div style={{ fontSize: 11, color: '#4a5570' }}>No existing nodes.</div>
           ) : feedsCandidates.map(c => (
@@ -363,7 +411,7 @@ export function NodeConfigDialog({
               key={c.name}
               type="button"
               disabled={!c.legal}
-              title={c.legal ? undefined : `${kind} may not feed ${c.kind}`}
+              title={c.legal ? undefined : `${recipeKind} may not feed ${c.kind}`}
               onClick={() => setFeeds(prev => toggleName(prev, c.name))}
               style={{
                 ...candidateButtonStyle,
@@ -377,7 +425,7 @@ export function NodeConfigDialog({
           ))}
         </div>
 
-        {fedBy.length > 0 && (
+        {!isSourceTable && fedBy.length > 0 && (
           <div data-testid="node-config-fieldmap">
             <div style={sectionTitleStyle}>Map fields</div>
             <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>
@@ -452,7 +500,7 @@ export function NodeConfigDialog({
             background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 5,
             fontSize: 10, color: '#a78bfa', fontFamily: 'JetBrains Mono, monospace',
             whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 160, overflowY: 'auto',
-          }}>{JSON.stringify({ target: step.target, sources: step.sources }, null, 2)}</pre>
+          }}>{JSON.stringify(previewJson, null, 2)}</pre>
           <div style={{
             fontSize: 11, marginTop: 6,
             color: validation.isValidating ? '#7b88aa' : validation.errors.length > 0 ? 'var(--red)' : 'var(--green)',

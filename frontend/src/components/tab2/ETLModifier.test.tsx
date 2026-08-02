@@ -78,6 +78,16 @@ const IPC_RULES = {
       { key: 'primaryKeys', parserType: 'List[String]', required: false, widget: 'stringList' },
     ],
   },
+  // Task 11: a slice of the real ipc-rules.json connections map — only the
+  // pairwise legality NodeConfigDialog's fed-by/feeds pickers exercise below
+  // (table -> table/sourceQualifier, sourceQualifier -> table).
+  connections: {
+    table: { mayFeed: ['sourceQualifier', 'table', 'normalizer'] },
+    sourceQualifier: {
+      mayFeed: ['table', 'unionInput', 'filter', 'joinerInput', 'aggregator', 'router', 'normalizer', 'java', 'storedProcedure'],
+      active: true,
+    },
+  },
 }
 
 // Task 16: static corpus counts for the Explorer footer's corpus summary.
@@ -365,16 +375,65 @@ describe('ETLModifier — editing state (Task 8)', () => {
 })
 
 // ─── Task 9: Palette + click-wire + delete UI ─────────────────────────────────
+// (extended by Task 11: every palette add routes through NodeConfigDialog)
 
-describe('ETLModifier — palette, click-wire, delete (Task 9)', () => {
-  it('palette: clicking "target table" adds a NEW_TABLE_1 node and dirties the SaveBar', async () => {
+describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
+  it('palette: clicking "target table" opens the config dialog and inserts nothing until Insert is pressed', async () => {
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
 
     fireEvent.click(screen.getByText('target table'))
 
-    expect(await screen.findByText('NEW_TABLE_1', { selector: 'text' })).toBeInTheDocument()
+    expect(await screen.findByText('Add table')).toBeInTheDocument()
+    expect(screen.queryByText('NEW_TABLE_1', { selector: 'text' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+  })
+
+  it('dragging a palette entry onto the canvas opens the same dialog rather than inserting directly', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.drop(screen.getByTestId('ipc-canvas-root'), {
+      dataTransfer: { getData: (fmt: string) => (fmt === 'text/etl-type' ? 'filter' : '') },
+    })
+
+    expect(await screen.findByText('Add filter')).toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+  })
+
+  it('Cancel leaves the draft and the dirty count unchanged', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('target table'))
+    await screen.findByText('Add table')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByText('Add table')).not.toBeInTheDocument()
+    expect(screen.queryByText('NEW_TABLE_1', { selector: 'text' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+  })
+
+  it('completing the dialog (name, connection, mapped field) and clicking Insert adds a real node and dirties the SaveBar', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('target table'))
+    await screen.findByText('Add table')
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_TBL' } })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'T — table' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    expect(await screen.findByText('NEW_TBL', { selector: 'text' })).toBeInTheDocument()
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
   })
 
@@ -505,7 +564,12 @@ describe('ETLModifier — final-review wave', () => {
     expect(screen.queryByText(/"source": "S\.A"/)).not.toBeInTheDocument()
   })
 
-  it('palette-add a node, give it a field via "+ field", then click-wire into its new port writes the dot-ref', async () => {
+  // Task 11: a palette add can no longer land with fields:[] and no ports at
+  // all (NodeConfigDialog requires at least one mapped field to enable
+  // Insert) — but the resulting node can still legitimately carry MORE
+  // fields than what got mapped at insert time, so "+ field" then
+  // click-wire into the new port must keep working on a dialog-inserted node.
+  it('a dialog-inserted node can still gain more fields via "+ field", then click-wire into the new port writes the dot-ref', async () => {
     server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
       path: 'CDM/m_FIX/_ETL_m_FIX.json',
       fileName: '_ETL_m_FIX.json',
@@ -523,12 +587,21 @@ describe('ETLModifier — final-review wave', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('S', { selector: 'text' })
 
-    // Palette-add a fresh target table node: inert (fields: [], no ports) until
-    // it gains a field.
+    // Insert a table node via the dialog: fed by S, mapping S.A — renamed to
+    // A_MAPPED so the new node's own port label never collides with S's own
+    // OUT port "A" below.
     fireEvent.click(screen.getByText('target table'))
-    const newNode = await screen.findByText('NEW_TABLE_1', { selector: 'text' })
+    await screen.findByText('Add table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_TBL' } })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'S — sourceQualifier' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+    fireEvent.change(screen.getByLabelText('A mapped field name'), { target: { value: 'A_MAPPED' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
-    // Select it and use the "+ field" affordance to give it its first field.
+    const newNode = await screen.findByText('NEW_TBL', { selector: 'text' })
+
+    // Select it and use the "+ field" affordance to give it a SECOND field.
     // Selecting the node keeps its EditPanel open (its own FieldEditor also
     // renders the field name "X" as a plain label), so port clicks below use
     // { selector: 'text' } to target the SVG port text specifically — the same
@@ -541,12 +614,77 @@ describe('ETLModifier — final-review wave', () => {
     expect(await screen.findByText('X', { selector: 'text' })).toBeInTheDocument()
 
     // Click-wire: OUT port S.A completes onto the freshly created IN port X.
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(screen.getByText('A', { selector: 'text' }))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
     fireEvent.click(screen.getByText('X', { selector: 'text' }))
 
     fireEvent.click(screen.getByText('{ raw JSON }'))
-    expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
+    expect(await screen.findByText(/"name": "X"/)).toBeInTheDocument()
+    expect(screen.getByText(/"source": "S\.A"/)).toBeInTheDocument()
+  })
+})
+
+// ─── Task 11: NodeConfigDialog's source-table mode vs transformation-step mode ─
+//
+// A source table is a ROOT (reads a physical table, no upstream) and structurally
+// is not a step — the dialog must ask which existing step CONSUMES it ("feeds"),
+// never "fed by", and must not require a mapped field. Every other palette kind
+// keeps Task 10's gate: at least one mapped field, or Insert never enables. These
+// two tests cover both halves of that design split end-to-end through ETLModifier.
+describe('ETLModifier — Task 11: source table vs transformation step', () => {
+  it('adding a source table succeeds: no "fed by"/mapped field, only which step it feeds', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+
+    // Structurally different from every other kind: no "fed by" section at all.
+    expect(screen.queryByTestId('node-config-fedby')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('node-config-fieldmap')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_SRC' } })
+    // Insert stays disabled until a consuming step is picked. Wait for the
+    // preview validate to SETTLE first — otherwise `isValidating` alone would
+    // keep Insert disabled and this assertion would pass for the wrong
+    // reason, masking whether the "at least one feeds" gate itself is doing
+    // any work.
+    await waitFor(() => expect(screen.queryByText('Validating…')).not.toBeInTheDocument(), { timeout: 2000 })
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+
+    fireEvent.click(within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: 'T — table' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    expect(await screen.findByText('NEW_SRC', { selector: 'text' })).toBeInTheDocument()
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(await screen.findByText(/"sourceTableNames"/)).toBeInTheDocument()
+    expect(screen.getByText(/"NEW_SRC"/)).toBeInTheDocument()
+  })
+
+  it('adding a transformation step with no connection still cannot insert', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('sourceQualifier'))
+    await screen.findByText('Add sourceQualifier')
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_SQ' } })
+    // No "fed by" selection at all — zero connections, zero mapped fields. Wait
+    // for the preview validate to SETTLE first (the mock default is zero
+    // errors) — otherwise `isValidating` alone would keep Insert disabled and
+    // this assertion would pass for the wrong reason, masking whether the
+    // mapped-field gate itself is doing any work.
+    await waitFor(() => expect(screen.queryByText('Validating…')).not.toBeInTheDocument(), { timeout: 2000 })
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByText('NEW_SQ', { selector: 'text' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
   })
 })
 

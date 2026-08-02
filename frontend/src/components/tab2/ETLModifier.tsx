@@ -11,8 +11,6 @@ import type { RecipeFile, RecipeValidation, RecipeValidationError } from '../../
 import { recipeToCanvas, fieldsOf } from '../../api/recipeAdapter'
 import type { RecipeJson } from '../../api/recipeAdapter'
 import {
-  addSourceTable,
-  addStep,
   deleteEdge,
   deleteNode,
   parseFormulaText,
@@ -27,11 +25,12 @@ import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { LoadingState } from '../shared/Spinner'
-import { Palette, SOURCE_TABLE_TYPE } from './Palette'
+import { Palette } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
 import { dangerButtonStyle } from './SaveBar'
 import { DDLViewer, type DdlColumnJson } from './DDLViewer'
 import { Inspector } from './Inspector'
+import { NodeConfigDialog } from './NodeConfigDialog'
 import { ConformanceChip } from './ConformanceChip'
 import { ExpressionDock } from './ExpressionDock'
 import { EditorLayout } from './EditorLayout'
@@ -168,6 +167,13 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   const [wireFrom, setWireFrom] = useState<{ nodeId: string; portName: string } | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
+  // Config-before-insert (Task 11 of this plan): the palette `type` string (or
+  // IpcCanvas's dropped one) a node-add is PENDING configuration for —
+  // `NodeConfigDialog` renders only while this is non-null, and is the ONLY
+  // path that can ever call `applyEdit` with a newly-inserted node. Neither
+  // `handlePaletteAdd` nor `IpcCanvas`'s `onDropType` insert anything directly
+  // anymore.
+  const [pendingKind, setPendingKind] = useState<string | null>(null)
   const { fs, loading, error } = useFilesystem()
   const queryClient = useQueryClient()
 
@@ -488,9 +494,25 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     }
   }
 
+  // Task 11: a palette click (or an IpcCanvas drop, same handler — see the
+  // `onDropType` wiring below) no longer inserts anything by itself. It only
+  // opens NodeConfigDialog, which is the sole path that can ever produce an
+  // orphan-proof (or, for a source table, upstream-less-by-design) node.
   const handlePaletteAdd = (type: string) => {
-    applyEdit(d => (type === SOURCE_TABLE_TYPE ? addSourceTable(d) : addStep(d, type)))
+    setPendingKind(type)
   }
+
+  // NodeConfigDialog's `onInsert` hands back a FULLY assembled next draft
+  // (already run through `insertConfiguredStep`/`insertSourceTable` inside the
+  // dialog) — routing it through `applyEdit` here, same as `handleInspectorChange`
+  // above, is what makes undo/redo, the dirty count and the conformance chip all
+  // follow automatically, exactly like every other edit path.
+  const handleInsertNode = (next: RecipeJson) => {
+    applyEdit(() => next)
+    setPendingKind(null)
+  }
+
+  const handleCancelInsertNode = () => setPendingKind(null)
 
   const handleDeleteNode = (name: string) => {
     applyEdit(d => deleteNode(d, name))
@@ -873,6 +895,21 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
           recipePath={recipePath}
           onView={handleViewVersion}
           onRestored={handleRestored}
+        />
+      )}
+      {/* Task 11: the ONLY way a palette/drop add reaches the draft — see
+          handlePaletteAdd/handleInsertNode above. `draft` is guaranteed
+          non-null here since pendingKind can only be set from an affordance
+          (Palette, IpcCanvas's onDropType) that itself only renders once
+          `draft` exists. */}
+      {pendingKind !== null && draft && (
+        <NodeConfigDialog
+          kind={pendingKind}
+          draft={draft}
+          keySchema={ipcRules.data?.keySchema ?? {}}
+          connections={ipcRules.data?.connections ?? {}}
+          onCancel={handleCancelInsertNode}
+          onInsert={handleInsertNode}
         />
       )}
     </div>
