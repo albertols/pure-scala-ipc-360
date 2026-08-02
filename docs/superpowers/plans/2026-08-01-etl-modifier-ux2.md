@@ -1360,8 +1360,20 @@ default either; the honest fact is that those names have no canonical DDL in thi
 
 **The dialog must not present a flattened list as authoritative.** When a matched name resolves to
 more than one underlying definition, say so and let the operator choose — surface the variants
-with their provenance (`usedByRecipes` already carries it) rather than silently offering a superset
-that would create fields absent from the DDL they are actually targeting. A single-definition match
+with their provenance rather than silently offering a superset that would create fields absent from
+the DDL they are actually targeting.
+
+**`usedByRecipes` cannot carry that provenance** — an earlier draft of this note said it could, and
+Task 13's reviewer disproved it: `RegistryService` unions `usedByRecipes` across every file sharing
+a name, so the list is identical whether one file or eleven sit behind it. **This task therefore
+needs a backend change too:** extend `RegistryTableDto` with a per-variant list — each variant
+carrying its own `columns` and the mapping path it came from — so the dialog can show the operator
+what actually differs and let them choose. Regenerate `types.gen.ts` after the DTO change.
+
+Task 13 already de-risked the display half by showing a column *count* rather than the raw unioned
+list, so no fabricated column name is currently rendered as if real. But the count itself is the
+union (116 where the real files hold 110 and 99) and carries no qualifier, so it still misleads for
+those 11 names — closing that is part of this task. A single-definition match
 behaves as before, with no extra ceremony. Two of the 11 affected names are real corpus tables, not
 `SYN`/`CAS` fixtures, so this is not a mock-data corner case.
 
