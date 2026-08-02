@@ -27,7 +27,8 @@ import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { LoadingState } from '../shared/Spinner'
 import { Palette } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
-import { dangerButtonStyle } from './SaveBar'
+import { dangerButtonStyle, ghostButtonStyle } from './SaveBar'
+import { NewRecipeDialog } from './NewRecipeDialog'
 import { DDLViewer, type DdlColumnJson } from './DDLViewer'
 import { Inspector } from './Inspector'
 import { NodeConfigDialog } from './NodeConfigDialog'
@@ -38,6 +39,15 @@ import { EditorToolbar } from './EditorToolbar'
 import { useDraftHistory } from './useDraftHistory'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
+
+// ─── New recipe from scratch (Task 15) ─────────────────────────────────────
+//
+// A blank canvas's draft, per `NewRecipeDialog`'s Create — no steps, no
+// source/target tables. `NodeConfigDialog`'s own empty-draft accommodation
+// (source-table mode, `NodeConfigDialog.tsx`) is what makes the FIRST
+// insertion into this possible at all: see its file-header comment for the
+// full ordering-problem writeup.
+const EMPTY_RECIPE_DRAFT: RecipeJson = { steps: [], table: { targetTableNames: [], sourceTableNames: [] } }
 
 // ─── Explorer scoping + info copy (Task 14) ────────────────────────────────────
 //
@@ -177,6 +187,14 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   const { fs, loading, error } = useFilesystem()
   const queryClient = useQueryClient()
 
+  // New recipe from scratch (Task 15): `authoring` is true from the moment
+  // `NewRecipeDialog`'s Create hands back a target path until the FIRST
+  // successful POST — the save path switches on it (POST vs PUT below), and
+  // it disables the `useRecipe` fetch (there is nothing to GET yet) so the
+  // draft-reset effect never clobbers the seeded empty draft.
+  const [showNewRecipeDialog, setShowNewRecipeDialog] = useState(false)
+  const [authoring, setAuthoring] = useState(false)
+
   // Expression registry (Task 11): corpus-wide, independent of the currently
   // open recipe. `focusedFormula` tracks which field's formula textarea last
   // gained focus in the Inspector below (`Inspector`'s `onFocusFormula`) — so a
@@ -206,7 +224,9 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   const [viewedRecipe, setViewedRecipe] = useState<RecipeFile | null>(null)
   const isViewing = viewingVersion !== null
 
-  const rec = useRecipe(recipePath ?? '')
+  // Task 15: no GET while authoring — the file doesn't exist on the corpus
+  // yet ("Create opens the editor with an empty draft and no recipe fetch").
+  const rec = useRecipe(recipePath ?? '', !authoring)
   const recError = rec.error as ApiError | null
 
   // Draft editing state (Task 8): deep-cloned from the loaded recipe whenever a
@@ -337,7 +357,19 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // Header card metadata (fileName/path/sizeBytes/modifiedAt) follows the same
   // swap as `content` — review finding: showing a read-only "viewing archived
   // version" banner next to the LIVE modifiedAt was misleading.
-  const headerRecipe = isViewing && viewedRecipe ? viewedRecipe : rec.data
+  //
+  // Task 15: while authoring, `rec.data` is never populated (the fetch is
+  // disabled — nothing exists on the corpus to GET yet), so a synthetic
+  // RecipeDto stands in: `fileName`/`path` are known from the target
+  // `recipePath` itself, `sizeBytes`/`modifiedAt` stay undefined (honestly —
+  // nothing has been saved) and `content` mirrors the live draft, same as
+  // every other field here would once the recipe is real.
+  const authoringFileName = recipePath ? recipePath.slice(recipePath.lastIndexOf('/') + 1) : ''
+  const headerRecipe: RecipeFile | null = isViewing && viewedRecipe
+    ? viewedRecipe
+    : authoring
+      ? { path: recipePath ?? '', fileName: authoringFileName }
+      : (rec.data ?? null)
   const graph = useMemo(
     () => (content && recipePath ? recipeToCanvas(content, recipePath, ipcRules.data?.typeAliases ?? {}) : null),
     [content, recipePath, ipcRules.data?.typeAliases],
@@ -380,6 +412,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     setSelectedPath(f.path)
     if (f.recipe) {
       setRecipePath(f.recipe)
+      setAuthoring(false)
       setSelectedNodeId(null)
       setSelectedEdge(null)
       setWireFrom(null)
@@ -389,6 +422,30 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
       setViewedRecipe(null)
       setFocusedFormula(null)
     }
+  }
+
+  // New recipe from scratch (Task 15): `NewRecipeDialog`'s Create hands back
+  // the resolved `<layer>/<mapping>/_ETL_<mapping>.json` target path — this
+  // is the ONLY place `authoring` turns true and `draft` is seeded directly
+  // (no GET landed to react to, unlike `handleSelectFile`'s recipe-fetch
+  // effect). Mirrors `handleSelectFile`'s own reset of selection/view state.
+  const handleCreateRecipe = (path: string) => {
+    setSelectedPath(null)
+    setRecipePath(path)
+    setAuthoring(true)
+    setDraft(structuredClone(EMPTY_RECIPE_DRAFT))
+    setDirtyOps(0)
+    setValidationErrors([])
+    setSaveError(null)
+    setSelectedNodeId(null)
+    setSelectedEdge(null)
+    setWireFrom(null)
+    setShowRaw(false)
+    setHistoryOpen(false)
+    setViewingVersion(null)
+    setViewedRecipe(null)
+    setFocusedFormula(null)
+    setShowNewRecipeDialog(false)
   }
 
   const applyEdit = (fn: (d: RecipeJson) => RecipeJson) => {
@@ -573,7 +630,10 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   }
 
   const handleDiscard = () => {
-    if (rec.data) setDraft(structuredClone(rec.data.content as RecipeJson))
+    // Task 15: authoring has no server copy to re-clone from — Discard goes
+    // back to the same blank draft Create seeded.
+    if (authoring) setDraft(structuredClone(EMPTY_RECIPE_DRAFT))
+    else if (rec.data) setDraft(structuredClone(rec.data.content as RecipeJson))
     setDirtyOps(0)
     setValidationErrors([])
     setSaveError(null)
@@ -581,7 +641,9 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   }
 
   const handleSave = async () => {
-    if (!draft || !recipePath || !rec.data) return
+    // Task 15: while authoring there is no `rec.data` yet (the fetch is
+    // disabled) — that guard only applies to the PUT branch below.
+    if (!draft || !recipePath || (!authoring && !rec.data)) return
     setValidationErrors([])
     setSaveError(null)
     setSaving(true)
@@ -591,7 +653,18 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
         setValidationErrors(result.errors ?? [])
         return
       }
-      await apiSend('PUT', `/recipes/${recipePath}`, { baseModified: rec.data.modifiedAt, content: draft })
+      if (authoring) {
+        // POST until the first successful create (Task 14's create endpoint —
+        // 409 if the file already exists, surfaced below exactly like any
+        // other save failure, never silently). Once it lands, this recipe is
+        // an ordinary open one: `authoring` flips off, `useRecipe`'s GET
+        // re-enables and re-populates `rec.data` for every future PUT's
+        // `baseModified`.
+        await apiSend('POST', `/recipes/${recipePath}`, draft)
+        setAuthoring(false)
+      } else {
+        await apiSend('PUT', `/recipes/${recipePath}`, { baseModified: rec.data!.modifiedAt, content: draft })
+      }
       await queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
       setDirtyOps(0)
       history.reset()
@@ -603,14 +676,28 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     }
   }
 
-  const sidebarExtra = loading ? (
-    <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
-  ) : error ? (
-    <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
-      <div>{error.title}</div>
-      {error.detail && <div>{error.detail}</div>}
+  // New recipe from scratch (Task 15): always present (not gated by
+  // loading/error, unlike the states stacked below it) — an operator can
+  // start authoring a recipe whether or not the corpus tree itself finished
+  // loading.
+  const sidebarExtra = (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border-subtle)' }}>
+        <button
+          onClick={() => setShowNewRecipeDialog(true)}
+          style={{ ...ghostButtonStyle, width: '100%', textAlign: 'center' }}
+        >+ New recipe</button>
+      </div>
+      {loading ? (
+        <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
+      ) : error ? (
+        <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
+          <div>{error.title}</div>
+          {error.detail && <div>{error.detail}</div>}
+        </div>
+      ) : null}
     </div>
-  ) : null
+  )
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -658,16 +745,16 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
             {EXPLORER_INFO_COPY}
           </span>
         </div>
-      ) : rec.isLoading ? (
+      ) : !authoring && rec.isLoading ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <LoadingState label="Loading recipe…" />
         </div>
-      ) : recError ? (
+      ) : !authoring && recError ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
           <div>{recError.title}</div>
           {recError.detail && <div>{recError.detail}</div>}
         </div>
-      ) : rec.data && graph ? (
+      ) : (authoring || rec.data) && graph ? (
         <EditorLayout
           toolbar={
             <>
@@ -712,14 +799,14 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <span style={{ fontSize: 10, color: '#4a5570', flex: 1 }}>Raw JSON</span>
-                      <CopyButton value={JSON.stringify(content ?? rec.data.content, null, 2)} size={11} />
+                      <CopyButton value={JSON.stringify(content ?? rec.data?.content, null, 2)} size={11} />
                     </div>
                     <pre style={{
                       margin: 0, padding: '10px 12px', maxHeight: 400, overflow: 'auto',
                       fontSize: 10, color: '#c8d3e8',
                       fontFamily: 'JetBrains Mono, monospace',
                       whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-                    }}>{JSON.stringify(content ?? rec.data.content, null, 2)}</pre>
+                    }}>{JSON.stringify(content ?? rec.data?.content, null, 2)}</pre>
                   </div>
                 }
                 // The dirty count/wire chip/Discard/Save are themselves editing
@@ -910,6 +997,14 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
           connections={ipcRules.data?.connections ?? {}}
           onCancel={handleCancelInsertNode}
           onInsert={handleInsertNode}
+        />
+      )}
+      {/* New recipe from scratch (Task 15) — the "+ New recipe" trigger in
+          `sidebarExtra` above. */}
+      {showNewRecipeDialog && (
+        <NewRecipeDialog
+          onCancel={() => setShowNewRecipeDialog(false)}
+          onCreate={handleCreateRecipe}
         />
       )}
     </div>

@@ -110,7 +110,17 @@ function defaultProps(specs: IpcKeySpec[]): Record<string, unknown> {
 /** Every node already present in the draft, resolved to its name + kind —
  * a step target's own `type`, or a `sources[]` entry's own `type`. Target
  * entries win over a same-named source occurrence (mirrors `Inspector.tsx`'s
- * own target-first precedence). */
+ * own target-first precedence).
+ *
+ * Task 15: also surfaces a BARE `table.sourceTableNames` entry — a source
+ * table inserted (via this dialog's own empty-draft accommodation, see
+ * `noStepsYet` below) before any step exists to consume it. Every other
+ * source occurrence is only reachable by walking `steps[].sources[]`, but a
+ * table with zero consumers lives NOWHERE in `steps[]` at all — without this
+ * fallback it would be typed once and then permanently invisible to a LATER
+ * dialog session's "fed by" picker. Never overrides a name already resolved
+ * above (a source occurrence already attached to a real step wins, same
+ * precedence target already has over source for a shared name). */
 function draftNodes(draft: RecipeJson): RecipeNodeRef[] {
   const map = new Map<string, string>()
   for (const step of draft.steps ?? []) {
@@ -120,6 +130,9 @@ function draftNodes(draft: RecipeJson): RecipeNodeRef[] {
   }
   for (const step of draft.steps ?? []) {
     if (step.target?.name) map.set(step.target.name, step.target.type ?? '')
+  }
+  for (const name of draft.table?.sourceTableNames ?? []) {
+    if (!map.has(name)) map.set(name, 'table')
   }
   return Array.from(map, ([name, kind]) => ({ name, kind }))
 }
@@ -309,9 +322,25 @@ export function NodeConfigDialog({
   // source-table node from a `sources[]` occurrence, never from
   // `table.sourceTableNames` alone). Every other kind keeps Task 10's gate:
   // at least one mapped field, feeds optional.
+  //
+  // Task 15 empty-draft accommodation (see the file-header comment on
+  // `draftNodes` and this dialog's own module doc): on a genuinely blank
+  // canvas (`draft.steps` empty) there is no existing step to pick as a
+  // consumer, so source-table mode's own "at least one feeds" gate can never
+  // clear — and the whole-recipe validate call can never clear either,
+  // since `{steps: []}` always fails `IPC-STR-001` regardless of what a
+  // single source table carries. Both are relaxed ONLY for
+  // `isSourceTable && noStepsYet`; a draft with at least one step (this
+  // dialog's every other call site, including source-table mode once the
+  // canvas is no longer blank) keeps the full gate exactly as before — see
+  // SOURCE_MODE_DRAFT's tests in NodeConfigDialog.test.tsx for the
+  // regression guard.
+  const noStepsYet = (draft.steps?.length ?? 0) === 0
+  const bypassWholeRecipeValidation = isSourceTable && noStepsYet
   const canInsert = !nameEmpty && !nameDuplicate && requiredPresent
-    && (isSourceTable ? feeds.length > 0 : hasMappedField)
-    && !validation.isValidating && !validation.failed && validation.errors.length === 0
+    && (isSourceTable ? (feeds.length > 0 || noStepsYet) : hasMappedField)
+    && (bypassWholeRecipeValidation
+      || (!validation.isValidating && !validation.failed && validation.errors.length === 0))
 
   const fedByCandidates = nodes.map(n => ({ ...n, legal: mayConnect(connections, n.kind, recipeKind) }))
   const feedsCandidates = nodes
@@ -441,8 +470,9 @@ export function NodeConfigDialog({
           <div style={sectionTitleStyle}>Feeds</div>
           {isSourceTable && (
             <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>
-              A source table has no upstream — select at least one existing step that
-              reads from it.
+              {noStepsYet
+                ? 'The canvas is empty, so there is no step yet that could consume this table — it can still be inserted; it just won\'t appear on the canvas until you add the step that reads from it.'
+                : 'A source table has no upstream — select at least one existing step that reads from it.'}
             </div>
           )}
           {feedsCandidates.length === 0 ? (

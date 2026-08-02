@@ -99,6 +99,13 @@ const SOURCE_MODE_DRAFT: RecipeJson = {
   table: { targetTableNames: ['SQ1', 'FLT1'], sourceTableNames: [] },
 }
 
+// Task 15: a genuinely blank canvas — `ETLModifier`'s authoring-mode seed.
+// Nothing has EVER been inserted: zero steps, zero source/target names.
+const EMPTY_DRAFT: RecipeJson = {
+  steps: [],
+  table: { targetTableNames: [], sourceTableNames: [] },
+}
+
 let lastValidateBody: RecipeJson | null = null
 let validateResponse: { valid: boolean; errors: { path: string; message: string }[]; warnings: { path: string; message: string }[]; checks: unknown[] } = {
   valid: true, errors: [], warnings: [], checks: [],
@@ -425,6 +432,64 @@ describe('NodeConfigDialog — source-table mode (Task 11)', () => {
     // every other kind's schema-driven properties.
     expect(consumer.sources).toEqual([{ name: 'NEWSRC', type: 'table', primaryKeys: [] }])
     expect(next.table!.sourceTableNames).toContain('NEWSRC')
+  })
+})
+
+// Task 15: the empty-draft ordering problem. A blank canvas has zero steps, so
+// EVERY existing-node picker (fed-by/feeds) is empty — no non-source kind can
+// ever gather a mapped field (nothing upstream to map FROM), and source-table
+// mode's OWN "at least one consuming step" gate (tested above, SOURCE_MODE_DRAFT)
+// can't be satisfied either (nothing downstream to consume it yet). Nothing can
+// be inserted first under that full gate. The break: a source table is the one
+// kind that can legitimately exist with NO step referencing it (it lives in
+// `table.sourceTableNames`, not `steps[]`), so source-table mode alone relaxes
+// its "feeds required" gate AND the whole-recipe-validates-clean gate while the
+// draft is still step-less — `{steps: []}` structurally cannot pass
+// `IPC-STR-001` ("steps must be a non-empty array") no matter what gets
+// inserted, so gating on it here would make the empty draft permanently stuck.
+// This bypass is scoped to `isSourceTable && noStepsYet` only — SOURCE_MODE_DRAFT
+// above already has two steps, so its own "keeps Insert disabled..." test is
+// this fix's regression guard: a non-empty draft keeps today's gate intact.
+describe('NodeConfigDialog — empty-draft accommodation (Task 15)', () => {
+  it('a source table can insert with zero feeds on a genuinely empty draft, even while the whole-recipe validate call reports real errors', async () => {
+    // Simulates the honest backend response for a `{steps: []}` draft
+    // (IPC-STR-001) — proves the bypass is real, not just incidentally
+    // passing because the mock defaults to `valid: true`.
+    validateResponse = {
+      valid: false,
+      errors: [{ path: '$.steps', message: 'steps must be a non-empty array' }],
+      warnings: [], checks: [],
+    }
+    renderDialog({ kind: SOURCE_TABLE_TYPE, draft: EMPTY_DRAFT })
+
+    // Nothing to feed — genuinely nothing exists yet, not a stale render.
+    expect(within(screen.getByTestId('node-config-feeds')).getByText('No existing nodes.')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    await waitFor(() => expect(lastValidateBody).not.toBeNull(), { timeout: 2000 })
+
+    expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled()
+  })
+
+  it('a non-source kind still cannot be inserted first on an empty draft — nothing upstream to map fields from', () => {
+    renderDialog({ kind: 'sourceQualifier', draft: EMPTY_DRAFT })
+
+    expect(within(screen.getByTestId('node-config-fedby')).getByText('No existing nodes.')).toBeInTheDocument()
+    expect(screen.queryByTestId('node-config-fieldmap')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'SQ_FIRST' } })
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+  })
+
+  it('a bare source table with no consuming step yet still becomes a legal "fed by" candidate for the next node', () => {
+    const draftAfterFirstInsert: RecipeJson = {
+      steps: [],
+      table: { targetTableNames: [], sourceTableNames: ['NEWSRC'] },
+    }
+    renderDialog({ kind: 'sourceQualifier', draft: draftAfterFirstInsert })
+
+    const candidate = within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: /NEWSRC/ })
+    expect(candidate).not.toBeDisabled()
   })
 })
 

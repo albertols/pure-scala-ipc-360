@@ -31,8 +31,14 @@ export const useMappingDom = (path: string) =>
 export const useMappingModel = (path: string) =>
   useQuery({ queryKey: ['model', path], queryFn: () => apiGet<MappingModel>(`/mappings/model/${path}`), staleTime: STALE_MS, enabled: !!path })
 
-export const useRecipe = (path: string) =>
-  useQuery({ queryKey: ['recipe', path], queryFn: () => apiGet<RecipeFile>(`/recipes/${path}`), staleTime: STALE_MS, enabled: !!path })
+// Task 15: `enabled` defaults to `true` for every existing caller — a SECOND
+// gate ANDed with the existing `!!path` one, not a replacement for it. Lets
+// `ETLModifier`'s authoring mode set a target `recipePath` (so the rest of the
+// component can address it — header, save target) WITHOUT ever GETting a file
+// that doesn't exist yet: "Create opens the editor with an empty draft and no
+// recipe fetch."
+export const useRecipe = (path: string, enabled = true) =>
+  useQuery({ queryKey: ['recipe', path], queryFn: () => apiGet<RecipeFile>(`/recipes/${path}`), staleTime: STALE_MS, enabled: !!path && enabled })
 
 export const useDdl = (path: string) =>
   useQuery({ queryKey: ['ddl', path], queryFn: () => apiGet<Record<string, unknown>>(`/ddl/${path}`), staleTime: STALE_MS, enabled: !!path })

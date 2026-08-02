@@ -1310,7 +1310,7 @@ shape enforced, body validated before any write, never creates a layer."
 - Consumes: `useRegistry()` (Task 13), `POST /api/recipes/{*path}` (Task 14), `NodeConfigDialog` (Task 10).
 - Produces: nothing consumed later.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 A "New recipe" control opens a dialog listing the registry's layers; entering a mapping name
 shows the exact path that will be created; Create opens the editor with an **empty** draft and no
@@ -1318,13 +1318,31 @@ recipe fetch; building a node through the config dialog and saving issues a `POS
 a name colliding with an existing recipe surfaces the 409 as a visible error rather than a
 silent failure.
 
-- [ ] **Step 2: Run to verify it fails, then implement**
+- [x] **Step 2: Run to verify it fails, then implement**
 
 `ETLModifier` gains an `authoring` mode: `draft` starts as `{steps: [], table: {targetTableNames: [], sourceTableNames: []}}`,
 `recipePath` is the target path, and the save path uses `POST` instead of `PUT` until the first
 successful create — after which it behaves exactly like any other open recipe.
 
-- [ ] **Step 3: Run all gates and commit**
+**Deviation 1 (authorized by the task-15 brief's "if it turns out the dialog needs a small
+accommodation... make it"):** the ordering problem is a genuine deadlock, not just a UX gap — a
+blank draft's `steps` is empty, so `NodeConfigDialog`'s "fed by"/"feeds" pickers (built off
+`draft.steps`) offer nothing, meaning NEITHER a non-source kind (needs a mapped field from an
+existing upstream) NOR source-table mode itself (needs an existing consuming step) can pass its
+own gate — and independently, ANY single first node leaves `{steps: []}`, which the backend's
+`IPC-STR-001` always rejects, so gating on a clean whole-recipe validate would keep Insert
+disabled forever regardless. `NodeConfigDialog.tsx`/`NodeConfigDialog.test.tsx` (not listed in
+this task's Files block) gained a scoped accommodation: when `draft.steps.length === 0`,
+source-table mode's "at least one feeds" requirement AND the whole-recipe-validates-clean
+requirement both relax — ONLY for `isSourceTable && noStepsYet`; every other kind, and
+source-table mode itself once the draft has a step, keep the existing gate byte-for-byte
+(`NodeConfigDialog.test.tsx`'s pre-existing `SOURCE_MODE_DRAFT` tests are the regression guard).
+`draftNodes` also gained a fallback surfacing a bare `table.sourceTableNames` entry with no
+consuming step yet, so the source table inserted this way is still selectable as a "fed by"
+candidate the moment the operator adds the first real step — see `NodeConfigDialog.tsx`'s
+`draftNodes`/`canInsert` doc comments for the full writeup.
+
+- [x] **Step 3: Run all gates and commit**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 

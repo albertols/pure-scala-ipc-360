@@ -93,6 +93,12 @@ const IPC_RULES = {
 // Task 16: static corpus counts for the Explorer footer's corpus summary.
 const SUMMARY = { xmlCount: 81, recipeCount: 86, ddlCount: 212, dirCount: 119, layers: ['CDM', 'DWH', 'ETL', 'ODS', 'OUTPUT', 'QDM', 'RDM', 'STG'] }
 
+// Task 15: the "New recipe" dialog's own layer picker — deliberately carries
+// a layer ('ZTESTLAYER') found NOWHERE in SUMMARY.layers, so a test asserting
+// on it proves the dialog is genuinely reading `GET /api/registry` (Task 13)
+// rather than incidentally rendering an overlapping list from elsewhere.
+const REGISTRY = { sourceTables: [], targetTables: [], ddlTables: [], layers: ['CDM', 'ZTESTLAYER'] }
+
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
   http.get('/api/summary', () => HttpResponse.json(SUMMARY)),
@@ -111,6 +117,7 @@ const server = setupServer(
   // suite above this one renders the canvas, so this default keeps them
   // green without knowing about the layout sidecar at all.
   http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+  http.get('/api/registry', () => HttpResponse.json(REGISTRY)),
 )
 beforeAll(() => server.listen())
 afterEach(() => { server.resetHandlers(); cleanup() })
@@ -1255,5 +1262,145 @@ describe('ETLModifier — undo/redo (Task 5)', () => {
 
     expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+  })
+})
+
+// ─── Task 15: New recipe from scratch ──────────────────────────────────────
+//
+// The bonus ask: author an `_ETL_*.json` on a blank canvas rather than only
+// editing recipes the parser produced. `+ New recipe` opens `NewRecipeDialog`
+// (its own layer/mapping-name picker, unit-tested in isolation); Create seeds
+// an EMPTY draft with NO recipe GET; the ordering problem (nothing upstream
+// exists yet on a blank canvas) is resolved by `NodeConfigDialog`'s
+// empty-draft accommodation (also unit-tested in isolation) letting a source
+// table be the first node with no consuming step yet; Save POSTs until the
+// first successful create, then behaves like any other open recipe.
+
+describe('ETLModifier — new recipe from scratch (Task 15)', () => {
+  it('the New recipe control opens a dialog listing the registry layers, and Cancel leaves the canvas untouched', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+
+    expect(await screen.findByRole('button', { name: 'ZTESTLAYER' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'CDM' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByText('New recipe')).not.toBeInTheDocument()
+    expect(screen.getByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
+  })
+
+  it('entering a mapping name shows the exact path that will be created', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_NEW_ONE' } })
+
+    expect(screen.getByText('CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json')).toBeInTheDocument()
+  })
+
+  it('Create opens the editor with an empty draft and issues no recipe fetch', async () => {
+    let recipeGetCalled = false
+    server.use(
+      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => {
+        recipeGetCalled = true
+        return HttpResponse.json({ path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json' })
+      }),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_NEW_ONE' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    // The toolbar identity reflects the TARGET path directly — no GET landed.
+    expect(await screen.findByRole('heading', { name: '_ETL_m_NEW_ONE.json' })).toBeInTheDocument()
+    // An empty draft: nothing dirtied it yet, so Save/Discard aren't shown.
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+    // The dialog itself is gone.
+    expect(screen.queryByText('New recipe')).not.toBeInTheDocument()
+
+    expect(recipeGetCalled).toBe(false)
+  })
+
+  it('building a node through the config dialog and saving issues a POST to the new recipe path', async () => {
+    let capturedPost: unknown = null
+    server.use(
+      http.post('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
+        capturedPost = await request.json()
+        return HttpResponse.json({
+          path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+          fileName: '_ETL_m_NEW_ONE.json',
+          sizeBytes: 80,
+          modifiedAt: '2026-08-01T00:00:00Z',
+          content: capturedPost,
+        }, { status: 201 })
+      }),
+      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({
+        path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+        fileName: '_ETL_m_NEW_ONE.json',
+        sizeBytes: 80,
+        modifiedAt: '2026-08-01T00:00:00Z',
+        content: capturedPost ?? { steps: [], table: { targetTableNames: [], sourceTableNames: [] } },
+      })),
+      http.get('/api/ddl/CDM/m_NEW_ONE', () => HttpResponse.json({})),
+      http.get('/api/layouts/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_NEW_ONE' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    await screen.findByRole('heading', { name: '_ETL_m_NEW_ONE.json' })
+
+    // The ordering problem: nothing exists yet, so the FIRST node addable is a
+    // source table (NodeConfigDialog's empty-draft accommodation).
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Save Changes'))
+
+    await waitFor(() => expect(capturedPost).not.toBeNull())
+    expect((capturedPost as { table: { sourceTableNames: string[] } }).table.sourceTableNames).toEqual(['NEWSRC'])
+    // Saved: the draft is no longer dirty, and the recipe behaves like any
+    // other open one from here (PUT thereafter — see the next test).
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+  })
+
+  it('a 409 from a colliding name surfaces as a visible error, not a silent failure', async () => {
+    server.use(
+      http.post('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({ title: 'Conflict', detail: 'Recipe already exists at CDM/m_FIX/_ETL_m_FIX.json' }, { status: 409 })),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    // Deliberately collides with the recipe the shared fixtures already serve
+    // at CDM/m_FIX/_ETL_m_FIX.json — Create never pre-checks (no recipe
+    // fetch), so the collision is only discovered on Save.
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_FIX' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    await screen.findByRole('heading', { name: '_ETL_m_FIX.json' })
+
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Save Changes'))
+
+    const detail = await screen.findByText('Recipe already exists at CDM/m_FIX/_ETL_m_FIX.json')
+    expect(detail).toHaveStyle({ color: 'var(--red)' })
+    // Not a silent failure: the edit is still unsaved, still on screen.
+    expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
   })
 })
