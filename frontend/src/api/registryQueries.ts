@@ -14,6 +14,12 @@ import type { components } from './types.gen'
 
 export type Registry = components['schemas']['RegistryDto']
 export type RegistryTable = components['schemas']['RegistryTableDto']
+/** One DISTINCT column set behind a DDL table name, with the mapping dirs that
+ * carry it (Task 16). `RegistryTable.columns` is a UNION across every file
+ * sharing the name — for the 11 corpus names whose files genuinely disagree it
+ * matches no real file on disk, so only a VARIANT may ever be presented as
+ * "what this table is". See `RegistryVariantDto`'s javadoc. */
+export type RegistryVariant = components['schemas']['RegistryVariantDto']
 
 export const useRegistry = () =>
   useQuery({ queryKey: ['registry'], queryFn: () => apiGet<Registry>('/registry'), staleTime: Infinity })

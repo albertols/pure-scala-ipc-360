@@ -263,6 +263,11 @@ export interface RecipeNodeRef {
  * NEW step's own field (defaults to the upstream field's own name/dataType,
  * user-editable — see `NodeConfigDialog`).
  *
+ * (Task 16: an EMPTY `source` is legal and means "this field exists but its
+ * value is not mapped yet" — what the dialog's target-DDL offer produces, since
+ * a `<TABLE>.json` names a column and its type but says nothing about where the
+ * data comes from. See `mappedFieldToRecipeField`.)
+ *
  * (Fix round 1, task-10-report.md: `IPC-FLW-003` ("no orphan step") measures
  * orphan-ness by dot-refs in field FORMULAS, not by `sources[]` membership —
  * a `fields: []` step can carry no outbound dot-ref no matter how many
@@ -275,8 +280,15 @@ export interface MappedField {
   source: string
 }
 
+/** An empty `source` yields `{name, dataType}` with NO `transformation` key —
+ * the same shape `addField` produces for an unmapped field — rather than an
+ * empty `{source: ""}` formula, which would be a transformation tree claiming a
+ * reference it does not have (`ReferentialRules.collectRefs` skips blank
+ * sources, so such a node is pure noise in the JSON). */
 function mappedFieldToRecipeField(m: MappedField): RecipeFieldJson {
-  return { name: m.name, dataType: m.dataType, transformation: { source: m.source } }
+  return m.source === ''
+    ? { name: m.name, dataType: m.dataType }
+    : { name: m.name, dataType: m.dataType, transformation: { source: m.source } }
 }
 
 /**

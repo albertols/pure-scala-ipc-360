@@ -6,7 +6,7 @@ import { http, HttpResponse } from 'msw'
 import type { RecipeJson } from '../../api/recipeAdapter'
 import type { IpcConnections, IpcKeySpec } from '../../api/queries'
 import type { Registry } from '../../api/registryQueries'
-import { NodeConfigDialog } from './NodeConfigDialog'
+import { NodeConfigDialog, scalaTypeForDdlType } from './NodeConfigDialog'
 import { SOURCE_TABLE_TYPE } from './Palette'
 
 afterEach(cleanup)
@@ -113,10 +113,55 @@ let validateResponse: { valid: boolean; errors: { path: string; message: string 
 // Task 13: the registry picker's fixture — deliberately distinct source vs.
 // target names so a test can prove the dialog asks RegistrySearch for the
 // right kind rather than whichever list happens to render first.
+//
+// Task 16: `ddlTables` carries the three shapes the target-DDL offer must tell
+// apart — one canonical definition (DWH_ORDERS_FACT), one definition that also
+// shares a column name with an upstream step target (DWH_JOINED_FACT), and a
+// genuinely DIVERGENT name whose two real files disagree (DWH_SPLIT_FACT: 3 and
+// 2 columns, union 4 — the union is what must never be offered).
 const REGISTRY_FIXTURE: Registry = {
-  sourceTables: [{ name: 'STG_L_ORDERS', columns: [], usedByRecipes: ['STG/m_A/_ETL_m_A.json'] }],
-  targetTables: [{ name: 'DWH_ORDERS_FACT', columns: [], usedByRecipes: ['DWH/m_C/_ETL_m_C.json'] }],
-  ddlTables: [],
+  sourceTables: [{ name: 'STG_L_ORDERS', columns: [], usedByRecipes: ['STG/m_A/_ETL_m_A.json'], variants: [] }],
+  targetTables: [{ name: 'DWH_ORDERS_FACT', columns: [], usedByRecipes: ['DWH/m_C/_ETL_m_C.json'], variants: [] }],
+  ddlTables: [
+    {
+      name: 'DWH_ORDERS_FACT',
+      columns: ['AMOUNT', 'LOADED_AT', 'ORDER_ID', 'PAYLOAD'],
+      usedByRecipes: ['DWH/m_C/_ETL_m_C.json'],
+      variants: [{
+        columns: [
+          { name: 'ORDER_ID', type: 'STRING' },
+          { name: 'AMOUNT', type: 'NUMERIC' },
+          { name: 'LOADED_AT', type: 'TIMESTAMP' },
+          { name: 'PAYLOAD', type: 'ARRAY<STRING>' },
+        ],
+        mappingDirs: ['DWH/m_C'],
+      }],
+    },
+    {
+      name: 'DWH_JOINED_FACT',
+      columns: ['A', 'Z'],
+      usedByRecipes: ['DWH/m_J/_ETL_m_J.json'],
+      variants: [{
+        columns: [{ name: 'A', type: 'STRING' }, { name: 'Z', type: 'INT64' }],
+        mappingDirs: ['DWH/m_J'],
+      }],
+    },
+    {
+      name: 'DWH_SPLIT_FACT',
+      columns: ['A', 'B', 'C', 'D'],
+      usedByRecipes: ['CDM/m_X/_ETL_m_X.json', 'ODS/m_Y/_ETL_m_Y.json'],
+      variants: [
+        {
+          columns: [{ name: 'A', type: 'STRING' }, { name: 'B', type: 'NUMERIC' }, { name: 'C', type: 'INT64' }],
+          mappingDirs: ['CDM/m_X'],
+        },
+        {
+          columns: [{ name: 'A', type: 'STRING' }, { name: 'D', type: 'DATE' }],
+          mappingDirs: ['ODS/m_Y', 'ODS/m_Z'],
+        },
+      ],
+    },
+  ],
   layers: [],
 }
 let registryResponse: Registry = REGISTRY_FIXTURE
@@ -559,9 +604,146 @@ describe('NodeConfigDialog — registry picker (Task 13)', () => {
     expect(screen.queryByRole('button', { name: /pick from registry/i })).not.toBeInTheDocument()
   })
 
-  it('free text stays allowed — typing a name directly works without ever opening the registry picker (and without a QueryClient in scope)', () => {
-    renderDialog({ kind: 'table' })
+  // Task 16 amended this test's wrapper: a target-table dialog now consults the
+  // registry itself (the DDL offer below), so `kind: 'table'` genuinely needs a
+  // QueryClient in scope. The "no provider needed" guarantee still holds for
+  // every kind that has no registry affordance — every `renderDialog` call in
+  // the rest of this file (filter / sourceQualifier / source-table mode) proves
+  // it, and the `filter` case is asserted directly above.
+  it('free text stays allowed — typing a name directly works without ever opening the registry picker', () => {
+    renderDialogWithQuery({ kind: 'table' })
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'BRAND_NEW_TABLE' } })
     expect(screen.getByLabelText('Name')).toHaveValue('BRAND_NEW_TABLE')
+  })
+})
+
+// ─── Task 16: the matching DDL's columns as a new target's authored fields ───
+//
+// 212 raw `<TABLE>.json` files collapse to 180 names; 25 recur and 11 of those
+// carry genuinely different column sets across mapping dirs (verified against
+// the live `GET /api/registry` — see the task report). `RegistryTableDto.columns`
+// unions them, so for those 11 the list (and its count) matches no real file on
+// disk — DWH_MAPLESHORE_MAPLEBARN_MEMBERS unions 110 and 99 columns into 116.
+// The offer below is therefore driven by `variants[]` (one entry per DISTINCT
+// column set, with the mapping dirs that carry it), never by `columns`: a single
+// variant is adopted with no ceremony, a divergent name names the conflict and
+// makes the operator choose, and whatever lands in `fields[]` is exactly one
+// real file's columns.
+describe('NodeConfigDialog — target DDL columns as fields (Task 16)', () => {
+  it('maps every BigQuery type the corpus uses to a ScalaType, and anything else to Unknown', () => {
+    expect(scalaTypeForDdlType('STRING')).toBe('String')
+    expect(scalaTypeForDdlType('NUMERIC')).toBe('BigDecimal')
+    expect(scalaTypeForDdlType('BIGNUMERIC')).toBe('BigDecimal')
+    expect(scalaTypeForDdlType('INT64')).toBe('Long')
+    expect(scalaTypeForDdlType('TIMESTAMP')).toBe('Timestamp')
+    expect(scalaTypeForDdlType('DATETIME')).toBe('LocalDateTime')
+    expect(scalaTypeForDdlType('DATE')).toBe('LocalDate')
+    expect(scalaTypeForDdlType('BOOL')).toBe('Boolean')
+    // Unknown is itself a legal ScalaType (ScalaType.scala:7) and passes
+    // IPC-STR-008 — an unrecognized type never produces an invalid recipe.
+    expect(scalaTypeForDdlType('ARRAY<STRING>')).toBe('Unknown')
+    expect(scalaTypeForDdlType('')).toBe('Unknown')
+    expect(scalaTypeForDdlType(undefined)).toBe('Unknown')
+  })
+
+  it('a single matching DDL definition offers its columns; adopting them fields the step with DDL types mapped to ScalaType', async () => {
+    const { onInsert } = renderDialogWithQuery({ kind: 'table', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'DWH_ORDERS_FACT' } })
+
+    const offer = await screen.findByTestId('node-config-targetddl')
+    expect(within(offer).getByText(/1 DDL definition/i)).toBeInTheDocument()
+
+    fireEvent.click(within(offer).getByRole('button', { name: /Use 4 columns/ }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    const [next] = onInsert.mock.calls[0] as [RecipeJson]
+    const added = next.steps!.find(s => s.target?.name === 'DWH_ORDERS_FACT')!
+    expect(added.target!.fields).toEqual([
+      { name: 'ORDER_ID', dataType: 'String' },
+      { name: 'AMOUNT', dataType: 'BigDecimal' },
+      { name: 'LOADED_AT', dataType: 'Timestamp' },
+      { name: 'PAYLOAD', dataType: 'Unknown' },
+    ])
+  })
+
+  it('declining the offer leaves fields: [] — nothing is adopted implicitly', async () => {
+    renderDialogWithQuery({ kind: 'table', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'DWH_ORDERS_FACT' } })
+
+    await screen.findByTestId('node-config-targetddl')
+
+    expect(screen.getByText(/"fields": \[\]/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+  })
+
+  it('a name matching no DDL offers nothing and shows no error', async () => {
+    renderDialogWithQuery({ kind: 'table', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'BRAND_NEW_TABLE' } })
+
+    // The registry query has settled (a matching name would have rendered by now).
+    await waitFor(() => expect(screen.getByText(/error/)).toBeInTheDocument(), { timeout: 2000 })
+    expect(screen.queryByTestId('node-config-targetddl')).not.toBeInTheDocument()
+    expect(screen.queryByText(/DDL/)).not.toBeInTheDocument()
+  })
+
+  it('a divergent name never offers the union — it names the conflict and requires a choice', async () => {
+    renderDialogWithQuery({ kind: 'table', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'DWH_SPLIT_FACT' } })
+
+    const offer = await screen.findByTestId('node-config-targetddl')
+    expect(within(offer).getByText(/2 conflicting DDL definitions/i)).toBeInTheDocument()
+    // The union is 4 columns (A, B, C, D) and matches neither real file — it may
+    // never be offered, nor counted, as if it were this table's definition.
+    expect(within(offer).queryByText(/4 columns/)).not.toBeInTheDocument()
+    expect(within(offer).getByRole('button', { name: /Use 3 columns/ })).toBeInTheDocument()
+    expect(within(offer).getByRole('button', { name: /Use 2 columns/ })).toBeInTheDocument()
+    // Provenance, not just counts — two variants can carry the SAME count
+    // (CAS_ODS_EVENTS is 4 and 4 in the real corpus).
+    expect(within(offer).getByText(/ODS\/m_Y/)).toBeInTheDocument()
+    expect(within(offer).getByText(/ODS\/m_Z/)).toBeInTheDocument()
+
+    // Nothing is adopted until the operator picks one.
+    expect(screen.getByText(/"fields": \[\]/)).toBeInTheDocument()
+  })
+
+  it('choosing one variant fields the step with exactly that variant\'s columns', async () => {
+    const { onInsert } = renderDialogWithQuery({ kind: 'table', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'DWH_SPLIT_FACT' } })
+
+    const offer = await screen.findByTestId('node-config-targetddl')
+    fireEvent.click(within(offer).getByRole('button', { name: /Use 2 columns/ }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    const [next] = onInsert.mock.calls[0] as [RecipeJson]
+    const added = next.steps!.find(s => s.target?.name === 'DWH_SPLIT_FACT')!
+    expect(added.target!.fields).toEqual([
+      { name: 'A', dataType: 'String' },
+      { name: 'D', dataType: 'LocalDate' },
+    ])
+  })
+
+  it('adopted columns coexist with upstream-mapped fields and never duplicate a mapped name', async () => {
+    const { onInsert } = renderDialogWithQuery({ kind: 'table', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'DWH_JOINED_FACT' } })
+    selectSQ1AndMapFieldA()
+
+    const offer = await screen.findByTestId('node-config-targetddl')
+    fireEvent.click(within(offer).getByRole('button', { name: /Use 2 columns/ }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    const [next] = onInsert.mock.calls[0] as [RecipeJson]
+    const added = next.steps!.find(s => s.target?.name === 'DWH_JOINED_FACT')!
+    // "A" keeps the upstream mapping the operator authored (a DDL column never
+    // overwrites it); "Z" is adopted unmapped — the DDL knows the column, not
+    // where its data comes from.
+    expect(added.target!.fields).toEqual([
+      { name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } },
+      { name: 'Z', dataType: 'Long' },
+    ])
   })
 })

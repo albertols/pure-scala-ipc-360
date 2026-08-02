@@ -17,8 +17,29 @@ const REGISTRY: Registry = {
     { name: 'DWH_ORDERS_FACT', columns: [], usedByRecipes: ['DWH/m_C/_ETL_m_C.json'] },
   ],
   ddlTables: [
-    { name: 'DWH_ORDERS_FACT', columns: ['ORDER_ID', 'AMOUNT'], usedByRecipes: ['DWH/m_C/_ETL_m_C.json'] },
-    { name: 'ODS_REFS', columns: ['REF_ID', 'REF_CODE'], usedByRecipes: ['ODS/m_D/_ETL_m_D.json', 'ODS/m_E/_ETL_m_E.json'] },
+    {
+      name: 'DWH_ORDERS_FACT',
+      columns: ['ORDER_ID', 'AMOUNT'],
+      usedByRecipes: ['DWH/m_C/_ETL_m_C.json'],
+      variants: [{
+        columns: [{ name: 'ORDER_ID', type: 'STRING' }, { name: 'AMOUNT', type: 'NUMERIC' }],
+        mappingDirs: ['DWH/m_C'],
+      }],
+    },
+    // Task 16: a DIVERGENT name — two real files, 2 and 1 columns, whose UNION
+    // (3) matches neither. `columns` is that union.
+    {
+      name: 'ODS_REFS',
+      columns: ['REF_ID', 'REF_CODE', 'REF_NOTE'],
+      usedByRecipes: ['ODS/m_D/_ETL_m_D.json', 'ODS/m_E/_ETL_m_E.json'],
+      variants: [
+        {
+          columns: [{ name: 'REF_ID', type: 'STRING' }, { name: 'REF_CODE', type: 'STRING' }],
+          mappingDirs: ['ODS/m_D'],
+        },
+        { columns: [{ name: 'REF_NOTE', type: 'STRING' }], mappingDirs: ['ODS/m_E'] },
+      ],
+    },
   ],
   layers: ['STG', 'ODS', 'DWH'],
 }
@@ -85,7 +106,7 @@ describe('RegistrySearch (Task 13)', () => {
     fireEvent.click(screen.getByText('ODS_REFS'))
 
     expect(onPick).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'ODS_REFS', columns: ['REF_ID', 'REF_CODE'] }),
+      expect.objectContaining({ name: 'ODS_REFS', columns: ['REF_ID', 'REF_CODE', 'REF_NOTE'] }),
     )
   })
 
@@ -114,6 +135,22 @@ describe('RegistrySearch (Task 13)', () => {
 
     expect(screen.getAllByText(/^TBL_\d{3}$/)).toHaveLength(150)
     expect(screen.getByText(/showing 150 of 200/i)).toBeInTheDocument()
+  })
+
+  // Task 16: `columns` is a union across every DDL file sharing a name, so its
+  // COUNT is a fabrication for the 11 corpus names whose files disagree (116
+  // where the real files hold 110 and 99). A row must never present that number
+  // as the table's column count.
+  it('a divergent name reports its definitions\' own counts, never the unioned total', async () => {
+    renderSearch({ kind: 'ddl' })
+
+    await waitFor(() => expect(screen.getByText('ODS_REFS')).toBeInTheDocument())
+
+    // Canonical name: one definition, its own count, no extra ceremony.
+    expect(screen.getByText('2 cols')).toBeInTheDocument()
+    // Divergent name: the union is 3 and must not be shown as a count.
+    expect(screen.queryByText('3 cols')).not.toBeInTheDocument()
+    expect(screen.getByText(/2 defs · 2\/1 cols/)).toBeInTheDocument()
   })
 
   it('shows no footer when nothing is hidden', async () => {

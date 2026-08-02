@@ -1366,10 +1366,20 @@ Task 15. Layer + mapping picker, empty draft, POST on first save then PUT therea
 
 ### Task 16: Target DDL columns as authored fields
 
-**Files:**
-- Modify: `frontend/src/components/tab2/NodeConfigDialog.tsx`, `NodeConfigDialog.test.tsx`
+**Files:** (this header was stale — it predated the amendment below, which mandates a backend
+change; corrected at implementation time to the set actually touched)
+- Create: `backend/src/main/java/io/pure360/etl360/api/dto/RegistryVariantDto.java`,
+  `RegistryColumnDto.java`
+- Modify: `backend/src/main/java/io/pure360/etl360/api/dto/RegistryTableDto.java`,
+  `backend/src/main/java/io/pure360/etl360/service/RegistryService.java`,
+  `backend/src/test/java/io/pure360/etl360/api/RegistryControllerTest.java`
+- Regenerate: `frontend/src/api/types.gen.ts`
+- Modify: `frontend/src/api/registryQueries.ts`, `frontend/src/api/recipeEdits.ts` +
+  `recipeEdits.test.ts`, `frontend/src/components/tab2/NodeConfigDialog.tsx` +
+  `NodeConfigDialog.test.tsx`, `frontend/src/components/tab2/RegistrySearch.tsx` +
+  `RegistrySearch.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 **AMENDED after Task 12's review (2026-08-02).** 212 raw `<TABLE>.json` files collapse to **180**
 distinct names: 25 recur, and **11 of those carry genuinely different column sets** across mapping
@@ -1403,7 +1413,7 @@ definition, the dialog offers that table's columns as fields, and accepting them
 `fields[]` carry those names with their DDL types mapped to `ScalaType` values. Declining leaves
 `fields: []`. A name matching no DDL offers nothing and shows no error.
 
-- [ ] **Step 2: Run to verify it fails, then implement**
+- [x] **Step 2: Run to verify it fails, then implement**
 
 Run: `cd frontend && pnpm test src/components/tab2/NodeConfigDialog.test.tsx`
 Expected: FAIL — no DDL column offer.
@@ -1415,9 +1425,23 @@ Map BigQuery DDL types to `ScalaType` values (`STRING`→`String`, `NUMERIC`/`BI
 
 Re-run the same command; expected PASS.
 
-- [ ] **Step 3: Run gates and commit**
+- [x] **Step 3: Run gates and commit**
 
-Run: `cd frontend && pnpm test && npx tsc --noEmit`
+Run: `cd frontend && pnpm test && npx tsc --noEmit` (plus `mvn -q -am -pl backend clean test`,
+since the amendment made this a backend change too).
+
+**Landed with four deviations** (see `.superpowers/sdd/2026-08-01-etl-modifier-ux2/task-16-report.md`):
+a variant's `columns` are `{name, type}` records rather than bare strings (the DDL type is
+required to map to a `ScalaType`, and a plain `List<String>` cannot carry it); `RegistrySearch`'s
+column-count chip and `recipeEdits.mappedFieldToRecipeField` were touched too (the chip showed the
+union count; an adopted DDL column is authored UNMAPPED, so an empty `source` must emit no
+`transformation`); and the Task-13 test asserting a `kind: 'table'` dialog needs no
+`QueryClientProvider` now uses one, because a target-table dialog genuinely consults the registry.
+The corpus figures in this note were re-verified against the live `GET /api/registry`: 180 DDL
+names, exactly **11** with more than one variant, `DWH_MAPLESHORE_MAPLEBARN_MEMBERS` 99/110
+(union 116) and `DWH_SYN_ORDERS_FACT` 7/5/2 (union 8) — all as written. One further finding: a
+12th name (`ODS_F_MAPLEGLADE_WITHDRAWALS`) has two files differing ONLY in column order, which
+dedupes to a single variant by design.
 
 ```bash
 git add frontend/src/components/tab2/NodeConfigDialog.tsx \

@@ -8,6 +8,8 @@ import type { MappedField, RecipeNodeRef } from '../../api/recipeEdits'
 import { SOURCE_TABLE_TYPE } from './Palette'
 import { ghostButtonStyle } from './SaveBar'
 import { RegistrySearch } from './RegistrySearch'
+import { useRegistry } from '../../api/registryQueries'
+import type { RegistryVariant } from '../../api/registryQueries'
 import {
   FormulaWidget,
   RowTableWidget,
@@ -53,6 +55,20 @@ import {
 // and this file's own test suite renders most cases with no
 // `QueryClientProvider` in scope, so an eagerly-mounted `RegistrySearch`
 // would throw on every one of them.
+//
+// Task 16: a TARGET TABLE whose typed name matches a registry DDL entry offers
+// that DDL's columns as the new node's fields (`TargetDdlOffer` below). That
+// offer is driven by `variants[]` — one entry per DISTINCT column set behind
+// the name, each with the mapping dirs that carry it — and NEVER by the
+// `columns` union, which for the 11 corpus names whose files genuinely disagree
+// matches no real `<TABLE>.json` on disk (DWH_MAPLESHORE_MAPLEBARN_MEMBERS is
+// 110 and 99 columns; the union is 116 and the intersection 93, and neither
+// variant is a subset of the other — so intersecting is no safer). A single
+// variant is adopted with one click; a divergent name says so and makes the
+// operator pick, and what lands in `fields[]` is then exactly one real file's
+// columns. `TargetDdlOffer` mounts only for a target `table` with a non-empty
+// name, so it is still the only path by which a `useRegistry()` call can reach
+// a dialog for any other kind.
 
 type KeySchemaMap = Record<string, IpcKeySpec[]>
 
@@ -221,6 +237,113 @@ function mappedFieldsFrom(
   return out
 }
 
+/** BigQuery DDL type -> `ScalaType` value (`ScalaType.scala:7`). The corpus's
+ * `<TABLE>.json` files only ever carry STRING/NUMERIC/INT64/TIMESTAMP/DATETIME
+ * today; the other three are the remaining BigQuery scalars a regenerated
+ * corpus could legitimately produce. Anything unrecognized (a parameterized or
+ * ARRAY/STRUCT type, say) becomes `Unknown` — itself a legal `ScalaType`, so it
+ * passes `IPC-STR-008` rather than authoring an invalid recipe, and it says
+ * "not known" instead of guessing `String`. */
+const DDL_TYPE_TO_SCALA_TYPE: Record<string, string> = {
+  STRING: 'String',
+  NUMERIC: 'BigDecimal',
+  BIGNUMERIC: 'BigDecimal',
+  INT64: 'Long',
+  TIMESTAMP: 'Timestamp',
+  DATETIME: 'LocalDateTime',
+  DATE: 'LocalDate',
+  BOOL: 'Boolean',
+}
+
+export function scalaTypeForDdlType(ddlType: string | undefined): string {
+  return DDL_TYPE_TO_SCALA_TYPE[(ddlType ?? '').trim().toUpperCase()] ?? 'Unknown'
+}
+
+/** One DDL variant rendered as authored fields: the column's own name, its type
+ * mapped to a `ScalaType`, and an EMPTY `source` — the DDL knows the column,
+ * not where its data comes from, so the field is authored UNMAPPED (see
+ * `recipeEdits.mappedFieldToRecipeField`). */
+function variantAsFields(variant: RegistryVariant): MappedField[] {
+  return (variant.columns ?? [])
+    .filter(c => (c.name ?? '') !== '')
+    .map(c => ({ name: c.name!, dataType: scalaTypeForDdlType(c.type), source: '' }))
+}
+
+/** Upstream-mapped fields first (the operator authored those, with a real
+ * dot-ref), then every adopted DDL column they did not already name. A DDL
+ * column never overwrites a mapping, and a name is never emitted twice
+ * (`IPC-STR-007`). */
+function withAdoptedDdlFields(mapped: MappedField[], adopted: MappedField[] | null): MappedField[] {
+  if (!adopted) return mapped
+  const taken = new Set(mapped.map(m => m.name))
+  return [...mapped, ...adopted.filter(f => !taken.has(f.name))]
+}
+
+/** The target-DDL offer (Task 16). Renders nothing at all when the typed name
+ * matches no DDL in the registry — "no match" is not an error, it is the normal
+ * case for a table being authored for the first time.
+ *
+ * With ONE variant behind the name there is no ambiguity to surface, so the
+ * offer is a single "use these N columns" button. With MORE than one the corpus
+ * has no canonical definition for that name: the conflict is stated, every
+ * variant is listed with its own column count AND its mapping dirs (two
+ * variants can carry the same count — `CAS_ODS_EVENTS` is 4 and 4 — so the
+ * count alone would not identify one), and nothing is adopted until the
+ * operator picks. The union is never shown, in any form. */
+function TargetDdlOffer({
+  tableName,
+  adoptedIndex,
+  onAdopt,
+}: {
+  tableName: string
+  adoptedIndex: number | null
+  onAdopt: (index: number, variant: RegistryVariant | null) => void
+}) {
+  const { data } = useRegistry()
+  const entry = (data?.ddlTables ?? []).find(t => t.name === tableName)
+  const variants = entry?.variants ?? []
+  if (variants.length === 0) return null
+  const divergent = variants.length > 1
+
+  return (
+    <div data-testid="node-config-targetddl">
+      <div style={sectionTitleStyle}>Target DDL</div>
+      <div style={{ fontSize: 10, color: divergent ? 'var(--yellow)' : '#4a5570', marginBottom: 8 }}>
+        {divergent
+          ? `${variants.length} conflicting DDL definitions carry this name in the corpus — there is no `
+            + 'canonical schema for it. Pick the one this target follows; its columns become the '
+            + 'node\'s fields.'
+          : `1 DDL definition matches this name — its columns can become the node's fields.`}
+      </div>
+      {variants.map((v, i) => {
+        const selected = adoptedIndex === i
+        const count = (v.columns ?? []).length
+        return (
+          <button
+            key={i}
+            type="button"
+            title={(v.mappingDirs ?? []).join('\n')}
+            onClick={() => onAdopt(i, selected ? null : v)}
+            style={{
+              ...candidateButtonStyle,
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2,
+              cursor: 'pointer', width: '100%', textAlign: 'left',
+              background: selected ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
+              border: `1px solid ${selected ? '#4f9cf9' : 'var(--border)'}`,
+              color: selected ? '#4f9cf9' : '#7b88aa',
+            }}
+          >
+            <span>{selected ? `Using ${count} columns as fields — click to clear` : `Use ${count} columns`}</span>
+            <span style={{ fontSize: 9, color: '#4a5570', wordBreak: 'break-all' }}>
+              {(v.mappingDirs ?? []).join(' · ')}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export function NodeConfigDialog({
   kind,
   draft,
@@ -271,6 +394,11 @@ export function NodeConfigDialog({
   const [includedFields, setIncludedFields] = useState<Set<string>>(new Set())
   const [fieldOverrides, setFieldOverrides] = useState<Record<string, { name?: string; dataType?: string }>>({})
   const [freeTextFields, setFreeTextFields] = useState<Record<string, string[]>>({})
+  // Task 16: the adopted target-DDL variant — its index (which button reads as
+  // selected) and the fields it contributes. Both are cleared whenever the name
+  // changes, since a variant only means anything for the name it was offered
+  // for.
+  const [adoptedDdl, setAdoptedDdl] = useState<{ index: number; fields: MappedField[] } | null>(null)
 
   const commitProp = (key: string, value: unknown) => setProps(prev => ({ ...prev, [key]: value }))
   const setFieldOverride = (key: string, patch: { name?: string; dataType?: string }) =>
@@ -284,6 +412,10 @@ export function NodeConfigDialog({
   const nameEmpty = trimmedName === ''
   const nameDuplicate = !nameEmpty && existingNames.has(trimmedName)
 
+  // A DDL variant is adopted FOR a name — retype the name and the adoption is
+  // void (the new name may resolve to a different DDL, or to none at all).
+  useEffect(() => { setAdoptedDdl(null) }, [trimmedName])
+
   const requiredPresent = propertySpecs
     .filter(s => s.required)
     .every(s => props[s.key ?? ''] !== undefined)
@@ -295,9 +427,13 @@ export function NodeConfigDialog({
     [fedBy, nodes],
   )
 
-  const mappedFields = useMemo(
+  const upstreamFields = useMemo(
     () => mappedFieldsFrom(fedBy, draft, includedFields, fieldOverrides, freeTextFields),
     [fedBy, draft, includedFields, fieldOverrides, freeTextFields],
+  )
+  const mappedFields = useMemo(
+    () => withAdoptedDdlFields(upstreamFields, adoptedDdl?.fields ?? null),
+    [upstreamFields, adoptedDdl],
   )
   const hasMappedField = mappedFields.length > 0
 
@@ -405,6 +541,19 @@ export function NodeConfigDialog({
             </div>
           )}
         </div>
+
+        {/* Target-table kind only: a source table's `name` is a physical table
+            too, but a source occurrence carries no `fields[]` at all
+            (`source:table` has no such key — see the schema slice in this
+            file's tests), so there is nothing for DDL columns to become. */}
+        {!isSourceTable && recipeKind === 'table' && !nameEmpty && (
+          <TargetDdlOffer
+            tableName={trimmedName}
+            adoptedIndex={adoptedDdl?.index ?? null}
+            onAdopt={(index, variant) =>
+              setAdoptedDdl(variant ? { index, fields: variantAsFields(variant) } : null)}
+          />
+        )}
 
         {propertySpecs.length > 0 && (
           <div>

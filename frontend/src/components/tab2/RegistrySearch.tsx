@@ -12,13 +12,14 @@ import { LoadingState } from '../shared/Spinner'
 // memory, without being FORCED to (free text stays allowed there — a target
 // that doesn't exist yet is the point of "from scratch", Task 15).
 //
-// `columns` on a `ddlTables` entry can be a union across genuinely divergent
-// DDL files sharing one name (Task 12's doc comment, Task 16 owns surfacing
-// the divergence) — this component's job is only not to make that worse: a
-// row never renders the full column list as if it were one file's schema,
-// only a count, and `usedByRecipes` (the actual provenance — which recipes
-// reference this name) is surfaced on every row via its native `title`
-// tooltip, the one affordance available without inventing new UI.
+// `columns` on a `ddlTables` entry is a union across genuinely divergent DDL
+// files sharing one name (Task 12's doc comment) — a row never renders the full
+// column list as if it were one file's schema, and as of Task 16 it never
+// renders the UNION's count either: `variants[]` (one entry per distinct column
+// set) drives the chip, so a divergent name reads "2 defs · 110/99 cols" rather
+// than the fictional "116 cols". `usedByRecipes` (which recipes reference this
+// name) is surfaced on every row via its native `title` tooltip, the one
+// affordance available without inventing new UI.
 //
 // Caps its rendered list with `ExpressionDock`'s exported `RENDER_CAP` — one
 // constant shared by both capped lists, not two that can drift.
@@ -47,6 +48,23 @@ function tablesForKind(
     case 'target': return registry.targetTables ?? []
     case 'ddl': return registry.ddlTables ?? []
   }
+}
+
+/** The row's column-count chip, or `''` when there is nothing honest to show.
+ *
+ * Task 16: `columns` is a UNION across every DDL file sharing the name, so for a
+ * DIVERGENT name (2 of the 11 in this corpus are real tables, not fixtures) its
+ * count describes no file that exists — 116 where the two real files hold 110
+ * and 99. Whenever `variants[]` says the name has more than one definition, the
+ * chip reports how many definitions and each one's own count instead, and the
+ * union is not rendered at all. */
+function columnCountLabel(table: RegistryTable): string {
+  const variants = table.variants ?? []
+  if (variants.length > 1) {
+    return `${variants.length} defs · ${variants.map(v => (v.columns ?? []).length).join('/')} cols`
+  }
+  const count = variants.length === 1 ? (variants[0].columns ?? []).length : (table.columns?.length ?? 0)
+  return count > 0 ? `${count} cols` : ''
 }
 
 function matches(table: RegistryTable, q: string): boolean {
@@ -91,8 +109,8 @@ export function RegistrySearch({
             {shown.map(t => (
               <button key={t.name} type="button" onClick={() => onPick(t)} style={rowStyle}>
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
-                {(t.columns?.length ?? 0) > 0 && (
-                  <span style={{ fontSize: 9, color: '#4a5570', flexShrink: 0 }}>{`${t.columns!.length} cols`}</span>
+                {columnCountLabel(t) && (
+                  <span style={{ fontSize: 9, color: '#4a5570', flexShrink: 0 }}>{columnCountLabel(t)}</span>
                 )}
                 <span
                   title={(t.usedByRecipes ?? []).join('\n')}

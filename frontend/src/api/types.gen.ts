@@ -13,7 +13,7 @@ export interface paths {
         };
         get: operations["recipe"];
         put: operations["save"];
-        post?: never;
+        post: operations["create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -409,6 +409,10 @@ export interface components {
             edges?: components["schemas"]["EdgeDto"][];
             meta?: components["schemas"]["MetaDto"];
         };
+        RegistryColumnDto: {
+            name?: string;
+            type?: string;
+        };
         RegistryDto: {
             sourceTables?: components["schemas"]["RegistryTableDto"][];
             targetTables?: components["schemas"]["RegistryTableDto"][];
@@ -419,6 +423,11 @@ export interface components {
             name?: string;
             columns?: string[];
             usedByRecipes?: string[];
+            variants?: components["schemas"]["RegistryVariantDto"][];
+        };
+        RegistryVariantDto: {
+            columns?: components["schemas"]["RegistryColumnDto"][];
+            mappingDirs?: string[];
         };
         RecipeHistoryEntryDto: {
             version?: string;
@@ -780,6 +789,32 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RecipeSaveRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecipeDto"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JsonNode"];
             };
         };
         responses: {

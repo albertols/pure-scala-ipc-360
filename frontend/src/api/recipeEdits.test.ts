@@ -191,6 +191,27 @@ describe('buildStep / insertConfiguredStep', () => {
     ])
   })
 
+  // Task 16: NodeConfigDialog's target-DDL offer authors a field per DDL column —
+  // it knows the column's name and type but NOT where the data comes from. An
+  // empty `source` therefore means "not mapped yet" and must emit the same shape
+  // `addField` produces ({name, dataType}, no transformation), never an empty
+  // `{source: ""}` formula claiming a reference it doesn't have.
+  it('a mappedField with an empty source becomes an UNMAPPED field — no transformation key at all', () => {
+    const step = buildStep(
+      'table',
+      'DWH_ORDERS_FACT',
+      {},
+      [],
+      [],
+      [{ name: 'ORDER_ID', dataType: 'String', source: '' }, { name: 'A', dataType: 'Long', source: 'SQ1.A' }],
+    )
+    expect(step.target!.fields).toEqual([
+      { name: 'ORDER_ID', dataType: 'String' },
+      { name: 'A', dataType: 'Long', transformation: { source: 'SQ1.A' } },
+    ])
+    expect(Object.keys(step.target!.fields![0])).toEqual(['name', 'dataType'])
+  })
+
   it('fields is spread in AFTER props, so a props.fields key can never silently override it', () => {
     const step = buildStep(
       'filter',
