@@ -303,6 +303,39 @@ each DTO; it is never hand-edited.
 12. Docs updated: `CLAUDE.md`, `docs/architecture.md`, `frontend/AGENTS.md`, and an ADR for the
     adjacency matrix.
 
+### Acceptance walk — results (Task 17, 2026-08-02)
+
+Four verdicts, used strictly: **PASS** (observed directly, command + output), **PASS
+(mechanical)** (proven by test or script; the rendered result was not observed), **NEEDS HUMAN
+VISUAL SIGN-OFF** (the criterion's substance is a rendered-geometry claim jsdom cannot settle),
+**FAIL**. Nothing here is marked PASS that was not observed.
+
+| # | Verdict | Evidence — and what was *not* proven |
+|---|---|---|
+| 1 | **PASS (mechanical)** | `ExpressionDock.test.tsx`: clamp (collapsed row is `maxHeight: CLAMP_PX` + `overflow: hidden`; click expands to `maxHeight: 260` + `overflowY: auto`), cap (`RENDER_CAP` 150 applied *after* filtering, footer reads `showing 150 of 1909 · refine the filter`), and no footer at all when nothing is hidden. `wordBreak: 'break-word'` at `ExpressionDock.tsx:145`. **Not proven:** the panel rendered in a browser with the real 53 881-char entry — the clamp is a fixed `max-height`, so it is length-independent by construction, but no visual observation was made. **Note:** this criterion's own "`showing 12 of 12` when a filter narrows below the cap" contradicts its own "no footer noise when nothing is hidden"; the implementation took the latter (footer renders only when `filtered.length > shown.length`). |
+| 2 | **NEEDS HUMAN VISUAL SIGN-OFF** | Proven: `ETLModifier.test.tsx` "renders the Inspector docked beside the canvas, not below the page fold" (the inspector dock and `data-region="canvas"` are children of one `display: flex` row) and "moves Source, Target and DDL into the drawer rather than the page body". **Not proven:** that nothing scrolls and the graph stays visible — jsdom computes no layout. **Look at:** open a recipe, click several nodes, confirm the Inspector updates in place with the canvas still on screen. |
+| 3 | **NEEDS HUMAN VISUAL SIGN-OFF** | Proven: `useResizableLayout.test.ts` (7 tests — defaults, floors, `localStorage` round-trip across a remount, corrupt/partial/non-numeric recovery, reset clears storage) and `EditorLayout.test.tsx` (12 tests — vertical splitter widens the Inspector, horizontal splitter grows the canvas region, window-level drag listeners, corner grip moves both axes in one drag, CSS floors, unmount detaches mid-drag, a below-floor stored value still renders at the floor). **Not proven:** "the canvas fills the available height" — rendered geometry. **Look at:** the canvas occupying the space between toolbar and drawer at several window sizes, both splitters and the grip dragging, and sizes surviving a reload. |
+| 4 | **PASS (mechanical)** | `useDraftHistory.test.ts` (7 tests incl. "undoes five consecutive edits in reverse order", redo, redo-branch truncation, `HISTORY_CAP` 25 dropping the oldest) + `ETLModifier.test.tsx` ("starts with Undo and Redo both disabled", "three edits, undo twice … redo once steps forward", "pushing a new edit after an undo truncates the redo branch", "Discard resets the history stack — Undo goes back to disabled"). **Not test-covered:** "a save resets the baseline" — verified by reading `ETLModifier.tsx`'s `handleSave` success path (`history.reset()` after the POST/PUT), no test asserts it. |
+| 5 | **PASS (mechanical)** | Nodes + ports: `recipeAdapter.test.ts` (union node `UNI` with one OUT port per distinct `fieldMapping.union`; joiner node `JNR` with `joinerType`/`joinerCondition` lifted to properties; `unionInput`/`joinerInput` edges; last-dot owner recovery incl. a joiner whose own name contains a dot; alias-threaded types; no duplicate ids). Live: `scripts/recipe_sweep.mts` evaluated 15 union/joiner source occurrences (10 union, 5 joiner) across 8 recipes, all 15 resolving to a canvas node. Reachable in the Inspector: `Inspector.tsx:261-270` derives the schema key from the *draft* (`findSourceOccurrence` → `source:union`/`source:joiner`), so the 2 previously unreachable of 20 `keySchema` entries now reach a node. Editable: `joinerTables`/`joinerType`/`joinerCondition` and `unionTables`' scalar row cells. **Not editable:** the 2197 `unionTables[].fieldMapping` pairs render read-only through `RowTableWidget`'s `nested` column — visible, never editable (carried-over sub-project-8 Task 12 deferral). Rendering not observed. |
+| 6 | **PASS** | `curl localhost:8080/api/ipc/rules` serves `connections` for 11 kinds (`aggregator`, `filter`, `java`, `joiner`, `joinerInput`, `normalizer`, `router`, `sourceQualifier`, `storedProcedure`, `table`, `union`). `IpcConnectionsContractTest.everyPairingObservedInTheCorpusIsPermitted` walks all 86 recipes and asserts no unpermitted pairing — green in the 189-test backend run. Re-proven over the wire: `recipe_sweep: … 10/10 corpus source kinds covered by connections`. |
+| 7 | **PASS** | Task 7 re-ran ADR-0010's procedure over all 86 recipes: **23 violations across 9 recipes, unchanged** by Task 6 (a canvas node is not the same fact as a `sources[].name` resolving in the JSON), so severity **stays `warning`**. Evidence recorded in `ipc-rules.json`'s `IPC-REF-003.corpusEvidence` and mirrored in `docs/ipc/rules.md#ipc-ref-003`, with both sub-patterns (15 union/joiner bare names, 8 SQL-only table names) named and witnessed. |
+| 8 | **PASS (mechanical)** | `NodeConfigDialog.test.tsx`: Insert disabled on an empty or duplicate name (with the reason shown); only matrix-permitted nodes offered, illegal ones disabled with the reason; Insert disabled with no mapped field; Insert disabled on a realistic `IPC-FLW-003` orphan error even when name/connection/field are satisfied; `onInsert` fires only once the preview validates clean; Cancel, scrim-click and Escape never call `onInsert`. Plus `ETLModifier.test.tsx`: palette click and canvas drop both open the dialog and insert nothing until Insert; Cancel leaves draft and dirty count unchanged; a transformation with no connection still cannot insert. **Qualification:** on a genuinely empty draft (`steps.length === 0`) source-table mode bypasses both the feeds gate and the whole-recipe validate — see §12 deviation 5; tautologically inapplicable to any non-empty draft. |
+| 9 | **PASS (mechanical)** | Backend, live against the booted corpus: `POST /api/recipes/CDM/m_CAS_CDM_EVENTS_MART/_ETL_m_CAS_CDM_EVENTS_MART.json` → **409** `Recipe already exists`; `POST …/NOT_A_LAYER/m_T17/_ETL_m_T17.json` → **400** `Unknown corpus layer (not an existing top-level directory)`; `POST …/CDM/m_T17_PROBE/_ETL_m_T17_PROBE.json` with `{"steps":[]}` → **400** `Recipe body failed validation … steps must be a non-empty array`; no directory or file created (corpus `git status` clean apart from the user's own untracked `_layout_*` files). Frontend: `ETLModifier.test.tsx` "the New recipe control opens a dialog listing the registry layers", "Create opens the editor with an empty draft and issues no recipe fetch", "building a node through the config dialog and saving issues a POST to the new recipe path", "a second save after the first successful create PUTs (never POSTs again)", "a 409 from a colliding name surfaces as a visible error"; `RegistrySearch.test.tsx` (8 tests) and the dialog's registry-picker tests cover source/target search. **Not observed:** the flow driven by hand in a browser. |
+| 10 | **PASS** | `make validate-loop` → `[validate-loop] PASS`: `viewer_sweep: 81/81 mappings render`, `recipe_sweep: 86/86 recipes render+validate (73 warning-severity checks; 10/10 corpus source kinds covered by connections)`, `mock_etl_data --check: clean`, `relationships_sweep: PASS`, frontend `348 passed (348)`. |
+| 11 | **PASS** | `mvn -am -pl backend clean test` → `Tests run: 189, Failures: 0, Errors: 0, Skipped: 0`, BUILD SUCCESS, with 35 surefire reports matching 35 `*Test.java` classes. `cd frontend && pnpm test` → `348 passed (348)` in 31 files. `make check` → exit 0, `check done` (`npx tsc --noEmit` clean; `pnpm format --check` reports the pre-existing 86-file backlog documented in the root `README.md`, non-fatal by design). |
+| 12 | **PASS** | This task's commit: `CLAUDE.md` (Tab 2's capabilities, the create endpoint's rules, the sweep's new assertions, `GET /api/registry`, ADR range `0001–0012`, current spec/plan pointer), `docs/architecture.md` (`POST /api/recipes/{*path}`, `GET /api/registry`, `connections` on `GET /api/ipc/rules`, Tab 2's authoring paragraph), `frontend/AGENTS.md` (the six new Tab 2 files, `registryQueries.ts`, the corrected `recipeEdits`/Inspector entries), and `docs/adr/0012-ipc-connection-matrix.md` (30 lines, per the template's own limit). |
+
+**Tally: 5 PASS (6, 7, 10, 11, 12) · 5 PASS (mechanical) (1, 4, 5, 8, 9) · 2 NEEDS HUMAN VISUAL
+SIGN-OFF (2, 3) · 0 FAIL.** Three of the mechanical passes carry a named shortfall that is not
+swept up: 1's footer wording, 4's untested save-resets-baseline, 5's read-only nested
+`fieldMapping`. The two sign-offs cover spec §10 items 1–5; items 6–7 (undo/redo controls, the
+modal) are exercised by tests but their appearance is likewise unobserved.
+
+**One fact deliberately NOT claimed:** Task 16's report states that a target whose fields come
+only from an adopted DDL still trips `IPC-FLW-003`. That was confirmed by a live
+`POST /api/recipes/validate`, but **no test in the suite pins it** — it is not asserted anywhere
+in the committed docs.
+
 ## 10. Visual contract impact
 
 ADR-0005 makes the prototype's look a hard contract; the user has explicitly asked for this
@@ -330,6 +363,61 @@ acceptance walk, in the manner of sub-project 8.
 
 ## 12. Implementation deviations
 
-Recorded here at implementation time, each traced to its task and commit.
+Recorded at implementation time, each traced to its task and commit. Every entry below was
+re-verified against the code at the acceptance walk (Task 17), not transcribed from the task
+reports.
 
-_(none yet — filled in as the plan executes)_
+1. **A joiner's owner is recovered from the LAST dot, not the first** (Task 6, `ef1f84d`; plan
+   corrected in `f2c0825`). §6.1 says a joiner node takes its input edges from its
+   `joinerInput` steps, and the plan originally specified splitting `<joiner>.<MASTER|DETAIL>`
+   at the first dot. `AbstractTargetFactory.scala:88` builds that name as
+   `s"${joiner.name}.$inputType"` — an arbitrary joiner name, one dot, then a fixed no-dot
+   suffix — so inverting the construction means stripping the *trailing* segment. `indexOf`
+   mis-splits `A.B.DETAIL` to `A`; `lastIndexOf` gives `A.B`. Every corpus joiner name is
+   dot-free today, so both agree on this data — the fixture in `recipeAdapter.test.ts` proves
+   the difference rather than relying on the corpus to expose it.
+2. **The connection matrix needed a fan-in rule beyond pairwise adjacency** (Task 9,
+   `3989579` + `5a8e576`; human rulings `17d652a`, `1d9fe76`). §6.2 describes `connections` as
+   an adjacency matrix, but PowerCenter's real constraint is about *convergence*: a downstream
+   input group takes either any number of passive inputs, or exactly one active input and
+   nothing beside it. No pairwise table can say that, so `IpcConnections.fanInVerdict` carries
+   it, with a nullable `active` flag on each entry. `active` is unknown (`null`) for `table`,
+   `java` **and `joinerInput`** — and the null check runs *before* both block conditions, so an
+   unknown participant anywhere in the pairing always downgrades a would-be `block` to `warn`.
+   Refusing a link we cannot prove illegal is worse than permitting one we cannot prove legal.
+3. **The config dialog maps fields from an upstream node instead of emitting `fields: []`**
+   (Task 10, `5f85668` + `5dcb034`; human ruling `2e60136`). §6.3 as written asked both for a
+   fragment shaped like the old `addStep`'s and for Insert to be gated on a zero-error
+   validation. Those are mutually exclusive: `IPC-FLW-003` (severity **error**) measures
+   orphan-ness from the dot-refs in field formulas (`ReferentialRules.collectRefs`), so a step
+   with no fields has neither inbound nor outbound references and can never validate clean. The
+   dialog therefore offers the chosen upstream's own fields, and at least one mapped field is
+   part of the Insert gate for every non-source kind.
+4. **`addStep`/`addSourceTable` were deleted, not wrapped** (Task 11, `92c03cb`). Replaced by
+   `buildStep` + `insertConfiguredStep` (a real step) and `insertSourceTable` (**not** a step —
+   it appends a `sources[]` entry to each chosen consumer plus `table.sourceTableNames`).
+   Keeping the old mutators would have left a second, ungated insertion path alive; deleting
+   them makes the dialog the only way in. The split matters to `IPC-FLW-003`, which iterates
+   `steps[]` only — a source table filed as a step would be a permanent orphan.
+5. **A narrowly-scoped empty-draft bypass** (Task 15, `640d78f`; attribution corrected in
+   `7ce7bde`). On a genuinely blank canvas there is no existing step to pick as a consumer, so
+   source-table mode's "at least one feeds" gate could never clear, and the whole-recipe
+   validate could never clear either (`{steps: []}` always fails `IPC-STR-001`). The condition
+   is exactly `isSourceTable && draft.steps.length === 0` (`NodeConfigDialog.tsx:474-475`), so
+   it is tautologically unreachable for any non-empty draft — including source-table mode once
+   the canvas is no longer blank. Guarded by its own regression tests.
+6. **`RegistryTableDto` gained `variants[]`** (Task 16, `aa8690c`; plan ruling `735d124`). §6.4
+   describes registry DDL entries as "table names with their columns", which the first cut
+   served as a union across every `<TABLE>.json` sharing a name. Measured on the live endpoint:
+   212 files collapse to **180 names**, of which **11** carry genuinely divergent column sets —
+   for those the union matches no real file on disk (`DWH_MAPLESHORE_MAPLEBARN_MEMBERS` is 110
+   and 99 columns, union 116, neither a subset of the other). `variants[]` is one entry per
+   distinct column set, so "no canonical DDL for this name" is expressible. A 12th name,
+   `ODS_F_MAPLEGLADE_WITHDRAWALS`, has two files with the identical 92 columns in a different
+   order (verified: same multiset, different sequence) and was deliberately ruled *not*
+   divergent — it dedupes to a single variant.
+
+**Not a deviation, though it looks like one:** canvas/Inspector/drawer sizes persist to
+`localStorage` rather than the `_layout_*.json` sidecar. §5.3 specifies exactly that, and
+ADR-0011's split still holds — node positions describe the recipe and are worth committing;
+splitter sizes describe one person's screen and are not.

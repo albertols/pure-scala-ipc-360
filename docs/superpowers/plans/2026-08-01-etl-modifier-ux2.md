@@ -863,6 +863,17 @@ Run: `mvn -am -pl backend clean test`
 Expected: PASS. If `everyPairingObservedInTheCorpusIsPermitted` fails, the matrix is too strict —
 widen it and record why in the task report; do **not** relax the test.
 
+**Outcome (2026-08-02).** Step 1's union/joiner node assertion was already live — Task 6 added it
+to `recipe_sweep.mts` when the nodes landed — so the genuinely new assertion is `connections`
+coverage of every source kind the corpus uses. RED was captured against a proxy that strips
+`connections` from `GET /api/ipc/rules` (the pre-change sweep passed 86/86 on a catalogue with
+no matrix at all); GREEN rejects both the stripped catalogue and a single dropped kind, and
+passes 10/10 against the real backend. Non-vacuity of the union/joiner half was measured
+separately: 15 occurrences (10 union, 5 joiner) across 8 recipes, all resolving. Acceptance walk
+tally (spec §9): **5 PASS · 5 PASS (mechanical) · 2 NEEDS HUMAN VISUAL SIGN-OFF · 0 FAIL**;
+deviations recorded in spec §12 (6 entries — the coordinator's proposed 7th, `localStorage`
+persistence, is not a deviation: §5.3 specifies it).
+
 - [x] **Step 6: Commit**
 
 ```bash
@@ -1462,24 +1473,24 @@ passes IPC-STR-008 rather than producing an invalid recipe."
 - Create: `docs/adr/0012-ipc-connection-matrix.md`
 - Modify: `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` (§12)
 
-- [ ] **Step 1: Extend the sweep**
+- [x] **Step 1: Extend the sweep**
 
 Assert every recipe with a `union`/`joiner` source yields a node of that name, and that
 `GET /api/ipc/rules` serves a `connections` entry for every source kind. Wire nothing new
 alongside `validate-loop` — extend what it already runs.
 
-- [ ] **Step 2: Run the full gate**
+- [x] **Step 2: Run the full gate**
 
 `make dev` in one terminal, `make validate-loop` in another. Expected: all sweeps green.
 
-- [ ] **Step 3: Write ADR-0012**
+- [x] **Step 3: Write ADR-0012**
 
 Follow `docs/adr/0000-template.md`, ≤ 30 lines per that template's own convention (ADRs 0010 and
 0011 overran it; do not repeat that). Record: why the matrix is authored rather than derived; the
 corpus as validation set; where it lives and how it is served; and why gating Insert behind
 validation beats permitting orphans and flagging them afterwards.
 
-- [ ] **Step 4: Update the docs**
+- [x] **Step 4: Update the docs**
 
 `CLAUDE.md` (Tab 2's description, the new endpoints, a pointer to ADR-0012), `docs/architecture.md`
 (`GET /api/registry`, `POST /api/recipes/{*path}`, `connections` on `GET /api/ipc/rules`),
@@ -1489,7 +1500,7 @@ validation beats permitting orphans and flagging them afterwards.
 line contradicting its own acceptance finding, and `CLAUDE.md` is primed into every future
 session.
 
-- [ ] **Step 5: Acceptance walk**
+- [x] **Step 5: Acceptance walk**
 
 Work spec §9's 12 criteria in order. For each record exactly one of **PASS** (with the command and
 its output), **PASS (mechanical)** (behaviour proven by test or script, visual result not
@@ -1500,7 +1511,7 @@ to look at), or **FAIL** (with evidence).
 good outcome; invented PASSes destroy the exercise. Record the results in spec §9 as a committed
 table, not only in the task report — the report is git-ignored.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/recipe_sweep.mts CLAUDE.md docs/architecture.md frontend/AGENTS.md \

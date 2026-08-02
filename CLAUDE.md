@@ -14,16 +14,25 @@ platform-agnostic. A multi-module Maven repo:
 - `frontend/` — React 19 / Vite / Tailwind v4 GUI (Figma Make prototype), wired to
   `backend/` tab by tab. **All four tabs are real now** — Tab 1 (IPC ETL Viewer)'s
   canvas/detail panel/search/zoom, Tab 2 (ETL Modifier)'s banded `IpcCanvas` (drag,
-  auto-layout, per-node conformance dots), schema-driven Inspector covering every
-  recipe key for the 18 of 20 IPC kinds that reach a canvas node — `union` (10) and
-  `joiner` (5) sources have none, leaving 2197 `fieldMapping` pairs and 5 joiner
-  configs unreachable in the GUI (spec `2026-08-01-etl-modifier-redesign-design.md`
-  §13 deviation 3) — a conformance chip + drawer against the IPC ruleset
-  (`docs/ipc/`), recipe-scoped Explorer/expression dock, focus mode
-  (`?focus=<recipePath>`), and save/history/rollback (the backend's first write API,
-  `PUT`/`validate`/`history`/`rollback` on `/api/recipes`), Tab 3 (ETL Operational)'s
-  relationships graph + operational summary, and Tab 4 (ETL DAG)'s clusters/run
-  history all consume the live corpus. See `frontend/AGENTS.md`.
+  auto-layout, per-node conformance dots) inside a fixed-height editor shell (docked
+  Inspector, two draggable splitters + a corner grip whose sizes persist to
+  `localStorage`, a collapsible Source/Target/DDL/Edge drawer, and a 25-entry
+  undo/redo stack), a schema-driven Inspector covering every recipe key for all 20 of
+  the ruleset's `source:`/`target:` kinds — `union` (10) and `joiner` (5) sources now
+  get canvas nodes too, closing spec `2026-08-01-etl-modifier-redesign-design.md` §13
+  deviation 3, though their 2197 `unionTables[].fieldMapping` pairs render read-only
+  (nested-object editing is still unbuilt) — a conformance chip + drawer against the
+  IPC ruleset (`docs/ipc/`), a pre-add configuration dialog gated on the `connections`
+  adjacency matrix (`docs/adr/0012-ipc-connection-matrix.md`) so the palette cannot
+  insert an orphan, registry-backed authoring of a recipe from scratch, a recipe-scoped
+  Explorer/expression dock (formulas clamped, list capped at 150 with an honest count),
+  focus mode (`?focus=<recipePath>`), and save/history/rollback (the backend's write
+  API, `PUT`/`POST`/`validate`/`history`/`rollback` on `/api/recipes`), Tab 3 (ETL
+  Operational)'s relationships graph + operational summary, and Tab 4 (ETL DAG)'s
+  clusters/run history all consume the live corpus. Tab 2's seven sanctioned visual
+  departures (`2026-08-01-etl-modifier-ux2-design.md` §10) are **pending human visual
+  sign-off** — the mechanisms are unit-tested, the rendered result is not observed.
+  See `frontend/AGENTS.md`.
 - `docs/` — ADRs, `architecture.md`, and `superpowers/{specs,plans}/` design artifacts.
 
 No Spark, GCS, or xlsx dependencies in `parser/` — deliberately removed in the slim
@@ -75,12 +84,17 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
    **derived artifacts** — fix `parser/.../sql/calcite` or `sql/sqlglot`, not the JSON.
    Manual overrides: `parser/src/main/resources/xmltobq/_sqlTranslations_manual.json`.
    Recipe source field references use `SOURCE_NAME.FIELD_NAME` dot notation — preserve
-   it when generating or editing recipe output. The recipe write API (`PUT`/`validate`/
-   `history`/`rollback` on `/api/recipes`, Tab 2's save path) archives the pre-edit
-   version to a `<recipeDir>/_history/<base>.<yyyyMMdd-HHmmss-SSS>.json` sidecar before
-   writing — committable by design, but excluded from every corpus walk (`/api/tree`,
-   contract tests, DDL discovery) so a viewer never lists an archived version as live
-   data (`backend/.../service/support/HistorySidecar.java`).
+   it when generating or editing recipe output. The recipe write API (`PUT`/`POST`/
+   `validate`/`history`/`rollback` on `/api/recipes`, Tab 2's save path) archives the
+   pre-edit version to a `<recipeDir>/_history/<base>.<yyyyMMdd-HHmmss-SSS>.json` sidecar
+   before writing — committable by design, but excluded from every corpus walk
+   (`/api/tree`, contract tests, DDL discovery) so a viewer never lists an archived
+   version as live data (`backend/.../service/support/HistorySidecar.java`).
+   `POST /api/recipes/{*path}` is the one endpoint that *creates* corpus files: 409 if
+   the file exists, 400 unless the path is exactly `<layer>/<mapping>/_ETL_<mapping>.json`
+   under an existing top-level corpus directory (enumerated per request, never
+   hardcoded), and the body must validate with zero errors first. A recipe authored
+   while testing must never be committed — it would move the contract-test floors.
 4. **Specs and plans live in `docs/superpowers/`**; progress is tracked by `- [ ]`
    checkboxes committed alongside each task's changes — the commit history is the
    resumability record. New architectural decisions get an ADR (`docs/adr/`, template
@@ -113,6 +127,9 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   against the IPC ruleset) and fails if any returned `checks[].ruleId` is absent from
   `GET /api/ipc/rules`, printing a per-run tally of warning-severity checks so a
   severity regression is visible without failing the gate (`docs/adr/0010-ipc-conformance-ruleset.md`);
+  it also asserts every `union`/`joiner` source yields a canvas node of that name (15
+  occurrences across 8 recipes) and that `GET /api/ipc/rules`'s `connections` covers
+  every source kind the corpus actually uses (10/10, `docs/adr/0012-ipc-connection-matrix.md`);
   (4) `node --experimental-strip-types
   scripts/mock_etl_data.mts --check` (manifest↔corpus↔mock drift over the `m_CAS_*`
   family) then `scripts/relationships_sweep.mts` (asserts every CAS relationship
@@ -126,8 +143,10 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   machine happens to carry an untracked local `DWH_CONTROL`/composer export.
   `GET /api/summary` (corpus counts for the view-aware Explorer footer/chip) and
   `GET`/`PUT /api/layouts/{*path}` (canvas node offsets, `docs/adr/0011-canvas-layout-sidecar.md`)
-  round out the endpoints this sub-project added; both are covered by backend contract
-  tests rather than a `validate-loop` curl.
+  round out sub-project 8's endpoints; sub-project 9 adds `GET /api/registry` (the
+  authoring inventory: 108 source tables, 87 target tables, 180 DDL names — 11 of them
+  carrying divergent `variants[]` — and 8 layers) and `POST /api/recipes/{*path}`. All
+  four are covered by backend contract tests rather than a `validate-loop` curl.
 
 ## Corpus caveats
 
@@ -186,24 +205,14 @@ checklist): `docs/visual-guide.md`.
 ## More
 
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0011`
+- Design rationale: `docs/adr/0001`–`0012`
 - `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,
   alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
   expression grammar. Start at `docs/ipc/README.md`.
-- Current spec/plan: `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
-  `docs/superpowers/plans/2026-07-29-etl360-foundation.md`,
-  `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,
-  `docs/superpowers/plans/2026-07-30-synthetic-operational-data.md`,
-  `docs/superpowers/specs/2026-07-31-etl-modifier-design.md` +
-  `docs/superpowers/plans/2026-07-31-etl-modifier.md`,
-  `docs/superpowers/specs/2026-07-31-etl360-dag-design.md` +
-  `docs/superpowers/plans/2026-07-31-etl360-dag.md`,
-  `docs/superpowers/specs/2026-07-31-operational-casuistics-design.md` +
-  `docs/superpowers/plans/2026-07-31-operational-casuistics.md`,
-  `docs/superpowers/specs/2026-07-31-etl360-distribution-design.md` +
-  `docs/superpowers/plans/2026-07-31-etl360-distribution.md`,
-  `docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md` +
-  `docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md`
+- Current spec/plan:
+  `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` +
+  `docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md`
+  (previous sub-project: `…/2026-08-01-etl-modifier-redesign-design.md` + its plan)
 - Parser deep-dive: `parser/src/main/scala/io/pure360/ipc/xmltojson/README.md`,
   `_DWH_Transformations_and_XML_Parsing.md`
 - Dev harness, prerequisites, `.env.example` reference: root `README.md`

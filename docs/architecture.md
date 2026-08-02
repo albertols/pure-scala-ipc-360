@@ -72,11 +72,13 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 | `GET /api/mappings/model/{*path}` | Semantic model via the in-JVM parser: repository/folder, sources, targets, mappings, mapplets, transformations, typed ports, connectors |
 | `GET /api/recipes/{*path}` | Content of one `_ETL_*.json` recipe plus file metadata; preserves `SOURCE_NAME.FIELD_NAME` dot notation |
 | `PUT /api/recipes/{*path}` | Saves a full recipe (`{baseModified, content}`); archives the current file to `_history/` (see note below) then writes atomically, returning the fresh `RecipeDto`. 409 if `baseModified` no longer matches the file's `modifiedAt` (stale edit) |
+| `POST /api/recipes/{*path}` | **Creates** a recipe from a raw JSON body, returning the fresh `RecipeDto`. 409 if the file already exists; 400 unless the path normalizes to exactly `<layer>/<mapping>/_ETL_<mapping>.json` with `<layer>` an existing top-level directory of the corpus root (enumerated per request, never hardcoded), or unless the body validates with **zero errors** first. Creates the `<mapping>` directory only, never a layer — the sole endpoint that adds corpus files (spec §6.4) |
 | `POST /api/recipes/validate` | Validates a recipe JSON body, no file IO: `{valid, errors: [{path, message}], warnings: [{path, message}], checks: [{ruleId, severity, status, path, message}]}`. `valid` stays `errors.isEmpty()` (warnings never block a save) — `errors`/`warnings` are the same `RecipeValidationErrorDto` shape; `checks` is every rule outcome (pass and fail) from the full IPC catalogue (`docs/adr/0010-ipc-conformance-ruleset.md`), driving the Tab 2 conformance chip/drawer and per-node dots |
 | `GET /api/recipes/history/{*path}` | No `?version` → sorted `[{version, timestamp, sizeBytes}]` from the `_history/` sidecar; `?version=v` → that archived version as a `RecipeDto` |
 | `POST /api/recipes/rollback/{*path}` | `?version=v` — archives the current file, restores the archived version, returns the fresh `RecipeDto` |
 | `GET /api/ddl/{*path}` | All `<TABLE>.json` BigQuery DDL files in a mapping's output dir, keyed by table name |
-| `GET /api/ipc/rules` | The IPC conformance catalogue: `{rules: [{id, severity, statement, parserRef, ipcRef, wikiRef}], typeAliases, keyAliases, keySchema: {"<source\|target>:<kind>": [{key, parserType, required, widget, ruleId}]}}` — `keySchema` is what drives the Inspector so the GUI never hardcodes a second copy of the recipe grammar (`docs/adr/0010-ipc-conformance-ruleset.md`) |
+| `GET /api/ipc/rules` | The IPC conformance catalogue: `{rules: [{id, severity, statement, parserRef, ipcRef, wikiRef}], typeAliases, keyAliases, keySchema: {"<source\|target>:<kind>": [{key, parserType, required, widget, ruleId}]}, connections: {"<sourceKind>": {mayFeed[], active, exactly?, namedInputs?}}}` — `keySchema` drives the Inspector and `connections` (the authored adjacency matrix, `docs/adr/0012-ipc-connection-matrix.md`) drives the pre-add config dialog's connection picker, so the GUI never hardcodes a second copy of the recipe grammar (`docs/adr/0010-ipc-conformance-ruleset.md`). `active` is nullable — unknown for `table`, `java`, `joinerInput` — and the fan-in verdict pairwise adjacency cannot express is computed server-side in `IpcConnections.fanInVerdict` |
+| `GET /api/registry` | The searchable authoring inventory (spec §6.4): `{sourceTables[], targetTables[], ddlTables[], layers[]}`, each table a `{name, columns[], usedByRecipes[], variants[]}`. `columns` is a UNION across every `<TABLE>.json` sharing the name; `variants[]` is one entry per DISTINCT column set, so the 11 corpus names whose DDL files genuinely disagree can be told apart from the 169 canonical ones. Same corpus walk and `_history/`/`_layout_*` exclusions as `/api/summary` |
 | `GET /api/layouts/{*path}` | Saved canvas node offsets for one recipe: `{version, nodes: {"<nodeId>": {dx, dy}}}`; `{version:1,nodes:{}}` when no `_layout_*.json` sidecar exists yet, never 404 (`docs/adr/0011-canvas-layout-sidecar.md`) |
 | `PUT /api/layouts/{*path}` | Writes the layout sidecar atomically (temp file + `ATOMIC_MOVE`, mirroring the recipe write path); sandboxed via `PathResolver.insideCorpus` |
 | `GET /api/summary` | Static corpus counts for the view-aware summary chip in every tab's Explorer/footer: `{xmlCount, recipeCount, ddlCount, dirCount, layers}` — same `_history`/`_layout_` exclusions as every other corpus walk |
@@ -95,7 +97,10 @@ Tab 2 (ETL Modifier) is the first consumer of the recipe write API: the canvas r
 from `/api/recipes/{*path}` (via `recipeAdapter.ts`'s `recipeToCanvas`), edits stage in
 a local draft validated through `POST /api/recipes/validate` before `PUT`, and the
 History drawer / Rollback button drive the `/api/recipes/history` and
-`/api/recipes/rollback` endpoints above.
+`/api/recipes/rollback` endpoints above. Sub-project 9 added the authoring half: the
+palette's pre-add dialog reads `connections` from `GET /api/ipc/rules` and its table
+pickers read `GET /api/registry`, and a recipe built on a blank canvas is written with
+`POST /api/recipes/{*path}` (subsequent saves are ordinary `PUT`s).
 
 Tab 3 (ETL Operational Table Relationships): `relationshipsAdapter.ts`'s
 `toOperationalGraph` combines `/api/relationships` + `/api/operational/summary` at a
@@ -164,12 +169,14 @@ resolve against the auto-detected repo root (first ancestor with both `pom.xml` 
 
 ## See also
 
-- `docs/adr/0001`–`0011` — the decisions behind this shape, with rejected alternatives.
+- `docs/adr/0001`–`0012` — the decisions behind this shape, with rejected alternatives.
 - `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
   `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,
   `docs/superpowers/specs/2026-07-31-operational-casuistics-design.md`,
-  `docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md` — full design specs.
+  `docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md`,
+  `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` — full design specs.
 - `docs/superpowers/plans/2026-07-29-etl360-foundation.md`,
   `docs/superpowers/plans/2026-07-30-synthetic-operational-data.md`,
   `docs/superpowers/plans/2026-07-31-operational-casuistics.md`,
-  `docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md` — task-by-task build logs.
+  `docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md`,
+  `docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md` — task-by-task build logs.

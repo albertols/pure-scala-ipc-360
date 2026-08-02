@@ -16,7 +16,9 @@
 // recipe actually draw AND validate clean" gate — mirrors scripts/viewer_sweep.mts (see
 // docs/superpowers/plans/2026-07-30-ipc-etl-viewer.md Task 7) for the Modifier corpus, per
 // docs/superpowers/plans/2026-07-31-etl-modifier.md Task 12 and extended by
-// docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md Task 18.
+// docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md Task 18 and by
+// docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md Tasks 6 and 17 (union/joiner source
+// nodes; connections-matrix coverage of every corpus source kind).
 import { recipeToCanvas } from '../frontend/src/api/recipeAdapter.ts'
 
 const BASE = process.env.ETL360_API ?? 'http://localhost:8080'
@@ -30,10 +32,25 @@ walk(await (await fetch(`${BASE}/api/tree`)).json() as Tree)
 if (paths.length < 86) { console.error(`recipe_sweep: only ${paths.length} recipes in tree (expected >= 86)`); process.exit(1) }
 
 type IpcRuleMeta = { id: string }
-type IpcRulesDto = { rules: IpcRuleMeta[]; typeAliases?: Record<string, string> }
+type IpcConnectionMeta = { mayFeed?: string[]; active?: boolean | null; exactly?: number; namedInputs?: string[] }
+type IpcRulesDto = {
+  rules: IpcRuleMeta[]
+  typeAliases?: Record<string, string>
+  connections?: Record<string, IpcConnectionMeta>
+}
 const catalog = await (await fetch(`${BASE}/api/ipc/rules`)).json() as IpcRulesDto
 const knownRuleIds = new Set(catalog.rules.map(r => r.id))
 if (!knownRuleIds.size) { console.error('recipe_sweep: GET /api/ipc/rules returned no rules'); process.exit(1) }
+// Task 17: the adjacency matrix (spec §6.2, docs/adr/0012-ipc-connection-matrix.md) is what
+// NodeConfigDialog's connection picker is driven by, so a kind the corpus actually uses as a
+// source but the matrix has no entry for is a silently un-connectable palette entry in the
+// GUI. `IpcConnectionsContractTest` proves the coverage in-JVM against
+// `IpcVocabulary.SOURCE_TYPES`; this re-proves it over the live wire against the kinds the
+// corpus REALLY carries (collected in the recipe loop below, alias-resolved), which is the
+// stricter of the two questions the frontend cares about.
+const connections = catalog.connections ?? {}
+if (!Object.keys(connections).length) { console.error('recipe_sweep: GET /api/ipc/rules served no connections matrix'); process.exit(1) }
+const corpusSourceKinds = new Set<string>()
 // Task 19: fetched once, passed to every recipeToCanvas() call below — same catalogue
 // the frontend's ETLModifier threads from useIpcRules(), so the sweep exercises the
 // canvas exactly as a real session would (anonymizer tokens resolved, not fallback boxes).
@@ -60,6 +77,7 @@ for (const p of paths.sort()) {
     for (const step of (dto.content as RecipeLike).steps ?? []) {
       for (const source of step.sources ?? []) {
         const canonical = typeAliases[source.type ?? ''] ?? source.type
+        if (canonical) corpusSourceKinds.add(canonical)
         if (canonical !== 'union' && canonical !== 'joiner') continue
         if (!source.name || !ids.has(source.name)) throw new Error(`${canonical} source '${source.name}' has no canvas node`)
       }
@@ -82,5 +100,11 @@ for (const p of paths.sort()) {
     }
   } catch (e) { failed++; console.error(`recipe_sweep FAIL ${p}: ${(e as Error).message}`) }
 }
-console.log(`recipe_sweep: ${paths.length - failed}/${paths.length} recipes render+validate (${warningChecks} warning-severity checks)`)
-process.exit(failed ? 1 : 0)
+// Counted separately from `failed` so the per-recipe tally stays honest: a missing
+// connections entry is a catalogue defect, not 86 broken recipes.
+const uncovered = [...corpusSourceKinds].filter(k => !(k in connections)).sort()
+if (uncovered.length) {
+  console.error(`recipe_sweep FAIL: GET /api/ipc/rules connections has no entry for corpus source kind(s) ${uncovered.join(', ')}`)
+}
+console.log(`recipe_sweep: ${paths.length - failed}/${paths.length} recipes render+validate (${warningChecks} warning-severity checks; ${corpusSourceKinds.size - uncovered.length}/${corpusSourceKinds.size} corpus source kinds covered by connections)`)
+process.exit(failed || uncovered.length ? 1 : 0)
