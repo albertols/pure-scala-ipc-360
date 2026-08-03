@@ -66,14 +66,16 @@ public class IpcController {
      * the GUI never needs a copy of the alias table to ask the question. An unknown token
      * resolves to itself, finds no rule, and lands on {@code "warn"} — never {@code "block"}.
      *
-     * <p>A missing/empty {@code pairings} answers with an empty map rather than a 4xx: this
-     * endpoint is a UI affordance, and the caller degrades by NOT constraining anything.
+     * <p>A null or absent {@code pairings} FIELD answers with an empty map rather than a
+     * 4xx: this endpoint is a UI affordance, and the caller degrades by NOT constraining
+     * anything. An absent BODY is a different case and is not handled here — Spring's
+     * {@code @RequestBody} defaults to {@code required = true}, so it never reaches this
+     * method; it surfaces as {@code ApiExceptionHandler}'s pre-existing global response.
      */
     @PostMapping("/fan-in")
     public FanInVerdictsDto fanIn(@RequestBody FanInRequestDto request) {
         Map<String, String> verdicts = new LinkedHashMap<>();
-        List<FanInPairingDto> pairings = request == null || request.pairings() == null
-            ? List.of() : request.pairings();
+        List<FanInPairingDto> pairings = request.pairings() == null ? List.of() : request.pairings();
         for (FanInPairingDto p : pairings) {
             if (p == null || p.key() == null) continue;
             List<String> existing = (p.existingSourceKinds() == null ? List.<String>of() : p.existingSourceKinds())

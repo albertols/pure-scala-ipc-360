@@ -1605,3 +1605,49 @@ compression would spend CPU shrinking a loopback copy).
 clean, `make validate-loop` PASS — viewer 81/81, recipe 86/86, 10/10 corpus source kinds
 covered by `connections`, relationships sweep all green. `types.gen.ts` verified byte-
 identical to a fresh regeneration against a booted backend, not hand-edited.
+
+### Residuals pass (2026-08-03)
+
+The non-blocking findings the fix wave triaged, closed before merge.
+
+- **A palette primitive that could never be inserted.** `Palette.tsx` offered `expression
+  step`, but `expression` is not an IPC kind in this recipe model at all — absent from all
+  20 `keySchema` kinds, all 11 `connections` entries and every `mayFeed` list, and never a
+  `type` on any corpus source or target. An EXPRESSION transformation's logic lives in each
+  target field's `transformation` call tree; `NODE_STYLES.expression` is the canvas's
+  generic fallback STYLE, not a kind. Probed first rather than assumed: against the REAL
+  `ipc-rules.json` with a draft carrying a node of all 13 kinds, the dialog offered 13
+  candidates with **0 enabled** and Insert permanently disabled (a `filter` control on the
+  same draft reached an enabled Insert). Entry removed, with the reasoning left where it
+  was. New `Palette.test.tsx` pins the palette against the real rules file, so an unbacked
+  primitive fails loudly instead of shipping as a dead button. **It also records that
+  `joiner` and `union` are dead by the identical mechanism** — named by the matrix as
+  source kinds, but absent from every `mayFeed` (only `joinerInput`/`unionInput` appear)
+  and with no `target:` schema. Both probed 0-of-13 enabled. Left in place as outside this
+  pass's brief; the pin makes any change to either fail.
+- **A banner that contradicted the button it described.** `fanInWarned` did not filter on
+  `c.legal` while `fanInTitle` did, so a candidate both illegal by `mayFeed` and `warn` by
+  fan-in rendered disabled with "filter may not feed sourceQualifier" while the yellow
+  banner named it and said "The link is allowed". Now `c.legal && c.verdict === 'warn'`.
+- **A vacuous escape-hatch assertion.** The "already-selected candidates stay clickable"
+  guard could not fail: dropping both `!fedBy.includes(...)`/`!feeds.includes(...)` clauses
+  left every test green, because the fixture's selected candidate is never asked about. Two
+  tests now put a genuine `block` on a SELECTED candidate (the verdict race the hatch
+  exists for), one per picker; both were proven to fail with the hatch removed.
+- **A false sentence beside an enabled button.** The failed-validate banner hardcoded
+  "Insert stays disabled until it succeeds", but `canInsert` short-circuits on
+  `bypassWholeRecipeValidation` — so a source table on a blank canvas said it beside an
+  ENABLED Insert. The sentence now branches on the same bypass the gate uses.
+- **Three doc overclaims about `POST /api/ipc/fan-in`.** `IpcController`'s `request == null`
+  clause is unreachable (`@RequestBody` defaults to `required = true`; probed: an absent
+  body 500s from `ApiExceptionHandler` without entering the handler). Clause dropped, and
+  `IpcController`'s javadoc, `FanInRequestDto`'s and `docs/architecture.md` narrowed from
+  "a missing body" to the null/absent `pairings` FIELD, which is what is genuinely handled
+  — `{}` and `{"pairings":null}` both keep a test, and both were proven to 500 without the
+  guard. ADR-0012 no longer presents `fanInVerdict` as internal-only now that
+  `architecture.md` cites it as the reference for the endpoint (still exactly 30 lines).
+  `frontend/AGENTS.md`'s `SaveBar.tsx` row named two importers of `ghostButtonStyle`; there
+  are five.
+
+**Gates:** frontend 363 (+6), backend 194 (+1) / 35 classes / 35 reports, `tsc --noEmit`
+clean.

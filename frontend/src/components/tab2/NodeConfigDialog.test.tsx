@@ -360,9 +360,91 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
 
     await waitFor(() => expect(fedBy.getByRole('button', { name: /FLT1/ })).toBeDisabled(), { timeout: 2000 })
     expect(fedBy.getByRole('button', { name: /FLT1/ })).toHaveAttribute('title', expect.stringMatching(/fan-in/i))
-    // The already-selected candidate stays clickable — a block must never trap
-    // the operator into a selection they cannot undo.
+    // SQ1 stays clickable — but only VACUOUSLY here (residuals pass): SQ1's own
+    // group is empty after self-exclusion, so it is never asked about and its
+    // verdict is `undefined`, which no `blocked` expression could disable. The
+    // escape hatch itself is pinned by the two tests below, where a SELECTED
+    // candidate genuinely carries a `block`.
     expect(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' })).not.toBeDisabled()
+  })
+
+  // Residuals pass (2026-08-03), finding 3. The escape hatch at
+  // `NodeConfigDialog.tsx`'s `blocked` expressions (`&& !fedBy.includes(...)` /
+  // `&& !feeds.includes(...)`) had no test that could fail: dropping BOTH
+  // clauses left all 42 tests in this file green. It is reachable through a
+  // verdict race — two selections land before the batched POST resolves, and
+  // the answer then blocks one of them. Without the hatch the operator is
+  // trapped: the only way out of an illegal group is to click the very
+  // candidate that is now disabled.
+  it('a SELECTED "fed by" candidate that turns out to be blocked stays clickable — the only way out of the group', async () => {
+    // Answered only for SQ1, so FLT1 is never blocked and both clicks below land
+    // on enabled buttons; SQ1's group ({filter}) becomes non-empty only once
+    // FLT1 is also selected, which is exactly the race.
+    serveFanIn({ 'fedBy:SQ1': 'block' })
+    renderDialog({ kind: 'aggregator', draft: FANIN_DRAFT })
+    const fedBy = within(screen.getByTestId('node-config-fedby'))
+
+    // Both selections happen before any response can land.
+    fireEvent.click(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+    fireEvent.click(fedBy.getByRole('button', { name: 'FLT1 — filter' }))
+
+    await waitFor(
+      () => expect(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+        .toHaveAttribute('title', expect.stringMatching(/fan-in/i)),
+      { timeout: 2000 },
+    )
+    expect(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' })).not.toBeDisabled()
+    // ...and clicking it genuinely deselects, rather than being inert.
+    fireEvent.click(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+    expect(screen.queryByText('From SQ1')).not.toBeInTheDocument()
+  })
+
+  it('a SELECTED "feeds" candidate that turns out to be blocked stays clickable too', async () => {
+    // MINI's T already reads S (a `table`), so `feeds:T` is asked on mount with
+    // a non-empty group — the click below lands before that answer does.
+    serveFanIn({ 'feeds:T': 'block' })
+    renderDialog({ kind: 'filter', draft: MINI })
+    const feeds = within(screen.getByTestId('node-config-feeds'))
+
+    fireEvent.click(feeds.getByRole('button', { name: 'T — table' }))
+
+    await waitFor(
+      () => expect(feeds.getByRole('button', { name: 'T — table' }))
+        .toHaveAttribute('title', expect.stringMatching(/fan-in/i)),
+      { timeout: 2000 },
+    )
+    expect(feeds.getByRole('button', { name: 'T — table' })).not.toBeDisabled()
+  })
+
+  // Residuals pass (2026-08-03), finding 2. `fanInWarned` did not filter on
+  // `c.legal` while `fanInTitle` did, so a candidate that is BOTH illegal by
+  // `mayFeed` and `warn` by fan-in rendered disabled with "filter may not feed
+  // sourceQualifier" while the yellow banner simultaneously named it and said
+  // "The link is allowed". Two mutually exclusive statements about one button.
+  it('the fan-in warning banner never names a candidate the matrix has already forbidden', async () => {
+    const draft: RecipeJson = {
+      steps: [
+        { target: { name: 'SRC1', type: 'table', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+        { target: { name: 'SRC2', type: 'table', fields: [{ name: 'B', dataType: 'String' }] }, sources: [] },
+        { target: { name: 'FLT1', type: 'filter', fields: [{ name: 'C', dataType: 'String' }] }, sources: [] },
+      ],
+      table: { targetTableNames: ['SRC1', 'SRC2', 'FLT1'], sourceTableNames: [] },
+    }
+    // Both candidates warn. SRC2 is a LEGAL upstream for a sourceQualifier
+    // (`table.mayFeed` names it) and so belongs in the banner; FLT1 is not
+    // (`filter.mayFeed` has no `sourceQualifier`) and must not appear.
+    serveFanIn({ 'fedBy:SRC2': 'warn', 'fedBy:FLT1': 'warn' })
+    renderDialog({ kind: 'sourceQualifier', draft })
+    const fedBy = within(screen.getByTestId('node-config-fedby'))
+    fireEvent.click(fedBy.getByRole('button', { name: 'SRC1 — table' }))
+
+    const banner = await screen.findByTestId('node-config-fanin-warning', {}, { timeout: 2000 })
+    expect(banner).toHaveTextContent(/SRC2/)
+    expect(banner).not.toHaveTextContent(/FLT1/)
+    // The contradiction this pins: FLT1 states the opposite on its own button.
+    expect(fedBy.getByRole('button', { name: /FLT1/ })).toBeDisabled()
+    expect(fedBy.getByRole('button', { name: /FLT1/ }))
+      .toHaveAttribute('title', 'filter may not feed sourceQualifier')
   })
 
   it('a warn verdict is surfaced without blocking — "cannot be determined" never refuses a link', async () => {
@@ -647,6 +729,22 @@ describe('NodeConfigDialog — empty-draft accommodation (Task 15)', () => {
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'SQ_FIRST' } })
     expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+  })
+
+  // Residuals pass (2026-08-03), finding 4. The failure banner's second clause
+  // was unconditional, but `canInsert` short-circuits on
+  // `bypassWholeRecipeValidation` — so this exact case (source table, blank
+  // canvas, validate rejecting) printed "Insert stays disabled until it
+  // succeeds" beside an ENABLED Insert. The sentence has to know about the
+  // bypass the gate already knows about.
+  it('the failed-validate banner does not claim Insert is disabled when the empty-draft bypass has already enabled it', async () => {
+    server.use(http.post('/api/recipes/validate', () => new HttpResponse(null, { status: 500 })))
+    renderDialog({ kind: SOURCE_TABLE_TYPE, draft: EMPTY_DRAFT })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+
+    expect(await screen.findByText(/Conformance check failed to run/i, {}, { timeout: 2000 })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled()
+    expect(screen.queryByText(/Insert stays disabled/i)).not.toBeInTheDocument()
   })
 
   it('a bare source table with no consuming step yet still becomes a legal "fed by" candidate for the next node', () => {

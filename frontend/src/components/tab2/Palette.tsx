@@ -31,7 +31,17 @@ export const PALETTE: { type: string; label: string; color: string }[] = [
   { type: 'java', label: 'java', color: NODE_STYLES.expression.color },
   { type: 'storedProcedure', label: 'storedProcedure', color: NODE_STYLES.expression.color },
   { type: 'table', label: 'target table', color: NODE_STYLES.target.color },
-  { type: 'expression', label: 'expression step', color: NODE_STYLES.expression.color },
+  // No `expression` entry, deliberately (residuals pass, 2026-08-03). In this
+  // recipe model an EXPRESSION transformation is not a node at all: its logic
+  // lives in each target field's `transformation` call tree — the thing the
+  // Inspector's formula widget edits and `ExpressionDock`/`_sqlTranslations_*`
+  // walk. `expression` is absent from all 20 `keySchema` kinds, from all 11
+  // `connections` entries and from every `mayFeed` list in `ipc-rules.json`, and
+  // appears as a `type` on no source or target in any corpus recipe;
+  // `NODE_STYLES.expression` above is the canvas's generic fallback STYLE, not a
+  // kind. An entry here could therefore only ever open a NodeConfigDialog with
+  // every candidate disabled and Insert permanently dead (probed: 13 candidates
+  // offered, 0 enabled). Palette.test.tsx pins this.
 ]
 
 export function Palette({ onAdd }: { onAdd: (type: string) => void }) {

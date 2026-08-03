@@ -108,4 +108,18 @@ class IpcControllerTest {
            .andExpect(status().isOk())
            .andExpect(jsonPath("$.verdicts.length()").value(0));
     }
+
+    /** The other half of "a missing {@code pairings} FIELD is not an error": an explicit
+     * JSON {@code null} reaches the handler as a record component that IS null, which is
+     * the case {@code IpcController} genuinely handles. (An absent BODY does not reach the
+     * handler at all — {@code @RequestBody} defaults to {@code required = true} — so it is
+     * not this endpoint's contract to state.) */
+    @Test
+    void fanInAcceptsAnExplicitlyNullPairingsField() throws Exception {
+        mvc.perform(post("/api/ipc/fan-in")
+               .contentType(MediaType.APPLICATION_JSON)
+               .content("{\"pairings\":null}"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.verdicts.length()").value(0));
+    }
 }

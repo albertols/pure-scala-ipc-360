@@ -10,8 +10,10 @@ import java.util.List;
  * {@code sources[]}, which differs per candidate — so a whole picker cannot be answered by
  * a single (group, candidate) question. One request per dialog state, not per button.
  *
- * <p>{@code pairings} may be null or empty; the answer is then an empty verdict map, never
- * an error (this endpoint is a UI affordance, and a 4xx here would surface as a broken
- * dialog rather than as the missing information it is).
+ * <p>The {@code pairings} FIELD may be null, absent or empty; the answer is then an empty
+ * verdict map, never an error (this endpoint is a UI affordance, and a 4xx here would
+ * surface as a broken dialog rather than as the missing information it is). A missing
+ * request BODY is not covered by that: {@code @RequestBody} is {@code required = true}, so
+ * Spring rejects it before the handler runs.
  */
 public record FanInRequestDto(List<FanInPairingDto> pairings) {}

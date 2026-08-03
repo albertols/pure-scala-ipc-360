@@ -4,18 +4,18 @@
 
 ## Context
 
-Tab 2's palette inserted `{name: "NEW_<TYPE>_<n>", type, fields: []}` — no sources, no refs —
-so nothing taught which IPC entities may legally connect. Deriving the pairings from the corpus
-is the obvious shortcut, but 86 anonymized recipes show one sample's 30 pairings, not IPC law.
+The palette inserted orphans (`{name: "NEW_<TYPE>_<n>", type, fields: []}`), so nothing taught
+which IPC entities may legally connect; the corpus shows one sample's 30 pairings, not IPC law.
 
 ## Decision
 
 Author a `connections` matrix from IPC semantics and the parser's step model in
 `backend/src/main/resources/ipc/ipc-rules.json`; the corpus only **validates** it —
 `IpcConnectionsContractTest` asserts all 30 observed pairings are permitted, so an over-strict or
-invented matrix fails at once. Served through the existing `GET /api/ipc/rules`, so the frontend
-keeps no second grammar copy. `IpcConnections.fanInVerdict` adds the fan-in rule adjacency cannot
-express, with nullable `active` (`table`, `java`, `joinerInput`) downgrading `block` to `warn`.
+invented matrix fails at once. It ships on `GET /api/ipc/rules`, so the frontend keeps no second
+grammar copy. `IpcConnections.fanInVerdict` adds the fan-in rule adjacency cannot express
+(nullable `active` — `table`, `java`, `joinerInput` — downgrades `block` to `warn`); being
+per-candidate it is asked in batches over `POST /api/ipc/fan-in`, never mirrored client-side.
 
 ## Consequences
 

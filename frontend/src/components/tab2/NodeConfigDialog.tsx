@@ -585,7 +585,14 @@ export function NodeConfigDialog({
     const verdict = fanInVerdicts[`${FAN_IN_FEEDS}${c.name}`]
     return { ...c, verdict, blocked: verdict === 'block' && !feeds.includes(c.name) }
   })
-  const fanInWarned = [...fedByCandidates, ...feedsCandidates].filter(c => c.verdict === 'warn')
+  // `c.legal` first, matching `fanInTitle`'s own precedence rule ("a pairing
+  // that is not permitted at all needs no fan-in commentary"). Without it the
+  // banner contradicted the button it described: a `filter` candidate offered
+  // to a `sourceQualifier` dialog is illegal by `mayFeed` AND `warn` by fan-in,
+  // so it rendered disabled with "filter may not feed sourceQualifier" while
+  // the banner named it and said "The link is allowed" (residuals pass,
+  // finding 2).
+  const fanInWarned = [...fedByCandidates, ...feedsCandidates].filter(c => c.legal && c.verdict === 'warn')
 
   const previewJson = isSourceTable
     ? { source: { name: trimmedName, type: 'table', ...props }, feeds }
@@ -865,8 +872,15 @@ export function NodeConfigDialog({
               : validation.isValidating ? '#7b88aa'
                 : validation.errors.length > 0 ? 'var(--red)' : 'var(--green)',
           }}>
+            {/* The second clause has to know about the bypass `canInsert`
+                already knows about: on a blank canvas a source table inserts
+                REGARDLESS of the whole-recipe validate, so "Insert stays
+                disabled until it succeeds" was false beside an enabled button
+                (residuals pass, finding 4). */}
             {validation.failed
-              ? 'Conformance check failed to run — Insert stays disabled until it succeeds.'
+              ? (bypassWholeRecipeValidation
+                ? 'Conformance check failed to run. It does not gate this insert — a step-less recipe cannot validate clean either way.'
+                : 'Conformance check failed to run — Insert stays disabled until it succeeds.')
               : validation.isValidating
                 ? 'Validating…'
                 : `${validation.errors.length} error${validation.errors.length === 1 ? '' : 's'} · ${validation.warnings.length} warning${validation.warnings.length === 1 ? '' : 's'}`}
