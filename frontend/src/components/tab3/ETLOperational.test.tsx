@@ -164,6 +164,14 @@ function renderTab() {
   )
 }
 
+// This end-to-end walk (full graph + search + filter + selection + detail
+// panel) sits right at vitest's 5000ms default when the suite's workers
+// contend on a loaded box — the same implicit-budget problem
+// ExpressionDock.test.tsx and ETLModifier.test.tsx already make explicit for
+// their own heavyweights. It asserts DOM structure, never render speed, so
+// the budget is the wrong contract to leave implicit.
+const HEAVY_WALK_TIMEOUT = 20_000
+
 describe('ETLOperational — real graph, cards, filters, search, selection', () => {
   it('renders the real relationships graph and drives search, layer filter, selection, and clearing', async () => {
     const { container } = renderTab()
@@ -224,7 +232,7 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     // Clear selection closes the detail panel.
     fireEvent.click(screen.getByText('Clear selection'))
     expect(screen.queryByText('Related (2)')).not.toBeInTheDocument()
-  })
+  }, HEAVY_WALK_TIMEOUT)
 
   it('renders a 14-cell history strip for a recipe with a full 14-day history', async () => {
     server.use(

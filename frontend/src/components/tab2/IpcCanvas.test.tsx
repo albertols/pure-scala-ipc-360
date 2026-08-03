@@ -148,3 +148,63 @@ describe('IpcCanvas', () => {
     expect(container.querySelector('[data-testid="ipc-node-status-tgt1"]')).not.toBeInTheDocument()
   })
 })
+
+// ─── UX round 4: hover affordance + reveal-on-select ─────────────────────────
+//
+// Round-4 report: boxes gave no hover feedback at all ("show the boxes more
+// clickable"), and selecting a right-edge node let the Inspector's dock
+// swallow it — the panel opened exactly over the node that was clicked, so
+// follow-up clicks landed on Inspector widgets instead. Hover is a stroke
+// highlight on the body; reveal is a pure pan adjustment (`revealPan`) the
+// canvas applies when the selected node sits outside the visible viewport.
+
+describe('IpcCanvas — hover highlight (UX round 4)', () => {
+  it('hovering a node body swaps its stroke to the kind color; leaving restores the border', () => {
+    const { container } = renderCanvas()
+    const body = container.querySelector('[data-testid="node-body-exp1"]')!
+    expect(body).toHaveAttribute('stroke', 'rgba(129,140,248,0.3)')
+
+    fireEvent.pointerOver(body)
+    expect(body).toHaveAttribute('stroke', '#818cf8')
+
+    fireEvent.pointerOut(body)
+    expect(body).toHaveAttribute('stroke', 'rgba(129,140,248,0.3)')
+  })
+
+  it('a selected node keeps its selection stroke while hovered (hover never downgrades selection)', () => {
+    const { container } = renderCanvas({ selectedNode: 'exp1' })
+    const body = container.querySelector('[data-testid="node-body-exp1"]')!
+    expect(body).toHaveAttribute('stroke', '#818cf8')
+    expect(body).toHaveAttribute('stroke-width', '2')
+
+    fireEvent.pointerOver(body)
+    expect(body).toHaveAttribute('stroke-width', '2')
+  })
+})
+
+describe('revealPan (UX round 4)', () => {
+  it('returns null when the node is fully inside the view', async () => {
+    const { revealPan } = await import('./IpcCanvas')
+    expect(revealPan({ w: 800, h: 600 }, { x: 30, y: 30 }, 1, { x: 100, y: 100, w: 195, h: 120 })).toBeNull()
+  })
+
+  it('shifts pan to pull a right/bottom-clipped node back inside the margin', async () => {
+    const { revealPan } = await import('./IpcCanvas')
+    const pan = revealPan({ w: 500, h: 300 }, { x: 30, y: 30 }, 1, { x: 400, y: 250, w: 195, h: 120 })!
+    expect(pan).toEqual({ x: 30 - 141, y: 30 - 116 })
+  })
+
+  it('prefers the left edge when a node is wider than the view itself', async () => {
+    const { revealPan } = await import('./IpcCanvas')
+    const pan = revealPan({ w: 200, h: 300 }, { x: 0, y: 0 }, 1, { x: 0, y: 50, w: 300, h: 100 })!
+    expect(pan.x).toBe(16)
+  })
+
+  it('accounts for zoom when computing the node’s screen rect', async () => {
+    const { revealPan } = await import('./IpcCanvas')
+    // At zoom 2 the node (x=300, w=195) spans screen 630→1020 with pan.x=30 —
+    // clipped by an 800px view: dx = (800-16) - 1020 = -236.
+    const pan = revealPan({ w: 800, h: 600 }, { x: 30, y: 30 }, 2, { x: 300, y: 40, w: 195, h: 120 })!
+    expect(pan.x).toBe(30 - 236)
+  })
+})

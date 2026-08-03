@@ -20,7 +20,8 @@ import { useValidation, nodeStatusFrom } from '../../api/ipcRules'
 import { Sidebar } from '../shared/Sidebar'
 import { useFilesystem } from '../shared/useFilesystem'
 import { InfoTooltip } from '../shared/InfoTooltip'
-import { IpcCanvas } from './IpcCanvas'
+import { IpcCanvas, bandOf } from './IpcCanvas'
+import { NODE_STYLES } from '../tab1/NodeBox'
 import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
@@ -427,6 +428,14 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
 
   const selectedNode = graph?.nodes.find(n => n.id === selectedNodeId) ?? null
 
+  // Transformations drawer tab (UX round 4): the canvas's middle band as a
+  // list, next to Source/Target — same membership rule as the bands themselves
+  // (`bandOf`, never a hand-kept kind list), so the two can't disagree about
+  // what counts as a transformation. Clicking a row funnels through
+  // `handleSelectNode`, which opens the Inspector exactly like clicking the
+  // node's own box.
+  const transformationNodes = graph?.nodes.filter(n => bandOf(n) === 'transformations') ?? []
+
   const handleSelectFile = (f: FSFile) => {
     setSelectedPath(f.path)
     if (f.recipe) {
@@ -533,8 +542,21 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     applyEdit(d => setFieldTransformation(d, stepName, fieldName, parseFormulaText(formula)))
   }
 
+  // UX round 4: ALWAYS select — no toggle. The old `prev === id ? null : id`
+  // made every second click on a node close the Inspector, so a habitual
+  // double-click flashed the panel open and shut ("it barely appears") and
+  // repeated clicks felt random. Closing is explicit now: the Inspector's ✕,
+  // or a clean click on the canvas background (both funnel through
+  // handleCloseInspector below).
   const handleSelectNode = (id: string) => {
-    setSelectedNodeId(prev => (id === prev ? null : id))
+    setSelectedNodeId(id)
+    setSelectedEdge(null)
+    setFocusedFormula(null)
+    setFocusedField(null)
+  }
+
+  const handleCloseInspector = () => {
+    setSelectedNodeId(null)
     setSelectedEdge(null)
     setFocusedFormula(null)
     setFocusedField(null)
@@ -931,6 +953,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                 onDropType={isViewing ? undefined : handlePaletteAdd}
                 onDropFormula={isViewing ? undefined : handleInsertExpression}
                 nodeStatus={nodeStatus}
+                onBackgroundClick={handleCloseInspector}
               />
             </div>
           }
@@ -951,6 +974,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                   onDelete={handleDeleteNode}
                   onFocusFormula={handleFocusFormula}
                   focusField={focusedField}
+                  onClose={handleCloseInspector}
                 />
               </div>
             ) : null
@@ -966,6 +990,50 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                     border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
                   }}>
                     <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
+                  </div>
+                </section>
+              ),
+            },
+            {
+              id: 'transformations', label: 'Transformations',
+              content: (
+                <section>
+                  <SectionHeader icon="⚙" label="Transformations" color="#818cf8" />
+                  <div style={{
+                    padding: '16px', background: 'var(--surface)',
+                    border: '1px solid rgba(129,140,248,0.2)', borderRadius: 7,
+                  }}>
+                    {transformationNodes.length === 0 ? (
+                      <div style={{ color: '#4a5570', fontSize: 11 }}>No transformation steps in this recipe.</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {transformationNodes.map(n => {
+                          const chip = NODE_STYLES[n.type] ?? NODE_STYLES.source
+                          return (
+                            <button
+                              key={n.id}
+                              onClick={() => handleSelectNode(n.id)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 8,
+                                width: '100%', textAlign: 'left', cursor: 'pointer',
+                                padding: '5px 8px', borderRadius: 5,
+                                background: 'transparent', border: '1px solid var(--border-subtle)',
+                              }}
+                            >
+                              <span style={{
+                                fontSize: 8.5, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace',
+                                color: chip.color, background: chip.bg, border: `1px solid ${chip.border}`,
+                                borderRadius: 4, padding: '2px 6px', flexShrink: 0,
+                              }}>{n.label}</span>
+                              <span style={{
+                                fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8',
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                              }}>{n.name}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 </section>
               ),
