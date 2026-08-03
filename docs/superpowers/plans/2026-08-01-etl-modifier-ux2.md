@@ -1620,15 +1620,30 @@ The non-blocking findings the fix wave triaged, closed before merge.
   candidates with **0 enabled** and Insert permanently disabled (a `filter` control on the
   same draft reached an enabled Insert). Entry removed, with the reasoning left where it
   was. New `Palette.test.tsx` pins the palette against the real rules file, so an unbacked
-  primitive fails loudly instead of shipping as a dead button. **It also records that
-  `joiner` and `union` are dead by the identical mechanism** — named by the matrix as
-  source kinds, but absent from every `mayFeed` (only `joinerInput`/`unionInput` appear)
-  and with no `target:` schema. Both probed 0-of-13 enabled. Left in place as outside this
-  pass's brief; the pin makes any change to either fail.
+  primitive fails loudly instead of shipping as a dead button. **The probe also found
+  `joiner` and `union` dead by the identical mechanism** — named by the matrix as source
+  kinds, but absent from every `mayFeed` (only `joinerInput`/`unionInput` appear) and with
+  no `target:` schema. Both probed 0-of-13 enabled. See the follow-up ruling below.
+- **The joiner/union follow-up: swapped, not removed** (coordinator ruling). Removing them
+  would take away the ability to build joins and unions at all, which is the opposite of
+  what was asked. `joiner` → `joinerInput` ("joiner side"), `union` → `unionInput` ("union
+  group") — labels taken from the wiki's own nouns (`joinerInput.md`: "one **side** (Master
+  or Detail)"; `unionInput.md`: "one **input group**"), colours unchanged. This is what the
+  model actually expresses: a joiner/union node is SYNTHESIZED from its inputs
+  (`recipeAdapter`'s `toJoinerNode`/`toUnionNode` read `sources[].joinerTables`/
+  `unionTables`), so the container is never a step target — only its inputs are, and the
+  corpus carries exactly that (`ASHPATH2` → `joinerInput`, `EARLYGLADE` → `unionInput`).
+  Re-probed end to end through a real `Palette` click: **all 10 non-sentinel entries now
+  reach an ENABLED Insert and commit through `onInsert`**, `joinerInput` and `unionInput`
+  included. The pin dropped its exceptions list and now states the real insertability
+  criterion — something may feed it, AND it has a `target:` key schema — with no
+  exceptions, proven to reject an added bogus entry.
 - **A banner that contradicted the button it described.** `fanInWarned` did not filter on
   `c.legal` while `fanInTitle` did, so a candidate both illegal by `mayFeed` and `warn` by
   fan-in rendered disabled with "filter may not feed sourceQualifier" while the yellow
-  banner named it and said "The link is allowed". Now `c.legal && c.verdict === 'warn'`.
+  banner named it and said "The link is allowed". Now `c.legal && c.verdict === 'warn'` —
+  and, on the coordinator's ruling, the same guard on the candidate's warn-yellow BORDER,
+  which carried the identical contradiction in visual form.
 - **A vacuous escape-hatch assertion.** The "already-selected candidates stay clickable"
   guard could not fail: dropping both `!fedBy.includes(...)`/`!feeds.includes(...)` clauses
   left every test green, because the fixture's selected candidate is never asked about. Two
@@ -1649,5 +1664,13 @@ The non-blocking findings the fix wave triaged, closed before merge.
   `frontend/AGENTS.md`'s `SaveBar.tsx` row named two importers of `ghostButtonStyle`; there
   are five.
 
-**Gates:** frontend 363 (+6), backend 194 (+1) / 35 classes / 35 reports, `tsc --noEmit`
-clean.
+**Known, not fixed here:** a `joinerInput`'s NAME must match `^.+\.(MASTER|DETAIL)$`
+(`IPC-TYP-JOINERINPUT-001`, severity error), so "JIN1" fails the real validate and Insert
+stays disabled — with that rule's message rendered in the dialog, so it teaches rather than
+traps. `unionInput` carries no naming rule. Also: `unionInput` has no `connections` entry of
+its own while `joinerInput` carries an explicit `mayFeed: []`, though both feed nothing —
+a cosmetic asymmetry in `ipc-rules.json`, deliberately not pinned (see `Palette.test.tsx`'s
+header for why the palette pin does not key on `connections` membership).
+
+**Gates:** frontend 365 (+8), backend 194 (+1) / 35 classes / 35 reports, `tsc --noEmit`
+clean. Backend untouched by the joiner/union follow-up.

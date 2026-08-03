@@ -445,6 +445,12 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
     expect(fedBy.getByRole('button', { name: /FLT1/ })).toBeDisabled()
     expect(fedBy.getByRole('button', { name: /FLT1/ }))
       .toHaveAttribute('title', 'filter may not feed sourceQualifier')
+    // ...and the same contradiction in VISUAL form: the warn-yellow border is
+    // for candidates the banner speaks about, so an already-forbidden candidate
+    // must not wear it either. SRC2 (legal + warn) proves the assertion is not
+    // vacuous — it DOES wear it.
+    expect(fedBy.getByRole('button', { name: /SRC2/ }).getAttribute('style')).toContain('--yellow')
+    expect(fedBy.getByRole('button', { name: /FLT1/ }).getAttribute('style')).not.toContain('--yellow')
   })
 
   it('a warn verdict is surfaced without blocking — "cannot be determined" never refuses a link', async () => {

@@ -723,7 +723,7 @@ export function NodeConfigDialog({
                     cursor: usable ? 'pointer' : 'not-allowed',
                     opacity: usable ? 1 : 0.4,
                     background: selected ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
-                    border: `1px solid ${selected ? '#4f9cf9' : c.verdict === 'warn' ? 'var(--yellow)' : 'var(--border)'}`,
+                    border: `1px solid ${selected ? '#4f9cf9' : c.legal && c.verdict === 'warn' ? 'var(--yellow)' : 'var(--border)'}`,
                     color: selected ? '#4f9cf9' : '#7b88aa',
                   }}
                 >{`${c.name} — ${c.kind}`}</button>
@@ -760,7 +760,7 @@ export function NodeConfigDialog({
                   cursor: usable ? 'pointer' : 'not-allowed',
                   opacity: usable ? 1 : 0.4,
                   background: selected ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
-                  border: `1px solid ${selected ? '#4f9cf9' : c.verdict === 'warn' ? 'var(--yellow)' : 'var(--border)'}`,
+                  border: `1px solid ${selected ? '#4f9cf9' : c.legal && c.verdict === 'warn' ? 'var(--yellow)' : 'var(--border)'}`,
                   color: selected ? '#4f9cf9' : '#7b88aa',
                 }}
               >{`${c.name} — ${c.kind}`}</button>
