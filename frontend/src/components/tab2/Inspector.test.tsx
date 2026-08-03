@@ -299,3 +299,53 @@ describe('Inspector — name (rename) and delete', () => {
     expect(onDelete).toHaveBeenCalledWith('FLT1')
   })
 })
+
+// ─── Declared source tables (UX round 3, issue 3) ────────────────────────────
+//
+// `recipeToCanvas` now paints a node for a `table.sourceTableNames` entry that
+// no step references (the first insertion into an empty draft, and four real
+// corpus lookup tables). Such a node resolves to NEITHER a step target NOR a
+// `sources[]` occurrence, so the schema lookup has nothing to read and the
+// Inspector used to bail out with `null` — the node was clickable and the dock
+// mounted empty. It gets its own honest panel instead: rename and delete both
+// work (`renameNode`/`deleteNode` already maintain `table.sourceTableNames`),
+// but there is no `sources[]` entry to hang per-kind properties off, so none
+// are offered rather than faked.
+describe('Inspector — declared source table', () => {
+  const declaredDraft: RecipeJson = {
+    steps: [{ target: { name: 'T', type: 'table', fields: [] }, sources: [] }],
+    table: { targetTableNames: ['T'], sourceTableNames: ['LKP_ONLY'] },
+  }
+
+  it('renders a panel (not nothing) and says why there are no properties yet', () => {
+    renderInspector({ draft: declaredDraft, node: node('LKP_ONLY', 'source') })
+
+    expect(screen.getByText('Edit — LKP_ONLY')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('LKP_ONLY')).toBeInTheDocument()
+    expect(screen.getByText(/no step reads from it yet/i)).toBeInTheDocument()
+  })
+
+  it('renaming it reports the new id so the Inspector stays attached', () => {
+    const { onChange } = renderInspector({ draft: declaredDraft, node: node('LKP_ONLY', 'source') })
+
+    fireEvent.change(screen.getByDisplayValue('LKP_ONLY'), { target: { value: 'LKP_RENAMED' } })
+    fireEvent.blur(screen.getByDisplayValue('LKP_RENAMED'))
+
+    const [next, selectId] = onChange.mock.calls[0]
+    expect(next.table.sourceTableNames).toEqual(['LKP_RENAMED'])
+    expect(selectId).toBe('LKP_RENAMED')
+  })
+
+  it('deletes through the same confirm control as every other node', () => {
+    const { onDelete } = renderInspector({ draft: declaredDraft, node: node('LKP_ONLY', 'source') })
+
+    fireEvent.click(screen.getByText('Delete'))
+    fireEvent.click(screen.getByText('Confirm delete'))
+    expect(onDelete).toHaveBeenCalledWith('LKP_ONLY')
+  })
+
+  it('still renders nothing for a node that is in neither the steps nor the table lists', () => {
+    const { container } = renderInspector({ draft: declaredDraft, node: node('GHOST', 'source') })
+    expect(container).toBeEmptyDOMElement()
+  })
+})

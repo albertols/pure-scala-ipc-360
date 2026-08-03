@@ -129,6 +129,63 @@
       { "key": "type", "parserType": "String", "required": true, "widget": "text" }
     ]
   },
+  "connections": {
+    "table": {
+      "mayFeed": ["sourceQualifier", "table", "normalizer"],
+      "active": null
+    },
+    "sourceQualifier": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
+    },
+    "union": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
+    },
+    "joiner": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
+    },
+    "router": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
+    },
+    "filter": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
+    },
+    "aggregator": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
+    },
+    "normalizer": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": true
+    },
+    "java": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": null
+    },
+    "storedProcedure": {
+      "mayFeed": ["table", "unionInput", "filter", "joinerInput", "aggregator",
+                  "router", "normalizer", "java", "storedProcedure"],
+      "active": false
+    },
+    "joinerInput": {
+      "mayFeed": [],
+      "exactly": 2,
+      "namedInputs": ["MASTER", "DETAIL"],
+      "active": null
+    }
+  },
   "rules": [
     { "id": "IPC-STR-001", "severity": "error",
       "statement": "steps must be a non-empty array",
@@ -243,7 +300,7 @@
       "statement": "every sources[].name resolves to a step target or a table.sourceTableNames entry",
       "parserRef": "parser/src/main/scala/io/pure360/ipc/model/recipe/AbstractItem.scala:7",
       "ipcRef": "", "wikiRef": "docs/ipc/rules.md#ipc-ref-003",
-      "corpusEvidence": "23 violations across 9 recipes, two distinct genuine-corpus sub-patterns: (1) 15 (10 union + 5 joiner) — e.g. CDM/m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR/_ETL_m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR.json @$.steps[0].sources[0].name — a joiner's or union's OUTPUT is referenced downstream by the transformation's own bare name (\"JNR_Ashshore\", \"Union_NETHUB\"), which never appears as a step target name (only its MASTER/DETAIL joinerInput children, or its per-group unionInput children, do); (2) 8, type: \"table\" sources absent from table.sourceTableNames — e.g. ETL/m_DWH_E_F_OVERSIGHT/_ETL_m_DWH_E_F_OVERSIGHT.json @$.steps[5].sources[1].name (\"DWH_MAPLEGROVE_TIMESPAN\") and ETL/m_DWH_E_F_OVERSIGHT_PLEDGES_MONTHLY/_ETL_m_DWH_E_F_OVERSIGHT_PLEDGES_MONTHLY.json @$.steps[4].sources[1].name (\"ODS_F_MIS_PACTS\") — confirmed against the source XML: these table names appear ONLY inside embedded SQL text (\"Source Filter\"/\"User Defined Join\"/\"Lookup Sql Override\"/\"Lookup table name\" attributes), never as an actual <SOURCE> element, so table.sourceTableNames (built strictly from declared <SOURCE> elements, XMLDataUtils.getSourceNames) never captures them even though some source-extraction step turned them into a type: \"table\" sources[] entry. Genuine gap between two source-provenance mechanisms, not a rule-completeness bug." },
+      "corpusEvidence": "23 violations across 9 recipes, unchanged by Task 6's union/joiner canvas nodes (sub-project 9): re-run against the live IpcRuleEngine over all 86 corpus recipes after Task 6 landed (2026-08-01) reproduces the identical 23/9 split with the same two sub-patterns below — Task 6's canvas node is synthesized directly off the same sources[].unionTables/joinerTables metadata this rule already inspects (recipeAdapter.ts's toUnionNode/toJoinerNode), never off a new steps[].target entry for the union/joiner itself, so the JSON-level referential gap this rule tests is untouched by a canvas-only fix — a canvas node existing is not the same fact as a sources[].name resolving in the recipe JSON. Two distinct genuine-corpus sub-patterns: (1) 15 (10 union + 5 joiner) — e.g. CDM/m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR/_ETL_m_DM_LKP_CONTACTREF_MEMBER_NETHUB_PAIR.json @$.steps[0].sources[0].name — a joiner's or union's OUTPUT is referenced downstream by the transformation's own bare name (\"JNR_Ashshore\", \"Union_NETHUB\"), which never appears as a step target name (only its MASTER/DETAIL joinerInput children, or its per-group unionInput children, do); (2) 8, type: \"table\" sources absent from table.sourceTableNames — e.g. ETL/m_DWH_E_F_OVERSIGHT/_ETL_m_DWH_E_F_OVERSIGHT.json @$.steps[5].sources[1].name (\"DWH_MAPLEGROVE_TIMESPAN\") and ETL/m_DWH_E_F_OVERSIGHT_PLEDGES_MONTHLY/_ETL_m_DWH_E_F_OVERSIGHT_PLEDGES_MONTHLY.json @$.steps[4].sources[1].name (\"ODS_F_MIS_PACTS\") — confirmed against the source XML: these table names appear ONLY inside embedded SQL text (\"Source Filter\"/\"User Defined Join\"/\"Lookup Sql Override\"/\"Lookup table name\" attributes), never as an actual <SOURCE> element, so table.sourceTableNames (built strictly from declared <SOURCE> elements, XMLDataUtils.getSourceNames) never captures them even though some source-extraction step turned them into a type: \"table\" sources[] entry. Genuine gap between two source-provenance mechanisms, not a rule-completeness bug." },
     { "id": "IPC-REF-004", "severity": "error",
       "statement": "no field may reference its own step",
       "parserRef": "parser/src/main/scala/io/pure360/ipc/xmltojson/recipe/RecipeGenerator.scala:259",

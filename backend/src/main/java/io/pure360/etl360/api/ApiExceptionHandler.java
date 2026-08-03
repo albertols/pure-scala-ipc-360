@@ -3,6 +3,7 @@ package io.pure360.etl360.api;
 import io.pure360.etl360.service.support.InvalidCorpusPathException;
 import io.pure360.etl360.service.support.InvalidDateException;
 import io.pure360.etl360.service.support.NotFoundException;
+import io.pure360.etl360.service.support.RecipeAlreadyExistsException;
 import io.pure360.etl360.service.support.StaleRecipeException;
 import io.pure360.etl360.service.support.UnreadableFileException;
 import io.pure360.etl360.service.support.XmlUnparsableException;
@@ -37,6 +38,13 @@ public class ApiExceptionHandler {
     ProblemDetail stale(StaleRecipeException e) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
         pd.setTitle("Recipe modified since load");
+        return pd;
+    }
+
+    @ExceptionHandler(RecipeAlreadyExistsException.class)
+    ProblemDetail alreadyExists(RecipeAlreadyExistsException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+        pd.setTitle("Recipe already exists");
         return pd;
     }
 

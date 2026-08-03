@@ -15,6 +15,7 @@ import io.pure360.etl360.service.support.HistorySidecar;
 import io.pure360.etl360.service.support.InvalidCorpusPathException;
 import io.pure360.etl360.service.support.NotFoundException;
 import io.pure360.etl360.service.support.PathResolver;
+import io.pure360.etl360.service.support.RecipeAlreadyExistsException;
 import io.pure360.etl360.service.support.StaleRecipeException;
 import io.pure360.etl360.service.support.UnreadableFileException;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,8 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -106,6 +109,41 @@ public class RecipeService {
             }
             archive(file);
             writeAtomic(file, request.content());
+            return recipe(relJsonPath);
+        }
+    }
+
+    /**
+     * Creates a brand-new recipe file at {@code relJsonPath} and returns the fresh
+     * {@link RecipeDto}. Deliberately creates a directory inside the corpus — sub-project 8's
+     * final review caught {@code LayoutService} doing exactly that as an <em>accidental</em>
+     * side effect of a missing existence check (see its javadoc), so here every guard runs, in
+     * order, before anything touches the filesystem: {@code relJsonPath} must resolve to exactly
+     * {@code <layer>/<mapping>/_ETL_<mapping>.json} where {@code <layer>} is an existing
+     * top-level directory of the corpus root ({@link #creatableRecipeFile}, 400 otherwise); the
+     * file must not already exist ({@link RecipeAlreadyExistsException}, 409 — this endpoint
+     * never upserts, which is why it is a {@code POST} that conflicts rather than a {@code PUT}
+     * that overwrites); and {@code content} must validate with zero errors (400 otherwise).
+     * Only the {@code <mapping>} directory is ever created — a nonexistent {@code <layer>} is
+     * rejected outright by {@link #creatableRecipeFile}, never stood up.
+     */
+    public RecipeDto create(String relJsonPath, JsonNode content) {
+        synchronized (writeLock) {
+            Path file = creatableRecipeFile(relJsonPath);
+            if (Files.exists(file)) {
+                throw new RecipeAlreadyExistsException("Recipe already exists at " + relJsonPath);
+            }
+            RecipeValidationDto validation = validate(content);
+            if (!validation.valid()) {
+                throw new InvalidCorpusPathException(
+                    "Recipe body failed validation for " + relJsonPath + ": " + validation.errors());
+            }
+            try {
+                Files.createDirectories(file.getParent()); // <mapping> only — <layer> already verified to exist
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            writeAtomic(file, content);
             return recipe(relJsonPath);
         }
     }
@@ -213,6 +251,50 @@ public class RecipeService {
             throw new InvalidCorpusPathException("Cannot write inside the history sidecar: " + relJsonPath);
         }
         return file;
+    }
+
+    /** Sandbox + shape gate for {@link #create}: {@code relJsonPath} must end {@code .json},
+     * resolve inside the corpus, and normalize to exactly three segments —
+     * {@code <layer>/<mapping>/_ETL_<mapping>.json} — where {@code <layer>} is an existing
+     * top-level directory of the corpus root, enumerated fresh via {@link #existingLayers()} on
+     * every call (never hardcoded, never cached) so a new corpus layer needs no code change.
+     * Throws {@link InvalidCorpusPathException} (400) otherwise. Deliberately does NOT check
+     * existence of the file itself — {@link #create} does that separately so it can raise the
+     * more specific {@link RecipeAlreadyExistsException} (409). */
+    private Path creatableRecipeFile(String relJsonPath) {
+        if (!relJsonPath.endsWith(JSON_EXT)) {
+            throw new InvalidCorpusPathException("Recipe path must end with .json: " + relJsonPath);
+        }
+        Path file = paths.insideCorpus(relJsonPath); // throws InvalidCorpusPathException on sandbox escape
+        Path relative = paths.corpusRoot().relativize(file);
+        String shapeMessage = "Recipe path must be <layer>/<mapping>/" + RECIPE_PREFIX
+            + "<mapping>.json: " + relJsonPath;
+        if (relative.getNameCount() != 3) {
+            throw new InvalidCorpusPathException(shapeMessage);
+        }
+        String layer = relative.getName(0).toString();
+        String mapping = relative.getName(1).toString();
+        String expectedFileName = RECIPE_PREFIX + mapping + JSON_EXT;
+        if (!relative.getName(2).toString().equals(expectedFileName)) {
+            throw new InvalidCorpusPathException(shapeMessage);
+        }
+        if (!existingLayers().contains(layer)) {
+            throw new InvalidCorpusPathException(
+                "Unknown corpus layer (not an existing top-level directory): " + layer);
+        }
+        return file;
+    }
+
+    /** Top-level directory names of the corpus root, listed fresh on every call — never a
+     * hardcoded list, never cached — so a layer added to the corpus is picked up immediately. */
+    private Set<String> existingLayers() {
+        try (Stream<Path> list = Files.list(paths.corpusRoot())) {
+            return list.filter(Files::isDirectory)
+                .map(p -> p.getFileName().toString())
+                .collect(Collectors.toSet());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /** Archives under a caller-held {@link #writeLock}, so this alone doesn't need its own

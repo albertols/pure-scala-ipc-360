@@ -1,0 +1,1676 @@
+# ETL Modifier UX Round 2 — Implementation Plan (sub-project 9)
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Make Tab 2 a usable editor (legible expression dock, fixed-height layout with a docked Inspector, resizable regions, undo/redo) and a safe authoring surface (union/joiner nodes, an IPC adjacency matrix, a pre-add configuration dialog that cannot produce orphans, and recipes authored from scratch).
+
+**Architecture:** Part 1 restructures Tab 2's body from a scrolling document into a fixed-height editor — a `useResizableLayout` hook owns region sizes, an `EditorLayout` shell composes toolbar / canvas / docked Inspector / collapsible drawer with draggable splitters, and `ETLModifier` becomes state + composition on top of it. Part 2 adds semantics: `recipeToCanvas` synthesizes nodes for `union`/`joiner` sources, a new authored `connections` matrix in `ipc-rules.json` (corpus-validated, never corpus-derived) drives a `NodeConfigDialog` that gates insertion behind validation, and a registry endpoint plus a `POST` create endpoint enable authoring a recipe on a blank canvas.
+
+**Tech Stack:** React 19 / TypeScript / Vite, Vitest + React Testing Library + MSW, Java 17 / Spring Boot 3.3, JUnit 5 + AssertJ + MockMvc, Node ≥22.6 `--experimental-strip-types` for sweeps.
+
+**Spec:** `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` — section references below (`spec §6.2`) point there.
+
+## Global Constraints
+
+- **No new frontend runtime dependencies.** `frontend/package.json` `dependencies` stays exactly `@tanstack/react-query`, `react`, `react-dom`. No canvas library, no virtualization library, no drag library, no router.
+- **No parser changes.** No file under `parser/src/main/scala` is modified.
+- **No corpus byte changes.** No `_ETL_*.json`, `.xml`/`.XML`, or DDL JSON under `parser/src/main/resources/xmltobq` is edited. A recipe authored during manual testing must **not** be committed — it would move the contract-test floors.
+- **`EtlCanvas.tsx` and `NodeBox.tsx` are not modified by any task.** Tab 1's canvas stays byte-identical. `ETLViewer.tsx`, `ETLOperational.tsx` and `ETLDag.tsx` are not modified either — only Tab 2 restructures.
+- **Figma visual contract (ADR-0005):** new UI composes only existing tokens — `--surface`, `--surface-2`, `--surface-3`, `--border`, `--border-subtle`, `--bg`, `--red`, `--green`, `--cyan`, `--text-dim`, and `NODE_STYLES` kind colors. No new design token. Spec §10's seven sanctioned departures are the whole permitted visual surface.
+- **`RecipeValidationDto.valid` stays `errors.isEmpty()`.** Warnings never block a save or an insert.
+- **Corpus floors unchanged:** 81 XMLs, 86 recipes, 33 L2L entries.
+- **Report backend test counts from `mvn clean test`, never a warm build** — `backend/target/surefire-reports/` accumulates reports from deleted classes. Cross-check `ls backend/target/surefire-reports/*.txt | wc -l` against `find backend/src/test/java -name '*Test.java' | wc -l`; they must match.
+- **`types.gen.ts` is generated**, never hand-edited. Refresh with `make generate-api` against a running backend.
+- **Staging discipline:** stage explicit paths. **NEVER `git add -A`** — `.claude/settings.json` and `first_prompt.md` are user-local untracked files.
+- **Ledger:** tick this plan's checkboxes and stage the plan file in the same commit as the task's changes.
+- Dot-refs (`TABLE.FIELD`) are preserved verbatim everywhere.
+
+## Baselines at plan authorship
+
+Backend **164** tests (clean build, 32 classes = 32 reports). Frontend **239** tests. `tsc --noEmit` clean. `make validate-loop` PASS (viewer 81/81, recipe 86/86).
+
+## File Structure
+
+**Frontend — new:**
+
+| File | Responsibility |
+|---|---|
+| `src/components/tab2/useResizableLayout.ts` | Region sizes + drag math + `localStorage` persistence. No JSX. |
+| `src/components/tab2/EditorLayout.tsx` | The shell: toolbar slot, canvas slot, docked inspector slot, collapsible drawer, two splitters, corner grip. Presentational; owns no recipe state. |
+| `src/components/tab2/EditorToolbar.tsx` | Compact identity + actions row (filename, layer, conformance chip, undo/redo, Discard/Save, history/raw/focus). |
+| `src/components/tab2/useDraftHistory.ts` | Bounded undo/redo stack over `RecipeJson`. |
+| `src/components/tab2/NodeConfigDialog.tsx` | Pre-add configuration modal: schema form + connection picker + live preview/validation. |
+| `src/components/tab2/RegistrySearch.tsx` | Searchable table/DDL/expression picker used by the dialog and the new-recipe flow. |
+| `src/components/tab2/NewRecipeDialog.tsx` | Layer + mapping-name picker that opens a blank canvas. |
+| `src/api/registryQueries.ts` | `useRegistry()` over `GET /api/registry`. |
+
+**Backend — new:** `api/RegistryController.java`, `api/dto/RegistryDto.java`, `api/dto/RegistryTableDto.java`, `service/RegistryService.java`, `service/ipc/IpcConnections.java`.
+
+**Modified:** `ExpressionDock.tsx`, `ETLModifier.tsx` (state + composition only), `recipeAdapter.ts`, `recipeEdits.ts`, `queries.ts`, `types.gen.ts`, `IpcCatalog.java`, `IpcController.java`, `RecipeController.java`, `RecipeService.java`, `ipc-rules.json`, `scripts/recipe_sweep.mts`.
+
+---
+
+# Part 1 — Editor usability
+
+### Task 1: Expression dock — clamp, cap, and an honest count
+
+**Files:**
+- Modify: `frontend/src/components/tab2/ExpressionDock.tsx`
+- Modify: `frontend/src/components/tab2/ExpressionDock.test.tsx`
+
+**Interfaces:**
+- Consumes: nothing new.
+- Produces: nothing consumed by later tasks — self-contained presentation fix.
+
+**Why:** the dock mounts all 1909 recipe-origin entries unclamped in a 260 px column. Median formula is 79 chars but the max is **53 881** (~1585 wrapped lines), and `wordBreak: 'break-all'` shatters identifiers mid-token. Result is a wall of horizontal lines.
+
+- [x] **Step 1: Write the failing tests**
+
+Append to `ExpressionDock.test.tsx`:
+
+```tsx
+const LONG = 'CONCAT(' + 'X'.repeat(4000) + ')'
+
+it('clamps a long formula and expands it on click', () => {
+  render(<ExpressionDock entries={[
+    { mappingPath: 'CDM/m_A', layer: 'CDM', transformation: 'EXP_A', port: 'P', formula: LONG, origin: 'recipe' },
+  ]} isLoading={false} error={null} filter="" onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+  const pre = screen.getByText(LONG)
+  expect(pre).toHaveStyle({ overflow: 'hidden' })      // clamped
+  fireEvent.click(screen.getByRole('button', { name: /expand/i }))
+  expect(screen.getByText(LONG)).not.toHaveStyle({ overflow: 'hidden' })
+})
+
+it('caps the rendered list and states truthfully how many are shown', () => {
+  const many = Array.from({ length: 300 }, (_, i) => ({
+    mappingPath: 'CDM/m_A', layer: 'CDM', transformation: `EXP_${i}`, port: 'P',
+    formula: `LTRIM(C${i})`, origin: 'recipe' as const,
+  }))
+  render(<ExpressionDock entries={many} isLoading={false} error={null} filter=""
+    onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+  expect(screen.getAllByText(/^EXP_\d+\.P$/)).toHaveLength(150)
+  expect(screen.getByText(/showing 150 of 300/i)).toBeInTheDocument()
+})
+
+it('shows no footer when nothing is hidden', () => {
+  render(<ExpressionDock entries={[
+    { mappingPath: 'CDM/m_A', layer: 'CDM', transformation: 'EXP_A', port: 'P', formula: 'LTRIM(A)', origin: 'recipe' },
+  ]} isLoading={false} error={null} filter="" onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+  expect(screen.queryByText(/showing/i)).not.toBeInTheDocument()
+})
+```
+
+- [x] **Step 2: Run to verify they fail**
+
+Run: `cd frontend && pnpm test src/components/tab2/ExpressionDock.test.tsx`
+Expected: FAIL — no expand button, 300 rows rendered, no footer.
+
+- [x] **Step 3: Implement**
+
+Add above the component:
+
+```tsx
+/** Rendered-row cap. The archive is 1909 recipe-origin entries corpus-wide; mounting
+ * them all is both unreadable and a real DOM cost. The filter above remains the way to
+ * reach any entry, so this caps what is PAINTED, never what is reachable.
+ * EXPORTED because Task 13's `RegistrySearch` caps its list the same way — one constant,
+ * not two that can drift. */
+export const RENDER_CAP = 150
+/** Clamp height for a collapsed formula: 3 lines at fontSize 10 / lineHeight 1.6. */
+const CLAMP_PX = 10 * 1.6 * 3
+```
+
+Inside the component, after `filtered`:
+
+```tsx
+const shown = filtered.slice(0, RENDER_CAP)
+const [expanded, setExpanded] = useState<Set<number>>(new Set())
+const toggle = (i: number) => setExpanded(prev => {
+  const next = new Set(prev)
+  if (!next.delete(i)) next.add(i)
+  return next
+})
+```
+
+Map over `shown` instead of `filtered`. Give each row's header an expand control before the
+`CopyButton`:
+
+```tsx
+<button
+  aria-label={expanded.has(i) ? 'Collapse formula' : 'Expand formula'}
+  onClick={() => toggle(i)}
+  style={{
+    background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+    color: '#4a5570', fontSize: 9, fontFamily: 'JetBrains Mono, monospace',
+  }}
+>{expanded.has(i) ? '▾' : '▸'}</button>
+```
+
+Replace the `<pre>` style with:
+
+```tsx
+<pre style={{
+  margin: 0, padding: '6px 8px',
+  fontSize: 10, color: '#a78bfa',
+  fontFamily: 'JetBrains Mono, monospace',
+  whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.6,
+  ...(expanded.has(i)
+    ? { maxHeight: 260, overflowY: 'auto' as const }
+    : { maxHeight: CLAMP_PX, overflow: 'hidden' as const }),
+}}>{e.formula}</pre>
+```
+
+After the list, render the footer only when something is hidden:
+
+```tsx
+{filtered.length > shown.length && (
+  <div style={{ fontSize: 9, color: '#4a5570', padding: '4px 2px', fontFamily: 'JetBrains Mono, monospace' }}>
+    {`showing ${shown.length} of ${filtered.length} · refine the filter`}
+  </div>
+)}
+```
+
+Import `useState` from `react`.
+
+- [x] **Step 4: Run to verify they pass**
+
+Run: `cd frontend && pnpm test src/components/tab2/ExpressionDock.test.tsx && npx tsc --noEmit`
+Expected: PASS.
+
+- [x] **Step 5: Commit**
+
+```bash
+git add frontend/src/components/tab2/ExpressionDock.tsx \
+        frontend/src/components/tab2/ExpressionDock.test.tsx \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "fix(modifier): make the expression dock legible — clamp, cap, break-word
+
+Task 1. 1909 entries mounted unclamped in a 260px column with wordBreak:break-all;
+one corpus formula is 53,881 chars (~1585 wrapped lines). Formulas now clamp to 3
+lines with expand, the list caps at 150 painted rows with a truthful count, and
+identifiers wrap at boundaries instead of shattering."
+```
+
+---
+
+### Task 2: `useResizableLayout` — region sizes, drag math, persistence
+
+**Files:**
+- Create: `frontend/src/components/tab2/useResizableLayout.ts`
+- Create: `frontend/src/components/tab2/useResizableLayout.test.ts`
+
+**Interfaces:**
+- Consumes: nothing.
+- Produces:
+
+```ts
+export interface LayoutSizes { canvasH: number; inspectorW: number; drawerH: number }
+/** Minimums for the three RESIZABLE dimensions — keyed exactly by `LayoutSizes`, so
+ * `setSize` can index it without a cast. */
+export const LAYOUT_MIN: Record<keyof LayoutSizes, number> =
+  { canvasH: 240, inspectorW: 280, drawerH: 0 }
+/** The canvas's minimum WIDTH is not resizable state — the canvas takes whatever the
+ * inspector leaves — so it is a plain layout constant consumed by `EditorLayout`'s
+ * `min-width`, deliberately kept out of `LayoutSizes`. */
+export const CANVAS_MIN_W = 360
+export const LAYOUT_DEFAULT: LayoutSizes = { canvasH: 520, inspectorW: 340, drawerH: 0 }
+export const LAYOUT_STORAGE_KEY = 'etl360.tab2.layout'
+export function useResizableLayout(): {
+  sizes: LayoutSizes
+  setSize: (key: keyof LayoutSizes, px: number) => void
+  resetSizes: () => void
+}
+```
+
+`setSize` clamps with `Math.max(LAYOUT_MIN[key], px)` and persists to `localStorage` under
+`LAYOUT_STORAGE_KEY`.
+
+**Why `localStorage` and not the layout sidecar:** `_layout_*.json` holds *node positions*, which describe the recipe and are worth committing and sharing. Splitter sizes describe one person's screen. Keep that line sharp (spec §5.3).
+
+- [x] **Step 1: Write the failing test**
+
+Create `useResizableLayout.test.ts` using `renderHook` from `@testing-library/react`:
+
+```ts
+import { renderHook, act } from '@testing-library/react'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { useResizableLayout, LAYOUT_DEFAULT, LAYOUT_MIN, LAYOUT_STORAGE_KEY } from './useResizableLayout'
+
+describe('useResizableLayout', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('starts at the defaults when nothing is stored', () => {
+    const { result } = renderHook(() => useResizableLayout())
+    expect(result.current.sizes).toEqual(LAYOUT_DEFAULT)
+  })
+
+  it('clamps below the minimum rather than accepting it', () => {
+    const { result } = renderHook(() => useResizableLayout())
+    act(() => result.current.setSize('canvasH', 10))
+    expect(result.current.sizes.canvasH).toBe(LAYOUT_MIN.canvasH)
+  })
+
+  it('persists across a remount', () => {
+    const first = renderHook(() => useResizableLayout())
+    act(() => first.result.current.setSize('inspectorW', 420))
+    first.unmount()
+    const second = renderHook(() => useResizableLayout())
+    expect(second.result.current.sizes.inspectorW).toBe(420)
+  })
+
+  it('survives corrupt stored JSON by falling back to defaults', () => {
+    localStorage.setItem(LAYOUT_STORAGE_KEY, '{not json')
+    const { result } = renderHook(() => useResizableLayout())
+    expect(result.current.sizes).toEqual(LAYOUT_DEFAULT)
+  })
+
+  it('resetSizes returns to defaults and clears storage', () => {
+    const { result } = renderHook(() => useResizableLayout())
+    act(() => result.current.setSize('canvasH', 700))
+    act(() => result.current.resetSizes())
+    expect(result.current.sizes).toEqual(LAYOUT_DEFAULT)
+    expect(localStorage.getItem(LAYOUT_STORAGE_KEY)).toBeNull()
+  })
+})
+```
+
+- [x] **Step 2: Run to verify it fails**
+
+Run: `cd frontend && pnpm test src/components/tab2/useResizableLayout.test.ts`
+Expected: FAIL — module not found.
+
+- [x] **Step 3: Implement the hook**
+
+Read stored JSON once in a lazy `useState` initializer, merge over `LAYOUT_DEFAULT` (so a
+stored object missing a key still yields a complete `LayoutSizes`), and guard the parse in a
+`try/catch` returning the defaults. `setSize` clamps with `Math.max(LAYOUT_MIN[key], px)`,
+writes the whole object back to `localStorage`, and returns the new state. Wrap every
+`localStorage` access in `try/catch` — a browser with storage disabled must degrade to
+in-memory sizes rather than throw.
+
+- [x] **Step 4: Run to verify it passes**
+
+Run: `cd frontend && pnpm test src/components/tab2/useResizableLayout.test.ts && npx tsc --noEmit`
+Expected: PASS, 5 tests.
+
+- [x] **Step 5: Commit**
+
+```bash
+git add frontend/src/components/tab2/useResizableLayout.ts \
+        frontend/src/components/tab2/useResizableLayout.test.ts \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): useResizableLayout — clamped region sizes persisted to localStorage
+
+Task 2. Splitter sizes describe one person's screen, so they live in localStorage —
+unlike node positions, which describe the recipe and stay in the committed
+_layout_*.json sidecar. Corrupt or unavailable storage degrades to defaults."
+```
+
+---
+
+### Task 3: `EditorLayout` shell — regions, splitters, corner grip
+
+**Files:**
+- Create: `frontend/src/components/tab2/EditorLayout.tsx`
+- Create: `frontend/src/components/tab2/EditorLayout.test.tsx`
+
+**Interfaces:**
+- Consumes: `useResizableLayout` (Task 2).
+- Produces:
+
+```tsx
+export function EditorLayout(props: {
+  toolbar: React.ReactNode
+  canvas: React.ReactNode
+  inspector: React.ReactNode | null   // null → canvas spans full width, no splitter
+  drawer: { id: string; label: string; content: React.ReactNode }[]
+}): React.ReactElement
+```
+
+**Why:** this is spec §5.2's shell. It owns geometry and nothing else — no recipe state, no
+mutators — so Task 4 can move `ETLModifier` onto it without the two concerns tangling.
+
+- [x] **Step 1: Write the failing test**
+
+Cover: all four slots render; a `pointerdown` + `pointermove` + `pointerup` on the vertical
+splitter calls through to a size change (assert the inspector element's inline `width` changes);
+the same for the horizontal splitter and `canvasH`; the corner grip changes both in one drag;
+clicking a drawer tab reveals that tab's content and collapses when clicked again; and with
+`inspector={null}` no vertical splitter renders. Use `container.querySelector('[data-splitter="vertical"]')`
+etc. — give each splitter and the grip a stable `data-splitter` / `data-grip` attribute for this.
+
+Note jsdom does no layout, so assert on the inline styles the hook drives, not on measured
+geometry.
+
+- [x] **Step 2: Run to verify it fails**
+
+Run: `cd frontend && pnpm test src/components/tab2/EditorLayout.test.tsx`
+Expected: FAIL — module not found.
+
+- [x] **Step 3: Implement**
+
+Structure: an outer `display: flex; flex-direction: column; flex: 1; overflow: hidden`. Row 1 is
+`toolbar`. Row 2 is `display: flex; flex: 1; min-height: 0` containing the canvas region
+(`flex: 1`, `min-width: CANVAS_MIN_W`), a 4 px vertical splitter with
+`cursor: col-resize`, and the inspector at `width: sizes.inspectorW`. Row 3 is a 4 px horizontal
+splitter with `cursor: row-resize`; row 4 is the drawer at `height: sizes.drawerH` with a tab
+strip that is always visible even when collapsed.
+
+The corner grip is a 12×12 element absolutely positioned at the canvas region's bottom-right
+with `cursor: nwse-resize`, adjusting `canvasH` and `inspectorW` together (dragging left widens
+the inspector, so its delta is negated).
+
+Drag handling mirrors `IpcCanvas`'s existing pointer-drag idiom: `onPointerDown` records the
+start client coordinate and the start size, `onPointerMove` on `window` computes the delta and
+calls `setSize`, `onPointerUp` detaches. Attach the move/up listeners to `window` so a fast drag
+that leaves the 4 px splitter does not strand the gesture.
+
+Styling: splitters are `var(--border)` at rest and `#4f9cf9` while dragging; drawer tabs reuse
+the existing small-mono-uppercase label idiom (`#4a5570`, 10 px, letter-spacing `0.08em`), active
+tab in `#c8d3e8`.
+
+- [x] **Step 4: Run to verify it passes**
+
+Run: `cd frontend && pnpm test src/components/tab2/EditorLayout.test.tsx && npx tsc --noEmit`
+Expected: PASS.
+
+- [x] **Step 5: Commit**
+
+```bash
+git add frontend/src/components/tab2/EditorLayout.tsx \
+        frontend/src/components/tab2/EditorLayout.test.tsx \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): EditorLayout shell — canvas/inspector/drawer with draggable splitters
+
+Task 3. Presentational only: owns geometry, no recipe state. Two splitters plus the
+corner grip, drawer tabs always visible even when collapsed, pointer listeners on
+window so a fast drag can't strand the gesture."
+```
+
+---
+
+### Task 4: Move Tab 2 onto the editor layout
+
+**Files:**
+- Create: `frontend/src/components/tab2/EditorToolbar.tsx`
+- Modify: `frontend/src/components/tab2/ETLModifier.tsx`
+- Modify: `frontend/src/components/tab2/ETLModifier.test.tsx`
+
+**Interfaces:**
+- Consumes: `EditorLayout` (Task 3).
+- Produces: `EditorToolbar` — identity (filename, layer chip), the conformance chip slot, and the action row. Undo/redo controls are added to it in Task 5.
+
+**Why:** this is the fix for "I click a node and nothing pops up" (spec §1 defect 2). The
+Inspector currently renders ~500 px below the fold, past the Target section
+(`ETLModifier.tsx:598` scrolling column, `:735` Inspector).
+
+- [x] **Step 1: Write the failing test**
+
+Append to `ETLModifier.test.tsx`:
+
+```tsx
+it('renders the Inspector docked beside the canvas, not below the page fold', async () => {
+  renderModifier()
+  fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+  fireEvent.click(await screen.findByText('T', { selector: 'text' }))
+
+  // The Inspector must be a sibling of the canvas inside the editor row — NOT a later
+  // section of a scrolling document. Walk up from the Inspector to the shared flex row
+  // and assert the canvas lives in the same row.
+  const inspector = await screen.findByTestId('inspector-dock')
+  const row = inspector.parentElement!
+  expect(row.querySelector('[data-region="canvas"]')).not.toBeNull()
+  expect(row.style.display).toBe('flex')
+})
+
+it('moves Source, Target and DDL into the drawer rather than the page body', async () => {
+  renderModifier()
+  fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+  // Drawer tabs are present…
+  expect(await screen.findByRole('button', { name: /^Source$/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /^Target$/ })).toBeInTheDocument()
+  // …and their content is not rendered until the tab is opened.
+  expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
+})
+```
+
+- [x] **Step 2: Run to verify it fails**
+
+Run: `cd frontend && pnpm test src/components/tab2/ETLModifier.test.tsx`
+Expected: FAIL — no `inspector-dock` testid, no drawer tabs.
+
+- [x] **Step 3: Write `EditorToolbar`**
+
+A single row: filename + layer chip on the left, then a flexible spacer, then the conformance
+chip, then the action buttons. Move the existing `{ history }` / `{ raw JSON }` / `⤢` buttons here
+verbatim — same styles, same handlers. Add `Discard` and `Save` (reusing `SaveBar`'s existing
+button styles via the already-exported `ghostButtonStyle`, and the same blue Save style),
+with the dirty count rendered as the existing amber `N unsaved changes` indicator.
+
+The header card's `Path` / `Size bytes` / `Modified` fields move into the `{ raw JSON }` panel —
+they are reference metadata, not per-second information, and the canvas needs the vertical space
+(spec §5.2).
+
+- [x] **Step 4: Rewire `ETLModifier`**
+
+Replace the `<div style={{ padding: 24, … }}>` document body with `<EditorLayout>`:
+
+- `toolbar` — `<EditorToolbar …>`.
+- `canvas` — the existing `<IpcCanvas …>`, wrapped in a `<div data-region="canvas" style={{ display: 'flex', flex: 1, minHeight: 0 }}>`. **Keep `display: flex`** — `IpcCanvas`'s root is `flex: 1` with absolutely-positioned children, and a block parent collapses it to 0 px (this is the bug Task 7 of sub-project 8 fixed; do not reintroduce it).
+- `inspector` — `selectedNode && draft && !isViewing ? <div data-testid="inspector-dock"><Inspector …/></div> : null`.
+- `drawer` — four entries: `Source`, `Target`, `BigQuery DDL`, `Edge`, each holding the JSX that
+  section renders today, moved verbatim.
+
+`SaveBar` is superseded by the toolbar's actions; delete its usage from `ETLModifier` and delete
+`SaveBar.tsx` **only if** nothing else imports it (grep first — `ghostButtonStyle` and
+`dangerButtonStyle` are exported from it and used by `Inspector`/`ConformanceChip`, so the file
+almost certainly must stay; in that case keep the style exports and remove only the `SaveBar`
+component itself, updating its tests).
+
+Focus mode (`?focus=`) renders the same layout minus the Explorer — no separate branch.
+
+- [x] **Step 5: Run every frontend gate**
+
+Run: `cd frontend && pnpm test && npx tsc --noEmit`
+Expected: PASS. Existing Tab 2 tests that queried sections by their old page position will need
+re-targeting at the drawer — that is expected and in scope. **Do not weaken any assertion**; if a
+test asserted a value, it must still assert that value from its new location.
+
+- [x] **Step 6: Verify Tabs 1, 3 and 4 are untouched**
+
+Run: `git diff --stat frontend/src/components/tab1/ frontend/src/components/tab3/ frontend/src/components/tab4/ frontend/src/components/shared/EtlCanvas.tsx`
+Expected: empty output.
+
+- [x] **Step 7: Commit**
+
+```bash
+git add frontend/src/components/tab2/EditorToolbar.tsx \
+        frontend/src/components/tab2/ETLModifier.tsx \
+        frontend/src/components/tab2/ETLModifier.test.tsx \
+        frontend/src/components/tab2/SaveBar.tsx \
+        frontend/src/components/tab2/SaveBar.test.tsx \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): Tab 2 becomes a fixed-height editor, Inspector docks beside the canvas
+
+Task 4. The body was a scrolling document ordered header/Source/canvas/Target/
+Inspector/Edge/DDL, so clicking a node updated a panel ~500px below the fold — the
+reported 'nothing pops up'. Canvas is now the dominant region with the Inspector
+docked beside it; Source/Target/DDL/Edge move into the collapsible drawer."
+```
+
+---
+
+### Task 5: Undo / redo
+
+**Files:**
+- Create: `frontend/src/components/tab2/useDraftHistory.ts`
+- Create: `frontend/src/components/tab2/useDraftHistory.test.ts`
+- Modify: `frontend/src/components/tab2/EditorToolbar.tsx`, `ETLModifier.tsx`, `ETLModifier.test.tsx`
+
+**Interfaces:**
+- Consumes: `EditorToolbar` (Task 4).
+- Produces:
+
+```ts
+export const HISTORY_CAP = 25
+export function useDraftHistory(): {
+  push: (before: RecipeJson) => void       // called with the PRE-edit draft
+  undo: (current: RecipeJson) => RecipeJson | null
+  redo: (current: RecipeJson) => RecipeJson | null
+  canUndo: boolean
+  canRedo: boolean
+  reset: () => void                        // on recipe change, discard, and successful save
+}
+```
+
+**Why capped at 25:** each entry is a `structuredClone` of an entire recipe and the largest
+corpus recipe is ~1000 lines. An unbounded stack is a real memory cost.
+
+- [x] **Step 1: Write the failing test**
+
+Cover: push/undo returns the prior draft; five consecutive edits undo in reverse order; redo
+returns forward; `canUndo`/`canRedo` are false at their respective ends; pushing after an undo
+truncates the redo branch (standard editor semantics — assert it explicitly); the stack caps at
+`HISTORY_CAP` with the oldest entry dropped; `reset()` clears both directions.
+
+- [x] **Step 2: Run to verify it fails**
+
+Run: `cd frontend && pnpm test src/components/tab2/useDraftHistory.test.ts`
+Expected: FAIL — module not found.
+
+- [x] **Step 3: Implement**
+
+Two arrays (`past`, `future`) in a `useRef` plus a `useState` counter to trigger re-render, or a
+single `useState` holding `{past, future}` — either is fine, but `canUndo`/`canRedo` must be
+derived state that re-renders the toolbar. `push` appends to `past` (slicing off the head beyond
+`HISTORY_CAP`) and clears `future`. `undo(current)` pops `past`, pushes `current` onto `future`,
+returns the popped draft, or `null` when empty.
+
+- [x] **Step 4: Wire into `ETLModifier` and the toolbar**
+
+In `applyEdit` (`ETLModifier.tsx:365`), call `history.push(currentDraft)` before applying. Add
+`handleUndo`/`handleRedo` that swap the draft and adjust `dirtyOps`. Call `history.reset()` in
+the recipe-change effect, in `handleDiscard`, and after a successful save.
+
+**Keep the history effect separate from the draft-reset effect.** Sub-project 8's Task 10 shipped
+a data-loss bug by putting an unrelated query's data into the draft-reset effect's dependency
+array; do not merge concerns into that effect again.
+
+Toolbar controls: `↶` and `↷` buttons left of Discard, `disabled={!canUndo}` / `!canRedo`,
+styled as the existing `ghostButtonStyle` ghost buttons with `opacity: 0.4` when disabled.
+
+Add an `ETLModifier` test: make three edits, undo twice, assert the field value and the dirty
+count both step back; redo once, assert forward.
+
+- [x] **Step 5: Run every frontend gate and commit**
+
+Run: `cd frontend && pnpm test && npx tsc --noEmit`
+Expected: PASS.
+
+```bash
+git add frontend/src/components/tab2/useDraftHistory.ts \
+        frontend/src/components/tab2/useDraftHistory.test.ts \
+        frontend/src/components/tab2/EditorToolbar.tsx \
+        frontend/src/components/tab2/ETLModifier.tsx \
+        frontend/src/components/tab2/ETLModifier.test.tsx \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): bounded undo/redo in the toolbar
+
+Task 5. 25-entry snapshot stack — each entry is a whole-recipe structuredClone and the
+largest corpus recipe is ~1000 lines, so unbounded history is a real memory cost.
+Pushing after an undo truncates the redo branch; reset on recipe change, discard and
+successful save."
+```
+
+---
+
+# Part 2 — Semantic authoring
+
+### Task 6: Union and joiner canvas nodes
+
+**Files:**
+- Modify: `frontend/src/api/recipeAdapter.ts` (`recipeToCanvas`, ~`:352`)
+- Modify: `frontend/src/api/recipeAdapter.test.ts`
+- Modify: `scripts/recipe_sweep.mts`
+
+**Interfaces:**
+- Consumes: `recipeToCanvas(recipe, recipePath, typeAliases?)` as it stands.
+- Produces: no signature change — only richer output.
+
+**Why:** `recipeAdapter.ts:352` skips every non-`table` source. All other non-table kinds share a
+name with a step target so their node exists anyway; `union` (10) and `joiner` (5) do not,
+leaving 2197 `unionTables[].fieldMapping` pairs across 7 recipes and 5 joiner configurations
+unreachable. Closes sub-project 8's spec §13 deviation 3.
+
+- [x] **Step 1: Write the failing test**
+
+Assert against a real corpus fixture: a recipe with a `union` source produces a node whose id is
+the union's `name`, `label === 'UNI'`, with one OUT port per distinct
+`unionTables[].fieldMapping[].union` value; a `joiner` source produces a node with
+`label === 'JNR'` and `type === 'joiner'`; edges connect each `unionInput` / `joinerInput` step
+to it; and no duplicate node id is produced when the same union feeds two steps.
+
+- [x] **Step 2: Run to verify it fails**
+
+Run: `cd frontend && pnpm test src/api/recipeAdapter.test.ts`
+Expected: FAIL — union/joiner nodes absent.
+
+- [x] **Step 3: Implement**
+
+Extend the source loop: keep `type === 'table'` producing today's source node, and add branches
+for canonical `union` and `joiner` (resolve through `typeAliases` first, as `kindAndLabel`
+already does). Reuse `kindAndLabel` for the type/label rather than hardcoding — `union` already
+maps to `FIXED_LABEL.union === 'UNI'` and `joiner` to `RECIPE_KIND.joiner === 'joiner'`.
+
+Ports: for a union, the distinct `unionTables[].fieldMapping[].union` names, direction `OUT`; for
+a joiner, the `joinerTables` entries, direction `OUT`. Properties: `collectScalarProps` already
+handles the scalar keys (`joinerType`, `joinerCondition`); array-valued keys stay on the JSON for
+the Inspector to render.
+
+Edges: a step whose target is a `unionInput`/`joinerInput` gets an edge **to** the union/joiner
+node it belongs to. For joiners, `joinerInput` names are `<joiner>.<MASTER|DETAIL>`
+(`AbstractTargetFactory.scala:88` builds `s"${joiner.name}.$inputType"`), so the owning joiner is
+everything before the **LAST** dot — the joiner's own name comes first and the fixed
+`MASTER`/`DETAIL` suffix is dot-free. **This plan originally said "first dot", which is wrong**
+whenever a joiner's own name contains a dot; corrected in Task 6's fix round after an implementer
+wrote the fixture, ran it against the unmodified code, and found it failed. Today's corpus has no
+dotted joiner name, so both splits agree and nothing caught it until that fixture existed. For
+unions, the owning union is the `sources[]` entry of type `union` in the step that consumes it.
+
+- [x] **Step 4: Extend the sweep and re-verify counts**
+
+In `scripts/recipe_sweep.mts`, assert that any recipe containing a `union` or `joiner` source
+produces a node with that source's name. Then run the full gate — node and edge counts change for
+12 recipes, so this is where a regression would surface.
+
+Run: `make validate-loop` (boot the backend first: `mvn -am -pl backend install -DskipTests`,
+then `mvn -pl backend spring-boot:run`, poll `/api/health`).
+Expected: viewer 81/81, recipe 86/86, no dangling edges.
+
+**Measured (not 12):** node/edge counts changed for **8** recipes, not 12 — the 7 recipes
+carrying a `union` source ∪ the 2 recipes carrying a `joiner` source, minus their 1-recipe
+overlap (`m_DWH_E_F_OVERSIGHT_PLEDGES_MONTHLY` has both). The plan's "12" reads as `7 + 5`
+(union-recipe count + joiner-*configuration* count, i.e. counting 4 of the 5 joiner configs
+that live in the single recipe `m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES` as though each were
+its own recipe, and not netting out the union/joiner overlap) rather than a distinct-recipe
+count. Verified both ways (`recipeToCanvas` run against every corpus recipe via the live
+backend, before vs. after this task's `recipeAdapter.ts` diff) — total nodes 388 -> 403 (+15 =
+10 union + 5 joiner, exactly the corpus's union/joiner source counts), total edges 8674 -> 9233
+(+559); viewer 81/81, recipe 86/86 (73 warning-severity checks, all pre-existing), relationships
+sweep PASS, no dangling edges. Full detail in `task-6-report.md`.
+
+- [x] **Step 5: Commit**
+
+```bash
+git add frontend/src/api/recipeAdapter.ts frontend/src/api/recipeAdapter.test.ts \
+        scripts/recipe_sweep.mts docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): union and joiner sources become canvas nodes
+
+Task 6. Closes sub-project 8 spec §13 deviation 3 — 2197 fieldMapping pairs across 7
+recipes and 5 joiner configs had no clickable node because recipeToCanvas only noded
+type==='table' sources. Node/edge counts change for 12 recipes; sweep re-verified."
+```
+
+---
+
+### Task 7: Recalibrate `IPC-REF-003`
+
+**Files:**
+- Modify: `backend/src/main/resources/ipc/ipc-rules.json`
+- Modify: `docs/ipc/rules.md`
+- Modify: `backend/src/test/java/io/pure360/etl360/IpcRulesContractTest.java` (if the severity moves)
+
+**Why:** `IPC-REF-003` currently ships `warning` with evidence "23 violations across 9 recipes,
+two distinct sub-patterns: (1) 15 (10 union + 5 joiner) … (2) 8 `type:"table"` sources absent
+from `sourceTableNames`". Task 6 makes sub-pattern (1) structurally resolvable. Leaving the rule
+at `warning` with stale evidence would be exactly the drift ADR-0010's procedure exists to
+prevent.
+
+- [x] **Step 1: Re-derive the true violation set**
+
+Write a temporary audit (deleted before commit) that runs `IpcRuleEngine` over all 86 corpus
+recipes and collects `IPC-REF-003` failures into a list — **counting from the list, never from an
+assertion printout**, since AssertJ silently truncates at 1000 elements and that produced wrong
+evidence once already.
+
+Record the count and the per-sub-pattern breakdown in the task report.
+
+- [x] **Step 2: Apply ADR-0010's procedure**
+
+Categorise the remaining violations structurally. If the residue is zero, restore
+`severity: "error"` and delete `corpusEvidence`. If a residue remains, keep `warning` and rewrite
+`corpusEvidence` to describe **only what actually remains** — do not leave the union/joiner text
+in place if that class is now resolvable.
+
+Do **not** weaken the rule's logic to change the count. Task 6 changed the canvas, not the
+recipes; if `IPC-REF-003` still fires on union/joiner names it is because those names genuinely
+do not resolve against step targets, which is a fact about the JSON, not about the canvas. Say so
+plainly in the evidence if that is the outcome.
+
+- [x] **Step 3: Mirror into the wiki**
+
+Copy the corrected `corpusEvidence` verbatim into `docs/ipc/rules.md`'s `IPC-REF-003` section.
+The three-way parity test asserts ids match, not evidence text — so verify this by hand.
+
+- [x] **Step 4: Run the gates**
+
+Run: `mvn -q -am -pl backend clean test`
+Expected: PASS, `everyCorpusRecipeIsErrorFree` still green.
+
+- [x] **Step 5: Commit**
+
+```bash
+git add backend/src/main/resources/ipc/ipc-rules.json docs/ipc/rules.md \
+        backend/src/test/java/io/pure360/etl360/IpcRulesContractTest.java \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "fix(ipc): recalibrate IPC-REF-003 after union/joiner nodes landed
+
+Task 7. Re-ran ADR-0010's severity procedure against the live rule engine rather than
+carrying stale evidence forward. Counts re-derived from a collected list, never an
+AssertJ printout (which truncates silently at 1000 and produced wrong evidence once)."
+```
+
+---
+
+### Task 8: IPC adjacency matrix
+
+**Files:**
+- Modify: `backend/src/main/resources/ipc/ipc-rules.json` (new `connections` section)
+- Create: `backend/src/main/java/io/pure360/etl360/service/ipc/IpcConnections.java`
+- Modify: `backend/src/main/java/io/pure360/etl360/service/ipc/IpcCatalog.java`
+- Create: `backend/src/test/java/io/pure360/etl360/IpcConnectionsContractTest.java`
+
+**Interfaces:**
+- Consumes: `IpcVocabulary` (`TARGET_TYPES`, `SOURCE_TYPES`, `canonicalTargetType`, `canonicalSourceType`).
+- Produces:
+
+```java
+public record IpcConnectionRule(String sourceKind, List<String> mayFeed,
+                                Integer exactly, List<String> namedInputs) {}
+// IpcCatalog gains:
+public Map<String, IpcConnectionRule> connections()
+```
+
+**The design rule:** the matrix is **authored** from IPC semantics and the parser's step model,
+**not derived** from the corpus. A derived matrix could only permit what these 86 recipes happen
+to contain, forbidding legal IPC constructions the sample never used. The corpus is the
+*validation* set instead.
+
+- [x] **Step 1: Write the failing contract test**
+
+```java
+package io.pure360.etl360;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.pure360.etl360.service.CorpusService;
+import io.pure360.etl360.service.ipc.IpcCatalog;
+import io.pure360.etl360.service.ipc.IpcVocabulary;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+class IpcConnectionsContractTest {
+    @Autowired CorpusService corpus;
+    @Autowired IpcCatalog catalog;
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    /** Spec §6.2: the matrix is authored, the corpus validates it. Every pairing that
+     * actually occurs across the 86 recipes must be permitted — an over-strict matrix
+     * fails here, and so does an invented one. */
+    @Test
+    void everyPairingObservedInTheCorpusIsPermitted() throws Exception {
+        Set<String> unpermitted = new LinkedHashSet<>();
+        for (String rel : corpus.allRecipePaths()) {
+            JsonNode d = mapper.readTree(
+                Files.readString(Path.of("../parser/src/main/resources/xmltobq").resolve(rel)));
+            for (JsonNode step : d.path("steps")) {
+                String tgt = IpcVocabulary.canonicalTargetType(step.path("target").path("type").asText(""));
+                for (JsonNode src : step.path("sources")) {
+                    String s = IpcVocabulary.canonicalSourceType(src.path("type").asText(""));
+                    var rule = catalog.connections().get(s);
+                    if (rule == null || !rule.mayFeed().contains(tgt)) {
+                        unpermitted.add(s + " -> " + tgt + "  (e.g. " + rel + ")");
+                    }
+                }
+            }
+        }
+        assertThat(unpermitted).as("corpus pairings the authored matrix forbids").isEmpty();
+    }
+
+    @Test
+    void everySourceKindHasAConnectionRule() {
+        assertThat(catalog.connections().keySet()).containsAll(IpcVocabulary.SOURCE_TYPES);
+    }
+
+    @Test
+    void everyMayFeedTargetIsAKnownTargetKind() {
+        catalog.connections().forEach((src, rule) ->
+            assertThat(IpcVocabulary.TARGET_TYPES)
+                .as("mayFeed targets of " + src).containsAll(rule.mayFeed()));
+    }
+
+    @Test
+    void joinerInputCarriesItsMasterDetailCardinality() {
+        var rule = catalog.connections().get("joinerInput");
+        assertThat(rule).isNotNull();
+        assertThat(rule.exactly()).isEqualTo(2);
+        assertThat(rule.namedInputs()).containsExactlyInAnyOrder("MASTER", "DETAIL");
+    }
+}
+```
+
+Note `joinerInput` is a *target* kind, not a source kind — it appears in `connections` because
+its cardinality constraint belongs with the adjacency model. `everySourceKindHasAConnectionRule`
+uses `containsAll`, so extra entries like this are permitted.
+
+- [x] **Step 2: Run to verify it fails**
+
+Run: `mvn -am -pl backend test -Dtest=IpcConnectionsContractTest -DfailIfNoTests=false`
+Expected: FAIL — `connections()` does not exist.
+
+- [x] **Step 3: Author the matrix**
+
+Add a `connections` object to `ipc-rules.json`. Author each source kind's `mayFeed` from what the
+kind *means* in IPC, then check it against spec §4's 30 observed pairings — every one must be
+covered, and you may legitimately permit more. Reference points: a `sourceQualifier` reads a
+relational source and feeds any downstream transformation or target; `union`/`joiner` outputs
+feed downstream transformations and targets; `router` feeds per-group consumers; a `table` source
+feeds a `sourceQualifier` (the normal IPC read path) and, in this corpus, `table` and `normalizer`
+directly.
+
+Add the `joinerInput` cardinality entry (`exactly: 2`, `namedInputs: ["MASTER","DETAIL"]`).
+
+- [x] **Step 4: Load it in `IpcCatalog`**
+
+Parse `connections` in the existing constructor alongside `rules`/`keySchema`/aliases; expose
+`connections()` returning an immutable copy, mirroring the existing accessors exactly.
+
+- [x] **Step 5: Run to verify it passes**
+
+Run: `mvn -am -pl backend clean test`
+Expected: PASS. If `everyPairingObservedInTheCorpusIsPermitted` fails, the matrix is too strict —
+widen it and record why in the task report; do **not** relax the test.
+
+- [x] **Step 6: Commit**
+
+```bash
+git add backend/src/main/resources/ipc/ipc-rules.json \
+        backend/src/main/java/io/pure360/etl360/service/ipc/IpcConnections.java \
+        backend/src/main/java/io/pure360/etl360/service/ipc/IpcCatalog.java \
+        backend/src/test/java/io/pure360/etl360/IpcConnectionsContractTest.java \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(ipc): authored connection adjacency matrix, validated against the corpus
+
+Task 8. Authored from IPC semantics rather than derived from the corpus — a derived
+matrix could only permit what these 86 recipes happen to contain. The corpus is the
+validation set: all 30 observed pairings must be permitted."
+```
+
+---
+
+### Task 9: Active/passive classification + fan-in rule, and serve `connections`
+
+**Files:**
+- Modify: `backend/src/main/resources/ipc/ipc-rules.json`, `service/ipc/IpcConnectionRule.java`, `service/ipc/IpcCatalog.java`
+- Create: `backend/src/main/java/io/pure360/etl360/service/ipc/IpcConnections.java`
+- Modify: `backend/src/main/java/io/pure360/etl360/api/dto/IpcRulesDto.java`, `IpcController.java`
+- Create: `backend/src/main/java/io/pure360/etl360/api/dto/IpcConnectionDto.java`
+- Modify: `backend/src/test/java/io/pure360/etl360/IpcConnectionsContractTest.java`
+- Modify: `frontend/src/api/types.gen.ts` (regenerated), `frontend/src/api/queries.ts`
+
+**Added after Task 8's review (human ruling, 2026-08-01).** Task 8's matrix models *pairwise*
+source-kind → target-kind legality, but PowerCenter's Designer also enforces a **fan-in** rule
+that shape cannot express: it will not let you connect multiple **active** transformations, or an
+active and a passive one, to the same downstream transformation or input group. Task 8's reviewer
+found the gap; the user chose to close it now rather than ship a partial "playing safe" claim.
+
+**Classify each kind from IPC semantics.** An active transformation can change the number of rows,
+their order, or transaction boundaries; a passive one cannot.
+
+| kind | `active` | why |
+|---|---|---|
+| `table` | `null` | a source/target definition, not a transformation — the rule does not apply |
+| `sourceQualifier` | `true` | filters, joins, sorts and select-distincts via its SQL override |
+| `filter` | `true` | drops rows |
+| `joiner` | `true` | row count changes with the join |
+| `aggregator` | `true` | collapses groups |
+| `router` | `true` | partitions rows across groups |
+| `union` | `true` | merges pipelines |
+| `normalizer` | `true` | one input row yields many |
+| `storedProcedure` | `false` | a connected Stored Procedure is passive |
+| `java` | `null` | PowerCenter's Java transformation is active **or** passive as configured at creation, and the recipe JSON does not record which |
+
+**`null` means "cannot be determined", not "passive".** Where a participant is `null` the fan-in
+check must **warn, never block** — refusing a link we cannot prove illegal is worse than
+permitting one we cannot prove legal, and `java`/`table` are exactly where the model does not know.
+
+**A validation you get for free:** the corpus's only multi-source steps are 21 uniform `table`
+fan-ins, and `table` is `null` — so a correct rule leaves every existing recipe unflagged. If your
+implementation starts flagging corpus recipes, the classification or the check is wrong, not the
+corpus. Assert it: extend `IpcConnectionsContractTest` with a test running the fan-in check over
+all 86 recipes and expecting **zero `block` verdicts**.
+
+**Interfaces:**
+- Produces: `IpcConnectionRule` gains `Boolean active` (nullable — `null` = unknown).
+  `IpcConnections.fanInVerdict(List<String> existingSourceKinds, String candidateKind) -> String`
+  returning `"ok" | "warn" | "block"`. The complete PowerCenter rule: a downstream input group may
+  hold **either** any number of passive inputs, **or** exactly one active input and nothing beside
+  it. In precedence order — **warn** when either side is `null` (this wins before both block
+  clauses); **block** when the candidate is active and `existingSourceKinds` is non-empty, whatever
+  those kinds are; **block** when the candidate is passive and any existing input is active;
+  **ok** otherwise. (An earlier draft of this line specified only the active-plus-active half,
+  contradicting the prose above it; corrected in Task 9's fix round after the implementer
+  implemented the literal contract and flagged the gap rather than silently widening it.)
+  `IpcRulesDto` gains `Map<String, IpcConnectionDto> connections`;
+  `IpcConnectionDto(String sourceKind, List<String> mayFeed, Integer exactly, List<String> namedInputs, Boolean active)`.
+  Frontend type alias `IpcConnections = IpcRules['connections']`.
+
+- [x] **Step 1: Extend the DTO and controller, with a MockMvc assertion**
+
+Add a test to the existing IPC controller test asserting `GET /api/ipc/rules` returns a
+`connections` object containing `sourceQualifier.mayFeed` as a non-empty array.
+
+- [x] **Step 2: Run to verify it fails, then implement**
+
+Run: `mvn -am -pl backend test -Dtest=IpcControllerTest -DfailIfNoTests=false` → FAIL, then map
+`catalog.connections()` into the DTO and re-run → PASS.
+
+- [x] **Step 3: Regenerate the frontend types**
+
+`mvn -am -pl backend install -DskipTests`, start `mvn -pl backend spring-boot:run` in the
+background, poll `http://localhost:8080/api/health`, run `make generate-api`, stop the server.
+Never hand-edit `types.gen.ts`.
+
+- [x] **Step 4: Run all gates and commit**
+
+Run: `mvn -q -am -pl backend clean test && cd frontend && pnpm test && npx tsc --noEmit`
+
+```bash
+git add backend/src/main/java/io/pure360/etl360/api/ \
+        frontend/src/api/types.gen.ts frontend/src/api/queries.ts \
+        backend/src/test/java/io/pure360/etl360/api/ \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(ipc): serve the connection matrix through GET /api/ipc/rules
+
+Task 9. Keeps the frontend holding no second copy of the recipe grammar — the same
+principle keySchema follows."
+```
+
+---
+
+### Task 10: `NodeConfigDialog` — configure before inserting
+
+**Files:**
+- Create: `frontend/src/components/tab2/NodeConfigDialog.tsx`, `NodeConfigDialog.test.tsx`
+- Modify: `frontend/src/api/recipeEdits.ts`
+
+**Interfaces:**
+- Consumes: `InspectorWidgets`' `TextWidget`, `ToggleWidget`, `TextareaWidget`, `StringListWidget`, `RowTableWidget`, `FormulaWidget`; `useIpcRules()`'s `keySchema` + `connections`; `useValidation`.
+- Produces:
+
+```tsx
+export function NodeConfigDialog(props: {
+  kind: string                       // palette `type`, e.g. 'filter' | 'sourceTable'
+  draft: RecipeJson
+  keySchema: KeySchemaMap
+  connections: IpcConnections
+  onCancel: () => void
+  onInsert: (next: RecipeJson) => void   // called ONLY with a validated draft
+}): React.ReactElement
+```
+
+Plus in `recipeEdits.ts`:
+
+```ts
+export interface MappedField { name: string; dataType: string; source: string }  // source = "UPSTREAM.FIELD"
+export function buildStep(kind: string, name: string, props: Record<string, unknown>,
+                          feeds: string[], fedBy: RecipeNodeRef[],
+                          mappedFields: MappedField[]): RecipeStepJson
+export function insertConfiguredStep(d: RecipeJson, step: RecipeStepJson): RecipeJson
+```
+
+**AMENDED after Task 10's review (human ruling, 2026-08-02).** The first implementation built
+nodes with `fields: []`, and Insert could therefore *never* be enabled: `IPC-FLW-003` measures
+orphan-ness by **dot-refs in field formulas** (`ReferentialRules.collectRefs`), not by `sources[]`
+membership, so a fieldless step can carry no outbound ref and nothing pre-existing can reference a
+name that did not exist a moment ago. A reviewer proved this against the real `IpcRuleEngine` for
+both a zero-connection and a fully-connected step. The frontend suite missed it because MSW mocks
+validation to pass unconditionally.
+
+The rule is not wrong — a step with declared sources and no field mappings genuinely moves no
+data. **The dialog must map fields.** When the user picks an upstream node in "fed by", the dialog
+offers that node's fields and maps the selected ones, emitting real
+`transformation: { source: "UPSTREAM.FIELD" }` dot-refs. At least one mapped field is required for
+Insert, and that requirement is what makes the resulting node genuinely connected rather than
+merely declared.
+
+Where the upstream's field list comes from:
+- **Upstream is a step target** — read `step.target.fields[]` from the draft and offer those names
+  with their `dataType`s.
+- **Upstream is a `table` source** — the recipe JSON carries no field list for table sources, so
+  offer free-text entry (the operator names the columns). Do not invent names; an empty list with
+  a free-text row is honest, a fabricated one is not.
+
+Mapped field names default to the upstream field's name and stay editable; `dataType` defaults to
+the upstream's, or `String` when unknown (a legal `ScalaType`, `ScalaType.scala:7`).
+
+**Why:** `addStep` today emits `{name: "NEW_<TYPE>_<n>", type, fields: []}` with no sources, no
+fields and no refs — the orphan `NEW_TABLE_1` in the user's screenshot. Insertion must not be able
+to produce that.
+
+- [x] **Step 1: Write the failing tests**
+
+Cover: the dialog renders one widget per `required` key of the chosen kind, using the schema
+(assert a `toggle` for `sourceQualifier.selectDistinct` and a `stringList` for
+`aggregator.groupByFields`); an empty name disables Insert; a duplicate name disables Insert with
+a visible reason; the connection picker lists only nodes the matrix permits for this kind and
+renders forbidden ones disabled with a reason; Insert stays disabled while the previewed draft
+has validation errors; `onInsert` fires with a draft containing the fully-formed step; Cancel
+calls `onCancel` and never `onInsert`.
+
+- [x] **Step 2: Run to verify they fail**
+
+Run: `cd frontend && pnpm test src/components/tab2/NodeConfigDialog.test.tsx`
+Expected: FAIL — module not found.
+
+- [x] **Step 3: Implement `buildStep` / `insertConfiguredStep`**
+
+`buildStep` assembles `{target: {name, type: kind, ...props, fields: []}, sources: [...]}` from
+the `fedBy` node names (each becomes a `sources[]` entry whose `type` is that node's kind).
+`insertConfiguredStep` appends the step immutably, adds the name to `table.targetTableNames` when
+`kind === 'table'`, and for each `feeds` entry adds this node as a `sources[]` entry of the
+consuming step. Both are pure and never mutate their input, matching the file's existing idiom.
+
+- [x] **Step 4: Implement the dialog**
+
+A centered modal over a `rgba(0,0,0,0.5)` scrim (composition, not a new token), `var(--surface)`
+panel with `1px solid var(--border)`. Sections: **Name** (text input + live uniqueness),
+**Properties** (schema-driven widgets — dispatch on `spec.widget` exactly as `Inspector` does; no
+per-kind branching), **Connections** (two lists, "fed by" and "feeds", each showing candidate
+nodes with permitted ones selectable and forbidden ones `disabled` plus a `title` giving the
+reason), **Preview** (the JSON fragment, and the validation result of the draft with the fragment
+applied), then Cancel / Insert.
+
+Insert is `disabled` unless: name non-empty, name unique, every `required` key present, and the
+previewed validation returns zero errors. Warnings do **not** block — `valid` is `errors.isEmpty()`
+and that contract is global.
+
+Escape and a scrim click both cancel. Focus the name input on mount.
+
+- [x] **Step 5: Run every gate and commit**
+
+Run: `cd frontend && pnpm test && npx tsc --noEmit`
+
+```bash
+git add frontend/src/components/tab2/NodeConfigDialog.tsx \
+        frontend/src/components/tab2/NodeConfigDialog.test.tsx \
+        frontend/src/api/recipeEdits.ts frontend/src/api/recipeEdits.test.ts \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): NodeConfigDialog — configure and validate before inserting
+
+Task 10. addStep emitted {name:'NEW_TYPE_n', type, fields:[]} with no sources, fields
+or refs — the orphan in the user's screenshot was the designed behaviour. Insert is
+now gated on a validated preview, so an orphan is unreachable by construction."
+```
+
+---
+
+### Task 11: Route every palette add through the dialog
+
+**Files:**
+- Modify: `frontend/src/components/tab2/ETLModifier.tsx`, `Palette.tsx`, `ETLModifier.test.tsx`
+
+**Interfaces:**
+- Consumes: `NodeConfigDialog` (Task 10).
+- Produces: nothing new.
+
+- [x] **Step 1: Write the failing test**
+
+Clicking a palette entry opens the dialog and inserts **nothing** until Insert is pressed;
+dragging a palette entry onto the canvas opens the same dialog rather than inserting directly;
+Cancel leaves the draft and the dirty count unchanged.
+
+- [x] **Step 2: Run to verify it fails, then implement**
+
+Replace `handlePaletteAdd`'s direct `addStep`/`addSourceTable` calls with
+`setPendingKind(type)`, render `<NodeConfigDialog>` when `pendingKind !== null`, and have its
+`onInsert` route through the existing `applyEdit` so undo/redo, the dirty count and the
+conformance chip all follow automatically.
+
+`IpcCanvas`'s `onDropType` handler does the same — it must open the dialog, not insert.
+
+- [x] **Step 3: Delete the superseded mutators**
+
+`addStep` and `addSourceTable` exist solely to serve the direct-add path this task removes, and
+`buildStep`/`insertConfiguredStep` supersede them with a shape that carries sources, properties
+and links. **Delete both from `frontend/src/api/recipeEdits.ts` along with their tests in
+`recipeEdits.test.ts`** (human ruling, pre-flight scan 2026-08-01) — leaving them exported and
+tested with no production caller repeats a defect sub-project 8's final review already named
+once, where tested-but-unreachable code reads as coverage without being it.
+
+`addSourceTable` currently calls `addStep` internally; both go together. Update
+`Palette.tsx`'s header comment, which references them by name.
+
+Then verify nothing reaches them:
+
+Run: `grep -rn 'addStep\|addSourceTable' frontend/src`
+Expected: no hits at all outside this task's own deletions.
+
+- [x] **Step 4: Run all gates and commit**
+
+```bash
+git add frontend/src/components/tab2/ETLModifier.tsx frontend/src/components/tab2/Palette.tsx \
+        frontend/src/components/tab2/ETLModifier.test.tsx \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): palette click and canvas drop both open the config dialog
+
+Task 11. Direct insertion is removed from the UI path — the only way to add a node is
+through a dialog that will not insert an invalid one."
+```
+
+---
+
+### Task 12: `GET /api/registry`
+
+**Files:**
+- Create: `backend/src/main/java/io/pure360/etl360/service/RegistryService.java`, `api/RegistryController.java`, `api/dto/RegistryDto.java`, `api/dto/RegistryTableDto.java`
+- Create: `backend/src/test/java/io/pure360/etl360/api/RegistryControllerTest.java`
+
+**Interfaces:**
+- Produces: `RegistryDto(List<RegistryTableDto> sourceTables, List<RegistryTableDto> targetTables, List<RegistryTableDto> ddlTables, List<String> layers)`; `RegistryTableDto(String name, List<String> columns, List<String> usedByRecipes)`.
+
+Expected magnitudes from spec §4: 108 source tables, 87 target tables, 212 DDL tables, 8 layers.
+
+- [x] **Step 1: Write the failing MockMvc test**
+
+Assert 200; `sourceTables` size ≥ 100 and `targetTables` ≥ 80; `layers` contains `CDM` and `DWH`;
+a known DDL table carries a non-empty `columns`; and — reusing the exclusion pattern already
+proven for `/api/summary` — a `_layout_*.json` and a `_history/` entry seeded into a temp corpus
+appear nowhere in the response.
+
+- [x] **Step 2: Run to verify it fails, then implement**
+
+Walk the corpus once, reusing `CorpusService.allRecipePaths()` and the existing
+`HistorySidecar`/`LayoutSidecar` exclusion predicates — do not re-implement either. DDL columns
+come from each `<TABLE>.json`'s field list, the same files `RecipeService.ddls` reads.
+
+- [x] **Step 3: Run backend gates and commit**
+
+Run: `mvn -q -am -pl backend clean test`
+
+```bash
+git add backend/src/main/java/io/pure360/etl360/service/RegistryService.java \
+        backend/src/main/java/io/pure360/etl360/api/RegistryController.java \
+        backend/src/main/java/io/pure360/etl360/api/dto/ \
+        backend/src/test/java/io/pure360/etl360/api/RegistryControllerTest.java \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(registry): GET /api/registry — searchable authoring inventory
+
+Task 12. Source/target/DDL tables with columns and referencing recipes, plus layers.
+Reuses the HistorySidecar/LayoutSidecar exclusion predicates rather than duplicating
+them; exclusions asserted, not assumed."
+```
+
+---
+
+### Task 13: Registry search UI
+
+**Files:**
+- Create: `frontend/src/api/registryQueries.ts`, `frontend/src/components/tab2/RegistrySearch.tsx`, `RegistrySearch.test.tsx`
+- Modify: `frontend/src/api/types.gen.ts` (regenerated), `NodeConfigDialog.tsx`
+
+**Interfaces:**
+- Produces: `useRegistry()` (TanStack, `staleTime: Infinity`); `RegistrySearch({ kind, onPick })` where `kind` is `'source' | 'target' | 'ddl'`.
+
+- [x] **Step 1: Regenerate types, write the failing test**
+
+Cover: typing filters the list across name and column names; picking calls `onPick` with the
+table; an empty result renders an explicit empty state, not a blank panel; the list is capped the
+same way the expression dock is (reuse the same cap constant idiom rather than inventing a
+second) with a truthful count.
+
+- [x] **Step 2: Run to verify it fails**
+
+Run: `cd frontend && pnpm test src/components/tab2/RegistrySearch.test.tsx`
+Expected: FAIL — module not found.
+
+- [x] **Step 3: Implement, then re-run**
+
+`useRegistry()` mirrors `useIpcRules()` exactly (`staleTime: Infinity`, same `apiGet` call shape)
+— the registry is static per backend build. `RegistrySearch` is a filter input over a capped
+list, importing Task 1's exported `RENDER_CAP` from `./ExpressionDock` rather than declaring a second cap. Filter across
+both the table name and its column names, so searching a column finds its table.
+
+Run: `cd frontend && pnpm test src/components/tab2/RegistrySearch.test.tsx && npx tsc --noEmit`
+Expected: PASS.
+
+- [x] **Step 4: Use it in the dialog**
+
+When the chosen kind is a source or target table, the Name field gains a "pick from registry"
+affordance that opens `RegistrySearch` and fills the name — free text stays allowed for new
+tables, since authoring a target that does not exist yet is the point.
+
+- [x] **Step 5: Run all gates and commit**
+
+Run: `cd frontend && pnpm test && npx tsc --noEmit`
+
+```bash
+git add frontend/src/api/registryQueries.ts frontend/src/api/types.gen.ts \
+        frontend/src/components/tab2/RegistrySearch.tsx \
+        frontend/src/components/tab2/RegistrySearch.test.tsx \
+        frontend/src/components/tab2/NodeConfigDialog.tsx \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): registry search for tables and DDL schemas
+
+Task 13. Backs the config dialog's name field; free text still allowed so a target
+that does not exist yet can be authored."
+```
+
+---
+
+### Task 14: `POST /api/recipes/{*path}` — create
+
+**Files:**
+- Modify: `backend/src/main/java/io/pure360/etl360/api/RecipeController.java`, `service/RecipeService.java`
+- Modify: `backend/src/test/java/io/pure360/etl360/api/RecipeWriteControllerTest.java`
+
+**Interfaces:**
+- Produces: `RecipeService.create(String relJsonPath, JsonNode content) -> RecipeDto`.
+
+**The safety requirement, stated plainly:** sub-project 8's final review caught `LayoutService`
+creating corpus directories as an accidental side effect. This endpoint does it **deliberately**,
+so the guards are the whole point:
+
+- **409** if the file already exists.
+- **400** unless the path is exactly `<layer>/<mapping>/_ETL_<mapping>.json`, where `<layer>` is
+  an existing top-level directory of the corpus root — **enumerated at request time, never
+  hardcoded**, so adding a layer to the corpus does not require a code change.
+- **400** if the body does not validate with zero errors, checked *before* anything is written.
+- Creates the `<mapping>` directory only. **Never creates a layer.**
+- Writes atomically (temp + `ATOMIC_MOVE`), like `RecipeService.writeAtomic`.
+
+- [x] **Step 1: Write the failing tests**
+
+One test per guard, against a `@DynamicPropertySource` temp corpus: create succeeds and the file
+lands at the right path; a second create returns 409; a path outside a layer returns 400 and
+creates nothing; a malformed path shape returns 400; an invalid body returns 400 and creates
+nothing; and after each failure case, assert the temp corpus tree is byte-unchanged.
+
+- [x] **Step 2: Run to verify they fail, then implement**
+
+Run: `mvn -am -pl backend test -Dtest=RecipeWriteControllerTest -DfailIfNoTests=false`
+Expected: FAIL — no `POST` mapping, the create attempts 404/405.
+
+Implement `RecipeService.create` next to `save`, reusing `writeAtomic` verbatim. Enumerate the
+layers with a single `Files.list(paths.corpusRoot())` filtered to directories — never a hardcoded
+list. Validate with the injected `IpcRuleEngine` before touching the filesystem.
+
+Re-run the same command; expected PASS.
+
+- [x] **Step 3: Confirm no corpus pollution from your own testing**
+
+Run: `git status --porcelain -- parser/`
+Expected: empty. Delete any stray directory your testing created before committing.
+
+- [x] **Step 4: Run backend gates and commit**
+
+```bash
+git add backend/src/main/java/io/pure360/etl360/api/RecipeController.java \
+        backend/src/main/java/io/pure360/etl360/service/RecipeService.java \
+        backend/src/test/java/io/pure360/etl360/api/RecipeWriteControllerTest.java \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(recipes): POST create — 409 on existing, layer-scoped, validation-gated
+
+Task 14. Deliberately creates a mapping directory inside the corpus, which is exactly
+why every guard is explicit: existing-layer check enumerated at request time, path
+shape enforced, body validated before any write, never creates a layer."
+```
+
+---
+
+### Task 15: New recipe from scratch
+
+**Files:**
+- Create: `frontend/src/components/tab2/NewRecipeDialog.tsx`, `NewRecipeDialog.test.tsx`
+- Modify: `frontend/src/components/tab2/ETLModifier.tsx`, `ETLModifier.test.tsx`, `frontend/src/api/queries.ts`
+
+**Interfaces:**
+- Consumes: `useRegistry()` (Task 13), `POST /api/recipes/{*path}` (Task 14), `NodeConfigDialog` (Task 10).
+- Produces: nothing consumed later.
+
+- [x] **Step 1: Write the failing test**
+
+A "New recipe" control opens a dialog listing the registry's layers; entering a mapping name
+shows the exact path that will be created; Create opens the editor with an **empty** draft and no
+recipe fetch; building a node through the config dialog and saving issues a `POST` to that path;
+a name colliding with an existing recipe surfaces the 409 as a visible error rather than a
+silent failure.
+
+- [x] **Step 2: Run to verify it fails, then implement**
+
+`ETLModifier` gains an `authoring` mode: `draft` starts as `{steps: [], table: {targetTableNames: [], sourceTableNames: []}}`,
+`recipePath` is the target path, and the save path uses `POST` instead of `PUT` until the first
+successful create — after which it behaves exactly like any other open recipe.
+
+**Deviation 1 (authorized by the coordinator's Task 15 dispatch message, not by
+`task-15-brief.md` itself — the brief did not anticipate the empty-draft case; the dispatch
+said: "If it turns out the dialog needs a small accommodation for the empty-draft case, make
+it — but do not weaken the orphan gate for non-empty drafts to get there."):** the ordering
+problem is a genuine deadlock, not just a UX gap — a
+blank draft's `steps` is empty, so `NodeConfigDialog`'s "fed by"/"feeds" pickers (built off
+`draft.steps`) offer nothing, meaning NEITHER a non-source kind (needs a mapped field from an
+existing upstream) NOR source-table mode itself (needs an existing consuming step) can pass its
+own gate — and independently, ANY single first node leaves `{steps: []}`, which the backend's
+`IPC-STR-001` always rejects, so gating on a clean whole-recipe validate would keep Insert
+disabled forever regardless. `NodeConfigDialog.tsx`/`NodeConfigDialog.test.tsx` (not listed in
+this task's Files block) gained a scoped accommodation: when `draft.steps.length === 0`,
+source-table mode's "at least one feeds" requirement AND the whole-recipe-validates-clean
+requirement both relax — ONLY for `isSourceTable && noStepsYet`; every other kind, and
+source-table mode itself once the draft has a step, keep the existing gate byte-for-byte
+(`NodeConfigDialog.test.tsx`'s pre-existing `SOURCE_MODE_DRAFT` tests are the regression guard).
+`draftNodes` also gained a fallback surfacing a bare `table.sourceTableNames` entry with no
+consuming step yet, so the source table inserted this way is still selectable as a "fed by"
+candidate the moment the operator adds the first real step — see `NodeConfigDialog.tsx`'s
+`draftNodes`/`canInsert` doc comments for the full writeup.
+
+- [x] **Step 3: Run all gates and commit**
+
+Run: `cd frontend && pnpm test && npx tsc --noEmit`
+
+```bash
+git add frontend/src/components/tab2/NewRecipeDialog.tsx \
+        frontend/src/components/tab2/NewRecipeDialog.test.tsx \
+        frontend/src/components/tab2/ETLModifier.tsx \
+        frontend/src/components/tab2/ETLModifier.test.tsx \
+        frontend/src/api/queries.ts \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): author a recipe from scratch on a blank canvas
+
+Task 15. Layer + mapping picker, empty draft, POST on first save then PUT thereafter.
+409 on a colliding name surfaces as a visible error."
+```
+
+---
+
+### Task 16: Target DDL columns as authored fields
+
+**Files:** (this header was stale — it predated the amendment below, which mandates a backend
+change; corrected at implementation time to the set actually touched)
+- Create: `backend/src/main/java/io/pure360/etl360/api/dto/RegistryVariantDto.java`,
+  `RegistryColumnDto.java`
+- Modify: `backend/src/main/java/io/pure360/etl360/api/dto/RegistryTableDto.java`,
+  `backend/src/main/java/io/pure360/etl360/service/RegistryService.java`,
+  `backend/src/test/java/io/pure360/etl360/api/RegistryControllerTest.java`
+- Regenerate: `frontend/src/api/types.gen.ts`
+- Modify: `frontend/src/api/registryQueries.ts`, `frontend/src/api/recipeEdits.ts` +
+  `recipeEdits.test.ts`, `frontend/src/components/tab2/NodeConfigDialog.tsx` +
+  `NodeConfigDialog.test.tsx`, `frontend/src/components/tab2/RegistrySearch.tsx` +
+  `RegistrySearch.test.tsx`
+
+- [x] **Step 1: Write the failing test**
+
+**AMENDED after Task 12's review (2026-08-02).** 212 raw `<TABLE>.json` files collapse to **180**
+distinct names: 25 recur, and **11 of those carry genuinely different column sets** across mapping
+directories. Task 12's registry dedupes by name and **unions** the columns, so for those 11 the
+list matches no real DDL file. Measured examples: `DWH_MAPLESHORE_MAPLEBARN_MEMBERS` is 110 and 99
+columns in its two files — union 116, intersect 93, and **neither variant is a subset of the
+other**; `DWH_SYN_ORDERS_FACT` is 5/7/2 — union 8, intersect 1. So intersecting is not a safer
+default either; the honest fact is that those names have no canonical DDL in this corpus.
+
+**The dialog must not present a flattened list as authoritative.** When a matched name resolves to
+more than one underlying definition, say so and let the operator choose — surface the variants
+with their provenance rather than silently offering a superset that would create fields absent from
+the DDL they are actually targeting.
+
+**`usedByRecipes` cannot carry that provenance** — an earlier draft of this note said it could, and
+Task 13's reviewer disproved it: `RegistryService` unions `usedByRecipes` across every file sharing
+a name, so the list is identical whether one file or eleven sit behind it. **This task therefore
+needs a backend change too:** extend `RegistryTableDto` with a per-variant list — each variant
+carrying its own `columns` and the mapping path it came from — so the dialog can show the operator
+what actually differs and let them choose. Regenerate `types.gen.ts` after the DTO change.
+
+Task 13 already de-risked the display half by showing a column *count* rather than the raw unioned
+list, so no fabricated column name is currently rendered as if real. But the count itself is the
+union (116 where the real files hold 110 and 99) and carries no qualifier, so it still misleads for
+those 11 names — closing that is part of this task. A single-definition match
+behaves as before, with no extra ceremony. Two of the 11 affected names are real corpus tables, not
+`SYN`/`CAS` fixtures, so this is not a mock-data corner case.
+
+When the configured kind is a target `table` and the entered name matches a **single** registry DDL
+definition, the dialog offers that table's columns as fields, and accepting them produces a step whose
+`fields[]` carry those names with their DDL types mapped to `ScalaType` values. Declining leaves
+`fields: []`. A name matching no DDL offers nothing and shows no error.
+
+- [x] **Step 2: Run to verify it fails, then implement**
+
+Run: `cd frontend && pnpm test src/components/tab2/NodeConfigDialog.test.tsx`
+Expected: FAIL — no DDL column offer.
+
+Map BigQuery DDL types to `ScalaType` values (`STRING`→`String`, `NUMERIC`/`BIGNUMERIC`→`BigDecimal`,
+`INT64`→`Long`, `TIMESTAMP`→`Timestamp`, `DATETIME`→`LocalDateTime`, `DATE`→`LocalDate`,
+`BOOL`→`Boolean`); anything unrecognized becomes `Unknown`, which is a legal `ScalaType`
+(`ScalaType.scala:7`) and passes `IPC-STR-008`.
+
+Re-run the same command; expected PASS.
+
+- [x] **Step 3: Run gates and commit**
+
+Run: `cd frontend && pnpm test && npx tsc --noEmit` (plus `mvn -q -am -pl backend clean test`,
+since the amendment made this a backend change too).
+
+**Landed with four deviations** (see `.superpowers/sdd/2026-08-01-etl-modifier-ux2/task-16-report.md`):
+a variant's `columns` are `{name, type}` records rather than bare strings (the DDL type is
+required to map to a `ScalaType`, and a plain `List<String>` cannot carry it); `RegistrySearch`'s
+column-count chip and `recipeEdits.mappedFieldToRecipeField` were touched too (the chip showed the
+union count; an adopted DDL column is authored UNMAPPED, so an empty `source` must emit no
+`transformation`); and the Task-13 test asserting a `kind: 'table'` dialog needs no
+`QueryClientProvider` now uses one, because a target-table dialog genuinely consults the registry.
+The corpus figures in this note were re-verified against the live `GET /api/registry`: 180 DDL
+names, exactly **11** with more than one variant, `DWH_MAPLESHORE_MAPLEBARN_MEMBERS` 99/110
+(union 116) and `DWH_SYN_ORDERS_FACT` 7/5/2 (union 8) — all as written. One further finding: a
+12th name (`ODS_F_MAPLEGLADE_WITHDRAWALS`) has two files differing ONLY in column order, which
+dedupes to a single variant by design.
+
+```bash
+git add frontend/src/components/tab2/NodeConfigDialog.tsx \
+        frontend/src/components/tab2/NodeConfigDialog.test.tsx \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "feat(modifier): offer matching DDL columns as a new target's fields
+
+Task 16. Unrecognized BigQuery types map to ScalaType 'Unknown', which is legal and
+passes IPC-STR-008 rather than producing an invalid recipe."
+```
+
+---
+
+### Task 17: Sweep, docs, ADR-0012, acceptance walk
+
+**Files:**
+- Modify: `scripts/recipe_sweep.mts`, `CLAUDE.md`, `docs/architecture.md`, `frontend/AGENTS.md`
+- Create: `docs/adr/0012-ipc-connection-matrix.md`
+- Modify: `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` (§12)
+
+- [x] **Step 1: Extend the sweep**
+
+Assert every recipe with a `union`/`joiner` source yields a node of that name, and that
+`GET /api/ipc/rules` serves a `connections` entry for every source kind. Wire nothing new
+alongside `validate-loop` — extend what it already runs.
+
+- [x] **Step 2: Run the full gate**
+
+`make dev` in one terminal, `make validate-loop` in another. Expected: all sweeps green.
+
+- [x] **Step 3: Write ADR-0012**
+
+Follow `docs/adr/0000-template.md`, ≤ 30 lines per that template's own convention (ADRs 0010 and
+0011 overran it; do not repeat that). Record: why the matrix is authored rather than derived; the
+corpus as validation set; where it lives and how it is served; and why gating Insert behind
+validation beats permitting orphans and flagging them afterwards.
+
+- [x] **Step 4: Update the docs**
+
+`CLAUDE.md` (Tab 2's description, the new endpoints, a pointer to ADR-0012), `docs/architecture.md`
+(`GET /api/registry`, `POST /api/recipes/{*path}`, `connections` on `GET /api/ipc/rules`),
+`frontend/AGENTS.md` (the new Tab 2 components and hooks).
+
+**Do not claim a capability the acceptance walk marks FAIL.** Sub-project 8 shipped a `CLAUDE.md`
+line contradicting its own acceptance finding, and `CLAUDE.md` is primed into every future
+session.
+
+- [x] **Step 5: Acceptance walk**
+
+Work spec §9's 12 criteria in order. For each record exactly one of **PASS** (with the command and
+its output), **PASS (mechanical)** (behaviour proven by test or script, visual result not
+observed — say precisely what was and was not proven), **NEEDS HUMAN VISUAL SIGN-OFF** (say what
+to look at), or **FAIL** (with evidence).
+
+**Do not write PASS for anything you did not observe.** An honest set of NEEDS-HUMAN entries is a
+good outcome; invented PASSes destroy the exercise. Record the results in spec §9 as a committed
+table, not only in the task report — the report is git-ignored.
+
+- [x] **Step 6: Commit**
+
+```bash
+git add scripts/recipe_sweep.mts CLAUDE.md docs/architecture.md frontend/AGENTS.md \
+        docs/adr/0012-ipc-connection-matrix.md \
+        docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md \
+        docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md
+git commit -m "chore: UX round 2 acceptance walk — sweep, ADR-0012, docs
+
+Task 17. Spec §9's criteria verified with evidence and recorded in the spec itself;
+deviations in §12."
+```
+
+**Outcome (2026-08-02).** Step 1's union/joiner node assertion was already live — Task 6 added it
+to `recipe_sweep.mts` when the nodes landed — so the genuinely new assertion is `connections`
+coverage of every source kind the corpus uses. RED was captured against a proxy that strips
+`connections` from `GET /api/ipc/rules` (the pre-change sweep passed 86/86 on a catalogue with
+no matrix at all); GREEN rejects both the stripped catalogue and a single dropped kind, and
+passes 10/10 against the real backend. Non-vacuity of the union/joiner half was measured
+separately: 15 occurrences (10 union, 5 joiner) across 8 recipes, all resolving. Acceptance walk
+tally (spec §9): **5 PASS · 5 PASS (mechanical) · 2 NEEDS HUMAN VISUAL SIGN-OFF · 0 FAIL**;
+deviations recorded in spec §12 (6 entries — the coordinator's proposed 7th, `localStorage`
+persistence, is not a deviation: §5.3 specifies it).
+
+**Fix round 1 (2026-08-02).** Four review fixes: this Outcome block was committed inside
+**Task 8**'s section (a `replace(anchor, …)` on `- [x] **Step 6: Commit**` matched the first
+occurrence in the file, not Task 17's) and is moved here verbatim; `CLAUDE.md`'s "cannot insert
+an orphan" now names the blank-canvas source-table exception ADR-0012 and spec §12 deviation 5
+already disclose; `frontend/AGENTS.md` quotes the toolbar's literal `{ raw JSON }` label
+(`{ history }` and `⤢` were already correct); and `IpcConnectionsContractTest` now pins the
+observed-pairing count — `assertThat(observed).hasSize(30)`, verified failing as
+`Expected size: 29 but was: 30` before restoring — so ADR-0012's and criterion 6's "all 30
+observed pairings" is literally test-backed. Backend stays 189 tests / 35 classes (the new
+assertion lives inside an existing `@Test`).
+
+---
+
+## Critical Files for Implementation
+
+| File | Why it matters |
+|---|---|
+| `frontend/src/components/tab2/ETLModifier.tsx` | The scrolling-document body (`:598`) and the fixed 420 px canvas host (`:700`) are what Task 4 replaces. Its `applyEdit` (`:365`) is the single funnel every mutation passes through — undo/redo and the dialog both hook there. |
+| `frontend/src/components/tab2/InspectorWidgets.tsx` | Seven widget primitives the config dialog reuses. Building a second widget system would be the main way this plan goes wrong. |
+| `frontend/src/api/recipeAdapter.ts:352` | The `source.type !== 'table'` skip that hides union and joiner sources. |
+| `frontend/src/api/recipeEdits.ts` | `addStep`'s orphan-producing shape, and the immutable-mutator idiom every new mutator must follow. |
+| `backend/.../service/ipc/IpcCatalog.java` | Loads `ipc-rules.json`; `connections` joins `rules`/`keySchema`/aliases there. |
+| `backend/.../service/RecipeService.java` | `writeAtomic` and `writableRecipeFile` are the idioms `create` mirrors — including the existence check `LayoutService` originally failed to mirror. |
+| `docs/adr/0010-ipc-conformance-ruleset.md` | The severity procedure Task 7 re-runs. |
+| `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` | The spec. Section references throughout point here. |
+
+---
+
+## Final whole-branch review — fix wave (2026-08-03)
+
+Ran after all 17 tasks were individually reviewed and approved. Every finding below is a
+**cross-task seam**: each was introduced because one task's implementer could not see
+another's work, and none was visible from inside a single task's diff.
+
+**BLOCKING 1 — rollback left the undo stack loaded.** Three code paths re-baseline the
+draft and `history.reset()` was called on only two, plus Discard. `handleRestored` was the
+third and was missed: a rollback rewrites the live file, so the refetch re-runs the
+draft-reset effect (keyed on `modifiedAt`) while the history-reset effect — keyed on
+`recipePath` alone — does not fire. Undo/Redo are not gated on `changes > 0` the way
+Discard/Save are, so this left a live Undo that reverted the operator's explicit rollback
+behind a toolbar reading 0 changes; one further edit then let Save PUT the pre-rollback
+content with a matching `baseModified`. Fixed in `ETLModifier.tsx`'s `handleRestored`.
+
+**BLOCKING 2 — the pre-add dialog rendered a FAILED conformance check as green.**
+`NodeConfigDialog`'s preview banner never consulted `validation.failed`, so a rejected
+`POST /api/recipes/validate` deterministically took the green branch and printed
+"0 errors · 0 warnings" while `canInsert` (correctly) disabled Insert with no stated
+reason. This is the second time this exact fallthrough shipped — `ConformanceChip` did it
+first. `ValidationState`'s javadoc now enumerates BOTH consumers and instructs a third to
+branch on `failed` FIRST. `TargetDdlOffer` got the same treatment: a registry failure is no
+longer indistinguishable from a genuine "no match".
+
+**BLOCKING 3 — `fanInVerdict` had no production caller.** Task 9 built the rule, tested it,
+and wired it to nothing: call sites existed only in `IpcConnectionsContractTest`, and
+`docs/architecture.md` read as though the constraint were enforced. The user had explicitly
+ruled "add fan-in now" during planning, so shipping it computed-but-unconsulted delivered
+half of an approved feature. Now asked over a new batched `POST /api/ipc/fan-in`
+(`FanInRequestDto`/`FanInVerdictsDto`/`FanInPairingDto`), server-side so the rule keeps ONE
+implementation — a client-side reimplementation would have left `fanInVerdict` exactly as
+the review found it. Three-valued: only `block` refuses a candidate; `warn` (nullable
+`active` — `table`, `java`, `joinerInput`, or any kind absent from the matrix) is surfaced
+without blocking.
+
+**Non-blocking, also fixed.** `registryQueries.ts` claimed "there is no write path that
+could make a cached copy stale within one running session" — true when Task 12 wrote it,
+falsified by Task 14's `POST /api/recipes/{*path}`. With `staleTime: Infinity` and no
+invalidation, a picker reopened after a save served the pre-save inventory for the rest of
+the session, so a recipe just authored could not be found in the search box built to find
+it. `handleSave` now invalidates `['registry']`. `frontend/AGENTS.md`'s `SaveBar.tsx` row
+still described a component deleted in Task 4 (the file is two style constants now), and
+`docs/architecture.md` gained the new endpoint and lost the claim that fan-in was enforced.
+
+**Deliberately shipped as-is** (triaged, not defects): `RegistrySearch.tsx`'s always-zero
+`columns` fallback and its double `columnCountLabel` call; the untrimmed field name in
+`NodeConfigDialog`; the `/api/registry` payload size (the server binds `127.0.0.1`, so
+compression would spend CPU shrinking a loopback copy).
+
+**Gates:** frontend 357, backend 193 (35 classes = 35 surefire reports), `tsc --noEmit`
+clean, `make validate-loop` PASS — viewer 81/81, recipe 86/86, 10/10 corpus source kinds
+covered by `connections`, relationships sweep all green. `types.gen.ts` verified byte-
+identical to a fresh regeneration against a booted backend, not hand-edited.
+
+### Residuals pass (2026-08-03)
+
+The non-blocking findings the fix wave triaged, closed before merge.
+
+- **A palette primitive that could never be inserted.** `Palette.tsx` offered `expression
+  step`, but `expression` is not an IPC kind in this recipe model at all — absent from all
+  20 `keySchema` kinds, all 11 `connections` entries and every `mayFeed` list, and never a
+  `type` on any corpus source or target. An EXPRESSION transformation's logic lives in each
+  target field's `transformation` call tree; `NODE_STYLES.expression` is the canvas's
+  generic fallback STYLE, not a kind. Probed first rather than assumed: against the REAL
+  `ipc-rules.json` with a draft carrying a node of all 13 kinds, the dialog offered 13
+  candidates with **0 enabled** and Insert permanently disabled (a `filter` control on the
+  same draft reached an enabled Insert). Entry removed, with the reasoning left where it
+  was. New `Palette.test.tsx` pins the palette against the real rules file, so an unbacked
+  primitive fails loudly instead of shipping as a dead button. **The probe also found
+  `joiner` and `union` dead by the identical mechanism** — named by the matrix as source
+  kinds, but absent from every `mayFeed` (only `joinerInput`/`unionInput` appear) and with
+  no `target:` schema. Both probed 0-of-13 enabled. See the follow-up ruling below.
+- **The joiner/union follow-up: swapped, not removed** (coordinator ruling). Removing them
+  would take away the ability to build joins and unions at all, which is the opposite of
+  what was asked. `joiner` → `joinerInput` ("joiner side"), `union` → `unionInput` ("union
+  group") — labels taken from the wiki's own nouns (`joinerInput.md`: "one **side** (Master
+  or Detail)"; `unionInput.md`: "one **input group**"), colours unchanged. This is what the
+  model actually expresses: a joiner/union node is SYNTHESIZED from its inputs
+  (`recipeAdapter`'s `toJoinerNode`/`toUnionNode` read `sources[].joinerTables`/
+  `unionTables`), so the container is never a step target — only its inputs are, and the
+  corpus carries exactly that (`ASHPATH2` → `joinerInput`, `EARLYGLADE` → `unionInput`).
+  Re-probed end to end through a real `Palette` click: **all 10 non-sentinel entries now
+  reach an ENABLED Insert and commit through `onInsert`**, `joinerInput` and `unionInput`
+  included. The pin dropped its exceptions list and now states the real insertability
+  criterion — something may feed it, AND it has a `target:` key schema — with no
+  exceptions, proven to reject an added bogus entry.
+- **A banner that contradicted the button it described.** `fanInWarned` did not filter on
+  `c.legal` while `fanInTitle` did, so a candidate both illegal by `mayFeed` and `warn` by
+  fan-in rendered disabled with "filter may not feed sourceQualifier" while the yellow
+  banner named it and said "The link is allowed". Now `c.legal && c.verdict === 'warn'` —
+  and, on the coordinator's ruling, the same guard on the candidate's warn-yellow BORDER,
+  which carried the identical contradiction in visual form.
+- **A vacuous escape-hatch assertion.** The "already-selected candidates stay clickable"
+  guard could not fail: dropping both `!fedBy.includes(...)`/`!feeds.includes(...)` clauses
+  left every test green, because the fixture's selected candidate is never asked about. Two
+  tests now put a genuine `block` on a SELECTED candidate (the verdict race the hatch
+  exists for), one per picker; both were proven to fail with the hatch removed.
+- **A false sentence beside an enabled button.** The failed-validate banner hardcoded
+  "Insert stays disabled until it succeeds", but `canInsert` short-circuits on
+  `bypassWholeRecipeValidation` — so a source table on a blank canvas said it beside an
+  ENABLED Insert. The sentence now branches on the same bypass the gate uses.
+- **Three doc overclaims about `POST /api/ipc/fan-in`.** `IpcController`'s `request == null`
+  clause is unreachable (`@RequestBody` defaults to `required = true`; probed: an absent
+  body 500s from `ApiExceptionHandler` without entering the handler). Clause dropped, and
+  `IpcController`'s javadoc, `FanInRequestDto`'s and `docs/architecture.md` narrowed from
+  "a missing body" to the null/absent `pairings` FIELD, which is what is genuinely handled
+  — `{}` and `{"pairings":null}` both keep a test, and both were proven to 500 without the
+  guard. ADR-0012 no longer presents `fanInVerdict` as internal-only now that
+  `architecture.md` cites it as the reference for the endpoint (still exactly 30 lines).
+  `frontend/AGENTS.md`'s `SaveBar.tsx` row named two importers of `ghostButtonStyle`; there
+  are five.
+
+**Known, not fixed here:** a `joinerInput`'s NAME must match `^.+\.(MASTER|DETAIL)$`
+(`IPC-TYP-JOINERINPUT-001`, severity error), so "JIN1" fails the real validate and Insert
+stays disabled — with that rule's message rendered in the dialog, so it teaches rather than
+traps. `unionInput` carries no naming rule. Also: `unionInput` has no `connections` entry of
+its own while `joinerInput` carries an explicit `mayFeed: []`, though both feed nothing —
+a cosmetic asymmetry in `ipc-rules.json`, deliberately not pinned (see `Palette.test.tsx`'s
+header for why the palette pin does not key on `connections` membership).
+
+**Gates:** frontend 365 (+8), backend 194 (+1) / 35 classes / 35 reports, `tsc --noEmit`
+clean. Backend untouched by the joiner/union follow-up.

@@ -97,30 +97,6 @@ function fieldsReferencing(d: RecipeJson, name: string): RecipeFieldJson[] {
   return fields
 }
 
-function allNodeNames(d: RecipeJson): Set<string> {
-  const names = new Set<string>()
-  for (const step of d.steps ?? []) {
-    if (step.target?.name) names.add(step.target.name)
-    for (const source of step.sources ?? []) {
-      if (source.name) names.add(source.name)
-    }
-  }
-  return names
-}
-
-/** Smallest `NEW_<PREFIX>_<n>` (n >= 1) not already used by any step target or
- * source name in `d`. */
-function nextUniqueName(d: RecipeJson, prefix: string): string {
-  const existing = allNodeNames(d)
-  let n = 1
-  let name = `NEW_${prefix}_${n}`
-  while (existing.has(name)) {
-    n += 1
-    name = `NEW_${prefix}_${n}`
-  }
-  return name
-}
-
 // ─── Mutators ───────────────────────────────────────────────────────────────────
 
 /** Sets (or creates) a field's transformation on the named step's target. Writes
@@ -197,51 +173,15 @@ export function editFieldDataType(d: RecipeJson, stepName: string, fieldName: st
   return draft
 }
 
-/** Appends a new step `{name: NEW_<TYPE>_<n>, type, fields: []}` (n picked to be
- * unique across every existing node name). For `type === 'table'` also appends the
- * new name to `table.targetTableNames`. */
-export function addStep(d: RecipeJson, type: string): RecipeJson {
-  const draft = structuredClone(d)
-  const name = nextUniqueName(draft, type.toUpperCase())
-  const newStep: RecipeStepJson = { target: { name, type, fields: [] }, sources: [] }
-  draft.steps = [...(draft.steps ?? []), newStep]
-  if (type === 'table') {
-    draft.table = draft.table ?? {}
-    draft.table.targetTableNames = [...(draft.table.targetTableNames ?? []), name]
-  }
-  return draft
-}
-
-/** Appends a new `{name: NEW_SOURCE_<n>, type: 'table'}` source into the named
- * step's `sources[]` (falling back to the first step when `stepName` is omitted or
- * doesn't resolve), plus `table.sourceTableNames`. Creates a stub `table`-typed
- * step (via addStep) first when the recipe has no steps at all to land on. */
-export function addSourceTable(d: RecipeJson, stepName?: string): RecipeJson {
-  let draft = structuredClone(d)
-
-  let step = stepName ? draft.steps?.find(s => s.target?.name === stepName) : undefined
-  if (!step) step = draft.steps?.[0]
-  if (!step) {
-    draft = addStep(draft, 'table')
-    step = draft.steps![draft.steps!.length - 1]
-  }
-
-  const name = nextUniqueName(draft, 'SOURCE')
-  const source: RecipeSourceJson = { name, type: 'table' }
-  step.sources = [...(step.sources ?? []), source]
-  draft.table = draft.table ?? {}
-  draft.table.sourceTableNames = [...(draft.table.sourceTableNames ?? []), name]
-  return draft
-}
-
 /** Appends a new field `{name, dataType: dataType || 'String'}` (no
- * `transformation`) to the named step's target. Final-review fix: palette-added
- * nodes (`addStep` creates `fields: []`) had no in-UI way to ever gain a field —
- * ports derive 1:1 from fields (recipeAdapter's `toStepNode`), so a freshly
- * added node could never be wired. Writes to whichever of fields/weststone the
- * target already carries (see `fieldsArrayFor`, creating `fields` only when
- * neither key is present yet). No-op (unchanged clone) if `stepName` doesn't
- * resolve to a step target. */
+ * `transformation`) to the named step's target. Final-review fix: a freshly
+ * inserted node can legitimately carry an empty `fields[]` (a dialog-built step's
+ * own "map fields" section leaves room for more than what it mapped at insert
+ * time) — ports derive 1:1 from fields (recipeAdapter's `toStepNode`), so a field
+ * the dialog didn't map could never be wired without this. Writes to whichever of
+ * fields/weststone the target already carries (see `fieldsArrayFor`, creating
+ * `fields` only when neither key is present yet). No-op (unchanged clone) if
+ * `stepName` doesn't resolve to a step target. */
 export function addField(
   d: RecipeJson,
   { stepName, fieldName, dataType }: { stepName: string; fieldName: string; dataType?: string },
@@ -289,6 +229,183 @@ export function deleteNode(d: RecipeJson, name: string): RecipeJson {
  * for the delete confirm hint ("this will clear N expressions"). */
 export function refsInto(d: RecipeJson, name: string): number {
   return fieldsReferencing(d, name).length
+}
+
+// ─── Configured-node insertion (Task 10) ─────────────────────────────────────
+//
+// The old direct-add path (`addStep`/`addSourceTable`, removed in Task 11 once
+// every palette add routed through `NodeConfigDialog` — human ruling, pre-flight
+// scan 2026-08-01) used to emit an ORPHAN: {name: NEW_<TYPE>_<n>, type, fields:
+// []} — no sources, no fields, no refs — the floating NEW_TABLE_1 the user
+// screenshotted. `buildStep`/`insertConfiguredStep` are `NodeConfigDialog`'s
+// write path for every kind EXCEPT a source table: the dialog gathers a name,
+// schema-driven properties, and a legality-checked set of "fed by"/"feeds" node
+// names, then commits ONE fully-formed step through these two pure helpers —
+// same clone-then-mutate idiom as every other mutator here.
+//
+// A source table (the palette's `SOURCE_TABLE_TYPE` sentinel) is NOT a step —
+// it's a root that reads a physical table with no upstream, so it structurally
+// cannot carry a `fedBy`/mapped-field requirement the way a transformation step
+// must. `IPC-FLW-003` ("no orphan step") iterates `d.steps` only, so a bare
+// `sources[]` occurrence never reaches it in the first place — see
+// `insertSourceTable` below, `NodeConfigDialog`'s write path for that one kind.
+
+/** A node already present in the draft, resolved to its name + kind (a step
+ * target's own `type`, or a `sources[]` entry's own `type`) — what
+ * `NodeConfigDialog`'s connection picker offers as "fed by"/"feeds" candidates. */
+export interface RecipeNodeRef {
+  name: string
+  kind: string
+}
+
+/** One field mapping the dialog's "map fields" section produces: `source` is
+ * the upstream dot-ref (`"UPSTREAM.FIELD"`), `name`/`dataType` describe the
+ * NEW step's own field (defaults to the upstream field's own name/dataType,
+ * user-editable — see `NodeConfigDialog`).
+ *
+ * (Task 16: an EMPTY `source` is legal and means "this field exists but its
+ * value is not mapped yet" — what the dialog's target-DDL offer produces, since
+ * a `<TABLE>.json` names a column and its type but says nothing about where the
+ * data comes from. See `mappedFieldToRecipeField`.)
+ *
+ * (Fix round 1, task-10-report.md: `IPC-FLW-003` ("no orphan step") measures
+ * orphan-ness by dot-refs in field FORMULAS, not by `sources[]` membership —
+ * a `fields: []` step can carry no outbound dot-ref no matter how many
+ * `sources[]` entries it declares, so it always failed that check and Insert
+ * could never enable. At least one real field mapping is what makes a new
+ * step genuinely connected.) */
+export interface MappedField {
+  name: string
+  dataType: string
+  source: string
+}
+
+/** An empty `source` yields `{name, dataType}` with NO `transformation` key —
+ * the same shape `addField` produces for an unmapped field — rather than an
+ * empty `{source: ""}` formula, which would be a transformation tree claiming a
+ * reference it does not have (`ReferentialRules.collectRefs` skips blank
+ * sources, so such a node is pure noise in the JSON). */
+function mappedFieldToRecipeField(m: MappedField): RecipeFieldJson {
+  return m.source === ''
+    ? { name: m.name, dataType: m.dataType }
+    : { name: m.name, dataType: m.dataType, transformation: { source: m.source } }
+}
+
+/**
+ * Builds the step a freshly-configured palette node inserts as:
+ * `{target: {name, type: kind, ...props, fields: [...]}, sources: [...]}` —
+ * `fields[]` is `mappedFields` rendered as real
+ * `{name, dataType, transformation: {source: "UPSTREAM.FIELD"}}` entries
+ * (never `[]` — see `MappedField`'s doc comment for why a fieldless step
+ * cannot pass validation regardless of its `sources[]`). `fields` is spread
+ * in AFTER `...props` so it always wins even if `props` happened to carry a
+ * `fields` key (unreachable today — the dialog filters out the
+ * `fieldTable`-widget key before building `props` — but the ordering itself
+ * should not depend on that).
+ *
+ * The `sources[]` array is built from `fedBy`, each entry `{name, type: <that
+ * node's own kind>}` (a `sources[]` entry always records the UPSTREAM node's
+ * kind, never this step's own).
+ *
+ * `feeds` needs no per-node kind — the `sources[]` entry `insertConfiguredStep`
+ * adds to each CONSUMING step always has `type: kind`, this new step's own kind
+ * — so it travels as plain names. `RecipeStepJson` has no field for it though,
+ * so it rides along as a transient marker on the returned object, read and
+ * stripped by `insertConfiguredStep`; it is never written into the persisted
+ * target/sources JSON (see the task-10 report's deviation log: the plan's
+ * literal `fedBy: string[]` cannot carry the per-node kind this function's own
+ * prose requires without a draft lookup buildStep's signature has no room for,
+ * so `fedBy` is `RecipeNodeRef[]` instead).
+ */
+export function buildStep(
+  kind: string,
+  name: string,
+  props: Record<string, unknown>,
+  feeds: string[],
+  fedBy: RecipeNodeRef[],
+  mappedFields: MappedField[],
+): RecipeStepJson {
+  const target = {
+    name, type: kind, ...props, fields: mappedFields.map(mappedFieldToRecipeField),
+  } as unknown as RecipeTargetJson
+  const sources: RecipeSourceJson[] = fedBy.map(f => ({ name: f.name, type: f.kind }))
+  const step: RecipeStepJson = { target, sources }
+  // Transient carrier consumed by insertConfiguredStep, see the doc comment above —
+  // never part of a real RecipeStepJson's own shape.
+  ;(step as unknown as { feeds?: string[] }).feeds = feeds
+  return step
+}
+
+/**
+ * Appends `step` (as built by `buildStep`) to `d.steps` immutably. When the
+ * step's kind is `table`, also appends its name to `table.targetTableNames`
+ * (same table-list bookkeeping a target-table addition always needs). For
+ * every name in `step`'s transient `feeds` list that resolves to an EXISTING
+ * step target, appends `{name, type: kind}` — this new step's own name/kind
+ * — onto that consuming step's `sources[]`; a `feeds` name that doesn't
+ * resolve to a step target is a safe no-op (nothing to attach to). Never
+ * mutates `d` or `step`.
+ */
+export function insertConfiguredStep(d: RecipeJson, step: RecipeStepJson): RecipeJson {
+  const draft = structuredClone(d)
+  const persisted: RecipeStepJson = structuredClone({ target: step.target, sources: step.sources })
+  const feeds = (step as unknown as { feeds?: string[] }).feeds ?? []
+
+  draft.steps = [...(draft.steps ?? []), persisted]
+
+  const name = persisted.target?.name
+  const kind = persisted.target?.type
+  if (kind === 'table' && name) {
+    draft.table = draft.table ?? {}
+    draft.table.targetTableNames = [...(draft.table.targetTableNames ?? []), name]
+  }
+
+  if (name && kind && feeds.length > 0) {
+    draft.steps = draft.steps.map(s => (
+      feeds.includes(s.target?.name ?? '')
+        ? { ...s, sources: [...(s.sources ?? []), { name, type: kind }] }
+        : s
+    ))
+  }
+
+  return draft
+}
+
+/**
+ * Inserts a **source table** — `NodeConfigDialog`'s write path for the
+ * palette's `SOURCE_TABLE_TYPE` sentinel (Task 11 design ruling). A source
+ * table is a ROOT: it reads a physical table and has no upstream of its own,
+ * and it is not even a step — unlike `insertConfiguredStep`, this NEVER
+ * appends to `d.steps`. It becomes real by being referenced: a `sources[]`
+ * entry `{name, type: 'table', ...props}` is appended to EVERY step named in
+ * `feeds` that already exists (a `feeds` name that doesn't resolve to a step
+ * target is a safe no-op for that entry, same contract as
+ * `insertConfiguredStep`'s own `feeds` handling — the table is still
+ * recorded in `table.sourceTableNames` even if nothing consumes it yet),
+ * plus `name` is appended to `table.sourceTableNames` (mirrors the removed
+ * `addSourceTable`'s own table-list bookkeeping). Each consuming step gets
+ * its OWN clone of the source entry — never a shared object reference across
+ * more than one step's `sources[]`. Pure — never mutates `d`.
+ */
+export function insertSourceTable(
+  d: RecipeJson,
+  name: string,
+  props: Record<string, unknown>,
+  feeds: string[],
+): RecipeJson {
+  const draft = structuredClone(d)
+  const source = { name, type: 'table', ...props } as unknown as RecipeSourceJson
+
+  draft.steps = (draft.steps ?? []).map(s => (
+    feeds.includes(s.target?.name ?? '')
+      ? { ...s, sources: [...(s.sources ?? []), structuredClone(source)] }
+      : s
+  ))
+
+  draft.table = draft.table ?? {}
+  draft.table.sourceTableNames = [...(draft.table.sourceTableNames ?? []), name]
+
+  return draft
 }
 
 /** Clears (deletes) the `.transformation` of a single field — the edge from

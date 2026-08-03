@@ -9,4 +9,5 @@ import java.util.Map;
 public record IpcRulesDto(List<IpcRuleMetaDto> rules,
                           Map<String, String> typeAliases,
                           Map<String, String> keyAliases,
-                          Map<String, List<IpcKeySpecDto>> keySchema) {}
+                          Map<String, List<IpcKeySpecDto>> keySchema,
+                          Map<String, IpcConnectionDto> connections) {}

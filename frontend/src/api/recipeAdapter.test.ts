@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { recipeToCanvas } from './recipeAdapter'
-import type { RecipeJson } from './recipeAdapter'
+import type { RecipeJson, RecipeSourceJson } from './recipeAdapter'
 import bizlink from './__fixtures__/recipe_m_DM_INFOHUB_BIZLINK.json'
 import syn from './__fixtures__/recipe_m_SYN_ODS_ORDERS.json'
 const BIZ_PATH = 'CDM/m_DM_INFOHUB_BIZLINK/_ETL_m_DM_INFOHUB_BIZLINK.json'
@@ -79,11 +79,238 @@ describe('recipeToCanvas — nodes, kinds, ports', () => {
     const n = recipeToCanvas(r, 'L/x/_ETL_x.json').nodes.find(x => x.id === 'X')!
     expect([n.type, n.label]).toEqual(['expression', 'BER'])
   })
-  it('SYN recipe: clean 2-node shape; empty/garbage input never throws', () => {
+  it('SYN recipe: the two step-derived nodes plus its declared-only lookup table; empty/garbage input never throws', () => {
     const g = recipeToCanvas(syn as RecipeJson, 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json')
-    expect(g.nodes.map(n => n.id).sort()).toEqual(['ODS_SYN_ORDERS', 'STG_L_SYN_ORDERS'])
+    // SYN_LKP_CURRENCY is declared in table.sourceTableNames but referenced only
+    // through the LKP_SYN_CURRENCY(...) call, never as a `sources[]` entry — see
+    // the declared-source-table block below.
+    expect(g.nodes.map(n => n.id).sort()).toEqual(['ODS_SYN_ORDERS', 'STG_L_SYN_ORDERS', 'SYN_LKP_CURRENCY'])
     expect(recipeToCanvas({} as RecipeJson, 'x').nodes).toEqual([])
     expect(recipeToCanvas({ steps: [{}] } as RecipeJson, 'x').nodes).toEqual([])
+  })
+
+  // ─── Declared-but-unconsumed source tables (UX round 3, issue 3) ────────────
+  //
+  // Nodes used to derive from `steps[]` ALONE (a step target, or a `sources[]`
+  // entry of one). A `table.sourceTableNames` entry that no step references
+  // therefore had no node at all — which is exactly what a source table
+  // inserted into an EMPTY draft is (`insertSourceTable` appends no step, by
+  // design: a source table is a root, not a step), so authoring from scratch
+  // started with an invisible first node and a blank canvas. It also hid four
+  // real corpus lookup tables (CAS_LKP_STATUS, SYN_LKP_CURRENCY ×2,
+  // CAS_ODS_EVENTS) that are declared and reached only through LKP_* calls.
+  describe('declared source tables', () => {
+    it('a sourceTableNames entry no step references still gets its own Sources-band node', () => {
+      const r: RecipeJson = {
+        steps: [{ target: { name: 'T', type: 'table', fields: [] }, sources: [] }],
+        table: { targetTableNames: ['T'], sourceTableNames: ['LKP_ONLY'] },
+      }
+      const n = recipeToCanvas(r, 'L/x/_ETL_x.json').nodes.find(x => x.id === 'LKP_ONLY')!
+      expect(n).toBeDefined()
+      expect(n.type).toBe('source')
+      expect(n.label).toBe('SRC')
+    })
+
+    it('the very first insertion into an empty draft is visible (the from-scratch case)', () => {
+      const r: RecipeJson = { steps: [], table: { targetTableNames: [], sourceTableNames: ['CAS_ODS_EVENTS'] } }
+      const g = recipeToCanvas(r, 'RDM/m_NEW/_ETL_m_NEW.json')
+      expect(g.nodes.map(n => n.id)).toEqual(['CAS_ODS_EVENTS'])
+      expect(g.connections).toEqual([])
+    })
+
+    it('never duplicates a node that already exists under different CASING', () => {
+      // BIZLINK declares "FF_BIZLINK" while its `sources[]` entry is "ff_BIZLINK"
+      // — the same physical table. Matching case-sensitively would paint it
+      // twice. (`buildResolver`/`toSourceNode` are already case-insensitive for
+      // exactly this reason.)
+      const g = recipeToCanvas(bizlink as RecipeJson, BIZ_PATH)
+      expect(g.nodes.filter(n => n.id.toLowerCase() === 'ff_bizlink')).toHaveLength(1)
+      expect(g.nodes).toHaveLength(3)
+    })
+
+    it('picks up dot-refs into it, so a declared table that IS referenced wires up like any source', () => {
+      const r: RecipeJson = {
+        steps: [{
+          target: { name: 'T', type: 'table', fields: [{ name: 'A', dataType: 'String', transformation: { source: 'LKP_REFD.CODE' } }] },
+          sources: [],
+        }],
+        table: { targetTableNames: ['T'], sourceTableNames: ['LKP_REFD'] },
+      }
+      const g = recipeToCanvas(r, 'L/x/_ETL_x.json')
+      expect(g.nodes.find(n => n.id === 'LKP_REFD')!.ports.map(p => p.name)).toEqual(['CODE'])
+      expect(g.connections).toContainEqual({ fromNode: 'LKP_REFD', fromPort: 'CODE', toNode: 'T', toPort: 'A' })
+    })
+
+    it('a blank name in sourceTableNames is ignored, not rendered as an empty node', () => {
+      const r: RecipeJson = { steps: [], table: { targetTableNames: [], sourceTableNames: ['', 'OK'] } }
+      expect(recipeToCanvas(r, 'x').nodes.map(n => n.id)).toEqual(['OK'])
+    })
+  })
+
+  // Task 6 — union/joiner sources become canvas nodes. Shapes below are faithful excerpts
+  // of real corpus recipes (names/keys copied verbatim): the union from
+  // DWH/m_DWH_E_LKP_DIR_PHONELIST/_ETL_m_DWH_E_LKP_DIR_PHONELIST.json ('Union' with
+  // unionTables MAPLEROAD301MAPLEHEATH/MAPLEROAD100MAPLEHEATH), and the joiner chain from
+  // DWH/m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES/_ETL_m_DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES.json
+  // ('JNR_Ashshore' with joinerInput targets 'JNR_Ashshore.MASTER'/'JNR_Ashshore.DETAIL',
+  // AbstractTargetFactory.scala:88 <joiner>.<MASTER|DETAIL> naming).
+  const unionTypeAliases = { EARLYGLADE: 'unionInput', BERYLFALLS: 'sourceQualifier' }
+  const unionRecipe: RecipeJson = {
+    steps: [
+      {
+        target: {
+          name: 'DWH_E_LKP_DIR_PHONELIST', type: 'table',
+          fields: [
+            { name: 'ID_LOCATION', dataType: 'BigDecimal', transformation: { source: 'Union.ID_LOCATION' } },
+            { name: 'ID_MEMBER', dataType: 'BigDecimal', transformation: { source: 'Union.ID_MEMBER' } },
+          ],
+        },
+        sources: [{
+          name: 'Union', type: 'union',
+          unionTables: [
+            { name: 'MAPLEROAD301MAPLEHEATH', fieldMapping: [
+              { origin: 'ID_LOCATION1', union: 'ID_LOCATION' },
+              { origin: 'ID_MEMBER1', union: 'ID_MEMBER' },
+            ] },
+            { name: 'MAPLEROAD100MAPLEHEATH', fieldMapping: [
+              { origin: 'ID_LOCATION2', union: 'ID_LOCATION' },
+              { origin: 'ID_MEMBER2', union: 'ID_MEMBER' },
+            ] },
+          ],
+        } as RecipeSourceJson],
+      },
+      { target: { name: 'MAPLEROAD301MAPLEHEATH', type: 'EARLYGLADE', fields: [] }, sources: [{ name: 'SQ_X1', type: 'BERYLFALLS' }] },
+      { target: { name: 'MAPLEROAD100MAPLEHEATH', type: 'EARLYGLADE', fields: [] }, sources: [{ name: 'SQ_X2', type: 'BERYLFALLS' }] },
+      { target: { name: 'SQ_X1', type: 'BERYLFALLS', fields: [] }, sources: [{ name: 'T_X1', type: 'table' }] },
+      { target: { name: 'SQ_X2', type: 'BERYLFALLS', fields: [] }, sources: [{ name: 'T_X2', type: 'table' }] },
+    ],
+    table: { targetTableNames: ['DWH_E_LKP_DIR_PHONELIST'], sourceTableNames: ['T_X1', 'T_X2'] },
+  }
+
+  const joinerTypeAliases = { ASHPATH2: 'joinerInput', BERYLFALLS: 'sourceQualifier' }
+  const joinerRecipe: RecipeJson = {
+    steps: [
+      {
+        target: { name: 'DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES', type: 'table', fields: [
+          { name: 'ID_MEMBER', dataType: 'Long', transformation: { source: 'JNR_Ashshore.ID_MEMBER' } },
+        ] },
+        sources: [{
+          name: 'JNR_Ashshore', type: 'joiner',
+          joinerTables: ['JNR_Ashshore.MASTER', 'JNR_Ashshore.DETAIL'],
+          joinerType: 'Detail Outer Join',
+          joinerCondition: 'ID_MEMBER1 = ID_MEMBER',
+        } as RecipeSourceJson],
+      },
+      { target: { name: 'JNR_Ashshore.DETAIL', type: 'ASHPATH2', fields: [] }, sources: [{ name: 'SQ_D', type: 'BERYLFALLS' }] },
+      { target: { name: 'JNR_Ashshore.MASTER', type: 'ASHPATH2', fields: [] }, sources: [{ name: 'SQ_M', type: 'BERYLFALLS' }] },
+      { target: { name: 'SQ_D', type: 'BERYLFALLS', fields: [] }, sources: [{ name: 'D_TBL', type: 'table' }] },
+      { target: { name: 'SQ_M', type: 'BERYLFALLS', fields: [] }, sources: [{ name: 'M_TBL', type: 'table' }] },
+    ],
+    table: { targetTableNames: ['DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES'], sourceTableNames: ['D_TBL', 'M_TBL'] },
+  }
+
+  it('union source becomes a canvas node: UNI label, one OUT port per distinct fieldMapping.union value', () => {
+    const g = recipeToCanvas(unionRecipe, 'DWH/x/_ETL_x.json', unionTypeAliases)
+    const union = g.nodes.find(n => n.id === 'Union')
+    expect(union).toBeDefined()
+    expect(union!.type).toBe('expression')
+    expect(union!.label).toBe('UNI')
+    expect(union!.ports.map(p => p.name).sort()).toEqual(['ID_LOCATION', 'ID_MEMBER'])
+    expect(union!.ports.every(p => p.direction === 'OUT')).toBe(true)
+  })
+
+  it('each unionInput step gets an edge to the union node it belongs to', () => {
+    const g = recipeToCanvas(unionRecipe, 'DWH/x/_ETL_x.json', unionTypeAliases)
+    expect(g.connections).toContainEqual({ fromNode: 'MAPLEROAD301MAPLEHEATH', fromPort: '', toNode: 'Union', toPort: '' })
+    expect(g.connections).toContainEqual({ fromNode: 'MAPLEROAD100MAPLEHEATH', fromPort: '', toNode: 'Union', toPort: '' })
+    // dot-ref field edges from the union to its consuming target already fall out of the
+    // existing ref mechanism now that 'Union' is a resolvable node id
+    expect(g.connections).toContainEqual(
+      { fromNode: 'Union', fromPort: 'ID_LOCATION', toNode: 'DWH_E_LKP_DIR_PHONELIST', toPort: 'ID_LOCATION' })
+  })
+
+  it('joiner source becomes a canvas node: type joiner, label JNR, joinerType/joinerCondition lifted to properties', () => {
+    const g = recipeToCanvas(joinerRecipe, 'DWH/x/_ETL_x.json', joinerTypeAliases)
+    const jnr = g.nodes.find(n => n.id === 'JNR_Ashshore')
+    expect(jnr).toBeDefined()
+    expect(jnr!.type).toBe('joiner')
+    expect(jnr!.label).toBe('JNR')
+    expect(jnr!.ports.map(p => p.name).sort()).toEqual(['JNR_Ashshore.DETAIL', 'JNR_Ashshore.MASTER'])
+    expect(jnr!.ports.every(p => p.direction === 'OUT')).toBe(true)
+    expect(jnr!.properties.joinerType).toBe('Detail Outer Join')
+    expect(jnr!.properties.joinerCondition).toBe('ID_MEMBER1 = ID_MEMBER')
+  })
+
+  it('each joinerInput step (<joiner>.<MASTER|DETAIL>) gets an edge to the joiner named by the segment before the trailing dot', () => {
+    const g = recipeToCanvas(joinerRecipe, 'DWH/x/_ETL_x.json', joinerTypeAliases)
+    expect(g.connections).toContainEqual({ fromNode: 'JNR_Ashshore.DETAIL', fromPort: '', toNode: 'JNR_Ashshore', toPort: '' })
+    expect(g.connections).toContainEqual({ fromNode: 'JNR_Ashshore.MASTER', fromPort: '', toNode: 'JNR_Ashshore', toPort: '' })
+    expect(g.connections).toContainEqual(
+      { fromNode: 'JNR_Ashshore', fromPort: 'ID_MEMBER', toNode: 'DWH_MAPLEGROVE_ACT_CLIENTMGR_PROFILES', toPort: 'ID_MEMBER' })
+  })
+
+  it('a joiner whose own name contains a dot: both joinerInput branches still resolve to the ' +
+     'one owning joiner node (AbstractTargetFactory.scala:88 appends exactly one dot + a fixed ' +
+     'MASTER/DETAIL suffix onto the joiner\'s own name, so recovering that name must anchor on ' +
+     'the trailing suffix, not on whichever dot comes first)', () => {
+    const dottedJoinerRecipe: RecipeJson = {
+      steps: [
+        { target: { name: 'T', type: 'table', fields: [] },
+          sources: [{ name: 'A.B', type: 'joiner', joinerTables: ['A.B.MASTER', 'A.B.DETAIL'] } as RecipeSourceJson] },
+        { target: { name: 'A.B.DETAIL', type: 'ASHPATH2', fields: [] }, sources: [] },
+        { target: { name: 'A.B.MASTER', type: 'ASHPATH2', fields: [] }, sources: [] },
+      ],
+      table: { targetTableNames: ['T'], sourceTableNames: [] },
+    }
+    const g = recipeToCanvas(dottedJoinerRecipe, 'L/x/_ETL_x.json', joinerTypeAliases)
+    expect(g.nodes.find(n => n.id === 'A.B')).toBeDefined()
+    expect(g.connections).toContainEqual({ fromNode: 'A.B.DETAIL', fromPort: '', toNode: 'A.B', toPort: '' })
+    expect(g.connections).toContainEqual({ fromNode: 'A.B.MASTER', fromPort: '', toNode: 'A.B', toPort: '' })
+  })
+
+  it('no duplicate node id is produced when the same union feeds two steps', () => {
+    const fanOut: RecipeJson = {
+      steps: [
+        { target: { name: 'T1', type: 'table', fields: [{ name: 'A', dataType: 'String', transformation: { source: 'Union.A' } }] },
+          sources: [{ name: 'Union', type: 'union', unionTables: [{ name: 'U1', fieldMapping: [{ origin: 'A1', union: 'A' }] }] } as RecipeSourceJson] },
+        { target: { name: 'T2', type: 'table', fields: [{ name: 'A', dataType: 'String', transformation: { source: 'Union.A' } }] },
+          sources: [{ name: 'Union', type: 'union', unionTables: [{ name: 'U1', fieldMapping: [{ origin: 'A1', union: 'A' }] }] } as RecipeSourceJson] },
+        { target: { name: 'U1', type: 'EARLYGLADE', fields: [] }, sources: [] },
+      ],
+      table: { targetTableNames: ['T1', 'T2'], sourceTableNames: [] },
+    }
+    const g = recipeToCanvas(fanOut, 'L/x/_ETL_x.json', unionTypeAliases)
+    expect(g.nodes.filter(n => n.id === 'Union')).toHaveLength(1)
+    expect(g.connections).toContainEqual({ fromNode: 'Union', fromPort: 'A', toNode: 'T1', toPort: 'A' })
+    expect(g.connections).toContainEqual({ fromNode: 'Union', fromPort: 'A', toNode: 'T2', toPort: 'A' })
+    expect(g.connections).toContainEqual({ fromNode: 'U1', fromPort: '', toNode: 'Union', toPort: '' })
+  })
+
+  it('an aliased union/joiner source type resolves identically to the canonical one (typeAliases threaded through, not hardcoded)', () => {
+    const aliases = { MY_UNION_ALIAS: 'union', MY_JOINER_ALIAS: 'joiner' }
+    const mkUnion = (type: string): RecipeJson => ({
+      steps: [
+        { target: { name: 'T', type: 'table', fields: [{ name: 'A', dataType: 'String', transformation: { source: 'U.A' } }] },
+          sources: [{ name: 'U', type, unionTables: [{ name: 'IN1', fieldMapping: [{ origin: 'A1', union: 'A' }] }] } as RecipeSourceJson] },
+      ],
+      table: { targetTableNames: ['T'], sourceTableNames: [] },
+    })
+    const aliased = recipeToCanvas(mkUnion('MY_UNION_ALIAS'), 'L/x/_ETL_x.json', aliases).nodes.find(n => n.id === 'U')!
+    const canonical = recipeToCanvas(mkUnion('union'), 'L/x/_ETL_x.json', aliases).nodes.find(n => n.id === 'U')!
+    expect([aliased.type, aliased.label]).toEqual(['expression', 'UNI'])
+    expect([aliased.type, aliased.label]).toEqual([canonical.type, canonical.label])
+
+    const mkJoiner = (type: string): RecipeJson => ({
+      steps: [
+        { target: { name: 'T', type: 'table', fields: [] },
+          sources: [{ name: 'J', type, joinerTables: ['J.MASTER', 'J.DETAIL'] } as RecipeSourceJson] },
+      ],
+      table: { targetTableNames: ['T'], sourceTableNames: [] },
+    })
+    const aliasedJ = recipeToCanvas(mkJoiner('MY_JOINER_ALIAS'), 'L/x/_ETL_x.json', aliases).nodes.find(n => n.id === 'J')!
+    const canonicalJ = recipeToCanvas(mkJoiner('joiner'), 'L/x/_ETL_x.json', aliases).nodes.find(n => n.id === 'J')!
+    expect([aliasedJ.type, aliasedJ.label]).toEqual(['joiner', 'JNR'])
+    expect([aliasedJ.type, aliasedJ.label]).toEqual([canonicalJ.type, canonicalJ.label])
   })
 })
 

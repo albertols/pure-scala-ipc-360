@@ -4,6 +4,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import { ETLModifier } from './ETLModifier'
+import { LAYOUT_DEFAULT } from './useResizableLayout'
+
+/** UX round 3 (issue 1): a wire starts from a port's CONNECTOR DOT, not from
+ * its row — a row click now selects the node and focuses that field (the whole
+ * point of the fix: clicking a node's body used to arm a wire and never open
+ * the Inspector). Every click-wire assertion below therefore targets the dot's
+ * own transparent hit circle, which `NodeBox` renders only when `onPortClick`
+ * is supplied. */
+function portDot(dir: 'in' | 'out', nodeId: string, port: string): Element {
+  const dot = document.querySelector(`[data-testid="ipc-port-${dir}-${nodeId}-${port}"]`)
+  if (!dot) throw new Error(`no ${dir} connector dot for ${nodeId}.${port}`)
+  return dot
+}
 
 // MINI = Task-5's field-less-source recipe literal (recipeAdapter.test.ts
 // "field-less source entry gets a single node-center edge") plus one field
@@ -77,10 +90,26 @@ const IPC_RULES = {
       { key: 'primaryKeys', parserType: 'List[String]', required: false, widget: 'stringList' },
     ],
   },
+  // Task 11: a slice of the real ipc-rules.json connections map — only the
+  // pairwise legality NodeConfigDialog's fed-by/feeds pickers exercise below
+  // (table -> table/sourceQualifier, sourceQualifier -> table).
+  connections: {
+    table: { mayFeed: ['sourceQualifier', 'table', 'normalizer'] },
+    sourceQualifier: {
+      mayFeed: ['table', 'unionInput', 'filter', 'joinerInput', 'aggregator', 'router', 'normalizer', 'java', 'storedProcedure'],
+      active: true,
+    },
+  },
 }
 
 // Task 16: static corpus counts for the Explorer footer's corpus summary.
 const SUMMARY = { xmlCount: 81, recipeCount: 86, ddlCount: 212, dirCount: 119, layers: ['CDM', 'DWH', 'ETL', 'ODS', 'OUTPUT', 'QDM', 'RDM', 'STG'] }
+
+// Task 15: the "New recipe" dialog's own layer picker — deliberately carries
+// a layer ('ZTESTLAYER') found NOWHERE in SUMMARY.layers, so a test asserting
+// on it proves the dialog is genuinely reading `GET /api/registry` (Task 13)
+// rather than incidentally rendering an overlapping list from elsewhere.
+const REGISTRY = { sourceTables: [], targetTables: [], ddlTables: [], layers: ['CDM', 'ZTESTLAYER'] }
 
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
@@ -100,6 +129,7 @@ const server = setupServer(
   // suite above this one renders the canvas, so this default keeps them
   // green without knowing about the layout sidecar at all.
   http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+  http.get('/api/registry', () => HttpResponse.json(REGISTRY)),
 )
 beforeAll(() => server.listen())
 afterEach(() => { server.resetHandlers(); cleanup() })
@@ -137,21 +167,37 @@ describe('ETLModifier — real recipes on the shared canvas', () => {
     const targetName = await screen.findByText('T', { selector: 'text' })
     expect(targetName).toBeInTheDocument()
 
-    // Header card: fileName as title (also still present in the tree), real
-    // RecipeDto metadata (Path / Size bytes / Modified) as read-only fields.
+    // Toolbar identity: fileName as title (also still present in the tree).
     expect(screen.getAllByText('_ETL_m_FIX.json').length).toBeGreaterThanOrEqual(2)
+
+    // Source / Target lists (Task 4: moved into the drawer, not the page body)
+    // don't render their table names until their own tab is opened.
+    expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
+
+    // Raw JSON — and the Path / Size bytes / Modified metadata that now lives
+    // inside its panel (Task 4 moved it out of the always-visible header card,
+    // spec §5.2) — is not shown until toggled.
+    expect(screen.queryByText('S.B')).not.toBeInTheDocument()
+    expect(screen.queryByDisplayValue('CDM/m_FIX/_ETL_m_FIX.json')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(await screen.findByText(/S\.B/)).toBeInTheDocument()
+
+    // RecipeDto metadata (Path / Size bytes / Modified) as read-only fields,
+    // now inside the { raw JSON } panel (Task 4).
     expect(screen.getByDisplayValue('CDM/m_FIX/_ETL_m_FIX.json')).toBeInTheDocument()
     expect(screen.getByDisplayValue('321')).toBeInTheDocument()
     expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
 
-    // Source / Target lists driven from table.sourceTableNames/targetTableNames.
-    expect(screen.getAllByText('S').length).toBeGreaterThan(0)
-
-    // Raw JSON is not shown until toggled.
-    expect(screen.queryByText('S.B')).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByText('{ raw JSON }'))
-    expect(await screen.findByText(/S\.B/)).toBeInTheDocument()
+    // Source / Target lists driven from table.sourceTableNames/targetTableNames
+    // — still real values once their drawer tab is opened (Task 4 re-target of
+    // the original "Source / Target lists" assertion, which used to be visible
+    // inline with no tab to open at all).
+    fireEvent.click(screen.getByRole('button', { name: /^Source$/ }))
+    expect(screen.getByText('S', { selector: 'span' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /^Target$/ }))
+    expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
+    expect(screen.getByText('T', { selector: 'span' })).toBeInTheDocument()
 
     // DDL section absent for an empty /api/ddl map.
     expect(screen.queryByText('BigQuery DDL Schema')).not.toBeInTheDocument()
@@ -348,16 +394,65 @@ describe('ETLModifier — editing state (Task 8)', () => {
 })
 
 // ─── Task 9: Palette + click-wire + delete UI ─────────────────────────────────
+// (extended by Task 11: every palette add routes through NodeConfigDialog)
 
-describe('ETLModifier — palette, click-wire, delete (Task 9)', () => {
-  it('palette: clicking "target table" adds a NEW_TABLE_1 node and dirties the SaveBar', async () => {
+describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
+  it('palette: clicking "target table" opens the config dialog and inserts nothing until Insert is pressed', async () => {
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
 
     fireEvent.click(screen.getByText('target table'))
 
-    expect(await screen.findByText('NEW_TABLE_1', { selector: 'text' })).toBeInTheDocument()
+    expect(await screen.findByText('Add table')).toBeInTheDocument()
+    expect(screen.queryByText('NEW_TABLE_1', { selector: 'text' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+  })
+
+  it('dragging a palette entry onto the canvas opens the same dialog rather than inserting directly', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.drop(screen.getByTestId('ipc-canvas-root'), {
+      dataTransfer: { getData: (fmt: string) => (fmt === 'text/etl-type' ? 'filter' : '') },
+    })
+
+    expect(await screen.findByText('Add filter')).toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+  })
+
+  it('Cancel leaves the draft and the dirty count unchanged', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('target table'))
+    await screen.findByText('Add table')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByText('Add table')).not.toBeInTheDocument()
+    expect(screen.queryByText('NEW_TABLE_1', { selector: 'text' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+  })
+
+  it('completing the dialog (name, connection, mapped field) and clicking Insert adds a real node and dirties the SaveBar', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('target table'))
+    await screen.findByText('Add table')
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_TBL' } })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'T — table' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    expect(await screen.findByText('NEW_TBL', { selector: 'text' })).toBeInTheDocument()
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
   })
 
@@ -380,13 +475,94 @@ describe('ETLModifier — palette, click-wire, delete (Task 9)', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('S', { selector: 'text' })
 
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('out', 'S', 'A'))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('X'))
+    fireEvent.click(portDot('in', 'T', 'X'))
 
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
+  })
+
+  // ─── UX round 3, issue 1 ───────────────────────────────────────────────────
+  //
+  // Reported as "when I click the boxes in ETL Modifier it does not show me the
+  // information". Reproduced in Chrome against the live corpus: the port ROW
+  // owned the wire click across the whole node body, so only the 44px header
+  // ever opened the Inspector — every other click on the box silently armed a
+  // wire whose only feedback was a small toolbar chip.
+  it('clicking a port ROW opens the Inspector on that node and focuses that field — it does not arm a wire', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          {
+            target: {
+              name: 'S', type: 'sourceQualifier',
+              fields: [{ name: 'A', dataType: 'String' }, { name: 'B', dataType: 'String' }],
+            },
+            sources: [],
+          },
+        ],
+        table: { targetTableNames: [], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('S', { selector: 'text' })
+
+    expect(screen.queryByTestId('inspector-dock')).not.toBeInTheDocument()
+
+    // The port LABEL, i.e. the node's body — what the report described as
+    // "clicking the box".
+    fireEvent.click(screen.getByText('B', { selector: 'text' }))
+
+    expect(await screen.findByTestId('inspector-dock')).toBeInTheDocument()
+    expect(screen.getByText('Edit — S')).toBeInTheDocument()
+    expect(screen.queryByText(/^wire: /)).not.toBeInTheDocument()
+
+    // …and the clicked field is the one outlined, not merely the panel opened.
+    expect(screen.getByTestId('inspector-field-B')).toHaveAttribute('data-focused', 'true')
+    expect(screen.getByTestId('inspector-field-A')).not.toHaveAttribute('data-focused')
+  })
+
+  it('a row click on the ALREADY-selected node re-focuses the new field instead of toggling the Inspector shut', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          {
+            target: {
+              name: 'S', type: 'sourceQualifier',
+              fields: [{ name: 'A', dataType: 'String' }, { name: 'B', dataType: 'String' }],
+            },
+            sources: [],
+          },
+        ],
+        table: { targetTableNames: [], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('S', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('A', { selector: 'text' }))
+    expect(await screen.findByTestId('inspector-field-A')).toHaveAttribute('data-focused', 'true')
+
+    // Same node, different field. `handleSelectNode`'s toggle would have closed
+    // the panel here; the row handler deliberately doesn't toggle.
+    fireEvent.click(screen.getByText('B', { selector: 'text' }))
+    expect(screen.getByTestId('inspector-dock')).toBeInTheDocument()
+    expect(screen.getByTestId('inspector-field-B')).toHaveAttribute('data-focused', 'true')
+    expect(screen.getByTestId('inspector-field-A')).not.toHaveAttribute('data-focused')
   })
 
   // Review finding (fix round): every IN/OUT port is a valid wire-start AND a
@@ -413,17 +589,17 @@ describe('ETLModifier — palette, click-wire, delete (Task 9)', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('S', { selector: 'text' })
 
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('out', 'S', 'A'))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
 
     // A second click on A — same node as wireFrom, and A is IN/OUT-eligible —
     // must NOT complete the wire: no dirty change, wire chip stays exactly as is.
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('in', 'S', 'A'))
     expect(screen.getByText('wire: S.A → click an IN port')).toBeInTheDocument()
     expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
 
     // The wire is still armed: completing on a DIFFERENT node's IN port still works.
-    fireEvent.click(screen.getByText('X'))
+    fireEvent.click(portDot('in', 'T', 'X'))
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
   })
@@ -467,7 +643,7 @@ describe('ETLModifier — final-review wave', () => {
     await screen.findByText('S', { selector: 'text' })
 
     // Arm a wire from S.A.
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('out', 'S', 'A'))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
 
     // Select S and delete it — the armed wire's origin node is gone.
@@ -482,13 +658,18 @@ describe('ETLModifier — final-review wave', () => {
 
     // A completion click on T's IN port is now a no-op: no armed wire survives
     // the delete, so it can't write a dot-ref onto a node that no longer exists.
-    fireEvent.click(screen.getByText('X'))
+    fireEvent.click(portDot('in', 'T', 'X'))
     expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(screen.queryByText(/"source": "S\.A"/)).not.toBeInTheDocument()
   })
 
-  it('palette-add a node, give it a field via "+ field", then click-wire into its new port writes the dot-ref', async () => {
+  // Task 11: a palette add can no longer land with fields:[] and no ports at
+  // all (NodeConfigDialog requires at least one mapped field to enable
+  // Insert) — but the resulting node can still legitimately carry MORE
+  // fields than what got mapped at insert time, so "+ field" then
+  // click-wire into the new port must keep working on a dialog-inserted node.
+  it('a dialog-inserted node can still gain more fields via "+ field", then click-wire into the new port writes the dot-ref', async () => {
     server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
       path: 'CDM/m_FIX/_ETL_m_FIX.json',
       fileName: '_ETL_m_FIX.json',
@@ -506,12 +687,21 @@ describe('ETLModifier — final-review wave', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('S', { selector: 'text' })
 
-    // Palette-add a fresh target table node: inert (fields: [], no ports) until
-    // it gains a field.
+    // Insert a table node via the dialog: fed by S, mapping S.A — renamed to
+    // A_MAPPED so the new node's own port label never collides with S's own
+    // OUT port "A" below.
     fireEvent.click(screen.getByText('target table'))
-    const newNode = await screen.findByText('NEW_TABLE_1', { selector: 'text' })
+    await screen.findByText('Add table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_TBL' } })
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'S — sourceQualifier' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+    fireEvent.change(screen.getByLabelText('A mapped field name'), { target: { value: 'A_MAPPED' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
-    // Select it and use the "+ field" affordance to give it its first field.
+    const newNode = await screen.findByText('NEW_TBL', { selector: 'text' })
+
+    // Select it and use the "+ field" affordance to give it a SECOND field.
     // Selecting the node keeps its EditPanel open (its own FieldEditor also
     // renders the field name "X" as a plain label), so port clicks below use
     // { selector: 'text' } to target the SVG port text specifically — the same
@@ -524,12 +714,77 @@ describe('ETLModifier — final-review wave', () => {
     expect(await screen.findByText('X', { selector: 'text' })).toBeInTheDocument()
 
     // Click-wire: OUT port S.A completes onto the freshly created IN port X.
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('out', 'S', 'A'))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
-    fireEvent.click(screen.getByText('X', { selector: 'text' }))
+    fireEvent.click(portDot('in', 'NEW_TBL', 'X'))
 
     fireEvent.click(screen.getByText('{ raw JSON }'))
-    expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
+    expect(await screen.findByText(/"name": "X"/)).toBeInTheDocument()
+    expect(screen.getByText(/"source": "S\.A"/)).toBeInTheDocument()
+  })
+})
+
+// ─── Task 11: NodeConfigDialog's source-table mode vs transformation-step mode ─
+//
+// A source table is a ROOT (reads a physical table, no upstream) and structurally
+// is not a step — the dialog must ask which existing step CONSUMES it ("feeds"),
+// never "fed by", and must not require a mapped field. Every other palette kind
+// keeps Task 10's gate: at least one mapped field, or Insert never enables. These
+// two tests cover both halves of that design split end-to-end through ETLModifier.
+describe('ETLModifier — Task 11: source table vs transformation step', () => {
+  it('adding a source table succeeds: no "fed by"/mapped field, only which step it feeds', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+
+    // Structurally different from every other kind: no "fed by" section at all.
+    expect(screen.queryByTestId('node-config-fedby')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('node-config-fieldmap')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_SRC' } })
+    // Insert stays disabled until a consuming step is picked. Wait for the
+    // preview validate to SETTLE first — otherwise `isValidating` alone would
+    // keep Insert disabled and this assertion would pass for the wrong
+    // reason, masking whether the "at least one feeds" gate itself is doing
+    // any work.
+    await waitFor(() => expect(screen.queryByText('Validating…')).not.toBeInTheDocument(), { timeout: 2000 })
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+
+    fireEvent.click(within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: 'T — table' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    expect(await screen.findByText('NEW_SRC', { selector: 'text' })).toBeInTheDocument()
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(await screen.findByText(/"sourceTableNames"/)).toBeInTheDocument()
+    expect(screen.getByText(/"NEW_SRC"/)).toBeInTheDocument()
+  })
+
+  it('adding a transformation step with no connection still cannot insert', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('sourceQualifier'))
+    await screen.findByText('Add sourceQualifier')
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_SQ' } })
+    // No "fed by" selection at all — zero connections, zero mapped fields. Wait
+    // for the preview validate to SETTLE first (the mock default is zero
+    // errors) — otherwise `isValidating` alone would keep Insert disabled and
+    // this assertion would pass for the wrong reason, masking whether the
+    // mapped-field gate itself is doing any work.
+    await waitFor(() => expect(screen.queryByText('Validating…')).not.toBeInTheDocument(), { timeout: 2000 })
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByText('NEW_SQ', { selector: 'text' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
   })
 })
 
@@ -573,7 +828,14 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('T', { selector: 'text' })
 
-    // Baseline: the header card shows the LIVE recipe's own metadata.
+    // Task 4: Path/Size bytes/Modified now live in the { raw JSON } panel
+    // rather than an always-visible header card — open it once and leave it
+    // open for the rest of this test (an independent toggle from the history
+    // drawer below), so the same metadata assertions still hold from their
+    // new location, live-updating as `headerRecipe` follows the archive.
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+
+    // Baseline: the raw JSON panel shows the LIVE recipe's own metadata.
     expect(screen.getByDisplayValue('321')).toBeInTheDocument()
     expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
 
@@ -587,7 +849,7 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
     expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
 
-    // Review finding: the header card must follow the archive too — showing
+    // Review finding: the raw JSON panel must follow the archive too — showing
     // the read-only banner next to the LIVE modifiedAt/sizeBytes is misleading.
     expect(screen.getByDisplayValue('100')).toBeInTheDocument()
     expect(screen.getByDisplayValue('2026-07-31T12:00:00Z')).toBeInTheDocument()
@@ -604,11 +866,92 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     await waitFor(() => expect(capturedRollbackVersion).toBe('20260731-120000-000'))
     await waitFor(() => expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument())
 
-    // The header card's LIVE values are back (the recipe query was invalidated
-    // and refetched — the base GET handler's own values, since this MSW
-    // fixture doesn't simulate the rollback mutating the live file on disk).
+    // The raw JSON panel's LIVE values are back (the recipe query was
+    // invalidated and refetched — the base GET handler's own values, since
+    // this MSW fixture doesn't simulate the rollback mutating the live file
+    // on disk).
     await waitFor(() => expect(screen.getByDisplayValue('321')).toBeInTheDocument())
     expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
+  })
+
+  // Final whole-branch review, BLOCKING 1: three paths re-baseline the draft
+  // (the recipe-change effect, handleDiscard, handleSave) and all three reset
+  // the undo stack; `handleRestored` was the fourth and did not. Because
+  // `recipePath` never changes across a rollback, the history-reset effect
+  // (keyed on recipePath alone, deliberately) never fires — so the pre-rollback
+  // snapshots survived a restore, and Undo/Redo are NOT gated on `changes > 0`
+  // the way Discard/Save are (EditorToolbar.tsx), leaving a live Undo button
+  // that reverts the operator's explicit rollback while the toolbar reads 0
+  // changes.
+  //
+  // The fixture above deliberately does not simulate the rollback mutating the
+  // live file; this one must, because the bug is only reachable through the
+  // refetch that a CHANGED `modifiedAt` triggers (RecipeService.rollback
+  // rewrites the live file, so `modifiedAt` always moves in production).
+  it('clears the undo stack when a rollback rewrites the live file, so Undo cannot silently revert the restore', async () => {
+    const ARCHIVED = {
+      steps: [{ target: { name: 'T_OLD', type: 'table', fields: [] }, sources: [] }],
+      table: { targetTableNames: ['T_OLD'], sourceTableNames: [] },
+    }
+    let live: { sizeBytes: number; modifiedAt: string; content: unknown } =
+      { sizeBytes: 321, modifiedAt: '2026-07-31T00:00:00Z', content: MINI }
+    const dto = () => ({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json', fileName: '_ETL_m_FIX.json', ...live,
+    })
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json(dto())),
+      http.get('/api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json', ({ request }) => {
+        const version = new URL(request.url).searchParams.get('version')
+        if (!version) {
+          return HttpResponse.json([
+            { version: '20260731-120000-000', timestamp: '2026-07-31T12:00:00Z', sizeBytes: 100 },
+          ])
+        }
+        return HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 100,
+          modifiedAt: '2026-07-31T12:00:00Z',
+          content: ARCHIVED,
+        })
+      }),
+      http.post('/api/recipes/rollback/CDM/m_FIX/_ETL_m_FIX.json', () => {
+        // What RecipeService.rollback actually does: the archived content
+        // becomes the live file, with a fresh mtime.
+        live = { sizeBytes: 100, modifiedAt: '2026-07-31T13:00:00Z', content: ARCHIVED }
+        return HttpResponse.json(dto())
+      }),
+    )
+
+    // Dirty the draft so the undo stack is non-empty and Undo is live.
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '999' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+    expect(screen.getByLabelText('Undo')).not.toBeDisabled()
+
+    fireEvent.click(screen.getByText('{ history }'))
+    fireEvent.click(await screen.findByText('View'))
+    // Wait for the parent to actually enter view mode before restoring —
+    // otherwise `handleViewVersion`'s in-flight GET resolves AFTER
+    // `handleRestored` cleared view state and puts the canvas back into
+    // read-only view mode, where `canUndo` is hardcoded false
+    // (ETLModifier.tsx: `canUndo={isViewing ? false : history.canUndo}`) and
+    // the assertion below would pass for entirely the wrong reason.
+    expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Restore this version'))
+    await waitFor(() => expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument())
+
+    // The rollback landed: the refetched live file IS the archived content,
+    // and the draft was re-baselined onto it (0 unsaved changes).
+    expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('1 unsaved change')).not.toBeInTheDocument())
+
+    // ...and the pre-rollback snapshots went with it. A live Undo here would
+    // restore the pre-rollback draft behind a "0 changes" toolbar, and one
+    // further edit would let Save PUT it back with a matching `baseModified`.
+    expect(screen.getByLabelText('Undo')).toBeDisabled()
   })
 
   it('closing the drawer while viewing exits view mode back to the live draft, without discarding an in-progress unsaved edit', async () => {
@@ -655,6 +998,89 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/999/)).toBeInTheDocument()
+  })
+})
+
+// ─── UX round 3, issue 4: the raw JSON panel is an editor ────────────────────
+//
+// Component-level behaviour (parse guard, Revert, upstream mirroring) is
+// covered in RawJsonPanel.test.tsx. These pin the WIRING: Apply must land on
+// the same `applyEdit` funnel every other edit path uses, so the canvas, the
+// dirty counter and undo all follow it.
+
+describe('ETLModifier — raw JSON editing (UX round 3)', () => {
+  const rawEditor = () => screen.getByTestId('raw-json-editor') as HTMLTextAreaElement
+
+  it('editing the document and pressing Apply redraws the canvas and counts as one unsaved change', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+
+    const edited = JSON.stringify({
+      steps: [{ target: { name: 'FROM_RAW', type: 'table', fields: [] }, sources: [] }],
+      table: { targetTableNames: ['FROM_RAW'], sourceTableNames: [] },
+    }, null, 2)
+    fireEvent.change(rawEditor(), { target: { value: edited } })
+    fireEvent.click(screen.getByText('Apply'))
+
+    expect(await screen.findByText('FROM_RAW', { selector: 'text' })).toBeInTheDocument()
+    expect(screen.queryByText('T', { selector: 'text' })).not.toBeInTheDocument()
+    expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
+  })
+
+  it('an Apply is undoable, like every other edit path', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    fireEvent.change(rawEditor(), {
+      target: { value: JSON.stringify({ steps: [{ target: { name: 'FROM_RAW', type: 'table', fields: [] }, sources: [] }], table: { targetTableNames: ['FROM_RAW'], sourceTableNames: [] } }) },
+    })
+    fireEvent.click(screen.getByText('Apply'))
+    await screen.findByText('FROM_RAW', { selector: 'text' })
+
+    fireEvent.click(screen.getByLabelText('Undo'))
+    expect(await screen.findByText('T', { selector: 'text' })).toBeInTheDocument()
+  })
+
+  it('unapplied text survives toggling the panel shut, but Discard clears it', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    // Dirty the draft first, so Discard is rendered at all (it is gated on
+    // `changes > 0`) — the raw text itself is deliberately NOT a dirty op.
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    fireEvent.change(rawEditor(), { target: { value: '{"steps":[{"target":{"name":"VIA_RAW","type":"table","fields":[]}}],"table":{"targetTableNames":["VIA_RAW"],"sourceTableNames":[]}}' } })
+    fireEvent.click(screen.getByText('Apply'))
+    await screen.findByText('VIA_RAW', { selector: 'text' })
+
+    // Now leave some unapplied text and toggle the dropdown shut and open.
+    fireEvent.change(rawEditor(), { target: { value: '{"work":"in progress"' } })
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(rawEditor().value).toBe('{"work":"in progress"')
+
+    // The panel is still open here — Discard must clear the text in place.
+    fireEvent.click(screen.getByText('Discard'))
+    expect(rawEditor().value).not.toBe('{"work":"in progress"')
+    expect(screen.queryByText('unapplied edits')).not.toBeInTheDocument()
+  })
+
+  it('typing malformed JSON changes nothing — the canvas and the dirty count stand still', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    fireEvent.change(rawEditor(), { target: { value: '{"steps": [' } })
+
+    expect(screen.getByText('T', { selector: 'text' })).toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+    expect(screen.getByText('Apply')).toBeDisabled()
   })
 })
 
@@ -882,20 +1308,27 @@ describe('ETLModifier — expression dock (Task 11/14)', () => {
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
   })
 
-  it('mounts the canvas inside a flex container so EtlCanvas flex:1 resolves to a real height', async () => {
+  it('mounts the canvas inside a flex container so IpcCanvas flex:1 resolves to a real height', async () => {
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     const nodeText = await screen.findByText('T', { selector: 'text' })
 
-    // Walk up from the rendered node to the fixed-height canvas host and assert every
-    // ancestor between them participates in flex layout. EtlCanvas's root is `flex: 1`
-    // with absolutely-positioned children, so a non-flex parent collapses it to 0px and
-    // the canvas renders invisibly (the original bug: "Canvas (2 nodes)" over an empty box).
+    // Walk up from the rendered node to the EditorLayout-owned canvas region and
+    // assert every ancestor between them participates in flex layout. IpcCanvas's
+    // root is `flex: 1` with absolutely-positioned children, so a non-flex parent
+    // collapses it to 0px and the canvas renders invisibly (the original bug: a
+    // canvas rendered above an empty box). Task 4 re-target: the old fixed
+    // `height: 420` wrapper is gone — `EditorLayout`'s own `data-region="canvas"`
+    // region now owns the real (dynamic, Task 2/3) height via `sizes.canvasH`,
+    // so the exact-height assertion moves there instead of disappearing.
     const svg = nodeText.closest('svg')!
-    const canvasRoot = svg.parentElement!            // EtlCanvas root div (flex: 1)
-    const host = canvasRoot.parentElement!           // the height:420 wrapper
-    expect(host.style.height).toBe('420px')
+    const canvasRoot = svg.parentElement!            // IpcCanvas root div (flex: 1)
+    const host = canvasRoot.parentElement!           // ETLModifier's own data-region="canvas" wrapper
     expect(host.style.display).toBe('flex')
+
+    const editorRegion = host.parentElement!         // EditorLayout's own data-region="canvas" region
+    expect(editorRegion.getAttribute('data-region')).toBe('canvas')
+    expect(editorRegion.style.minHeight).toBe(`${LAYOUT_DEFAULT.canvasH}px`)
   })
 })
 
@@ -966,5 +1399,387 @@ describe('ETLModifier — focus mode (Task 15)', () => {
     expect(openSpy).toHaveBeenCalledWith('?focus=CDM%2Fm_FIX%2F_ETL_m_FIX.json', '_blank')
 
     openSpy.mockRestore()
+  })
+})
+
+// ─── Task 4: editor layout — Inspector docked beside the canvas, drawer ──────
+//
+// Fix for "I click a node and nothing pops up" (spec §1 defect 2): the body
+// used to be a scrolling document (header/Source/canvas/Target/Inspector/
+// Edge/DDL), so clicking a canvas node updated a panel ~500px below the fold.
+// `ETLModifier` now composes `EditorLayout` (Task 3): the canvas is the
+// dominant region, the Inspector docks beside it, and Source/Target/DDL/Edge
+// move into the collapsible drawer.
+
+describe('ETLModifier — editor layout (Task 4)', () => {
+  it('renders the Inspector docked beside the canvas, not below the page fold', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    fireEvent.click(await screen.findByText('T', { selector: 'text' }))
+
+    // The Inspector must be a sibling of the canvas inside the editor row — NOT
+    // a later section of a scrolling document. Walk up from the Inspector to
+    // the shared flex row and assert the canvas lives in the same row.
+    //
+    // Deviation from the brief's literal one-`parentElement` walk: `EditorLayout`
+    // (Task 3, already committed) wraps its `inspector` slot in its OWN
+    // width-styled sizing div (`EditorLayout.tsx`'s `sizes.inspectorW` region) —
+    // confirmed empirically (a standalone probe against the committed
+    // `EditorLayout` before writing this test) — so `inspector-dock`'s
+    // IMMEDIATE parent is that sizing div, not the shared flex row; the row
+    // (display:flex, containing both the canvas region and the inspector
+    // sizing div as direct children) is one level further up. The two
+    // assertions below are unchanged from the brief — only the number of
+    // `parentElement` hops needed to reach them.
+    const inspector = await screen.findByTestId('inspector-dock')
+    const row = inspector.parentElement!.parentElement!
+    expect(row.querySelector('[data-region="canvas"]')).not.toBeNull()
+    expect(row.style.display).toBe('flex')
+  })
+
+  it('moves Source, Target and DDL into the drawer rather than the page body', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    // Drawer tabs are present…
+    expect(await screen.findByRole('button', { name: /^Source$/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Target$/ })).toBeInTheDocument()
+    // …and their content is not rendered until the tab is opened.
+    expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
+  })
+})
+
+// ─── Task 5: undo/redo ──────────────────────────────────────────────────────
+
+describe('ETLModifier — undo/redo (Task 5)', () => {
+  it('starts with Undo and Redo both disabled', async () => {
+    await loadAndSelectT()
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Redo' })).toBeDisabled()
+  })
+
+  it('three edits, undo twice steps the field value and dirty count back; redo once steps forward', async () => {
+    const formula = await loadAndSelectT()
+
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.change(await screen.findByDisplayValue('2'), { target: { value: '3' } })
+    fireEvent.blur(screen.getByDisplayValue('3'))
+    expect(await screen.findByText('2 unsaved changes')).toBeInTheDocument()
+
+    fireEvent.change(await screen.findByDisplayValue('3'), { target: { value: '4' } })
+    fireEvent.blur(screen.getByDisplayValue('4'))
+    expect(await screen.findByText('3 unsaved changes')).toBeInTheDocument()
+
+    // Undo twice: field value AND dirty count both step back.
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByDisplayValue('3')).toBeInTheDocument()
+    expect(await screen.findByText('2 unsaved changes')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByDisplayValue('2')).toBeInTheDocument()
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    // Redo once: both step forward again.
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(await screen.findByDisplayValue('3')).toBeInTheDocument()
+    expect(await screen.findByText('2 unsaved changes')).toBeInTheDocument()
+  })
+
+  it('pushing a new edit after an undo truncates the redo branch (standard editor semantics)', async () => {
+    const formula = await loadAndSelectT()
+
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByDisplayValue('1')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Redo' })).not.toBeDisabled()
+
+    // A fresh edit from here must discard the redo branch rather than leaving
+    // '2' reachable via Redo.
+    fireEvent.change(await screen.findByDisplayValue('1'), { target: { value: '9' } })
+    fireEvent.blur(screen.getByDisplayValue('9'))
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    expect(screen.getByRole('button', { name: 'Redo' })).toBeDisabled()
+  })
+
+  it('Discard resets the history stack — Undo goes back to disabled', async () => {
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Undo' })).not.toBeDisabled()
+
+    fireEvent.click(screen.getByText('Discard'))
+
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled()
+  })
+})
+
+// ─── Task 15: New recipe from scratch ──────────────────────────────────────
+//
+// The bonus ask: author an `_ETL_*.json` on a blank canvas rather than only
+// editing recipes the parser produced. `+ New recipe` opens `NewRecipeDialog`
+// (its own layer/mapping-name picker, unit-tested in isolation); Create seeds
+// an EMPTY draft with NO recipe GET; the ordering problem (nothing upstream
+// exists yet on a blank canvas) is resolved by `NodeConfigDialog`'s
+// empty-draft accommodation (also unit-tested in isolation) letting a source
+// table be the first node with no consuming step yet; Save POSTs until the
+// first successful create, then behaves like any other open recipe.
+
+describe('ETLModifier — new recipe from scratch (Task 15)', () => {
+  it('the New recipe control opens a dialog listing the registry layers, and Cancel leaves the canvas untouched', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+
+    expect(await screen.findByRole('button', { name: 'ZTESTLAYER' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'CDM' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByText('New recipe')).not.toBeInTheDocument()
+    expect(screen.getByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
+  })
+
+  it('entering a mapping name shows the exact path that will be created', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_NEW_ONE' } })
+
+    expect(screen.getByText('CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json')).toBeInTheDocument()
+  })
+
+  it('Create opens the editor with an empty draft and issues no recipe fetch', async () => {
+    let recipeGetCalled = false
+    server.use(
+      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => {
+        recipeGetCalled = true
+        return HttpResponse.json({ path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json' })
+      }),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_NEW_ONE' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    // The toolbar identity reflects the TARGET path directly — no GET landed.
+    expect(await screen.findByRole('heading', { name: '_ETL_m_NEW_ONE.json' })).toBeInTheDocument()
+    // An empty draft: nothing dirtied it yet, so Save/Discard aren't shown.
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+    // The dialog itself is gone.
+    expect(screen.queryByText('New recipe')).not.toBeInTheDocument()
+
+    expect(recipeGetCalled).toBe(false)
+  })
+
+  it('building a node through the config dialog and saving issues a POST to the new recipe path', async () => {
+    let capturedPost: unknown = null
+    server.use(
+      http.post('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
+        capturedPost = await request.json()
+        return HttpResponse.json({
+          path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+          fileName: '_ETL_m_NEW_ONE.json',
+          sizeBytes: 80,
+          modifiedAt: '2026-08-01T00:00:00Z',
+          content: capturedPost,
+        }, { status: 201 })
+      }),
+      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({
+        path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+        fileName: '_ETL_m_NEW_ONE.json',
+        sizeBytes: 80,
+        modifiedAt: '2026-08-01T00:00:00Z',
+        content: capturedPost ?? { steps: [], table: { targetTableNames: [], sourceTableNames: [] } },
+      })),
+      http.get('/api/ddl/CDM/m_NEW_ONE', () => HttpResponse.json({})),
+      http.get('/api/layouts/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_NEW_ONE' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    await screen.findByRole('heading', { name: '_ETL_m_NEW_ONE.json' })
+
+    // The ordering problem: nothing exists yet, so the FIRST node addable is a
+    // source table (NodeConfigDialog's empty-draft accommodation).
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Save Changes'))
+
+    await waitFor(() => expect(capturedPost).not.toBeNull())
+    expect((capturedPost as { table: { sourceTableNames: string[] } }).table.sourceTableNames).toEqual(['NEWSRC'])
+    // Saved: the draft is no longer dirty, and the recipe behaves like any
+    // other open one from here (PUT thereafter — see the next test).
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+  })
+
+  // Final whole-branch review, non-blocking 1. `useRegistry` is `staleTime:
+  // Infinity` on the (once true) reasoning that nothing can make the registry
+  // stale mid-session. Tasks 14/15 then added `POST /api/recipes/{*path}`, and
+  // a PUT can rewrite `table.sourceTableNames` — both change what
+  // `RegistryService` would walk. Without an invalidation the operator authors
+  // a recipe and then cannot find its tables in the very search box built to
+  // find them, for the rest of the session.
+  // `useRegistry` mounts only behind the config dialog's registry picker, so
+  // the symptom is not a missing live refetch — it is that REMOUNTING the
+  // picker after a save serves the `staleTime: Infinity` cache without ever
+  // asking the server again.
+  it('re-fetches the registry after a save, so a freshly authored recipe is findable', async () => {
+    let registryFetches = 0
+    server.use(
+      http.get('/api/registry', () => { registryFetches += 1; return HttpResponse.json(REGISTRY) }),
+      http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+        path: 'CDM/m_FIX/_ETL_m_FIX.json',
+        fileName: '_ETL_m_FIX.json',
+        sizeBytes: 321,
+        modifiedAt: '2026-07-31T12:00:00Z',
+        content: MINI,
+      })),
+    )
+    const openRegistryPicker = async () => {
+      fireEvent.click(screen.getByText('source table'))
+      await screen.findByText('Add source table')
+      fireEvent.click(screen.getByRole('button', { name: 'Pick from registry' }))
+    }
+
+    // Any edit at all — the point is the save, not what changed.
+    const formula = await loadAndSelectT()
+
+    await openRegistryPicker()
+    await waitFor(() => expect(registryFetches).toBe(1))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText(/unsaved change/)).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Save Changes'))
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+
+    // A save can add or remove table names, so the cached inventory is now
+    // provably out of date — the next picker must ask again.
+    await openRegistryPicker()
+    await waitFor(() => expect(registryFetches).toBe(2))
+  })
+
+  it('a second save after the first successful create PUTs (never POSTs again) with the freshly-created baseModified', async () => {
+    let capturedPost: unknown = null
+    let postCallCount = 0
+    let capturedPut: { baseModified?: string; content?: unknown } | null = null
+    server.use(
+      http.post('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
+        postCallCount += 1
+        capturedPost = await request.json()
+        return HttpResponse.json({
+          path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+          fileName: '_ETL_m_NEW_ONE.json',
+          sizeBytes: 80,
+          modifiedAt: '2026-08-01T00:00:00Z',
+          content: capturedPost,
+        }, { status: 201 })
+      }),
+      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({
+        path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+        fileName: '_ETL_m_NEW_ONE.json',
+        sizeBytes: 80,
+        modifiedAt: '2026-08-01T00:00:00Z',
+        content: capturedPost ?? { steps: [], table: { targetTableNames: [], sourceTableNames: [] } },
+      })),
+      http.put('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
+        capturedPut = await request.json() as { baseModified?: string; content?: unknown }
+        return HttpResponse.json({
+          path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+          fileName: '_ETL_m_NEW_ONE.json',
+          sizeBytes: 120,
+          modifiedAt: '2026-08-01T00:05:00Z',
+          content: capturedPut.content,
+        })
+      }),
+      http.get('/api/ddl/CDM/m_NEW_ONE', () => HttpResponse.json({})),
+      http.get('/api/layouts/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_NEW_ONE' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    await screen.findByRole('heading', { name: '_ETL_m_NEW_ONE.json' })
+
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Save Changes'))
+    await waitFor(() => expect(capturedPost).not.toBeNull())
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+    expect(postCallCount).toBe(1)
+
+    // The recipe is real now — an ordinary open recipe. A second edit + Save
+    // must PUT, carrying the `modifiedAt` the create response (re-fetched via
+    // the GET that re-enabled once `authoring` flipped off) actually returned
+    // — never POST again.
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC2' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Save Changes'))
+
+    await waitFor(() => expect(capturedPut).not.toBeNull())
+    expect(capturedPut!.baseModified).toBe('2026-08-01T00:00:00Z')
+    expect(postCallCount).toBe(1)
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+  })
+
+  it('a 409 from a colliding name surfaces as a visible error, not a silent failure', async () => {
+    server.use(
+      http.post('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({ title: 'Conflict', detail: 'Recipe already exists at CDM/m_FIX/_ETL_m_FIX.json' }, { status: 409 })),
+    )
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('+ New recipe'))
+    fireEvent.click(await screen.findByRole('button', { name: 'CDM' }))
+    // Deliberately collides with the recipe the shared fixtures already serve
+    // at CDM/m_FIX/_ETL_m_FIX.json — Create never pre-checks (no recipe
+    // fetch), so the collision is only discovered on Save.
+    fireEvent.change(screen.getByLabelText(/mapping name/i), { target: { value: 'm_FIX' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    await screen.findByRole('heading', { name: '_ETL_m_FIX.json' })
+
+    fireEvent.click(screen.getByText('source table'))
+    await screen.findByText('Add source table')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Save Changes'))
+
+    const detail = await screen.findByText('Recipe already exists at CDM/m_FIX/_ETL_m_FIX.json')
+    expect(detail).toHaveStyle({ color: 'var(--red)' })
+    // Not a silent failure: the edit is still unsaved, still on screen.
+    expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
   })
 })

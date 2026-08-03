@@ -27,11 +27,21 @@ export interface ValidationState {
   /** True when the most recent `POST /api/recipes/validate` rejected (500,
    * timeout, backend down) rather than settling. `checks`/`errors`/`warnings`
    * are NOT to be trusted while this is true — they reflect either the empty
-   * state or a stale prior success, never the current draft. The caller
-   * (`ConformanceChip`) must render a neutral "unavailable" state, not fall
-   * through to its errors.length-driven green/amber/red — a failed check is
-   * not the same as a clean one (BLOCKER 2, final whole-branch review: this
-   * exact fallthrough used to render the chip green on a failed validate). */
+   * state or a stale prior success, never the current draft.
+   *
+   * EVERY caller must render a neutral "unavailable" state and must not fall
+   * through to an `errors.length`-driven green/amber/red — a failed check is
+   * not the same as a clean one. There are exactly TWO consumers today, and
+   * both shipped this exact fallthrough before it was caught; a THIRD must
+   * branch on `failed` FIRST, before `isValidating` and before the counts:
+   *   - `ConformanceChip.tsx` — the toolbar chip + drawer (BLOCKER 2, first
+   *     review round: rendered green on a failed validate).
+   *   - `NodeConfigDialog.tsx` — the pre-add dialog's preview banner
+   *     (BLOCKING 2, final whole-branch review: printed a green
+   *     "0 errors · 0 warnings" beside an already-disabled Insert, because
+   *     this javadoc enumerated only the chip).
+   * `NodeConfigDialog`'s `canInsert` also consults `failed` directly — a
+   * failed check never counts as a passed one for gating either. */
   failed: boolean
 }
 
@@ -113,6 +123,85 @@ export function useValidation(draft: RecipeJson | null): ValidationState {
   }, [draft])
 
   return state
+}
+
+// ─── Fan-in verdicts (final whole-branch review, BLOCKING 3) ────────────────
+//
+// The one PowerCenter constraint the pairwise `connections.mayFeed` adjacency
+// cannot express: a downstream input group takes either any number of passive
+// inputs, or exactly one active input and nothing else alongside it. It lives
+// in `IpcConnections.fanInVerdict` (backend) and is asked over
+// `POST /api/ipc/fan-in` — deliberately NOT mirrored here, for the same reason
+// this file's header ruling refuses a local TypeScript copy of the rule
+// catalogue: one rule, one implementation. A client-side reimplementation
+// would also have left `fanInVerdict` exactly as the review found it —
+// computed, contract-tested, and called by nothing.
+
+/** `"block"` asserts the link IS illegal and is the only value a caller may
+ * refuse a connection on. `"warn"` means "cannot be determined" (a participant
+ * whose `active` classification is null — `table`, `java`, `joinerInput`, or an
+ * unknown kind) and must be surfaced WITHOUT blocking: refusing a link we
+ * cannot prove illegal is worse than permitting one we cannot prove legal. */
+export type FanInVerdict = 'ok' | 'warn' | 'block'
+
+export interface FanInPairing {
+  /** The caller's own correlation id, echoed back verbatim — the two pickers'
+   * candidate names can collide, so the caller namespaces them. */
+  key: string
+  /** The group the candidate would JOIN, never including the candidate itself. */
+  existingSourceKinds: string[]
+  candidateKind: string
+}
+
+/** Mirrors `reportValidationError`: log-and-swallow. A fan-in outage degrades
+ * to "no verdicts", i.e. nothing is constrained — never to a blocked picker. */
+function reportFanInError(e: unknown): void {
+  // eslint-disable-next-line no-console
+  console.error('[ipcRules] fan-in request failed', e)
+}
+
+/**
+ * Batched `POST /api/ipc/fan-in` for a whole picker at once — one request per
+ * dialog state, not per candidate button. Batched because each candidate
+ * carries its OWN existing input group (a "feeds" candidate's group is the
+ * downstream step's `sources[]`, which differs per candidate), so a single
+ * (group, candidate) question cannot answer a picker.
+ *
+ * Not debounced, unlike `useValidation`: `pairings` changes on discrete
+ * selection toggles, never per keystroke.
+ *
+ * The effect is keyed on the SERIALIZED pairings, not the array identity — a
+ * caller building the list inline would otherwise re-fire on every render.
+ * Same self-containment discipline as `useValidation`: the request lives
+ * entirely inside this hook's own effect and touches no state outside it.
+ */
+export function useFanIn(pairings: FanInPairing[]): Record<string, FanInVerdict> {
+  const [verdicts, setVerdicts] = useState<Record<string, FanInVerdict>>({})
+  const payload = JSON.stringify(pairings)
+
+  useEffect(() => {
+    const asked = JSON.parse(payload) as FanInPairing[]
+    if (asked.length === 0) {
+      setVerdicts({})
+      return
+    }
+    let cancelled = false
+    apiSend<{ verdicts?: Record<string, string> }>('POST', '/ipc/fan-in', { pairings: asked })
+      .then(result => {
+        if (cancelled) return
+        setVerdicts((result.verdicts ?? {}) as Record<string, FanInVerdict>)
+      })
+      .catch(e => {
+        if (cancelled) return
+        reportFanInError(e)
+        // Drop any stale verdicts from a prior success: a failed request
+        // vouches for nothing, and an unanswered candidate is never blocked.
+        setVerdicts({})
+      })
+    return () => { cancelled = true }
+  }, [payload])
+
+  return verdicts
 }
 
 /**

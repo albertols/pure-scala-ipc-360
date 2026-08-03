@@ -1,0 +1,209 @@
+package io.pure360.etl360;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.pure360.etl360.service.CorpusService;
+import io.pure360.etl360.service.ipc.IpcCatalog;
+import io.pure360.etl360.service.ipc.IpcConnections;
+import io.pure360.etl360.service.ipc.IpcVocabulary;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+class IpcConnectionsContractTest {
+    @Autowired CorpusService corpus;
+    @Autowired IpcCatalog catalog;
+    @Autowired IpcConnections connections;
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    /** Spec §6.2: the matrix is authored, the corpus validates it. Every pairing that
+     * actually occurs across the 86 recipes must be permitted — an over-strict matrix
+     * fails here, and so does an invented one.
+     *
+     * <p>The observed-pairing COUNT is pinned too (Task 17 review): spec §4's table,
+     * acceptance criterion 6 and {@code docs/adr/0012-ipc-connection-matrix.md} all say
+     * "all 30 observed pairings", and an emptiness assertion alone would keep passing if
+     * the corpus lost pairings — a silently shrinking validation set is exactly the way an
+     * over-strict matrix would stop being caught. Same idiom as
+     * {@code multiSourceSteps == 21} below. */
+    @Test
+    void everyPairingObservedInTheCorpusIsPermitted() throws Exception {
+        Set<String> unpermitted = new LinkedHashSet<>();
+        Set<String> observed = new LinkedHashSet<>();
+        for (String rel : corpus.allRecipePaths()) {
+            JsonNode d = mapper.readTree(
+                Files.readString(Path.of("../parser/src/main/resources/xmltobq").resolve(rel)));
+            for (JsonNode step : d.path("steps")) {
+                String tgt = IpcVocabulary.canonicalTargetType(step.path("target").path("type").asText(""));
+                for (JsonNode src : step.path("sources")) {
+                    String s = IpcVocabulary.canonicalSourceType(src.path("type").asText(""));
+                    observed.add(s + " -> " + tgt);
+                    var rule = catalog.connections().get(s);
+                    if (rule == null || !rule.mayFeed().contains(tgt)) {
+                        unpermitted.add(s + " -> " + tgt + "  (e.g. " + rel + ")");
+                    }
+                }
+            }
+        }
+        assertThat(unpermitted).as("corpus pairings the authored matrix forbids").isEmpty();
+        assertThat(observed).as("distinct kind-to-kind pairings the corpus exhibits (spec §4)").hasSize(30);
+    }
+
+    @Test
+    void everySourceKindHasAConnectionRule() {
+        assertThat(catalog.connections().keySet()).containsAll(IpcVocabulary.SOURCE_TYPES);
+    }
+
+    @Test
+    void everyMayFeedTargetIsAKnownTargetKind() {
+        catalog.connections().forEach((src, rule) ->
+            assertThat(IpcVocabulary.TARGET_TYPES)
+                .as("mayFeed targets of " + src).containsAll(rule.mayFeed()));
+    }
+
+    @Test
+    void joinerInputCarriesItsMasterDetailCardinality() {
+        var rule = catalog.connections().get("joinerInput");
+        assertThat(rule).isNotNull();
+        assertThat(rule.exactly()).isEqualTo(2);
+        assertThat(rule.namedInputs()).containsExactlyInAnyOrder("MASTER", "DETAIL");
+    }
+
+    /** Task 9, spec §6.2: the classification table's ten source kinds must all be present,
+     * with exactly two {@code null} ("cannot be determined") entries — {@code table} (not a
+     * transformation) and {@code java} (configured active-or-passive at creation, unrecorded
+     * in the recipe JSON). A drifted classification (e.g. a kind silently defaulting to
+     * {@code null} because the JSON key was mistyped) fails here before it can mask a
+     * fan-in bug. */
+    @Test
+    void everySourceKindCarriesItsActiveClassification() {
+        assertThat(catalog.connections().get("table").active()).isNull();
+        assertThat(catalog.connections().get("java").active()).isNull();
+        assertThat(catalog.connections().get("sourceQualifier").active()).isTrue();
+        assertThat(catalog.connections().get("filter").active()).isTrue();
+        assertThat(catalog.connections().get("joiner").active()).isTrue();
+        assertThat(catalog.connections().get("aggregator").active()).isTrue();
+        assertThat(catalog.connections().get("router").active()).isTrue();
+        assertThat(catalog.connections().get("union").active()).isTrue();
+        assertThat(catalog.connections().get("normalizer").active()).isTrue();
+        assertThat(catalog.connections().get("storedProcedure").active()).isFalse();
+    }
+
+    /** Two active transformations feeding the same downstream input group is exactly the
+     * case PowerCenter's Designer refuses — spec §6.2, added after Task 8's review. */
+    @Test
+    void fanInVerdictBlocksTwoActiveTransformationsIntoTheSameInput() {
+        assertThat(connections.fanInVerdict(List.of("filter"), "aggregator")).isEqualTo("block");
+    }
+
+    /** A downstream input group may hold exactly one active input and nothing else alongside
+     * it — an active candidate joining a NON-EMPTY existing group blocks regardless of whether
+     * those existing members are themselves active or passive; a passive existing member does
+     * not "dilute" the violation, because the rule is "nothing else alongside it", not "no
+     * other active thing alongside it" (human ruling, fix round 1). */
+    @Test
+    void fanInVerdictBlocksAnActiveCandidateJoiningAnyNonEmptyExistingGroupRegardlessOfComposition() {
+        assertThat(connections.fanInVerdict(List.of("storedProcedure", "filter"), "aggregator"))
+            .isEqualTo("block");
+    }
+
+    /** The other half of the same rule: an active candidate joining an existing group whose
+     * only members are KNOWN passive still blocks — "exactly one active input and nothing else
+     * alongside it" forbids the group from growing past one member at all once an active one is
+     * involved, even if every other member is passive. */
+    @Test
+    void fanInVerdictBlocksAnActiveCandidateJoiningAPassiveOnlyExistingGroup() {
+        assertThat(connections.fanInVerdict(List.of("storedProcedure"), "filter")).isEqualTo("block");
+    }
+
+    /** Two passive transformations (or a passive one alone) never trip the rule. */
+    @Test
+    void fanInVerdictOkWhenNoParticipantIsActive() {
+        assertThat(connections.fanInVerdict(List.of("storedProcedure"), "storedProcedure")).isEqualTo("ok");
+    }
+
+    /** The symmetric case a narrower, candidate-only-active reading of the contract would miss
+     * (fix round 1, human ruling): a PASSIVE candidate joining a group that already has a KNOWN
+     * active input is equally forbidden — "an active transformation and a passive transformation
+     * to the same downstream input group" is illegal regardless of which one connects second.
+     * Drawing order must not matter. */
+    @Test
+    void fanInVerdictBlocksAPassiveCandidateJoiningAnActiveExistingInput() {
+        assertThat(connections.fanInVerdict(List.of("filter"), "storedProcedure")).isEqualTo("block");
+    }
+
+    /** A single new source with nothing already connected is trivially fine regardless of
+     * its own classification. */
+    @Test
+    void fanInVerdictOkWithNoExistingInputs() {
+        assertThat(connections.fanInVerdict(List.of(), "aggregator")).isEqualTo("ok");
+    }
+
+    /** `table`'s `active` is `null` ("cannot be determined"), never "passive" — the fan-in
+     * check must warn, not silently wave the candidate through as safe. */
+    @Test
+    void fanInVerdictWarnsWhenTheCandidateIsUnclassified() {
+        assertThat(connections.fanInVerdict(List.of("filter"), "table")).isEqualTo("warn");
+    }
+
+    /** Same principle, unknown participant on the existing side instead of the candidate. */
+    @Test
+    void fanInVerdictWarnsWhenAnExistingInputIsUnclassified() {
+        assertThat(connections.fanInVerdict(List.of("java"), "filter")).isEqualTo("warn");
+    }
+
+    /** `null` must never resolve to "block" even when it sits alongside a definite active
+     * participant — refusing a link we cannot prove illegal is worse than permitting one we
+     * cannot prove legal (spec §6.2). A wrong implementation that treats `null` as truthy or
+     * as "assume active" would block here instead. */
+    @Test
+    void fanInVerdictWarnsRatherThanBlocksWhenAnUnknownParticipantJoinsAKnownActiveOne() {
+        assertThat(connections.fanInVerdict(List.of("java"), "aggregator")).isEqualTo("warn");
+    }
+
+    /** Spec §6.2's free validation: the corpus's only multi-source steps are 21 uniform
+     * {@code table} fan-ins, and {@code table} is {@code null} ("cannot be determined") — so
+     * a correctly classified rule leaves every one of the 86 corpus recipes unflagged. A
+     * `block` verdict anywhere here means the classification or the check regressed, not that
+     * the corpus grew a genuinely illegal fan-in. Every source in a multi-source step is
+     * checked as the candidate against the rest as existing inputs, so a single step with
+     * (say) three sources is exercised from all three angles, not just the last one. */
+    @Test
+    void fanInCheckNeverBlocksAnyCorpusRecipe() throws Exception {
+        List<String> blocked = new ArrayList<>();
+        int multiSourceSteps = 0;
+        for (String rel : corpus.allRecipePaths()) {
+            JsonNode d = mapper.readTree(
+                Files.readString(Path.of("../parser/src/main/resources/xmltobq").resolve(rel)));
+            for (JsonNode step : d.path("steps")) {
+                List<String> kinds = new ArrayList<>();
+                for (JsonNode src : step.path("sources")) {
+                    kinds.add(IpcVocabulary.canonicalSourceType(src.path("type").asText("")));
+                }
+                if (kinds.size() < 2) continue;
+                multiSourceSteps++;
+                for (int i = 0; i < kinds.size(); i++) {
+                    List<String> existing = new ArrayList<>(kinds);
+                    String candidate = existing.remove(i);
+                    String verdict = connections.fanInVerdict(existing, candidate);
+                    if ("block".equals(verdict)) {
+                        blocked.add(rel + " step target " + step.path("target").path("name").asText("")
+                            + ": " + kinds + " (candidate " + candidate + ")");
+                    }
+                }
+            }
+        }
+        assertThat(blocked).as("corpus fan-ins the classification wrongly blocks").isEmpty();
+        assertThat(multiSourceSteps).as("corpus's only multi-source steps (spec §6.2)").isEqualTo(21);
+    }
+}

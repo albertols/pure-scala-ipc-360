@@ -11,8 +11,6 @@ import type { RecipeFile, RecipeValidation, RecipeValidationError } from '../../
 import { recipeToCanvas, fieldsOf } from '../../api/recipeAdapter'
 import type { RecipeJson } from '../../api/recipeAdapter'
 import {
-  addSourceTable,
-  addStep,
   deleteEdge,
   deleteNode,
   parseFormulaText,
@@ -27,15 +25,30 @@ import { CopyButton } from '../shared/CopyButton'
 import { GCPIcon } from '../shared/GCPIcon'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { LoadingState } from '../shared/Spinner'
-import { Palette, SOURCE_TABLE_TYPE } from './Palette'
+import { Palette } from './Palette'
 import { HistoryDrawer } from './HistoryDrawer'
-import { SaveBar, dangerButtonStyle } from './SaveBar'
+import { dangerButtonStyle, ghostButtonStyle } from './SaveBar'
+import { NewRecipeDialog } from './NewRecipeDialog'
 import { DDLViewer, type DdlColumnJson } from './DDLViewer'
 import { Inspector } from './Inspector'
+import { NodeConfigDialog } from './NodeConfigDialog'
 import { ConformanceChip } from './ConformanceChip'
 import { ExpressionDock } from './ExpressionDock'
+import { EditorLayout } from './EditorLayout'
+import { EditorToolbar } from './EditorToolbar'
+import { RawJsonPanel, serializeRecipe } from './RawJsonPanel'
+import { useDraftHistory } from './useDraftHistory'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
+
+// ─── New recipe from scratch (Task 15) ─────────────────────────────────────
+//
+// A blank canvas's draft, per `NewRecipeDialog`'s Create — no steps, no
+// source/target tables. `NodeConfigDialog`'s own empty-draft accommodation
+// (source-table mode, `NodeConfigDialog.tsx`) is what makes the FIRST
+// insertion into this possible at all: see its file-header comment for the
+// full ordering-problem writeup.
+const EMPTY_RECIPE_DRAFT: RecipeJson = { steps: [], table: { targetTableNames: [], sourceTableNames: [] } }
 
 // ─── Explorer scoping + info copy (Task 14) ────────────────────────────────────
 //
@@ -162,11 +175,39 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   const [recipePath, setRecipePath] = useState<string | null>(focusRecipe ?? null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdge, setSelectedEdge] = useState<Connection | null>(null)
+  // UX round 3 (issue 1): the field name a port-ROW click named, so the Inspector
+  // can scroll it into view and outline it. Scoped to `selectedNodeId` (a row
+  // click always selects its own node in the same handler), so it needs no node
+  // id of its own — and it is cleared by every other selection path so a stale
+  // name can never outline the wrong node's field.
+  const [focusedField, setFocusedField] = useState<string | null>(null)
   const [wireFrom, setWireFrom] = useState<{ nodeId: string; portName: string } | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
+  // Unapplied `{ raw JSON }` editor text (UX round 3, issue 4), or null for
+  // "mirroring the draft". Held HERE rather than inside `RawJsonPanel` because
+  // toggling the dropdown unmounts that panel — local state would discard a
+  // half-written document on a stray click of the button that opened it. Every
+  // path that re-baselines the draft clears it too (see `resetRawText` calls),
+  // since text describing a superseded document is worse than no text.
+  const [rawText, setRawText] = useState<string | null>(null)
+  // Config-before-insert (Task 11 of this plan): the palette `type` string (or
+  // IpcCanvas's dropped one) a node-add is PENDING configuration for —
+  // `NodeConfigDialog` renders only while this is non-null, and is the ONLY
+  // path that can ever call `applyEdit` with a newly-inserted node. Neither
+  // `handlePaletteAdd` nor `IpcCanvas`'s `onDropType` insert anything directly
+  // anymore.
+  const [pendingKind, setPendingKind] = useState<string | null>(null)
   const { fs, loading, error } = useFilesystem()
   const queryClient = useQueryClient()
+
+  // New recipe from scratch (Task 15): `authoring` is true from the moment
+  // `NewRecipeDialog`'s Create hands back a target path until the FIRST
+  // successful POST — the save path switches on it (POST vs PUT below), and
+  // it disables the `useRecipe` fetch (there is nothing to GET yet) so the
+  // draft-reset effect never clobbers the seeded empty draft.
+  const [showNewRecipeDialog, setShowNewRecipeDialog] = useState(false)
+  const [authoring, setAuthoring] = useState(false)
 
   // Expression registry (Task 11): corpus-wide, independent of the currently
   // open recipe. `focusedFormula` tracks which field's formula textarea last
@@ -197,7 +238,9 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   const [viewedRecipe, setViewedRecipe] = useState<RecipeFile | null>(null)
   const isViewing = viewingVersion !== null
 
-  const rec = useRecipe(recipePath ?? '')
+  // Task 15: no GET while authoring — the file doesn't exist on the corpus
+  // yet ("Create opens the editor with an empty draft and no recipe fetch").
+  const rec = useRecipe(recipePath ?? '', !authoring)
   const recError = rec.error as ApiError | null
 
   // Draft editing state (Task 8): deep-cloned from the loaded recipe whenever a
@@ -211,6 +254,12 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // disables the button so a slow validate+PUT round trip can't be
   // double-submitted. `finally` re-enables on both success AND failure.
   const [saving, setSaving] = useState(false)
+
+  // Undo/redo (Task 5): a bounded snapshot stack over `applyEdit` — the single
+  // funnel every draft mutation passes through, so this covers every edit
+  // path (Inspector, click-wire, delete, palette add, the expression dock's
+  // Insert) automatically.
+  const history = useDraftHistory()
 
   // Node drag offsets (Task 8) + the layout sidecar (Task 9/10): per-node pixel
   // deltas from IpcCanvas's default layout position, added at render time
@@ -226,9 +275,28 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
       setDirtyOps(0)
       setValidationErrors([])
       setSaveError(null)
+      // Every re-baselining path funnels through here (recipe opened, save
+      // landed, rollback refetched), so this one line covers all three: raw
+      // text describing the superseded document must not survive into the new
+      // one, where Apply would silently reinstate what was just replaced.
+      setRawText(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipePath, rec.data?.modifiedAt])
+
+  // History reset on recipe change (Task 5): a SEPARATE effect from the
+  // draft-reset effect above, not an addition to its dependency array —
+  // sub-project 8's Task 10 shipped a silent data-loss bug by folding an
+  // unrelated query's data into that effect's deps, so a background refetch
+  // re-ran the reset and wiped an in-progress edit. This effect's only
+  // trigger is `recipePath` itself (a genuinely new recipe opened), never
+  // `rec.data`/`modifiedAt` — a save's own history reset is handled
+  // explicitly in handleSave below, not by this effect noticing modifiedAt
+  // change.
+  useEffect(() => {
+    history.reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipePath])
 
   // Layout offsets (Task 9/10): a SEPARATE effect from the draft reset above —
   // review finding (fix round 1): folding `layout.data` into the draft-reset
@@ -308,7 +376,19 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // Header card metadata (fileName/path/sizeBytes/modifiedAt) follows the same
   // swap as `content` — review finding: showing a read-only "viewing archived
   // version" banner next to the LIVE modifiedAt was misleading.
-  const headerRecipe = isViewing && viewedRecipe ? viewedRecipe : rec.data
+  //
+  // Task 15: while authoring, `rec.data` is never populated (the fetch is
+  // disabled — nothing exists on the corpus to GET yet), so a synthetic
+  // RecipeDto stands in: `fileName`/`path` are known from the target
+  // `recipePath` itself, `sizeBytes`/`modifiedAt` stay undefined (honestly —
+  // nothing has been saved) and `content` mirrors the live draft, same as
+  // every other field here would once the recipe is real.
+  const authoringFileName = recipePath ? recipePath.slice(recipePath.lastIndexOf('/') + 1) : ''
+  const headerRecipe: RecipeFile | null = isViewing && viewedRecipe
+    ? viewedRecipe
+    : authoring
+      ? { path: recipePath ?? '', fileName: authoringFileName }
+      : (rec.data ?? null)
   const graph = useMemo(
     () => (content && recipePath ? recipeToCanvas(content, recipePath, ipcRules.data?.typeAliases ?? {}) : null),
     [content, recipePath, ipcRules.data?.typeAliases],
@@ -351,6 +431,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     setSelectedPath(f.path)
     if (f.recipe) {
       setRecipePath(f.recipe)
+      setAuthoring(false)
       setSelectedNodeId(null)
       setSelectedEdge(null)
       setWireFrom(null)
@@ -362,9 +443,63 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     }
   }
 
+  // New recipe from scratch (Task 15): `NewRecipeDialog`'s Create hands back
+  // the resolved `<layer>/<mapping>/_ETL_<mapping>.json` target path — this
+  // is the ONLY place `authoring` turns true and `draft` is seeded directly
+  // (no GET landed to react to, unlike `handleSelectFile`'s recipe-fetch
+  // effect). Mirrors `handleSelectFile`'s own reset of selection/view state.
+  const handleCreateRecipe = (path: string) => {
+    setSelectedPath(null)
+    setRecipePath(path)
+    setAuthoring(true)
+    setDraft(structuredClone(EMPTY_RECIPE_DRAFT))
+    setDirtyOps(0)
+    // Authoring seeds the draft DIRECTLY — no GET lands, so the draft-reset
+    // effect above never fires for it and this reset has to be explicit.
+    setRawText(null)
+    setValidationErrors([])
+    setSaveError(null)
+    setSelectedNodeId(null)
+    setSelectedEdge(null)
+    setWireFrom(null)
+    setShowRaw(false)
+    setHistoryOpen(false)
+    setViewingVersion(null)
+    setViewedRecipe(null)
+    setFocusedFormula(null)
+    setShowNewRecipeDialog(false)
+  }
+
   const applyEdit = (fn: (d: RecipeJson) => RecipeJson) => {
+    // Task 5: push the PRE-edit draft before applying — the single funnel
+    // every draft mutation passes through, so undo/redo covers every edit
+    // path for free.
+    if (draft) history.push(draft)
     setDraft(d => (d ? fn(d) : d))
     setDirtyOps(n => n + 1)
+  }
+
+  // Undo/redo (Task 5): swap the draft and step `dirtyOps` back/forward in
+  // lockstep with it — both are bumped by the very same `applyEdit` call, so
+  // they stay in sync except once the history stack itself has capped out
+  // (dirtyOps keeps counting past HISTORY_CAP edits; the snapshot stack
+  // doesn't, by design).
+  const handleUndo = () => {
+    if (!draft) return
+    const prev = history.undo(draft)
+    if (prev) {
+      setDraft(prev)
+      setDirtyOps(n => Math.max(0, n - 1))
+    }
+  }
+
+  const handleRedo = () => {
+    if (!draft) return
+    const next = history.redo(draft)
+    if (next) {
+      setDraft(next)
+      setDirtyOps(n => n + 1)
+    }
   }
 
   // Inspector commit (Task 12): the Inspector owns picking WHICH mutator to run
@@ -402,6 +537,20 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     setSelectedNodeId(prev => (id === prev ? null : id))
     setSelectedEdge(null)
     setFocusedFormula(null)
+    setFocusedField(null)
+  }
+
+  // Port ROW click (UX round 3, issue 1). Deliberately NOT `handleSelectNode`:
+  // that one TOGGLES, which is right for the node header (click it again to
+  // dismiss the Inspector) but wrong here — clicking a second field of the
+  // already-selected node would close the very panel the click was asking to
+  // look at. A row click always selects, and additionally names the field for
+  // the Inspector to scroll to.
+  const handlePortRowClick = (nodeId: string, port: Port) => {
+    setSelectedNodeId(nodeId)
+    setSelectedEdge(null)
+    setFocusedFormula(null)
+    setFocusedField(port.name)
   }
 
   const handleSelectEdge = (conn: Connection) => {
@@ -438,9 +587,25 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     }
   }
 
+  // Task 11: a palette click (or an IpcCanvas drop, same handler — see the
+  // `onDropType` wiring below) no longer inserts anything by itself. It only
+  // opens NodeConfigDialog, which is the sole path that can ever produce an
+  // orphan-proof (or, for a source table, upstream-less-by-design) node.
   const handlePaletteAdd = (type: string) => {
-    applyEdit(d => (type === SOURCE_TABLE_TYPE ? addSourceTable(d) : addStep(d, type)))
+    setPendingKind(type)
   }
+
+  // NodeConfigDialog's `onInsert` hands back a FULLY assembled next draft
+  // (already run through `insertConfiguredStep`/`insertSourceTable` inside the
+  // dialog) — routing it through `applyEdit` here, same as `handleInspectorChange`
+  // above, is what makes undo/redo, the dirty count and the conformance chip all
+  // follow automatically, exactly like every other edit path.
+  const handleInsertNode = (next: RecipeJson) => {
+    applyEdit(() => next)
+    setPendingKind(null)
+  }
+
+  const handleCancelInsertNode = () => setPendingKind(null)
 
   const handleDeleteNode = (name: string) => {
     applyEdit(d => deleteNode(d, name))
@@ -483,6 +648,18 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     void queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
     setViewingVersion(null)
     setViewedRecipe(null)
+    // The FOURTH re-baselining path (final whole-branch review, BLOCKING 1).
+    // A rollback rewrites the live file server-side, so the invalidation above
+    // refetches a recipe with a NEW `modifiedAt`, which re-runs the draft-reset
+    // effect and zeroes `dirtyOps`. `recipePath` never changed, so the
+    // history-reset effect — deliberately keyed on `recipePath` ALONE — does
+    // not fire, and the pre-rollback snapshots would survive into a draft they
+    // no longer describe. Undo/Redo are not gated on `changes > 0` the way
+    // Discard/Save are, so that leaves a live Undo that reverts the operator's
+    // explicit rollback behind a toolbar reading 0 changes; one further edit
+    // then lets Save PUT the pre-rollback content with a matching
+    // `baseModified`. Same reset the other three paths do, for the same reason.
+    history.reset()
   }
 
   // Closing the drawer is the only escape hatch out of view mode short of
@@ -501,14 +678,24 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   }
 
   const handleDiscard = () => {
-    if (rec.data) setDraft(structuredClone(rec.data.content as RecipeJson))
+    // Task 15: authoring has no server copy to re-clone from — Discard goes
+    // back to the same blank draft Create seeded.
+    if (authoring) setDraft(structuredClone(EMPTY_RECIPE_DRAFT))
+    else if (rec.data) setDraft(structuredClone(rec.data.content as RecipeJson))
     setDirtyOps(0)
     setValidationErrors([])
     setSaveError(null)
+    // Discard means "throw away my uncommitted work" — unapplied raw JSON is
+    // exactly that, and `rec.data` is unchanged here so the draft-reset effect
+    // above does not fire to do it for us.
+    setRawText(null)
+    history.reset()
   }
 
   const handleSave = async () => {
-    if (!draft || !recipePath || !rec.data) return
+    // Task 15: while authoring there is no `rec.data` yet (the fetch is
+    // disabled) — that guard only applies to the PUT branch below.
+    if (!draft || !recipePath || (!authoring && !rec.data)) return
     setValidationErrors([])
     setSaveError(null)
     setSaving(true)
@@ -518,9 +705,30 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
         setValidationErrors(result.errors ?? [])
         return
       }
-      await apiSend('PUT', `/recipes/${recipePath}`, { baseModified: rec.data.modifiedAt, content: draft })
+      if (authoring) {
+        // POST until the first successful create (Task 14's create endpoint —
+        // 409 if the file already exists, surfaced below exactly like any
+        // other save failure, never silently). Once it lands, this recipe is
+        // an ordinary open one: `authoring` flips off, `useRecipe`'s GET
+        // re-enables and re-populates `rec.data` for every future PUT's
+        // `baseModified`.
+        await apiSend('POST', `/recipes/${recipePath}`, draft)
+        setAuthoring(false)
+      } else {
+        await apiSend('PUT', `/recipes/${recipePath}`, { baseModified: rec.data!.modifiedAt, content: draft })
+      }
       await queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
+      // `useRegistry` is `staleTime: Infinity`, so without this the cached
+      // inventory outlives the write that changed it: `RegistryService` walks
+      // every recipe's `table.sourceTableNames`/`targetTableNames`, which a PUT
+      // can rewrite and a POST adds wholesale. The symptom is not a stale live
+      // view — the registry only mounts behind the config dialog's picker — but
+      // a picker REOPENED after a save serving the pre-save cache, so a recipe
+      // just authored from scratch cannot be found in the search box built to
+      // find it, for the rest of the session (final whole-branch review).
+      await queryClient.invalidateQueries({ queryKey: ['registry'] })
       setDirtyOps(0)
+      history.reset()
     } catch (e) {
       const err = e as ApiError
       setSaveError({ title: err.title ?? 'Save failed', detail: err.detail })
@@ -529,14 +737,28 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     }
   }
 
-  const sidebarExtra = loading ? (
-    <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
-  ) : error ? (
-    <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
-      <div>{error.title}</div>
-      {error.detail && <div>{error.detail}</div>}
+  // New recipe from scratch (Task 15): always present (not gated by
+  // loading/error, unlike the states stacked below it) — an operator can
+  // start authoring a recipe whether or not the corpus tree itself finished
+  // loading.
+  const sidebarExtra = (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border-subtle)' }}>
+        <button
+          onClick={() => setShowNewRecipeDialog(true)}
+          style={{ ...ghostButtonStyle, width: '100%', textAlign: 'center' }}
+        >+ New recipe</button>
+      </div>
+      {loading ? (
+        <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
+      ) : error ? (
+        <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
+          <div>{error.title}</div>
+          {error.detail && <div>{error.detail}</div>}
+        </div>
+      ) : null}
     </div>
-  ) : null
+  )
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -571,60 +793,36 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
         </div>
       )}
 
-      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-        {!recipePath ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <rect x="8" y="4" width="24" height="32" rx="3" stroke="#2a3050" strokeWidth="1.5" fill="none" />
-              <line x1="13" y1="12" x2="27" y2="12" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="13" y1="18" x2="27" y2="18" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span style={{ fontSize: 12 }}>Select an _ETL_*.json recipe to edit</span>
-            <span style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.5 }}>
-              {EXPLORER_INFO_COPY}
-            </span>
-          </div>
-        ) : rec.isLoading ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <LoadingState label="Loading recipe…" />
-          </div>
-        ) : recError ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
-            <div>{recError.title}</div>
-            {recError.detail && <div>{recError.detail}</div>}
-          </div>
-        ) : rec.data && graph ? (
-          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-            {/* recipe header */}
-            <div style={{
-              display: 'flex', alignItems: 'flex-start', gap: 16,
-              padding: '16px 20px',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 8,
-              flexDirection: 'column',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, width: '100%' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#e2e8f8' }}>{headerRecipe?.fileName}</h2>
-                    <span style={{
-                      fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 600,
-                      background: 'rgba(79,156,249,0.15)',
-                      color: '#4f9cf9',
-                      border: '1px solid rgba(79,156,249,0.3)',
-                      fontFamily: 'JetBrains Mono, monospace',
-                    }}>{(headerRecipe?.path ?? '').split('/')[0]}</span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-                    <EditableField label="Path" value={headerRecipe?.path ?? ''} onChange={() => {}} mono />
-                    <EditableField label="Size bytes" value={String(headerRecipe?.sizeBytes ?? '')} onChange={() => {}} mono />
-                    <EditableField label="Modified" value={headerRecipe?.modifiedAt ?? ''} onChange={() => {}} mono />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+      {!recipePath ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="8" y="4" width="24" height="32" rx="3" stroke="#2a3050" strokeWidth="1.5" fill="none" />
+            <line x1="13" y1="12" x2="27" y2="12" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="13" y1="18" x2="27" y2="18" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontSize: 12 }}>Select an _ETL_*.json recipe to edit</span>
+          <span style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.5 }}>
+            {EXPLORER_INFO_COPY}
+          </span>
+        </div>
+      ) : !authoring && rec.isLoading ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LoadingState label="Loading recipe…" />
+        </div>
+      ) : !authoring && recError ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
+          <div>{recError.title}</div>
+          {recError.detail && <div>{recError.detail}</div>}
+        </div>
+      ) : (authoring || rec.data) && graph ? (
+        <EditorLayout
+          toolbar={
+            <>
+              <EditorToolbar
+                fileName={headerRecipe?.fileName ?? ''}
+                layerChip={(headerRecipe?.path ?? '').split('/')[0]}
+                conformance={
                   <ConformanceChip
                     errors={ipcErrors}
                     warnings={ipcWarnings}
@@ -635,185 +833,196 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                     graph={graph}
                     onSelectNode={handleSelectNode}
                   />
-                  <button onClick={handleToggleHistory} style={{
-                    padding: '5px 12px', borderRadius: 5,
-                    background: historyOpen ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
-                    color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                  }}>{'{ history }'}</button>
-                  {/* Focus mode deep link (Task 15) — opens THIS recipe alone,
-                      full-viewport, in a new tab (encodeURIComponent: recipe
-                      paths carry '/' and are user-visible corpus paths, so an
-                      unencoded one would produce a malformed URL). */}
-                  <button
-                    onClick={() => recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')}
-                    title="Open in a new tab, isolated"
-                    style={{
-                      padding: '5px 12px', borderRadius: 5,
-                      background: 'transparent', border: '1px solid var(--border)',
-                      color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                    }}>{'⤢'}</button>
-                  <button onClick={() => setShowRaw(r => !r)} style={{
-                    padding: '5px 12px', borderRadius: 5,
-                    background: showRaw ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
-                    color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                  }}>{'{ raw JSON }'}</button>
-                </div>
-              </div>
-
-              {showRaw && (
-                <div style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '5px 10px', background: 'var(--surface-2)',
-                    borderBottom: '1px solid var(--border)',
-                  }}>
-                    <span style={{ fontSize: 10, color: '#4a5570', flex: 1 }}>Raw JSON</span>
-                    <CopyButton value={JSON.stringify(content ?? rec.data.content, null, 2)} size={11} />
-                  </div>
-                  <pre style={{
-                    margin: 0, padding: '10px 12px', maxHeight: 400, overflow: 'auto',
-                    fontSize: 10, color: '#c8d3e8',
-                    fontFamily: 'JetBrains Mono, monospace',
-                    whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-                  }}>{JSON.stringify(content ?? rec.data.content, null, 2)}</pre>
-                </div>
-              )}
-            </div>
-
-            {/* source */}
-            <section>
-              <SectionHeader icon="→" label="Source" color="#34d399" />
-              <div style={{
-                padding: '16px', background: 'var(--surface)',
-                border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
-              }}>
-                <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
-              </div>
-            </section>
-
-            {/* canvas */}
-            <section>
-              <SectionHeader icon="⇄" label={`Canvas (${graph.nodes.length} nodes)`} color="#818cf8" />
-              {/* display:flex is load-bearing: IpcCanvas's root is `flex: 1` with every
-                  child absolutely positioned, so a block parent collapses it to 0px and
-                  the canvas renders invisibly. */}
-              <div style={{ height: 420, display: 'flex', border: '1px solid var(--border)', borderRadius: 8, position: 'relative', overflow: 'hidden' }}>
-                <IpcCanvas
-                  nodes={graph.nodes}
-                  connections={graph.connections}
-                  selectedNode={selectedNodeId}
-                  onSelectNode={handleSelectNode}
-                  offsets={offsets}
-                  onMoveNode={handleMoveNode}
-                  onAutoLayout={handleAutoLayout}
-                  onPortClick={isViewing ? undefined : handlePortClick}
-                  onSelectEdge={isViewing ? undefined : handleSelectEdge}
-                  selectedEdge={selectedEdge}
-                  onDropType={isViewing ? undefined : handlePaletteAdd}
-                  onDropFormula={isViewing ? undefined : handleInsertExpression}
-                  nodeStatus={nodeStatus}
-                />
-              </div>
-            </section>
-
-            {/* target */}
-            <section>
-              <SectionHeader icon="⬡" label="Target" color="#f87171" extra={<GCPIcon service="bigquery" size={16} />} />
-              <div style={{
-                padding: '16px', background: 'var(--surface)',
-                border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7,
-              }}>
-                <TableNameList names={content?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
-              </div>
-            </section>
-
-            {/* Inspector — schema-driven per-node property editor (Task 12) for
-                whichever canvas node is selected; hidden entirely while viewing an
-                archived version (Task 10: "all editing affordances disabled while
-                viewing"). */}
-            {selectedNode && draft && !isViewing && (
-              <Inspector
-                draft={draft}
-                node={selectedNode}
-                keySchema={ipcRules.data?.keySchema ?? {}}
-                typeAliases={ipcRules.data?.typeAliases ?? {}}
-                keyAliases={ipcRules.data?.keyAliases ?? {}}
-                onChange={handleInspectorChange}
-                onDelete={handleDeleteNode}
-                onFocusFormula={handleFocusFormula}
+                }
+                historyOpen={historyOpen}
+                onToggleHistory={handleToggleHistory}
+                // Focus mode deep link (Task 15) — opens THIS recipe alone,
+                // full-viewport, in a new tab (encodeURIComponent: recipe paths
+                // carry '/' and are user-visible corpus paths, so an unencoded
+                // one would produce a malformed URL).
+                onOpenFocus={() => recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')}
+                showRaw={showRaw}
+                onToggleRaw={() => setShowRaw(r => !r)}
+                // Raw JSON is an EDITOR now (UX round 3, issue 4), not a
+                // read-only `<pre>`: `onApply` routes the parsed document
+                // through the same `applyEdit` funnel as every other edit path,
+                // so undo/redo, the dirty count and the conformance chip follow
+                // for free — and shapes no Inspector widget covers yet
+                // (`unionTables[].fieldMapping`'s nested objects) become
+                // authorable. Read-only while viewing an archived version, same
+                // as every other editing affordance.
+                rawContent={
+                  <RawJsonPanel
+                    json={serializeRecipe(content ?? rec.data?.content)}
+                    readOnly={isViewing}
+                    onApply={next => applyEdit(() => next)}
+                    text={rawText}
+                    onTextChange={setRawText}
+                    metadata={
+                      /* Path / Size bytes / Modified (Task 4): moved out of the
+                         always-visible header card — reference metadata, not
+                         per-second information, and the canvas needs the
+                         vertical space (spec §5.2). */
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, borderBottom: '1px solid var(--border)' }}>
+                        <EditableField label="Path" value={headerRecipe?.path ?? ''} onChange={() => {}} mono />
+                        <EditableField label="Size bytes" value={String(headerRecipe?.sizeBytes ?? '')} onChange={() => {}} mono />
+                        <EditableField label="Modified" value={headerRecipe?.modifiedAt ?? ''} onChange={() => {}} mono />
+                      </div>
+                    }
+                  />
+                }
+                // The dirty count/wire chip/Discard/Save are themselves editing
+                // affordances — hidden while viewing an archived version, same
+                // as the old SaveBar's own `{!isViewing && <SaveBar .../>}` gate.
+                changes={isViewing ? 0 : dirtyOps}
+                wireFrom={isViewing ? null : wireFrom}
+                onCancelWire={() => setWireFrom(null)}
+                onSave={handleSave}
+                onDiscard={handleDiscard}
+                saving={saving}
+                // Task 5: undo/redo — disabled (not hidden, same as
+                // wireFrom/changes above) while viewing an archived version,
+                // since the buttons would act on the invisible live draft
+                // rather than the read-only content on screen.
+                canUndo={isViewing ? false : history.canUndo}
+                canRedo={isViewing ? false : history.canRedo}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
               />
-            )}
-
-            {/* selected-edge delete control (Task 9) — also disabled while viewing */}
-            {selectedEdge && !isViewing && (
-              <section>
-                <SectionHeader icon="⌫" label="Edge" color="var(--red)" />
+              {(validationErrors.length > 0 || saveError) && (
                 <div style={{
-                  padding: 16, background: 'var(--surface)',
-                  border: '1px solid var(--border)', borderRadius: 7,
-                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 16px', background: 'var(--surface)',
+                  borderTop: '1px solid var(--red)', color: 'var(--red)', fontSize: 11,
+                  display: 'flex', flexDirection: 'column', gap: 4,
                 }}>
-                  <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', flex: 1 }}>
-                    {`${selectedEdge.fromNode}.${selectedEdge.fromPort || '·'} → ${selectedEdge.toNode}.${selectedEdge.toPort || '·'}`}
-                  </span>
-                  <button onClick={() => handleDeleteEdge(selectedEdge)} style={dangerButtonStyle}>Delete</button>
-                </div>
-              </section>
-            )}
-
-            {/* DDL — hidden entirely when the map is empty or errored */}
-            {!ddl.error && ddlEntries.length > 0 && (
-              <section>
-                <SectionHeader icon="⬡" label="BigQuery DDL Schema" color="#4f9cf9" extra={<GCPIcon service="bigquery" size={16} />} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {ddlEntries.map(([table, cols]) => (
-                    <div key={table}>
-                      <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>{table}</div>
-                      <DDLViewer cols={cols} />
+                  {validationErrors.map((e, i) => (
+                    <div key={i}>
+                      {e.path && <div style={{ fontSize: 9, opacity: 0.7 }}>{e.path}</div>}
+                      <div>{e.message}</div>
                     </div>
                   ))}
+                  {saveError && (
+                    <div>
+                      <div>{saveError.title}</div>
+                      {saveError.detail && <div>{saveError.detail}</div>}
+                    </div>
+                  )}
                 </div>
-              </section>
-            )}
-
-            <div style={{ height: 60 }} />
-          </div>
-        ) : null}
-
-        {(validationErrors.length > 0 || saveError) && (
-          <div style={{
-            padding: '10px 16px', background: 'var(--surface)',
-            borderTop: '1px solid var(--red)', color: 'var(--red)', fontSize: 11,
-            display: 'flex', flexDirection: 'column', gap: 4,
-          }}>
-            {validationErrors.map((e, i) => (
-              <div key={i}>
-                {e.path && <div style={{ fontSize: 9, opacity: 0.7 }}>{e.path}</div>}
-                <div>{e.message}</div>
+              )}
+            </>
+          }
+          canvas={
+            // display:flex is load-bearing: IpcCanvas's root is `flex: 1` with every
+            // child absolutely positioned, so a block parent collapses it to 0px and
+            // the canvas renders invisibly (the bug Task 7 of sub-project 8 fixed).
+            <div data-region="canvas" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+              <IpcCanvas
+                nodes={graph.nodes}
+                connections={graph.connections}
+                selectedNode={selectedNodeId}
+                onSelectNode={handleSelectNode}
+                offsets={offsets}
+                onMoveNode={handleMoveNode}
+                onAutoLayout={handleAutoLayout}
+                onPortClick={isViewing ? undefined : handlePortClick}
+                onPortRowClick={handlePortRowClick}
+                onSelectEdge={isViewing ? undefined : handleSelectEdge}
+                selectedEdge={selectedEdge}
+                onDropType={isViewing ? undefined : handlePaletteAdd}
+                onDropFormula={isViewing ? undefined : handleInsertExpression}
+                nodeStatus={nodeStatus}
+              />
+            </div>
+          }
+          inspector={
+            // Inspector — schema-driven per-node property editor (Task 12) for
+            // whichever canvas node is selected; hidden entirely while viewing
+            // an archived version (Task 10: "all editing affordances disabled
+            // while viewing").
+            selectedNode && draft && !isViewing ? (
+              <div data-testid="inspector-dock">
+                <Inspector
+                  draft={draft}
+                  node={selectedNode}
+                  keySchema={ipcRules.data?.keySchema ?? {}}
+                  typeAliases={ipcRules.data?.typeAliases ?? {}}
+                  keyAliases={ipcRules.data?.keyAliases ?? {}}
+                  onChange={handleInspectorChange}
+                  onDelete={handleDeleteNode}
+                  onFocusFormula={handleFocusFormula}
+                  focusField={focusedField}
+                />
               </div>
-            ))}
-            {saveError && (
-              <div>
-                <div>{saveError.title}</div>
-                {saveError.detail && <div>{saveError.detail}</div>}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* SaveBar is itself an editing affordance (Save/Discard mutate the
-            draft) — hidden while viewing an archived version. */}
-        {!isViewing && (
-          <SaveBar
-            changes={dirtyOps}
-            wireFrom={wireFrom}
-            onCancelWire={() => setWireFrom(null)}
-            onSave={handleSave}
-            onDiscard={handleDiscard}
-            saving={saving}
-          />
-        )}
-      </div>
+            ) : null
+          }
+          drawer={[
+            {
+              id: 'source', label: 'Source',
+              content: (
+                <section>
+                  <SectionHeader icon="→" label="Source" color="#34d399" />
+                  <div style={{
+                    padding: '16px', background: 'var(--surface)',
+                    border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
+                  }}>
+                    <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
+                  </div>
+                </section>
+              ),
+            },
+            {
+              id: 'target', label: 'Target',
+              content: (
+                <section>
+                  <SectionHeader icon="⬡" label="Target" color="#f87171" extra={<GCPIcon service="bigquery" size={16} />} />
+                  <div style={{
+                    padding: '16px', background: 'var(--surface)',
+                    border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7,
+                  }}>
+                    <TableNameList names={content?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
+                  </div>
+                </section>
+              ),
+            },
+            {
+              id: 'ddl', label: 'BigQuery DDL',
+              // hidden entirely when the map is empty or errored
+              content: !ddl.error && ddlEntries.length > 0 ? (
+                <section>
+                  <SectionHeader icon="⬡" label="BigQuery DDL Schema" color="#4f9cf9" extra={<GCPIcon service="bigquery" size={16} />} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {ddlEntries.map(([table, cols]) => (
+                      <div key={table}>
+                        <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>{table}</div>
+                        <DDLViewer cols={cols} />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null,
+            },
+            {
+              id: 'edge', label: 'Edge',
+              // selected-edge delete control (Task 9) — also disabled while viewing
+              content: selectedEdge && !isViewing ? (
+                <section>
+                  <SectionHeader icon="⌫" label="Edge" color="var(--red)" />
+                  <div style={{
+                    padding: 16, background: 'var(--surface)',
+                    border: '1px solid var(--border)', borderRadius: 7,
+                    display: 'flex', alignItems: 'center', gap: 12,
+                  }}>
+                    <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', flex: 1 }}>
+                      {`${selectedEdge.fromNode}.${selectedEdge.fromPort || '·'} → ${selectedEdge.toNode}.${selectedEdge.toPort || '·'}`}
+                    </span>
+                    <button onClick={() => handleDeleteEdge(selectedEdge)} style={dangerButtonStyle}>Delete</button>
+                  </div>
+                </section>
+              ) : null,
+            },
+          ]}
+        />
+      ) : null}
 
       {/* Expression dock (Task 11/14): corpus-wide, filtered to recipe-origin
           only. Relocated here (beside the Palette) from its old spot inline
@@ -837,6 +1046,29 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
           recipePath={recipePath}
           onView={handleViewVersion}
           onRestored={handleRestored}
+        />
+      )}
+      {/* Task 11: the ONLY way a palette/drop add reaches the draft — see
+          handlePaletteAdd/handleInsertNode above. `draft` is guaranteed
+          non-null here since pendingKind can only be set from an affordance
+          (Palette, IpcCanvas's onDropType) that itself only renders once
+          `draft` exists. */}
+      {pendingKind !== null && draft && (
+        <NodeConfigDialog
+          kind={pendingKind}
+          draft={draft}
+          keySchema={ipcRules.data?.keySchema ?? {}}
+          connections={ipcRules.data?.connections ?? {}}
+          onCancel={handleCancelInsertNode}
+          onInsert={handleInsertNode}
+        />
+      )}
+      {/* New recipe from scratch (Task 15) — the "+ New recipe" trigger in
+          `sidebarExtra` above. */}
+      {showNewRecipeDialog && (
+        <NewRecipeDialog
+          onCancel={() => setShowNewRecipeDialog(false)}
+          onCreate={handleCreateRecipe}
         />
       )}
     </div>

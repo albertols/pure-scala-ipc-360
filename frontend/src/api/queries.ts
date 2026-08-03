@@ -31,8 +31,14 @@ export const useMappingDom = (path: string) =>
 export const useMappingModel = (path: string) =>
   useQuery({ queryKey: ['model', path], queryFn: () => apiGet<MappingModel>(`/mappings/model/${path}`), staleTime: STALE_MS, enabled: !!path })
 
-export const useRecipe = (path: string) =>
-  useQuery({ queryKey: ['recipe', path], queryFn: () => apiGet<RecipeFile>(`/recipes/${path}`), staleTime: STALE_MS, enabled: !!path })
+// Task 15: `enabled` defaults to `true` for every existing caller — a SECOND
+// gate ANDed with the existing `!!path` one, not a replacement for it. Lets
+// `ETLModifier`'s authoring mode set a target `recipePath` (so the rest of the
+// component can address it — header, save target) WITHOUT ever GETting a file
+// that doesn't exist yet: "Create opens the editor with an empty draft and no
+// recipe fetch."
+export const useRecipe = (path: string, enabled = true) =>
+  useQuery({ queryKey: ['recipe', path], queryFn: () => apiGet<RecipeFile>(`/recipes/${path}`), staleTime: STALE_MS, enabled: !!path && enabled })
 
 export const useDdl = (path: string) =>
   useQuery({ queryKey: ['ddl', path], queryFn: () => apiGet<Record<string, unknown>>(`/ddl/${path}`), staleTime: STALE_MS, enabled: !!path })
@@ -72,6 +78,11 @@ export type IpcRules = components['schemas']['IpcRulesDto']
 export type IpcRuleMeta = components['schemas']['IpcRuleMetaDto']
 export type IpcKeySpec = components['schemas']['IpcKeySpecDto']
 export type IpcCheck = components['schemas']['IpcCheckDto']
+// Task 9: the connection adjacency matrix Task 8 authored, served through GET /api/ipc/rules
+// so the frontend holds no second copy of the recipe grammar — the same principle keySchema
+// follows. `active` classifies the kind's IPC active/passive-transformation status (nullable —
+// null means "cannot be determined") for the fan-in rule (spec §6.2).
+export type IpcConnections = IpcRules['connections']
 
 export const useIpcRules = () =>
   useQuery({ queryKey: ['ipcRules'], queryFn: () => apiGet<IpcRules>('/ipc/rules'), staleTime: Infinity })

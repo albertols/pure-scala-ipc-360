@@ -1,33 +1,63 @@
 // ─── Palette — designer strip (Task 9) ──────────────────────────────────────
 //
 // Right-side vertical strip of IPC primitives. Every entry is both click-to-add
-// (onAdd) and HTML5-draggable (drop target lives on EtlCanvas via onDropType,
+// (onAdd) and HTML5-draggable (drop target lives on IpcCanvas via onDropType,
 // reading the same 'text/etl-type' payload). `type` is the raw recipe `type`
-// string ETLModifier hands to `addStep`/`addSourceTable` — see recipeAdapter's
-// RECIPE_KIND/FIXED_LABEL maps for how each resolves to a canvas kind, and
-// recipeEdits' addStep/addSourceTable for how each becomes a draft mutation.
+// string ETLModifier hands to `NodeConfigDialog` (Task 11: neither a click nor a
+// drop inserts anything directly anymore — both only open the dialog, which
+// gathers the rest and commits via recipeEdits' `buildStep`/`insertConfiguredStep`,
+// or, for `SOURCE_TABLE_TYPE`, `insertSourceTable`) — see recipeAdapter's
+// RECIPE_KIND/FIXED_LABEL maps for how each `type` resolves to a canvas kind.
 // Colors are read straight from NodeBox's NODE_STYLES tokens — no new palette
 // introduced (Figma contract §6/§9).
 
 import { NODE_STYLES } from '../tab1/NodeBox'
 
-/** Sentinel `type` handled specially by ETLModifier (addSourceTable, not
- * addStep) — everything else is a literal recipe step `type` string. */
+/** Sentinel `type` `NodeConfigDialog` switches into its source-table mode for
+ * — a root with no upstream and no step of its own (`insertSourceTable`, not
+ * `insertConfiguredStep`) — everything else is a literal recipe step `type`
+ * string. */
 export const SOURCE_TABLE_TYPE = 'sourceTable'
 
 export const PALETTE: { type: string; label: string; color: string }[] = [
   { type: SOURCE_TABLE_TYPE, label: 'source table', color: NODE_STYLES.source.color },
   { type: 'sourceQualifier', label: 'sourceQualifier', color: NODE_STYLES.sq.color },
   { type: 'filter', label: 'filter', color: NODE_STYLES.filter.color },
-  { type: 'joiner', label: 'joiner', color: NODE_STYLES.joiner.color },
+  { type: 'joinerInput', label: 'joiner side', color: NODE_STYLES.joiner.color },
   { type: 'aggregator', label: 'aggregator', color: NODE_STYLES.aggregator.color },
   { type: 'router', label: 'router', color: NODE_STYLES.router.color },
-  { type: 'union', label: 'union', color: NODE_STYLES.expression.color },
+  { type: 'unionInput', label: 'union group', color: NODE_STYLES.expression.color },
   { type: 'normalizer', label: 'normalizer', color: NODE_STYLES.expression.color },
   { type: 'java', label: 'java', color: NODE_STYLES.expression.color },
   { type: 'storedProcedure', label: 'storedProcedure', color: NODE_STYLES.expression.color },
   { type: 'table', label: 'target table', color: NODE_STYLES.target.color },
-  { type: 'expression', label: 'expression step', color: NODE_STYLES.expression.color },
+  // ── What this list may and may not contain (residuals pass, 2026-08-03) ──
+  //
+  // An entry is only addable if something may FEED its kind (`canInsert` needs
+  // a mapped field, which only a "fed by" upstream can supply) and the kind has
+  // a `target:` key schema (the step shape the dialog gathers). Three entries
+  // failed that and were dead buttons — each opened a NodeConfigDialog with
+  // every candidate disabled and Insert permanently unreachable (probed against
+  // the real `ipc-rules.json`: 13 candidates offered, 0 enabled).
+  //
+  // - `expression` is GONE, with no replacement: in this recipe model an
+  //   EXPRESSION transformation is not a node at all. Its logic lives in each
+  //   target field's `transformation` call tree — what the Inspector's formula
+  //   widget edits and `ExpressionDock`/`_sqlTranslations_*` walk — and it
+  //   appears as a `type` on no source or target in any corpus recipe.
+  //   `NODE_STYLES.expression` above is the canvas's generic fallback STYLE,
+  //   not a kind.
+  // - `joiner` and `union` became `joinerInput` and `unionInput` above. Same
+  //   reason, opposite remedy: a joiner/union node is SYNTHESIZED from its
+  //   inputs in this model (`recipeAdapter`'s `toJoinerNode`/`toUnionNode` read
+  //   `sources[].joinerTables`/`unionTables`), so the container never exists as
+  //   a step target — only its inputs do. The addable primitive is therefore
+  //   the input, not the container: one Master/Detail SIDE of a join
+  //   (`docs/ipc/transformations/joinerInput.md`) or one input GROUP of a union
+  //   (`unionInput.md`), which is what the labels say and what the corpus
+  //   carries (`ASHPATH2` -> `joinerInput`, `EARLYGLADE` -> `unionInput`).
+  //
+  // `Palette.test.tsx` pins both conditions against the real rules file.
 ]
 
 export function Palette({ onAdd }: { onAdd: (type: string) => void }) {

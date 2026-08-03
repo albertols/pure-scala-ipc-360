@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   addField,
-  addSourceTable,
-  addStep,
+  buildStep,
   deleteEdge,
   deleteNode,
   deleteTargetProperty,
   editFieldDataType,
+  insertConfiguredStep,
+  insertSourceTable,
   parseFormulaText,
   refsInto,
   renameNode,
@@ -44,8 +45,8 @@ describe('recipeEdits — every helper is pure', () => {
       setFieldTransformation(MINI, 'T', 'A', { value: '2' }),
       renameNode(MINI, 'T', 'T2'),
       editFieldDataType(MINI, 'T', 'A', 'Long'),
-      addStep(MINI, 'table'),
-      addSourceTable(MINI, 'T'),
+      insertConfiguredStep(MINI, buildStep('table', 'NEWTGT', {}, [], [], [])),
+      insertSourceTable(MINI, 'NEWSRC', {}, ['T']),
       addField(MINI, { stepName: 'T', fieldName: 'NEWX' }),
       deleteNode(MINI, 'S'),
       deleteEdge(MINI, 'T', 'B'),
@@ -155,63 +156,170 @@ describe('editFieldDataType', () => {
   })
 })
 
-describe('addStep', () => {
-  it('appends {name: NEW_<TYPE>_<n>, type, fields: []}', () => {
-    const out = addStep(MINI, 'table')
+describe('buildStep / insertConfiguredStep', () => {
+  it('buildStep assembles target {name, type: kind, ...props, fields} and sources[] from fedBy', () => {
+    const step = buildStep(
+      'filter',
+      'FLT2',
+      { filterCondition: { source: 'S.A' } },
+      [],
+      [{ name: 'SQ1', kind: 'sourceQualifier' }],
+      [],
+    )
+    expect(step.target).toEqual({
+      name: 'FLT2', type: 'filter', filterCondition: { source: 'S.A' }, fields: [],
+    })
+    expect(step.sources).toEqual([{ name: 'SQ1', type: 'sourceQualifier' }])
+  })
+
+  // Fix round 1: IPC-FLW-003 ("no orphan step") reads outbound dot-refs off
+  // FIELD FORMULAS, not sources[] membership — a fieldless step always failed
+  // it regardless of connections, so Insert could never enable. mappedFields
+  // is what makes a step genuinely connected.
+  it('mappedFields become real {name, dataType, transformation: {source}} field entries', () => {
+    const step = buildStep(
+      'filter',
+      'FLT2',
+      {},
+      [],
+      [],
+      [{ name: 'A', dataType: 'String', source: 'SQ1.A' }, { name: 'B_RENAMED', dataType: 'Long', source: 'SQ1.B' }],
+    )
+    expect(step.target!.fields).toEqual([
+      { name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } },
+      { name: 'B_RENAMED', dataType: 'Long', transformation: { source: 'SQ1.B' } },
+    ])
+  })
+
+  // Task 16: NodeConfigDialog's target-DDL offer authors a field per DDL column —
+  // it knows the column's name and type but NOT where the data comes from. An
+  // empty `source` therefore means "not mapped yet" and must emit the same shape
+  // `addField` produces ({name, dataType}, no transformation), never an empty
+  // `{source: ""}` formula claiming a reference it doesn't have.
+  it('a mappedField with an empty source becomes an UNMAPPED field — no transformation key at all', () => {
+    const step = buildStep(
+      'table',
+      'DWH_ORDERS_FACT',
+      {},
+      [],
+      [],
+      [{ name: 'ORDER_ID', dataType: 'String', source: '' }, { name: 'A', dataType: 'Long', source: 'SQ1.A' }],
+    )
+    expect(step.target!.fields).toEqual([
+      { name: 'ORDER_ID', dataType: 'String' },
+      { name: 'A', dataType: 'Long', transformation: { source: 'SQ1.A' } },
+    ])
+    expect(Object.keys(step.target!.fields![0])).toEqual(['name', 'dataType'])
+  })
+
+  it('fields is spread in AFTER props, so a props.fields key can never silently override it', () => {
+    const step = buildStep(
+      'filter',
+      'FLT2',
+      { fields: 'should never survive' },
+      [],
+      [],
+      [{ name: 'A', dataType: 'String', source: 'SQ1.A' }],
+    )
+    expect(step.target!.fields).toEqual([{ name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } }])
+  })
+
+  it('insertConfiguredStep appends the step immutably and never mutates its inputs', () => {
+    const before = JSON.stringify(MINI)
+    const step = buildStep('filter', 'FLT2', {}, [], [{ name: 'T', kind: 'table' }], [{ name: 'X', dataType: 'String', source: 'T.X' }])
+    const stepBefore = JSON.stringify(step)
+
+    const out = insertConfiguredStep(MINI, step)
+
+    expect(out).not.toBe(MINI)
+    expect(JSON.stringify(MINI)).toBe(before)
+    expect(JSON.stringify(step)).toBe(stepBefore)
     expect(out.steps).toHaveLength(2)
-    const added = out.steps![1].target!
-    expect(added.name).toMatch(/^NEW_TABLE_\d+$/)
-    expect(added.type).toBe('table')
-    expect(added.fields).toEqual([])
+    expect(out.steps![1]).toEqual({
+      target: { name: 'FLT2', type: 'filter', fields: [{ name: 'X', dataType: 'String', transformation: { source: 'T.X' } }] },
+      sources: [{ name: 'T', type: 'table' }],
+    })
   })
 
-  it('type table also appends the new name to targetTableNames', () => {
-    const out = addStep(MINI, 'table')
-    const added = out.steps![1].target!
-    expect(out.table!.targetTableNames).toContain(added.name)
+  it('appends the new name to table.targetTableNames when kind is table', () => {
+    const step = buildStep('table', 'NEWTGT', {}, [], [], [])
+    const out = insertConfiguredStep(MINI, step)
+    expect(out.table!.targetTableNames).toContain('NEWTGT')
   })
 
-  it('non-table types do not touch targetTableNames', () => {
-    const out = addStep(MINI, 'filter')
+  it('a non-table kind does not touch table.targetTableNames', () => {
+    const step = buildStep('filter', 'FLT2', {}, [], [], [])
+    const out = insertConfiguredStep(MINI, step)
     expect(out.table!.targetTableNames).toEqual(['T'])
   })
 
-  it('picks a fresh unique name across repeated calls', () => {
-    const once = addStep(MINI, 'table')
-    const twice = addStep(once, 'table')
-    const names = twice.steps!.map(s => s.target?.name)
-    expect(new Set(names).size).toBe(names.length)
+  it('adds this node as a sources[] entry of every consuming step named in feeds', () => {
+    const step = buildStep('filter', 'FLT2', {}, ['T'], [], [])
+    const out = insertConfiguredStep(MINI, step)
+    const consumer = out.steps!.find(s => s.target?.name === 'T')!
+    expect(consumer.sources).toContainEqual({ name: 'FLT2', type: 'filter' })
+    // The original 'S' source survives untouched.
+    expect(consumer.sources).toContainEqual({ name: 'S', type: 'table' })
+  })
+
+  it('a feeds name that does not resolve to a step target is a safe no-op', () => {
+    const step = buildStep('filter', 'FLT2', {}, ['GHOST'], [], [])
+    const out = insertConfiguredStep(MINI, step)
+    expect(out.steps).toHaveLength(2)
+    expect(out.steps!.some(s => s.target?.name === 'GHOST')).toBe(false)
   })
 })
 
-describe('addSourceTable', () => {
-  it('appends {name, type: table} into the named step sources[] + sourceTableNames', () => {
-    const out = addSourceTable(MINI, 'T')
+// Task 11 design ruling: a source table is a ROOT (reads a physical table, no
+// upstream of its own) and structurally isn't even a step — `insertSourceTable`
+// is `NodeConfigDialog`'s write path for that one kind, never touching
+// `d.steps` at all (unlike `insertConfiguredStep`, which always appends one).
+describe('insertSourceTable', () => {
+  it('appends {name, type: table, ...props} into every feeds step\'s sources[], plus table.sourceTableNames', () => {
+    const out = insertSourceTable(MINI, 'NEWSRC', { primaryKeys: ['ID'] }, ['T'])
     const step = out.steps!.find(s => s.target?.name === 'T')!
-    expect(step.sources).toHaveLength(2)
-    const added = step.sources!.find(s => s.name !== 'S')!
-    expect(added.type).toBe('table')
-    expect(out.table!.sourceTableNames).toContain(added.name)
+    const added = step.sources!.find(s => s.name === 'NEWSRC')!
+    expect(added).toEqual({ name: 'NEWSRC', type: 'table', primaryKeys: ['ID'] })
+    expect(out.table!.sourceTableNames).toContain('NEWSRC')
   })
 
-  it('falls back to the first step when stepName is omitted', () => {
-    const out = addSourceTable(MINI)
-    expect(out.steps![0].sources).toHaveLength(2)
-  })
-
-  it('creates a stub table-typed step when the recipe has no steps at all', () => {
-    const empty: RecipeJson = {}
-    const out = addSourceTable(empty)
+  it('never appends a step to d.steps — a source table is not a step', () => {
+    const out = insertSourceTable(MINI, 'NEWSRC', {}, ['T'])
     expect(out.steps).toHaveLength(1)
-    expect(out.steps![0].target!.type).toBe('table')
-    expect(out.steps![0].sources).toHaveLength(1)
-    expect(out.table!.sourceTableNames).toHaveLength(1)
+  })
+
+  it('attaches to every named consuming step when feeds names more than one', () => {
+    const twoSteps: RecipeJson = {
+      steps: [
+        { target: { name: 'T1', type: 'table', fields: [] }, sources: [] },
+        { target: { name: 'T2', type: 'sourceQualifier', fields: [] }, sources: [] },
+      ],
+      table: { targetTableNames: ['T1'], sourceTableNames: [] },
+    }
+    const out = insertSourceTable(twoSteps, 'NEWSRC', {}, ['T1', 'T2'])
+    expect(out.steps![0].sources!.some(s => s.name === 'NEWSRC')).toBe(true)
+    expect(out.steps![1].sources!.some(s => s.name === 'NEWSRC')).toBe(true)
+  })
+
+  it('a feeds name that does not resolve to an existing step is a safe no-op for that entry, but the table is still recorded', () => {
+    const out = insertSourceTable(MINI, 'NEWSRC', {}, ['GHOST'])
+    expect(out.steps!.every(s => (s.sources ?? []).every(src => src.name !== 'NEWSRC'))).toBe(true)
+    expect(out.table!.sourceTableNames).toContain('NEWSRC')
+  })
+
+  it('is pure: returns a new object, never mutates the input', () => {
+    const before = JSON.stringify(MINI)
+    const out = insertSourceTable(MINI, 'NEWSRC', {}, ['T'])
+    expect(out).not.toBe(MINI)
+    expect(JSON.stringify(MINI)).toBe(before)
   })
 })
 
-// Final-review finding: palette-added nodes (addStep's fields: []) had no
-// in-UI way to ever gain a field — ports derive 1:1 from fields, so a freshly
-// added node could never be wired. addField is the minimal creation path the
+// Final-review finding: a freshly-inserted node can legitimately carry an
+// empty fields[] (a dialog-built step's own "map fields" section leaves room
+// for more than what it mapped at insert time) — ports derive 1:1 from
+// fields, so a field the dialog didn't map could never be wired. addField is
+// the minimal creation path the
 // new EditPanel "+ field" affordance calls.
 describe('addField', () => {
   it('appends {name, dataType: String} with no transformation when dataType is omitted', () => {
@@ -246,10 +354,9 @@ describe('addField', () => {
     expect(addField(MINI, { stepName: 'NOPE', fieldName: 'C' })).toEqual(MINI)
   })
 
-  it('gives a fresh palette-added step (fields: []) its first field', () => {
-    const fresh = addStep(MINI, 'table')
-    const addedName = fresh.steps![1].target!.name!
-    const out = addField(fresh, { stepName: addedName, fieldName: 'F1' })
+  it('gives a freshly-inserted step (fields: []) its first field', () => {
+    const fresh = insertConfiguredStep(MINI, buildStep('table', 'NEWTGT', {}, [], [], []))
+    const out = addField(fresh, { stepName: 'NEWTGT', fieldName: 'F1' })
     expect(out.steps![1].target!.fields).toEqual([{ name: 'F1', dataType: 'String' }])
   })
 })
@@ -277,11 +384,10 @@ describe('deleteNode / refsInto', () => {
   })
 
   it('removes a step-target node and its targetTableNames mention', () => {
-    const withTwoSteps = addStep(MINI, 'table')
-    const addedName = withTwoSteps.steps![1].target!.name!
-    const out = deleteNode(withTwoSteps, addedName)
+    const withTwoSteps = insertConfiguredStep(MINI, buildStep('table', 'NEWTGT', {}, [], [], []))
+    const out = deleteNode(withTwoSteps, 'NEWTGT')
     expect(out.steps).toHaveLength(1)
-    expect(out.table!.targetTableNames).not.toContain(addedName)
+    expect(out.table!.targetTableNames).not.toContain('NEWTGT')
   })
 
   // Regression (final review, task-8): the real corpus has 469 fields whose

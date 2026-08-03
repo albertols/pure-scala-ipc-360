@@ -6,6 +6,15 @@ import type { ExpressionEntry } from '../../api/queries'
 
 afterEach(() => cleanup())
 
+// The two RENDER_CAP tests below mount 150 rows through jsdom, which costs ~1.4s
+// on a loaded dev box — under 4x headroom against vitest's default 5000ms budget.
+// Once the suite's workers contend that margin disappears, and whichever of the
+// two renders loses the race times out, so the failure wandered between runs
+// rather than pinning one test. Both assert DOM structure, never render speed,
+// so the budget is the wrong contract to leave implicit. Raised here rather than
+// globally so a genuine hang elsewhere still trips the 5s default.
+const HEAVY_RENDER_TIMEOUT = 20_000
+
 const ENTRIES: ExpressionEntry[] = [
   {
     mappingPath: 'CDM/m_DM_INFOHUB_BIZLINK', layer: 'CDM',
@@ -111,5 +120,65 @@ describe('ExpressionDock (Task 14)', () => {
     const insertButton = screen.getByText('Insert')
     fireEvent.click(insertButton)
     expect(onInsert).toHaveBeenCalledWith('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')
+  })
+})
+
+const LONG = 'CONCAT(' + 'X'.repeat(4000) + ')'
+
+describe('ExpressionDock (Task 1 — clamp and cap)', () => {
+  it('clamps a long formula and expands it on click', () => {
+    render(<ExpressionDock entries={[
+      { mappingPath: 'CDM/m_A', layer: 'CDM', transformation: 'EXP_A', port: 'P', formula: LONG, origin: 'recipe' },
+    ]} isLoading={false} error={null} filter="" onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+    const pre = screen.getByText(LONG)
+    expect(pre).toHaveStyle({ overflow: 'hidden' })      // clamped
+    fireEvent.click(screen.getByRole('button', { name: /expand/i }))
+    expect(screen.getByText(LONG)).not.toHaveStyle({ overflow: 'hidden' })
+  })
+
+  it('caps the rendered list and states truthfully how many are shown', () => {
+    const many = Array.from({ length: 300 }, (_, i) => ({
+      mappingPath: 'CDM/m_A', layer: 'CDM', transformation: `EXP_${i}`, port: 'P',
+      formula: `LTRIM(C${i})`, origin: 'recipe' as const,
+    }))
+    render(<ExpressionDock entries={many} isLoading={false} error={null} filter=""
+      onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+    expect(screen.getAllByText(/^EXP_\d+\.P$/)).toHaveLength(150)
+    expect(screen.getByText(/showing 150 of 300/i)).toBeInTheDocument()
+  }, HEAVY_RENDER_TIMEOUT)
+
+  // Regression (UX round 3, issue 2): the dock's list is a `flexDirection:
+  // 'column'` container with `flex: 1` inside a FIXED-height shell, and each row
+  // carries `overflow: 'hidden'` (for the rounded-corner clip). `overflow` other
+  // than `visible` zeroes a flex item's automatic minimum size, so the default
+  // `flex-shrink: 1` squeezed all 150 rows down to their 2px border box instead
+  // of overflowing into the container's own `overflowY: 'auto'` — the dock
+  // painted as a stack of hairlines with every formula present in the DOM but
+  // invisible (live-DOM evidence: row height 2px, full textContent intact).
+  // jsdom performs no flex layout, so this pins the property that prevents it.
+  it('list rows and the footer opt out of flex shrinking, so a capped list scrolls instead of collapsing to hairlines', () => {
+    const many = Array.from({ length: 300 }, (_, i) => ({
+      mappingPath: 'CDM/m_A', layer: 'CDM', transformation: `EXP_${i}`, port: 'P',
+      formula: `LTRIM(C${i})`, origin: 'recipe' as const,
+    }))
+    render(<ExpressionDock entries={many} isLoading={false} error={null} filter=""
+      onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+    const rows = screen.getAllByText(/^EXP_\d+\.P$/)
+      .map(el => el.closest('[draggable="true"]') as HTMLElement)
+    expect(rows).toHaveLength(150)
+    for (const row of rows) expect(row.style.flexShrink).toBe('0')
+
+    expect((screen.getByText(/showing 150 of 300/i) as HTMLElement).style.flexShrink).toBe('0')
+  }, HEAVY_RENDER_TIMEOUT)
+
+  it('shows no footer when nothing is hidden', () => {
+    render(<ExpressionDock entries={[
+      { mappingPath: 'CDM/m_A', layer: 'CDM', transformation: 'EXP_A', port: 'P', formula: 'LTRIM(A)', origin: 'recipe' },
+    ]} isLoading={false} error={null} filter="" onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+
+    expect(screen.queryByText(/showing/i)).not.toBeInTheDocument()
   })
 })

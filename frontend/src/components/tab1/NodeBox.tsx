@@ -4,6 +4,14 @@ export const NODE_WIDTH = 195
 export const NODE_HEADER_H = 44
 export const NODE_PORT_H = 22
 
+/** Click radius of a connector dot, as opposed to the 4px radius it is PAINTED
+ * at. A transparent circle of this size sits on top of the painted one so the
+ * wire handle is comfortably hittable without changing how it looks (ADR-0005:
+ * the visual contract covers what is drawn, not what is clickable). Rendered
+ * only when `onPortClick` is supplied — Tab 1 never passes it, so its nodes
+ * gain no extra elements at all. */
+const PORT_HIT_R = 9
+
 export const NODE_STYLES: Record<string, { color: string; bg: string; border: string; abbr: string }> = {
   source:     { color: '#34d399', bg: 'rgba(52,211,153,0.08)',  border: 'rgba(52,211,153,0.3)',  abbr: 'SRC' },
   sq:         { color: '#22d3ee', bg: 'rgba(34,211,238,0.08)',  border: 'rgba(34,211,238,0.3)',  abbr: 'SQ'  },
@@ -35,17 +43,31 @@ export function NodeBox({
   onClick,
   compact = false,
   onPortClick,
+  onPortRowClick,
 }: {
   node: ETLNode
   isSelected: boolean
   onClick: () => void
   compact?: boolean
   /** Task 9 (ETL Modifier click-wire) — optional, behavior-only: when provided,
-   * each port row gains its own onClick (stopping propagation to the node's own
-   * onClick above) firing `onPortClick(node.id, port)`. Tab 1 (ETLViewer) never
-   * passes this, so its ports stay non-interactive and node.onClick is the only
-   * handler that ever fires there — zero visual or behavioral change. */
+   * each port's CONNECTOR DOT gains its own onClick (stopping propagation to the
+   * node's own onClick above) firing `onPortClick(node.id, port)`. Tab 1
+   * (ETLViewer) never passes this, so its ports stay non-interactive and
+   * node.onClick is the only handler that ever fires there — zero visual or
+   * behavioral change.
+   *
+   * (UX round 3, issue 1: this used to sit on the whole port ROW `<g>`, which
+   * meant every click below the 44px header armed a wire instead of selecting
+   * the node — the Inspector never opened for a click anywhere on the node's
+   * body, which is most of its surface. The handler moved down onto the dots,
+   * where a wire handle belongs; the row reports through `onPortRowClick`.) */
   onPortClick?: (nodeId: string, port: Port) => void
+  /** UX round 3 — optional, behavior-only, Tab 2 only: a click on the port row
+   * itself (its label / data type / the body behind them). Distinct from
+   * `onPortClick` so the caller can select the node and focus that field rather
+   * than start a wire. When absent, a row click simply bubbles to the node's own
+   * `onClick`, which is Tab 1's unchanged behavior. */
+  onPortRowClick?: (nodeId: string, port: Port) => void
 }) {
   const style = NODE_STYLES[node.type] ?? NODE_STYLES.source
   const h = getNodeHeight(node, compact)
@@ -122,11 +144,14 @@ export function NodeBox({
         const isOut = port.direction === 'OUT' || port.direction === 'IN/OUT'
         const isIn = port.direction === 'IN' || port.direction === 'IN/OUT'
         const hasExpr = Boolean(port.expression)
-        const portClick = onPortClick
+        const wireClick = onPortClick
           ? (e: React.MouseEvent) => { e.stopPropagation(); onPortClick(node.id, port) }
           : undefined
+        const rowClick = onPortRowClick
+          ? (e: React.MouseEvent) => { e.stopPropagation(); onPortRowClick(node.id, port) }
+          : undefined
         return (
-          <g key={i} onClick={portClick} style={portClick ? { cursor: 'pointer' } : undefined}>
+          <g key={i} onClick={rowClick} style={rowClick ? { cursor: 'pointer' } : undefined}>
             {isIn && (
               <circle cx={node.x} cy={py} r={4} fill={port.linked ? style.color : '#1e2438'} stroke={style.border} strokeWidth={1} />
             )}
@@ -154,6 +179,24 @@ export function NodeBox({
             {i < node.ports.length - 1 && (
               <line x1={node.x + 8} y1={py + NODE_PORT_H / 2} x2={node.x + NODE_WIDTH - 8} y2={py + NODE_PORT_H / 2}
                 stroke="#1a1f2e" strokeWidth={1} />
+            )}
+            {/* Wire handles — invisible, PAINTED LAST so they sit above the row's
+                own children and win the click. Their `stopPropagation` (inside
+                `wireClick`) is what keeps a dot click from also reaching
+                `rowClick` on the enclosing row `<g>`. */}
+            {wireClick && isIn && (
+              <circle data-testid={`ipc-port-in-${node.id}-${port.name}`}
+                cx={node.x} cy={py} r={PORT_HIT_R} fill="transparent"
+                onClick={wireClick} style={{ cursor: 'crosshair' }}>
+                <title>{`${port.name} — click to wire`}</title>
+              </circle>
+            )}
+            {wireClick && isOut && (
+              <circle data-testid={`ipc-port-out-${node.id}-${port.name}`}
+                cx={node.x + NODE_WIDTH} cy={py} r={PORT_HIT_R} fill="transparent"
+                onClick={wireClick} style={{ cursor: 'crosshair' }}>
+                <title>{`${port.name} — click to wire`}</title>
+              </circle>
             )}
           </g>
         )
