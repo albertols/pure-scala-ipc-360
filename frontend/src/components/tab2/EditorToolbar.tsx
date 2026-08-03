@@ -117,10 +117,13 @@ export function EditorToolbar({
           color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
         }}>{'{ raw JSON }'}</button>
 
+        {/* No `width` on the dropdown any more (UX round 3, issue 4): the
+            raw-JSON panel is an editor now and sizes ITSELF (`RawJsonPanel`'s
+            PANEL_W, which clamps against the viewport), so this wrapper only
+            positions it. A fixed 420px here would have re-clamped it. */}
         {showRaw && (
           <div style={{
             position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 20,
-            width: 420,
             background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6,
             overflow: 'hidden',
           }}>

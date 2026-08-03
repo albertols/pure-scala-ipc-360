@@ -57,6 +57,11 @@ export function IpcCanvas(props: {
   onMoveNode?: (id: string, x: number, y: number) => void
   onAutoLayout?: () => void
   onPortClick?: (nodeId: string, port: Port) => void
+  /** UX round 3 (issue 1): a click on a port ROW rather than its connector dot.
+   * The caller selects the node and focuses that field; wiring stays on the
+   * dots. Without this the row click bubbles to `onSelectNode` instead, which
+   * is still a select — just with no field to focus. */
+  onPortRowClick?: (nodeId: string, port: Port) => void
   onSelectEdge?: (conn: Connection) => void
   selectedEdge?: Connection | null
   onDropType?: (type: string) => void
@@ -74,7 +79,7 @@ export function IpcCanvas(props: {
 }) {
   const {
     nodes, connections, selectedNode, onSelectNode, offsets,
-    onMoveNode, onAutoLayout, onPortClick, onSelectEdge, selectedEdge, onDropType, onDropFormula, nodeStatus,
+    onMoveNode, onAutoLayout, onPortClick, onPortRowClick, onSelectEdge, selectedEdge, onDropType, onDropFormula, nodeStatus,
   } = props
 
   const [pan, setPan] = useState({ x: 30, y: 30 })
@@ -243,6 +248,7 @@ export function IpcCanvas(props: {
                 onClick={() => onSelectNode(n.id)}
                 compact={compact}
                 onPortClick={onPortClick}
+                onPortRowClick={onPortRowClick}
               />
               {status && (
                 <circle

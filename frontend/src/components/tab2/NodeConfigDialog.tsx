@@ -737,7 +737,14 @@ export function NodeConfigDialog({
           {isSourceTable && (
             <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>
               {noStepsYet
-                ? 'The canvas is empty, so there is no step yet that could consume this table — it can still be inserted; it just won\'t appear on the canvas until you add the step that reads from it.'
+                // UX round 3, issue 3: this used to end "…it just won't appear on
+                // the canvas until you add the step that reads from it", which was
+                // the honest description of the old behaviour and the reason a
+                // from-scratch recipe started on a blank canvas. `recipeToCanvas`
+                // now paints a node for any declared `table.sourceTableNames`
+                // entry, so the table IS visible the moment it is inserted — it
+                // just has no ports until something references its fields.
+                ? 'The canvas is empty, so there is no step yet that could consume this table. Insert it anyway to start the recipe: it appears in the Sources band right away, and gains ports once a step reads from it.'
                 : 'A source table has no upstream — select at least one existing step that reads from it.'}
             </div>
           )}

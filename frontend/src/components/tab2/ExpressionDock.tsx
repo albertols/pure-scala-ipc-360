@@ -105,7 +105,18 @@ export function ExpressionDock({
                 key={i}
                 draggable
                 onDragStart={ev => ev.dataTransfer.setData('text/etl-formula', e.formula ?? '')}
-                style={{ border: '1px solid rgba(167,139,250,0.2)', borderRadius: 5, overflow: 'hidden', cursor: 'grab' }}
+                // `flexShrink: 0` is load-bearing, not cosmetic. This list is a
+                // `flexDirection: 'column'` container inside the FIXED-height
+                // editor shell, and `overflow: 'hidden'` here (the rounded-corner
+                // clip) zeroes this item's automatic minimum size — so the default
+                // `flex-shrink: 1` squeezed all 150 rows to their 2px border box
+                // rather than overflowing into the container's own
+                // `overflowY: 'auto'`. The dock painted as a stack of hairlines
+                // with every formula present in the DOM but invisible.
+                // (`Palette`/`RegistrySearch` rows survive the same layout only
+                // because they keep `overflow: visible`, which leaves
+                // `min-height: auto` intact.)
+                style={{ border: '1px solid rgba(167,139,250,0.2)', borderRadius: 5, overflow: 'hidden', cursor: 'grab', flexShrink: 0 }}
               >
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -150,7 +161,7 @@ export function ExpressionDock({
               </div>
             ))}
             {filtered.length > shown.length && (
-              <div style={{ fontSize: 9, color: '#4a5570', padding: '4px 2px', fontFamily: 'JetBrains Mono, monospace' }}>
+              <div style={{ fontSize: 9, color: '#4a5570', padding: '4px 2px', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>
                 {`showing ${shown.length} of ${filtered.length} · refine the filter`}
               </div>
             )}

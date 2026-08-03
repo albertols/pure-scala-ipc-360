@@ -21,7 +21,10 @@ platform-agnostic. A multi-module Maven repo:
   the ruleset's `source:`/`target:` kinds — `union` (10) and `joiner` (5) sources now
   get canvas nodes too, closing spec `2026-08-01-etl-modifier-redesign-design.md` §13
   deviation 3, though their 2197 `unionTables[].fieldMapping` pairs render read-only
-  (nested-object editing is still unbuilt) — a conformance chip + drawer against the
+  (nested-object editing is still unbuilt — the editable `{ raw JSON }` panel is the
+  authoring path for those shapes meanwhile) — a declared-but-unconsumed
+  `table.sourceTableNames` entry also gets a Sources-band node, which is what makes the
+  first insertion into a from-scratch recipe visible — a conformance chip + drawer against the
   IPC ruleset (`docs/ipc/`), a pre-add configuration dialog gated on the `connections`
   adjacency matrix (`docs/adr/0012-ipc-connection-matrix.md`) so the palette cannot
   insert an orphan into any non-empty draft (the one exception: a *source table* on a

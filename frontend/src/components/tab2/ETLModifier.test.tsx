@@ -6,6 +6,18 @@ import { http, HttpResponse } from 'msw'
 import { ETLModifier } from './ETLModifier'
 import { LAYOUT_DEFAULT } from './useResizableLayout'
 
+/** UX round 3 (issue 1): a wire starts from a port's CONNECTOR DOT, not from
+ * its row — a row click now selects the node and focuses that field (the whole
+ * point of the fix: clicking a node's body used to arm a wire and never open
+ * the Inspector). Every click-wire assertion below therefore targets the dot's
+ * own transparent hit circle, which `NodeBox` renders only when `onPortClick`
+ * is supplied. */
+function portDot(dir: 'in' | 'out', nodeId: string, port: string): Element {
+  const dot = document.querySelector(`[data-testid="ipc-port-${dir}-${nodeId}-${port}"]`)
+  if (!dot) throw new Error(`no ${dir} connector dot for ${nodeId}.${port}`)
+  return dot
+}
+
 // MINI = Task-5's field-less-source recipe literal (recipeAdapter.test.ts
 // "field-less source entry gets a single node-center edge") plus one field
 // carrying a dot-ref transformation, so the recipe exercises both a
@@ -463,13 +475,94 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('S', { selector: 'text' })
 
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('out', 'S', 'A'))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('X'))
+    fireEvent.click(portDot('in', 'T', 'X'))
 
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
+  })
+
+  // ─── UX round 3, issue 1 ───────────────────────────────────────────────────
+  //
+  // Reported as "when I click the boxes in ETL Modifier it does not show me the
+  // information". Reproduced in Chrome against the live corpus: the port ROW
+  // owned the wire click across the whole node body, so only the 44px header
+  // ever opened the Inspector — every other click on the box silently armed a
+  // wire whose only feedback was a small toolbar chip.
+  it('clicking a port ROW opens the Inspector on that node and focuses that field — it does not arm a wire', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          {
+            target: {
+              name: 'S', type: 'sourceQualifier',
+              fields: [{ name: 'A', dataType: 'String' }, { name: 'B', dataType: 'String' }],
+            },
+            sources: [],
+          },
+        ],
+        table: { targetTableNames: [], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('S', { selector: 'text' })
+
+    expect(screen.queryByTestId('inspector-dock')).not.toBeInTheDocument()
+
+    // The port LABEL, i.e. the node's body — what the report described as
+    // "clicking the box".
+    fireEvent.click(screen.getByText('B', { selector: 'text' }))
+
+    expect(await screen.findByTestId('inspector-dock')).toBeInTheDocument()
+    expect(screen.getByText('Edit — S')).toBeInTheDocument()
+    expect(screen.queryByText(/^wire: /)).not.toBeInTheDocument()
+
+    // …and the clicked field is the one outlined, not merely the panel opened.
+    expect(screen.getByTestId('inspector-field-B')).toHaveAttribute('data-focused', 'true')
+    expect(screen.getByTestId('inspector-field-A')).not.toHaveAttribute('data-focused')
+  })
+
+  it('a row click on the ALREADY-selected node re-focuses the new field instead of toggling the Inspector shut', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          {
+            target: {
+              name: 'S', type: 'sourceQualifier',
+              fields: [{ name: 'A', dataType: 'String' }, { name: 'B', dataType: 'String' }],
+            },
+            sources: [],
+          },
+        ],
+        table: { targetTableNames: [], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('S', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('A', { selector: 'text' }))
+    expect(await screen.findByTestId('inspector-field-A')).toHaveAttribute('data-focused', 'true')
+
+    // Same node, different field. `handleSelectNode`'s toggle would have closed
+    // the panel here; the row handler deliberately doesn't toggle.
+    fireEvent.click(screen.getByText('B', { selector: 'text' }))
+    expect(screen.getByTestId('inspector-dock')).toBeInTheDocument()
+    expect(screen.getByTestId('inspector-field-B')).toHaveAttribute('data-focused', 'true')
+    expect(screen.getByTestId('inspector-field-A')).not.toHaveAttribute('data-focused')
   })
 
   // Review finding (fix round): every IN/OUT port is a valid wire-start AND a
@@ -496,17 +589,17 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
     await screen.findByText('S', { selector: 'text' })
 
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('out', 'S', 'A'))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
 
     // A second click on A — same node as wireFrom, and A is IN/OUT-eligible —
     // must NOT complete the wire: no dirty change, wire chip stays exactly as is.
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('in', 'S', 'A'))
     expect(screen.getByText('wire: S.A → click an IN port')).toBeInTheDocument()
     expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
 
     // The wire is still armed: completing on a DIFFERENT node's IN port still works.
-    fireEvent.click(screen.getByText('X'))
+    fireEvent.click(portDot('in', 'T', 'X'))
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/"source": "S\.A"/)).toBeInTheDocument()
   })
@@ -550,7 +643,7 @@ describe('ETLModifier — final-review wave', () => {
     await screen.findByText('S', { selector: 'text' })
 
     // Arm a wire from S.A.
-    fireEvent.click(screen.getByText('A'))
+    fireEvent.click(portDot('out', 'S', 'A'))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
 
     // Select S and delete it — the armed wire's origin node is gone.
@@ -565,7 +658,7 @@ describe('ETLModifier — final-review wave', () => {
 
     // A completion click on T's IN port is now a no-op: no armed wire survives
     // the delete, so it can't write a dot-ref onto a node that no longer exists.
-    fireEvent.click(screen.getByText('X'))
+    fireEvent.click(portDot('in', 'T', 'X'))
     expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(screen.queryByText(/"source": "S\.A"/)).not.toBeInTheDocument()
@@ -621,9 +714,9 @@ describe('ETLModifier — final-review wave', () => {
     expect(await screen.findByText('X', { selector: 'text' })).toBeInTheDocument()
 
     // Click-wire: OUT port S.A completes onto the freshly created IN port X.
-    fireEvent.click(screen.getByText('A', { selector: 'text' }))
+    fireEvent.click(portDot('out', 'S', 'A'))
     expect(await screen.findByText('wire: S.A → click an IN port')).toBeInTheDocument()
-    fireEvent.click(screen.getByText('X', { selector: 'text' }))
+    fireEvent.click(portDot('in', 'NEW_TBL', 'X'))
 
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/"name": "X"/)).toBeInTheDocument()
@@ -905,6 +998,89 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
     fireEvent.click(screen.getByText('{ raw JSON }'))
     expect(await screen.findByText(/999/)).toBeInTheDocument()
+  })
+})
+
+// ─── UX round 3, issue 4: the raw JSON panel is an editor ────────────────────
+//
+// Component-level behaviour (parse guard, Revert, upstream mirroring) is
+// covered in RawJsonPanel.test.tsx. These pin the WIRING: Apply must land on
+// the same `applyEdit` funnel every other edit path uses, so the canvas, the
+// dirty counter and undo all follow it.
+
+describe('ETLModifier — raw JSON editing (UX round 3)', () => {
+  const rawEditor = () => screen.getByTestId('raw-json-editor') as HTMLTextAreaElement
+
+  it('editing the document and pressing Apply redraws the canvas and counts as one unsaved change', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+
+    const edited = JSON.stringify({
+      steps: [{ target: { name: 'FROM_RAW', type: 'table', fields: [] }, sources: [] }],
+      table: { targetTableNames: ['FROM_RAW'], sourceTableNames: [] },
+    }, null, 2)
+    fireEvent.change(rawEditor(), { target: { value: edited } })
+    fireEvent.click(screen.getByText('Apply'))
+
+    expect(await screen.findByText('FROM_RAW', { selector: 'text' })).toBeInTheDocument()
+    expect(screen.queryByText('T', { selector: 'text' })).not.toBeInTheDocument()
+    expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
+  })
+
+  it('an Apply is undoable, like every other edit path', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    fireEvent.change(rawEditor(), {
+      target: { value: JSON.stringify({ steps: [{ target: { name: 'FROM_RAW', type: 'table', fields: [] }, sources: [] }], table: { targetTableNames: ['FROM_RAW'], sourceTableNames: [] } }) },
+    })
+    fireEvent.click(screen.getByText('Apply'))
+    await screen.findByText('FROM_RAW', { selector: 'text' })
+
+    fireEvent.click(screen.getByLabelText('Undo'))
+    expect(await screen.findByText('T', { selector: 'text' })).toBeInTheDocument()
+  })
+
+  it('unapplied text survives toggling the panel shut, but Discard clears it', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    // Dirty the draft first, so Discard is rendered at all (it is gated on
+    // `changes > 0`) — the raw text itself is deliberately NOT a dirty op.
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    fireEvent.change(rawEditor(), { target: { value: '{"steps":[{"target":{"name":"VIA_RAW","type":"table","fields":[]}}],"table":{"targetTableNames":["VIA_RAW"],"sourceTableNames":[]}}' } })
+    fireEvent.click(screen.getByText('Apply'))
+    await screen.findByText('VIA_RAW', { selector: 'text' })
+
+    // Now leave some unapplied text and toggle the dropdown shut and open.
+    fireEvent.change(rawEditor(), { target: { value: '{"work":"in progress"' } })
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    expect(rawEditor().value).toBe('{"work":"in progress"')
+
+    // The panel is still open here — Discard must clear the text in place.
+    fireEvent.click(screen.getByText('Discard'))
+    expect(rawEditor().value).not.toBe('{"work":"in progress"')
+    expect(screen.queryByText('unapplied edits')).not.toBeInTheDocument()
+  })
+
+  it('typing malformed JSON changes nothing — the canvas and the dirty count stand still', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(screen.getByText('{ raw JSON }'))
+    fireEvent.change(rawEditor(), { target: { value: '{"steps": [' } })
+
+    expect(screen.getByText('T', { selector: 'text' })).toBeInTheDocument()
+    expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument()
+    expect(screen.getByText('Apply')).toBeDisabled()
   })
 })
 

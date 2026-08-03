@@ -36,6 +36,7 @@ import { ConformanceChip } from './ConformanceChip'
 import { ExpressionDock } from './ExpressionDock'
 import { EditorLayout } from './EditorLayout'
 import { EditorToolbar } from './EditorToolbar'
+import { RawJsonPanel, serializeRecipe } from './RawJsonPanel'
 import { useDraftHistory } from './useDraftHistory'
 
 const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
@@ -174,9 +175,22 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   const [recipePath, setRecipePath] = useState<string | null>(focusRecipe ?? null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdge, setSelectedEdge] = useState<Connection | null>(null)
+  // UX round 3 (issue 1): the field name a port-ROW click named, so the Inspector
+  // can scroll it into view and outline it. Scoped to `selectedNodeId` (a row
+  // click always selects its own node in the same handler), so it needs no node
+  // id of its own — and it is cleared by every other selection path so a stale
+  // name can never outline the wrong node's field.
+  const [focusedField, setFocusedField] = useState<string | null>(null)
   const [wireFrom, setWireFrom] = useState<{ nodeId: string; portName: string } | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
+  // Unapplied `{ raw JSON }` editor text (UX round 3, issue 4), or null for
+  // "mirroring the draft". Held HERE rather than inside `RawJsonPanel` because
+  // toggling the dropdown unmounts that panel — local state would discard a
+  // half-written document on a stray click of the button that opened it. Every
+  // path that re-baselines the draft clears it too (see `resetRawText` calls),
+  // since text describing a superseded document is worse than no text.
+  const [rawText, setRawText] = useState<string | null>(null)
   // Config-before-insert (Task 11 of this plan): the palette `type` string (or
   // IpcCanvas's dropped one) a node-add is PENDING configuration for —
   // `NodeConfigDialog` renders only while this is non-null, and is the ONLY
@@ -261,6 +275,11 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
       setDirtyOps(0)
       setValidationErrors([])
       setSaveError(null)
+      // Every re-baselining path funnels through here (recipe opened, save
+      // landed, rollback refetched), so this one line covers all three: raw
+      // text describing the superseded document must not survive into the new
+      // one, where Apply would silently reinstate what was just replaced.
+      setRawText(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipePath, rec.data?.modifiedAt])
@@ -435,6 +454,9 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     setAuthoring(true)
     setDraft(structuredClone(EMPTY_RECIPE_DRAFT))
     setDirtyOps(0)
+    // Authoring seeds the draft DIRECTLY — no GET lands, so the draft-reset
+    // effect above never fires for it and this reset has to be explicit.
+    setRawText(null)
     setValidationErrors([])
     setSaveError(null)
     setSelectedNodeId(null)
@@ -515,6 +537,20 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     setSelectedNodeId(prev => (id === prev ? null : id))
     setSelectedEdge(null)
     setFocusedFormula(null)
+    setFocusedField(null)
+  }
+
+  // Port ROW click (UX round 3, issue 1). Deliberately NOT `handleSelectNode`:
+  // that one TOGGLES, which is right for the node header (click it again to
+  // dismiss the Inspector) but wrong here — clicking a second field of the
+  // already-selected node would close the very panel the click was asking to
+  // look at. A row click always selects, and additionally names the field for
+  // the Inspector to scroll to.
+  const handlePortRowClick = (nodeId: string, port: Port) => {
+    setSelectedNodeId(nodeId)
+    setSelectedEdge(null)
+    setFocusedFormula(null)
+    setFocusedField(port.name)
   }
 
   const handleSelectEdge = (conn: Connection) => {
@@ -649,6 +685,10 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     setDirtyOps(0)
     setValidationErrors([])
     setSaveError(null)
+    // Discard means "throw away my uncommitted work" — unapplied raw JSON is
+    // exactly that, and `rec.data` is unchanged here so the draft-reset effect
+    // above does not fire to do it for us.
+    setRawText(null)
     history.reset()
   }
 
@@ -803,32 +843,33 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                 onOpenFocus={() => recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')}
                 showRaw={showRaw}
                 onToggleRaw={() => setShowRaw(r => !r)}
+                // Raw JSON is an EDITOR now (UX round 3, issue 4), not a
+                // read-only `<pre>`: `onApply` routes the parsed document
+                // through the same `applyEdit` funnel as every other edit path,
+                // so undo/redo, the dirty count and the conformance chip follow
+                // for free — and shapes no Inspector widget covers yet
+                // (`unionTables[].fieldMapping`'s nested objects) become
+                // authorable. Read-only while viewing an archived version, same
+                // as every other editing affordance.
                 rawContent={
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    {/* Path / Size bytes / Modified (Task 4): moved out of the
-                        always-visible header card — reference metadata, not
-                        per-second information, and the canvas needs the
-                        vertical space (spec §5.2). */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, borderBottom: '1px solid var(--border)' }}>
-                      <EditableField label="Path" value={headerRecipe?.path ?? ''} onChange={() => {}} mono />
-                      <EditableField label="Size bytes" value={String(headerRecipe?.sizeBytes ?? '')} onChange={() => {}} mono />
-                      <EditableField label="Modified" value={headerRecipe?.modifiedAt ?? ''} onChange={() => {}} mono />
-                    </div>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '5px 10px', background: 'var(--surface-2)',
-                      borderBottom: '1px solid var(--border)',
-                    }}>
-                      <span style={{ fontSize: 10, color: '#4a5570', flex: 1 }}>Raw JSON</span>
-                      <CopyButton value={JSON.stringify(content ?? rec.data?.content, null, 2)} size={11} />
-                    </div>
-                    <pre style={{
-                      margin: 0, padding: '10px 12px', maxHeight: 400, overflow: 'auto',
-                      fontSize: 10, color: '#c8d3e8',
-                      fontFamily: 'JetBrains Mono, monospace',
-                      whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.6,
-                    }}>{JSON.stringify(content ?? rec.data?.content, null, 2)}</pre>
-                  </div>
+                  <RawJsonPanel
+                    json={serializeRecipe(content ?? rec.data?.content)}
+                    readOnly={isViewing}
+                    onApply={next => applyEdit(() => next)}
+                    text={rawText}
+                    onTextChange={setRawText}
+                    metadata={
+                      /* Path / Size bytes / Modified (Task 4): moved out of the
+                         always-visible header card — reference metadata, not
+                         per-second information, and the canvas needs the
+                         vertical space (spec §5.2). */
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, borderBottom: '1px solid var(--border)' }}>
+                        <EditableField label="Path" value={headerRecipe?.path ?? ''} onChange={() => {}} mono />
+                        <EditableField label="Size bytes" value={String(headerRecipe?.sizeBytes ?? '')} onChange={() => {}} mono />
+                        <EditableField label="Modified" value={headerRecipe?.modifiedAt ?? ''} onChange={() => {}} mono />
+                      </div>
+                    }
+                  />
                 }
                 // The dirty count/wire chip/Discard/Save are themselves editing
                 // affordances — hidden while viewing an archived version, same
@@ -884,6 +925,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                 onMoveNode={handleMoveNode}
                 onAutoLayout={handleAutoLayout}
                 onPortClick={isViewing ? undefined : handlePortClick}
+                onPortRowClick={handlePortRowClick}
                 onSelectEdge={isViewing ? undefined : handleSelectEdge}
                 selectedEdge={selectedEdge}
                 onDropType={isViewing ? undefined : handlePaletteAdd}
@@ -908,6 +950,7 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                   onChange={handleInspectorChange}
                   onDelete={handleDeleteNode}
                   onFocusFormula={handleFocusFormula}
+                  focusField={focusedField}
                 />
               </div>
             ) : null

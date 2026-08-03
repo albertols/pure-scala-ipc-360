@@ -479,6 +479,32 @@ export function recipeToCanvas(recipe: RecipeJson, recipePath: string, typeAlias
     }
   }
 
+  // Declared-but-unconsumed source tables (UX round 3, issue 3). Everything
+  // above derives from `steps[]`, so a `table.sourceTableNames` entry that no
+  // step references produced NO node — which is precisely what a source table
+  // inserted into an empty draft is: `insertSourceTable` deliberately appends no
+  // step (a source table is a root that reads a physical table, not a step), so
+  // the first node of a from-scratch recipe was invisible and the canvas stayed
+  // blank. It also hid four real corpus lookup tables that are declared here and
+  // reached only through `LKP_*` calls rather than a `sources[]` entry.
+  //
+  // Matched CASE-INSENSITIVELY against the nodes already built: the corpus
+  // declares "FF_BIZLINK" for a `sources[]` entry spelled "ff_BIZLINK" (same
+  // physical table), and painting both would double the node. This mirrors
+  // `buildResolver`/`toSourceNode`, which already fold case for the same reason.
+  //
+  // Built through `toSourceNode` like any other table source, so a declared
+  // table that IS dot-referenced gets its OUT ports and its edges for free from
+  // the existing ref walk below — no second edge-derivation path.
+  const lowerNodeIds = new Set([...nodeIds].map(id => id.toLowerCase()))
+  for (const declared of recipe.table?.sourceTableNames ?? []) {
+    if (isBlank(declared)) continue
+    if (lowerNodeIds.has(declared.toLowerCase())) continue
+    lowerNodeIds.add(declared.toLowerCase())
+    nodeIds.add(declared)
+    nodes.push(toSourceNode({ name: declared, type: 'table' }, refs, basename))
+  }
+
   const nodeById = new Map(nodes.map(n => [n.id, n]))
   const connections = deriveConnections(steps, refs, nodeIds, nodeById, typeAliases, unionInputOwner)
 

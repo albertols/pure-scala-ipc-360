@@ -79,11 +79,72 @@ describe('recipeToCanvas — nodes, kinds, ports', () => {
     const n = recipeToCanvas(r, 'L/x/_ETL_x.json').nodes.find(x => x.id === 'X')!
     expect([n.type, n.label]).toEqual(['expression', 'BER'])
   })
-  it('SYN recipe: clean 2-node shape; empty/garbage input never throws', () => {
+  it('SYN recipe: the two step-derived nodes plus its declared-only lookup table; empty/garbage input never throws', () => {
     const g = recipeToCanvas(syn as RecipeJson, 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json')
-    expect(g.nodes.map(n => n.id).sort()).toEqual(['ODS_SYN_ORDERS', 'STG_L_SYN_ORDERS'])
+    // SYN_LKP_CURRENCY is declared in table.sourceTableNames but referenced only
+    // through the LKP_SYN_CURRENCY(...) call, never as a `sources[]` entry — see
+    // the declared-source-table block below.
+    expect(g.nodes.map(n => n.id).sort()).toEqual(['ODS_SYN_ORDERS', 'STG_L_SYN_ORDERS', 'SYN_LKP_CURRENCY'])
     expect(recipeToCanvas({} as RecipeJson, 'x').nodes).toEqual([])
     expect(recipeToCanvas({ steps: [{}] } as RecipeJson, 'x').nodes).toEqual([])
+  })
+
+  // ─── Declared-but-unconsumed source tables (UX round 3, issue 3) ────────────
+  //
+  // Nodes used to derive from `steps[]` ALONE (a step target, or a `sources[]`
+  // entry of one). A `table.sourceTableNames` entry that no step references
+  // therefore had no node at all — which is exactly what a source table
+  // inserted into an EMPTY draft is (`insertSourceTable` appends no step, by
+  // design: a source table is a root, not a step), so authoring from scratch
+  // started with an invisible first node and a blank canvas. It also hid four
+  // real corpus lookup tables (CAS_LKP_STATUS, SYN_LKP_CURRENCY ×2,
+  // CAS_ODS_EVENTS) that are declared and reached only through LKP_* calls.
+  describe('declared source tables', () => {
+    it('a sourceTableNames entry no step references still gets its own Sources-band node', () => {
+      const r: RecipeJson = {
+        steps: [{ target: { name: 'T', type: 'table', fields: [] }, sources: [] }],
+        table: { targetTableNames: ['T'], sourceTableNames: ['LKP_ONLY'] },
+      }
+      const n = recipeToCanvas(r, 'L/x/_ETL_x.json').nodes.find(x => x.id === 'LKP_ONLY')!
+      expect(n).toBeDefined()
+      expect(n.type).toBe('source')
+      expect(n.label).toBe('SRC')
+    })
+
+    it('the very first insertion into an empty draft is visible (the from-scratch case)', () => {
+      const r: RecipeJson = { steps: [], table: { targetTableNames: [], sourceTableNames: ['CAS_ODS_EVENTS'] } }
+      const g = recipeToCanvas(r, 'RDM/m_NEW/_ETL_m_NEW.json')
+      expect(g.nodes.map(n => n.id)).toEqual(['CAS_ODS_EVENTS'])
+      expect(g.connections).toEqual([])
+    })
+
+    it('never duplicates a node that already exists under different CASING', () => {
+      // BIZLINK declares "FF_BIZLINK" while its `sources[]` entry is "ff_BIZLINK"
+      // — the same physical table. Matching case-sensitively would paint it
+      // twice. (`buildResolver`/`toSourceNode` are already case-insensitive for
+      // exactly this reason.)
+      const g = recipeToCanvas(bizlink as RecipeJson, BIZ_PATH)
+      expect(g.nodes.filter(n => n.id.toLowerCase() === 'ff_bizlink')).toHaveLength(1)
+      expect(g.nodes).toHaveLength(3)
+    })
+
+    it('picks up dot-refs into it, so a declared table that IS referenced wires up like any source', () => {
+      const r: RecipeJson = {
+        steps: [{
+          target: { name: 'T', type: 'table', fields: [{ name: 'A', dataType: 'String', transformation: { source: 'LKP_REFD.CODE' } }] },
+          sources: [],
+        }],
+        table: { targetTableNames: ['T'], sourceTableNames: ['LKP_REFD'] },
+      }
+      const g = recipeToCanvas(r, 'L/x/_ETL_x.json')
+      expect(g.nodes.find(n => n.id === 'LKP_REFD')!.ports.map(p => p.name)).toEqual(['CODE'])
+      expect(g.connections).toContainEqual({ fromNode: 'LKP_REFD', fromPort: 'CODE', toNode: 'T', toPort: 'A' })
+    })
+
+    it('a blank name in sourceTableNames is ignored, not rendered as an empty node', () => {
+      const r: RecipeJson = { steps: [], table: { targetTableNames: [], sourceTableNames: ['', 'OK'] } }
+      expect(recipeToCanvas(r, 'x').nodes.map(n => n.id)).toEqual(['OK'])
+    })
   })
 
   // Task 6 — union/joiner sources become canvas nodes. Shapes below are faithful excerpts

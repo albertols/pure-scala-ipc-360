@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ETLNode } from '../../types'
 import type {
   RecipeFieldJson,
@@ -139,19 +139,38 @@ function FieldRow({
   field,
   onChange,
   onFocusFormula,
+  focused = false,
 }: {
   draft: RecipeJson
   stepName: string
   field: RecipeFieldJson
   onChange: (next: RecipeJson) => void
   onFocusFormula: (stepName: string, fieldName: string) => void
+  /** UX round 3 (issue 1): this is the field a canvas port-ROW click named.
+   * Outlined with the existing selection blue (no new token — ADR-0005) and
+   * scrolled into view, so clicking a port on a 40-field node lands you on
+   * that field's editors rather than at the top of a long panel. */
+  focused?: boolean
 }) {
   const fieldName = field.name ?? ''
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!focused) return
+    // jsdom implements no layout and leaves `scrollIntoView` undefined — the
+    // optional call keeps the component testable without a per-suite polyfill.
+    ref.current?.scrollIntoView?.({ block: 'nearest' })
+  }, [focused, fieldName])
+
   return (
-    <div style={{
-      border: '1px solid var(--border-subtle)', borderRadius: 5, padding: 10,
-      display: 'flex', flexDirection: 'column', gap: 8,
-    }}>
+    <div
+      ref={ref}
+      data-testid={`inspector-field-${fieldName}`}
+      data-focused={focused ? 'true' : undefined}
+      style={{
+        border: `1px solid ${focused ? '#4f9cf9' : 'var(--border-subtle)'}`, borderRadius: 5, padding: 10,
+        display: 'flex', flexDirection: 'column', gap: 8,
+      }}>
       <div style={{ fontSize: 10, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{fieldName}</div>
       <TextWidget label="Data type" value={field.dataType ?? ''} mono
         onChange={v => onChange(editFieldDataType(draft, stepName, fieldName, v))} />
@@ -232,6 +251,7 @@ export function Inspector({
   onChange,
   onDelete,
   onFocusFormula,
+  focusField = null,
 }: {
   draft: RecipeJson
   node: ETLNode
@@ -257,12 +277,60 @@ export function Inspector({
   onChange: (next: RecipeJson, selectId?: string) => void
   onDelete: (name: string) => void
   onFocusFormula: (stepName: string, fieldName: string) => void
+  /** UX round 3 (issue 1): the field named by a canvas port-ROW click — scrolled
+   * into view and outlined. `null` (the default, and what every other selection
+   * path resets to) outlines nothing. */
+  focusField?: string | null
 }) {
   const targetStep = findTargetStep(draft, node.id)
   const sourceOcc = !targetStep ? findSourceOccurrence(draft, node.id) : undefined
   const raw = (targetStep ? targetStep.target : sourceOcc?.source) as unknown as RawRecord | undefined
 
-  if (!raw) return null
+  // Hoisted above the early returns below: renaming is defined for every node
+  // this component can render, including the declared-source-table case, which
+  // has no `raw` to key a schema off (`renameNode` rewrites `sources[]` entries,
+  // step targets AND both `table.*TableNames` lists — see its own docstring).
+  const handleRename = (newName: string) => {
+    const trimmed = newName.trim()
+    if (trimmed === '' || trimmed === node.id) return
+    onChange(renameNode(draft, node.id, trimmed), trimmed)
+  }
+
+  // A declared-but-unconsumed source table (UX round 3, issue 3): a
+  // `table.sourceTableNames` entry that `recipeToCanvas` paints as a node but
+  // that appears in no step, so there is no `target`/`sources[]` object to read
+  // a schema off. Rendering `null` here left the dock mounted and empty for a
+  // node the operator had just inserted and clicked. Rename/delete are the two
+  // operations that ARE well-defined on it (both mutators already maintain
+  // `table.sourceTableNames`); properties are not offered because there is no
+  // occurrence to write them onto — the note says so rather than implying the
+  // panel is still loading.
+  if (!raw) {
+    const declared = (draft.table?.sourceTableNames ?? []).includes(node.id)
+    if (!declared) return null
+    return (
+      <section>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <span style={{ fontSize: 14, color: '#4f9cf9', fontFamily: 'JetBrains Mono, monospace' }}>✎</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8' }}>{`Edit — ${node.id}`}</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        </div>
+        <div style={{
+          padding: 16, background: 'var(--surface)',
+          border: '1px solid var(--border)', borderRadius: 7,
+          display: 'flex', flexDirection: 'column', gap: 16,
+        }}>
+          <TextWidget label="Node name" value={node.id} onChange={handleRename} />
+          <div style={{ fontSize: 11, color: '#4a5570', lineHeight: 1.5 }}>
+            Declared in <code style={{ fontFamily: 'JetBrains Mono, monospace' }}>table.sourceTableNames</code>, but
+            no step reads from it yet — a source table is a root, not a step, so it carries no properties of its own
+            until a step declares it as a source. Add a step fed by it (or wire one of its fields) to give it ports.
+          </div>
+          <DeleteControl draft={draft} nodeId={node.id} onDelete={onDelete} />
+        </div>
+      </section>
+    )
+  }
 
   const rawType = typeof raw.type === 'string' ? raw.type : ''
   const canonicalType = typeAliases[rawType] ?? rawType
@@ -275,12 +343,6 @@ export function Inspector({
       ? setTargetProperty(draft, node.id, rawKey, value)
       : setSourceProperty(draft, sourceOcc!.stepName, node.id, rawKey, value)
     onChange(next)
-  }
-
-  const handleRename = (newName: string) => {
-    const trimmed = newName.trim()
-    if (trimmed === '' || trimmed === node.id) return
-    onChange(renameNode(draft, node.id, trimmed), trimmed)
   }
 
   const propertySpecs = specs.filter(s => s.key !== 'name' && s.widget !== 'fieldTable')
@@ -335,7 +397,8 @@ export function Inspector({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {fields.map(f => (
               <FieldRow key={f.name} draft={draft} stepName={node.id} field={f}
-                onChange={onChange} onFocusFormula={onFocusFormula} />
+                onChange={onChange} onFocusFormula={onFocusFormula}
+                focused={!!focusField && f.name === focusField} />
             ))}
             <AddFieldRow onAdd={fieldName => onChange(addField(draft, { stepName: node.id, fieldName }))} />
           </div>
