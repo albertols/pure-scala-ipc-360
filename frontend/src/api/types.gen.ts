@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ipc/fan-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["fanIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tree": {
         parameters: {
             query?: never;
@@ -354,6 +370,19 @@ export interface components {
         RecipeValidationErrorDto: {
             path?: string;
             message?: string;
+        };
+        FanInPairingDto: {
+            key?: string;
+            existingSourceKinds?: string[];
+            candidateKind?: string;
+        };
+        FanInRequestDto: {
+            pairings?: components["schemas"]["FanInPairingDto"][];
+        };
+        FanInVerdictsDto: {
+            verdicts?: {
+                [key: string]: string;
+            };
         };
         TreeNodeDto: {
             name?: string;
@@ -921,6 +950,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RecipeDto"];
+                };
+            };
+        };
+    };
+    fanIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FanInRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FanInVerdictsDto"];
                 };
             };
         };

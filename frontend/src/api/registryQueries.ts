@@ -8,9 +8,18 @@ import type { components } from './types.gen'
 // `RegistrySearch`: every source table, target table, and DDL table name
 // referenced across the live recipe corpus, plus the corpus's layers. Mirrors
 // `useIpcRules()` (`queries.ts`) exactly — same `apiGet` call shape, same
-// `staleTime: Infinity` — because the registry, like the IPC catalogue, is
-// static per backend build; there is no write path that could make a cached
-// copy stale within one running session.
+// `staleTime: Infinity`.
+//
+// Unlike the IPC catalogue, though, the registry is NOT static per backend
+// build. It is derived from the corpus, and Tasks 14/15 gave Tab 2 the write
+// paths that change it: `POST /api/recipes/{*path}` adds a whole recipe, and a
+// `PUT` can rewrite `table.sourceTableNames`/`targetTableNames`. `staleTime:
+// Infinity` is therefore load-bearing on an explicit invalidation rather than
+// on immutability — `ETLModifier`'s `handleSave` invalidates `['registry']`
+// after every successful write. A new write path MUST do the same; otherwise
+// the picker silently serves a pre-write inventory for the rest of the session
+// (final whole-branch review — this comment previously claimed no such write
+// path existed, which was true only until Task 14 landed).
 
 export type Registry = components['schemas']['RegistryDto']
 export type RegistryTable = components['schemas']['RegistryTableDto']

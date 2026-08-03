@@ -612,6 +612,18 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     void queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
     setViewingVersion(null)
     setViewedRecipe(null)
+    // The FOURTH re-baselining path (final whole-branch review, BLOCKING 1).
+    // A rollback rewrites the live file server-side, so the invalidation above
+    // refetches a recipe with a NEW `modifiedAt`, which re-runs the draft-reset
+    // effect and zeroes `dirtyOps`. `recipePath` never changed, so the
+    // history-reset effect — deliberately keyed on `recipePath` ALONE — does
+    // not fire, and the pre-rollback snapshots would survive into a draft they
+    // no longer describe. Undo/Redo are not gated on `changes > 0` the way
+    // Discard/Save are, so that leaves a live Undo that reverts the operator's
+    // explicit rollback behind a toolbar reading 0 changes; one further edit
+    // then lets Save PUT the pre-rollback content with a matching
+    // `baseModified`. Same reset the other three paths do, for the same reason.
+    history.reset()
   }
 
   // Closing the drawer is the only escape hatch out of view mode short of
@@ -666,6 +678,15 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
         await apiSend('PUT', `/recipes/${recipePath}`, { baseModified: rec.data!.modifiedAt, content: draft })
       }
       await queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
+      // `useRegistry` is `staleTime: Infinity`, so without this the cached
+      // inventory outlives the write that changed it: `RegistryService` walks
+      // every recipe's `table.sourceTableNames`/`targetTableNames`, which a PUT
+      // can rewrite and a POST adds wholesale. The symptom is not a stale live
+      // view — the registry only mounts behind the config dialog's picker — but
+      // a picker REOPENED after a save serving the pre-save cache, so a recipe
+      // just authored from scratch cannot be found in the search box built to
+      // find it, for the rest of the session (final whole-branch review).
+      await queryClient.invalidateQueries({ queryKey: ['registry'] })
       setDirtyOps(0)
       history.reset()
     } catch (e) {

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { RecipeJson, RecipeTransformationJson } from '../../api/recipeAdapter'
 import { fieldsOf } from '../../api/recipeAdapter'
 import type { IpcConnections, IpcKeySpec } from '../../api/queries'
-import { useValidation } from '../../api/ipcRules'
+import { useFanIn, useValidation } from '../../api/ipcRules'
+import type { FanInPairing, FanInVerdict } from '../../api/ipcRules'
 import { buildStep, insertConfiguredStep, insertSourceTable } from '../../api/recipeEdits'
 import type { MappedField, RecipeNodeRef } from '../../api/recipeEdits'
 import { SOURCE_TABLE_TYPE } from './Palette'
@@ -166,6 +167,30 @@ function mayConnect(connections: IpcConnections, fromKind: string, toKind: strin
   return Boolean(connections?.[fromKind]?.mayFeed?.includes(toKind))
 }
 
+/** Key namespaces for `POST /api/ipc/fan-in` — the two pickers can offer the
+ * same node name (a step target is both a possible upstream and a possible
+ * downstream), so a verdict map keyed on the bare name would collide. */
+const FAN_IN_FEDBY = 'fedBy:'
+const FAN_IN_FEEDS = 'feeds:'
+
+/** The `title` a fan-in verdict earns a candidate button, or `undefined` when
+ * there is nothing to say. Phrased for an operator, not for the rule engine:
+ * `block` states what IPC forbids, `warn` states what could not be determined
+ * and that the link is still allowed. `mayFeed`'s own reason (already on the
+ * button when illegal) takes precedence — a pairing that is not permitted at
+ * all needs no fan-in commentary. */
+function fanInTitle(verdict: FanInVerdict | undefined, group: string): string | undefined {
+  if (verdict === 'block') {
+    return `IPC fan-in: an active transformation must be the only input to ${group}, `
+      + 'which already has one. Remove the other input first.'
+  }
+  if (verdict === 'warn') {
+    return `IPC fan-in: ${group} already has an input, and this pairing's active/passive `
+      + 'classification is not recorded — the link is allowed, but check it in Designer.'
+  }
+  return undefined
+}
+
 function toggleName(list: string[], name: string): string[] {
   return list.includes(name) ? list.filter(n => n !== name) : [...list, name]
 }
@@ -289,7 +314,17 @@ function withAdoptedDdlFields(mapped: MappedField[], adopted: MappedField[] | nu
  * variant is listed with its own column count AND its mapping dirs (two
  * variants can carry the same count — `CAS_ODS_EVENTS` is 4 and 4 — so the
  * count alone would not identify one), and nothing is adopted until the
- * operator picks. The union is never shown, in any form. */
+ * operator picks. The union is never shown, in any form.
+ *
+ * A FAILED registry fetch is NOT that no-match state and must not render as it
+ * (final whole-branch review, BLOCKING 2 — same class as the validation banner
+ * below): destructuring only `data` left `variants.length === 0` on a 500,
+ * byte-identical to "this name is new", which would tell an operator authoring
+ * an EXISTING corpus table, silently, that it does not exist. `isError` is
+ * checked first and says what actually happened. It stays a neutral note, never
+ * an error the operator must clear: the offer is an optional convenience, so a
+ * registry outage never blocks Insert (that gate is `POST /recipes/validate`'s
+ * alone). */
 function TargetDdlOffer({
   tableName,
   adoptedIndex,
@@ -299,7 +334,18 @@ function TargetDdlOffer({
   adoptedIndex: number | null
   onAdopt: (index: number, variant: RegistryVariant | null) => void
 }) {
-  const { data } = useRegistry()
+  const { data, isError } = useRegistry()
+  if (isError) {
+    return (
+      <div data-testid="node-config-targetddl-unavailable">
+        <div style={sectionTitleStyle}>Target DDL</div>
+        <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
+          The registry failed to load, so this name could not be checked against the corpus DDL —
+          a matching definition may exist. Nothing is offered; the field list is yours to author.
+        </div>
+      </div>
+    )
+  }
   const entry = (data?.ddlTables ?? []).find(t => t.name === tableName)
   const variants = entry?.variants ?? []
   if (variants.length === 0) return null
@@ -478,10 +524,68 @@ export function NodeConfigDialog({
     && (bypassWholeRecipeValidation
       || (!validation.isValidating && !validation.failed && validation.errors.length === 0))
 
-  const fedByCandidates = nodes.map(n => ({ ...n, legal: mayConnect(connections, n.kind, recipeKind) }))
-  const feedsCandidates = nodes
+  const rawFedByCandidates = nodes.map(n => ({ ...n, legal: mayConnect(connections, n.kind, recipeKind) }))
+  const rawFeedsCandidates = nodes
     .filter(n => targetNames.has(n.name))
     .map(n => ({ ...n, legal: mayConnect(connections, recipeKind, n.kind) }))
+
+  // ─── Fan-in (final whole-branch review, BLOCKING 3) ───────────────────────
+  //
+  // `mayFeed` above answers "may kind A feed kind B?" pairwise. It cannot
+  // answer "may this candidate join a group that ALREADY holds these inputs?"
+  // — the constraint PowerCenter's Designer actually enforces, and the one the
+  // user explicitly ruled in during planning. That answer comes from
+  // `IpcConnections.fanInVerdict` over `POST /api/ipc/fan-in`; nothing here
+  // re-implements it (see `useFanIn`'s doc comment).
+  //
+  // Two DIFFERENT input groups are in play, which is why every pairing carries
+  // its own `existingSourceKinds`:
+  //   - "fed by": the NEW node is the downstream, and its group is whatever is
+  //     selected right now. A candidate is asked against the selection MINUS
+  //     itself, so an already-selected node is never judged against its own
+  //     presence.
+  //   - "feeds": each candidate is a DOWNSTREAM step, and its group is that
+  //     step's own `sources[]` — a different group per candidate.
+  //
+  // Pairings whose existing group is EMPTY are not asked at all: both `block`
+  // conditions require a non-empty group, so no verdict is lost, and asking
+  // anyway would paint the picker yellow on first open (`fanInVerdict([],
+  // 'table')` is `warn`, because `table`'s active/passive is unrecorded) with
+  // a warning about a fan-in that does not exist yet.
+  const fanInPairings = useMemo<FanInPairing[]>(() => {
+    const out: FanInPairing[] = []
+    if (!isSourceTable) {
+      for (const c of rawFedByCandidates) {
+        const existing = fedByRefs.filter(r => r.name !== c.name).map(r => r.kind)
+        if (existing.length === 0) continue
+        out.push({ key: `${FAN_IN_FEDBY}${c.name}`, existingSourceKinds: existing, candidateKind: c.kind })
+      }
+    }
+    for (const c of rawFeedsCandidates) {
+      const existing = (findStepTarget(draft, c.name)?.sources ?? []).map(s => s.type ?? '')
+      if (existing.length === 0) continue
+      out.push({ key: `${FAN_IN_FEEDS}${c.name}`, existingSourceKinds: existing, candidateKind: recipeKind })
+    }
+    return out
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSourceTable, recipeKind, draft, JSON.stringify(rawFedByCandidates), JSON.stringify(rawFeedsCandidates), fedByRefs])
+  const fanInVerdicts = useFanIn(fanInPairings)
+
+  // A `block` never disables an ALREADY-SELECTED candidate: the operator has to
+  // be able to click it again to back out of the very selection that made the
+  // group illegal. Selecting is the only way into a blocked state, and the
+  // first selection into an empty group can never block, so a blocked
+  // candidate is unreachable as a selected one anyway — this is belt and
+  // braces against a trap, not a live case.
+  const fedByCandidates = rawFedByCandidates.map(c => {
+    const verdict = fanInVerdicts[`${FAN_IN_FEDBY}${c.name}`]
+    return { ...c, verdict, blocked: verdict === 'block' && !fedBy.includes(c.name) }
+  })
+  const feedsCandidates = rawFeedsCandidates.map(c => {
+    const verdict = fanInVerdicts[`${FAN_IN_FEEDS}${c.name}`]
+    return { ...c, verdict, blocked: verdict === 'block' && !feeds.includes(c.name) }
+  })
+  const fanInWarned = [...fedByCandidates, ...feedsCandidates].filter(c => c.verdict === 'warn')
 
   const previewJson = isSourceTable
     ? { source: { name: trimmedName, type: 'table', ...props }, feeds }
@@ -595,23 +699,29 @@ export function NodeConfigDialog({
             <div style={sectionTitleStyle}>Fed by</div>
             {fedByCandidates.length === 0 ? (
               <div style={{ fontSize: 11, color: '#4a5570' }}>No existing nodes.</div>
-            ) : fedByCandidates.map(c => (
-              <button
-                key={c.name}
-                type="button"
-                disabled={!c.legal}
-                title={c.legal ? undefined : `${c.kind} may not feed ${recipeKind}`}
-                onClick={() => setFedBy(prev => toggleName(prev, c.name))}
-                style={{
-                  ...candidateButtonStyle,
-                  cursor: c.legal ? 'pointer' : 'not-allowed',
-                  opacity: c.legal ? 1 : 0.4,
-                  background: fedBy.includes(c.name) ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
-                  border: `1px solid ${fedBy.includes(c.name) ? '#4f9cf9' : 'var(--border)'}`,
-                  color: fedBy.includes(c.name) ? '#4f9cf9' : '#7b88aa',
-                }}
-              >{`${c.name} — ${c.kind}`}</button>
-            ))}
+            ) : fedByCandidates.map(c => {
+              const selected = fedBy.includes(c.name)
+              const usable = c.legal && !c.blocked
+              return (
+                <button
+                  key={c.name}
+                  type="button"
+                  disabled={!usable}
+                  title={c.legal
+                    ? fanInTitle(c.verdict, `${trimmedName || 'this node'}'s inputs`)
+                    : `${c.kind} may not feed ${recipeKind}`}
+                  onClick={() => setFedBy(prev => toggleName(prev, c.name))}
+                  style={{
+                    ...candidateButtonStyle,
+                    cursor: usable ? 'pointer' : 'not-allowed',
+                    opacity: usable ? 1 : 0.4,
+                    background: selected ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
+                    border: `1px solid ${selected ? '#4f9cf9' : c.verdict === 'warn' ? 'var(--yellow)' : 'var(--border)'}`,
+                    color: selected ? '#4f9cf9' : '#7b88aa',
+                  }}
+                >{`${c.name} — ${c.kind}`}</button>
+              )
+            })}
           </div>
         )}
 
@@ -626,24 +736,43 @@ export function NodeConfigDialog({
           )}
           {feedsCandidates.length === 0 ? (
             <div style={{ fontSize: 11, color: '#4a5570' }}>No existing nodes.</div>
-          ) : feedsCandidates.map(c => (
-            <button
-              key={c.name}
-              type="button"
-              disabled={!c.legal}
-              title={c.legal ? undefined : `${recipeKind} may not feed ${c.kind}`}
-              onClick={() => setFeeds(prev => toggleName(prev, c.name))}
-              style={{
-                ...candidateButtonStyle,
-                cursor: c.legal ? 'pointer' : 'not-allowed',
-                opacity: c.legal ? 1 : 0.4,
-                background: feeds.includes(c.name) ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
-                border: `1px solid ${feeds.includes(c.name) ? '#4f9cf9' : 'var(--border)'}`,
-                color: feeds.includes(c.name) ? '#4f9cf9' : '#7b88aa',
-              }}
-            >{`${c.name} — ${c.kind}`}</button>
-          ))}
+          ) : feedsCandidates.map(c => {
+            const selected = feeds.includes(c.name)
+            const usable = c.legal && !c.blocked
+            return (
+              <button
+                key={c.name}
+                type="button"
+                disabled={!usable}
+                title={c.legal
+                  ? fanInTitle(c.verdict, `${c.name}'s inputs`)
+                  : `${recipeKind} may not feed ${c.kind}`}
+                onClick={() => setFeeds(prev => toggleName(prev, c.name))}
+                style={{
+                  ...candidateButtonStyle,
+                  cursor: usable ? 'pointer' : 'not-allowed',
+                  opacity: usable ? 1 : 0.4,
+                  background: selected ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
+                  border: `1px solid ${selected ? '#4f9cf9' : c.verdict === 'warn' ? 'var(--yellow)' : 'var(--border)'}`,
+                  color: selected ? '#4f9cf9' : '#7b88aa',
+                }}
+              >{`${c.name} — ${c.kind}`}</button>
+            )
+          })}
         </div>
+
+        {/* A `warn` must be legible, not `title`-only — a tooltip an operator
+            never hovers is not "surfaced". `block` needs no equivalent line:
+            the candidate is visibly disabled and carries its own reason. Uses
+            `--yellow`, already the warning tone of ConformanceChip and the
+            divergent-DDL note (ADR-0005, no new colour). */}
+        {fanInWarned.length > 0 && (
+          <div data-testid="node-config-fanin-warning" style={{ fontSize: 10, color: 'var(--yellow)' }}>
+            {`IPC fan-in could not be settled for ${fanInWarned.map(c => c.name).join(', ')}: `}
+            the downstream input group already has an input and the active/passive classification
+            of a participant is not recorded in the recipe. The link is allowed — verify it in Designer.
+          </div>
+        )}
 
         {!isSourceTable && fedBy.length > 0 && (
           <div data-testid="node-config-fieldmap">
@@ -721,13 +850,26 @@ export function NodeConfigDialog({
             fontSize: 10, color: '#a78bfa', fontFamily: 'JetBrains Mono, monospace',
             whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 160, overflowY: 'auto',
           }}>{JSON.stringify(previewJson, null, 2)}</pre>
+          {/* `validation.failed` is checked FIRST — before `isValidating` and
+              before the errors.length-driven green/amber/red — for the reason
+              `ValidationState`'s javadoc states: on a rejected validate the
+              counts are empty because nothing ran, not because the draft is
+              clean, so falling through here printed a green "0 errors · 0
+              warnings" beside an Insert button `canInsert` had already
+              disabled with no stated reason (final whole-branch review,
+              BLOCKING 2). Same neutral treatment `ConformanceChip` gives the
+              same state — `var(--text-dim)`, no new colour token (ADR-0005). */}
           <div style={{
             fontSize: 11, marginTop: 6,
-            color: validation.isValidating ? '#7b88aa' : validation.errors.length > 0 ? 'var(--red)' : 'var(--green)',
+            color: validation.failed ? 'var(--text-dim)'
+              : validation.isValidating ? '#7b88aa'
+                : validation.errors.length > 0 ? 'var(--red)' : 'var(--green)',
           }}>
-            {validation.isValidating
-              ? 'Validating…'
-              : `${validation.errors.length} error${validation.errors.length === 1 ? '' : 's'} · ${validation.warnings.length} warning${validation.warnings.length === 1 ? '' : 's'}`}
+            {validation.failed
+              ? 'Conformance check failed to run — Insert stays disabled until it succeeds.'
+              : validation.isValidating
+                ? 'Validating…'
+                : `${validation.errors.length} error${validation.errors.length === 1 ? '' : 's'} · ${validation.warnings.length} warning${validation.warnings.length === 1 ? '' : 's'}`}
           </div>
           {validation.errors.map((e, i) => (
             <div key={i} style={{ fontSize: 10, color: 'var(--red)', marginTop: 2 }}>{e.message}</div>

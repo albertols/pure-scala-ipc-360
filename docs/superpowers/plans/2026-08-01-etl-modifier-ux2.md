@@ -1549,3 +1549,59 @@ assertion lives inside an existing `@Test`).
 | `backend/.../service/RecipeService.java` | `writeAtomic` and `writableRecipeFile` are the idioms `create` mirrors — including the existence check `LayoutService` originally failed to mirror. |
 | `docs/adr/0010-ipc-conformance-ruleset.md` | The severity procedure Task 7 re-runs. |
 | `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` | The spec. Section references throughout point here. |
+
+---
+
+## Final whole-branch review — fix wave (2026-08-03)
+
+Ran after all 17 tasks were individually reviewed and approved. Every finding below is a
+**cross-task seam**: each was introduced because one task's implementer could not see
+another's work, and none was visible from inside a single task's diff.
+
+**BLOCKING 1 — rollback left the undo stack loaded.** Three code paths re-baseline the
+draft and `history.reset()` was called on only two, plus Discard. `handleRestored` was the
+third and was missed: a rollback rewrites the live file, so the refetch re-runs the
+draft-reset effect (keyed on `modifiedAt`) while the history-reset effect — keyed on
+`recipePath` alone — does not fire. Undo/Redo are not gated on `changes > 0` the way
+Discard/Save are, so this left a live Undo that reverted the operator's explicit rollback
+behind a toolbar reading 0 changes; one further edit then let Save PUT the pre-rollback
+content with a matching `baseModified`. Fixed in `ETLModifier.tsx`'s `handleRestored`.
+
+**BLOCKING 2 — the pre-add dialog rendered a FAILED conformance check as green.**
+`NodeConfigDialog`'s preview banner never consulted `validation.failed`, so a rejected
+`POST /api/recipes/validate` deterministically took the green branch and printed
+"0 errors · 0 warnings" while `canInsert` (correctly) disabled Insert with no stated
+reason. This is the second time this exact fallthrough shipped — `ConformanceChip` did it
+first. `ValidationState`'s javadoc now enumerates BOTH consumers and instructs a third to
+branch on `failed` FIRST. `TargetDdlOffer` got the same treatment: a registry failure is no
+longer indistinguishable from a genuine "no match".
+
+**BLOCKING 3 — `fanInVerdict` had no production caller.** Task 9 built the rule, tested it,
+and wired it to nothing: call sites existed only in `IpcConnectionsContractTest`, and
+`docs/architecture.md` read as though the constraint were enforced. The user had explicitly
+ruled "add fan-in now" during planning, so shipping it computed-but-unconsulted delivered
+half of an approved feature. Now asked over a new batched `POST /api/ipc/fan-in`
+(`FanInRequestDto`/`FanInVerdictsDto`/`FanInPairingDto`), server-side so the rule keeps ONE
+implementation — a client-side reimplementation would have left `fanInVerdict` exactly as
+the review found it. Three-valued: only `block` refuses a candidate; `warn` (nullable
+`active` — `table`, `java`, `joinerInput`, or any kind absent from the matrix) is surfaced
+without blocking.
+
+**Non-blocking, also fixed.** `registryQueries.ts` claimed "there is no write path that
+could make a cached copy stale within one running session" — true when Task 12 wrote it,
+falsified by Task 14's `POST /api/recipes/{*path}`. With `staleTime: Infinity` and no
+invalidation, a picker reopened after a save served the pre-save inventory for the rest of
+the session, so a recipe just authored could not be found in the search box built to find
+it. `handleSave` now invalidates `['registry']`. `frontend/AGENTS.md`'s `SaveBar.tsx` row
+still described a component deleted in Task 4 (the file is two style constants now), and
+`docs/architecture.md` gained the new endpoint and lost the claim that fan-in was enforced.
+
+**Deliberately shipped as-is** (triaged, not defects): `RegistrySearch.tsx`'s always-zero
+`columns` fallback and its double `columnCountLabel` call; the untrimmed field name in
+`NodeConfigDialog`; the `/api/registry` payload size (the server binds `127.0.0.1`, so
+compression would spend CPU shrinking a loopback copy).
+
+**Gates:** frontend 357, backend 193 (35 classes = 35 surefire reports), `tsc --noEmit`
+clean, `make validate-loop` PASS — viewer 81/81, recipe 86/86, 10/10 corpus source kinds
+covered by `connections`, relationships sweep all green. `types.gen.ts` verified byte-
+identical to a fresh regeneration against a booted backend, not hand-edited.

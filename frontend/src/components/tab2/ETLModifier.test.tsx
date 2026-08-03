@@ -781,6 +781,86 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
   })
 
+  // Final whole-branch review, BLOCKING 1: three paths re-baseline the draft
+  // (the recipe-change effect, handleDiscard, handleSave) and all three reset
+  // the undo stack; `handleRestored` was the fourth and did not. Because
+  // `recipePath` never changes across a rollback, the history-reset effect
+  // (keyed on recipePath alone, deliberately) never fires — so the pre-rollback
+  // snapshots survived a restore, and Undo/Redo are NOT gated on `changes > 0`
+  // the way Discard/Save are (EditorToolbar.tsx), leaving a live Undo button
+  // that reverts the operator's explicit rollback while the toolbar reads 0
+  // changes.
+  //
+  // The fixture above deliberately does not simulate the rollback mutating the
+  // live file; this one must, because the bug is only reachable through the
+  // refetch that a CHANGED `modifiedAt` triggers (RecipeService.rollback
+  // rewrites the live file, so `modifiedAt` always moves in production).
+  it('clears the undo stack when a rollback rewrites the live file, so Undo cannot silently revert the restore', async () => {
+    const ARCHIVED = {
+      steps: [{ target: { name: 'T_OLD', type: 'table', fields: [] }, sources: [] }],
+      table: { targetTableNames: ['T_OLD'], sourceTableNames: [] },
+    }
+    let live: { sizeBytes: number; modifiedAt: string; content: unknown } =
+      { sizeBytes: 321, modifiedAt: '2026-07-31T00:00:00Z', content: MINI }
+    const dto = () => ({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json', fileName: '_ETL_m_FIX.json', ...live,
+    })
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json(dto())),
+      http.get('/api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json', ({ request }) => {
+        const version = new URL(request.url).searchParams.get('version')
+        if (!version) {
+          return HttpResponse.json([
+            { version: '20260731-120000-000', timestamp: '2026-07-31T12:00:00Z', sizeBytes: 100 },
+          ])
+        }
+        return HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 100,
+          modifiedAt: '2026-07-31T12:00:00Z',
+          content: ARCHIVED,
+        })
+      }),
+      http.post('/api/recipes/rollback/CDM/m_FIX/_ETL_m_FIX.json', () => {
+        // What RecipeService.rollback actually does: the archived content
+        // becomes the live file, with a fresh mtime.
+        live = { sizeBytes: 100, modifiedAt: '2026-07-31T13:00:00Z', content: ARCHIVED }
+        return HttpResponse.json(dto())
+      }),
+    )
+
+    // Dirty the draft so the undo stack is non-empty and Undo is live.
+    const formula = await loadAndSelectT()
+    fireEvent.change(formula, { target: { value: '999' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
+    expect(screen.getByLabelText('Undo')).not.toBeDisabled()
+
+    fireEvent.click(screen.getByText('{ history }'))
+    fireEvent.click(await screen.findByText('View'))
+    // Wait for the parent to actually enter view mode before restoring —
+    // otherwise `handleViewVersion`'s in-flight GET resolves AFTER
+    // `handleRestored` cleared view state and puts the canvas back into
+    // read-only view mode, where `canUndo` is hardcoded false
+    // (ETLModifier.tsx: `canUndo={isViewing ? false : history.canUndo}`) and
+    // the assertion below would pass for entirely the wrong reason.
+    expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Restore this version'))
+    await waitFor(() => expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument())
+
+    // The rollback landed: the refetched live file IS the archived content,
+    // and the draft was re-baselined onto it (0 unsaved changes).
+    expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('1 unsaved change')).not.toBeInTheDocument())
+
+    // ...and the pre-rollback snapshots went with it. A live Undo here would
+    // restore the pre-rollback draft behind a "0 changes" toolbar, and one
+    // further edit would let Save PUT it back with a matching `baseModified`.
+    expect(screen.getByLabelText('Undo')).toBeDisabled()
+  })
+
   it('closing the drawer while viewing exits view mode back to the live draft, without discarding an in-progress unsaved edit', async () => {
     server.use(
       http.get('/api/recipes/history/CDM/m_FIX/_ETL_m_FIX.json', ({ request }) => {
@@ -1371,6 +1451,54 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     // Saved: the draft is no longer dirty, and the recipe behaves like any
     // other open one from here (PUT thereafter — see the next test).
     await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+  })
+
+  // Final whole-branch review, non-blocking 1. `useRegistry` is `staleTime:
+  // Infinity` on the (once true) reasoning that nothing can make the registry
+  // stale mid-session. Tasks 14/15 then added `POST /api/recipes/{*path}`, and
+  // a PUT can rewrite `table.sourceTableNames` — both change what
+  // `RegistryService` would walk. Without an invalidation the operator authors
+  // a recipe and then cannot find its tables in the very search box built to
+  // find them, for the rest of the session.
+  // `useRegistry` mounts only behind the config dialog's registry picker, so
+  // the symptom is not a missing live refetch — it is that REMOUNTING the
+  // picker after a save serves the `staleTime: Infinity` cache without ever
+  // asking the server again.
+  it('re-fetches the registry after a save, so a freshly authored recipe is findable', async () => {
+    let registryFetches = 0
+    server.use(
+      http.get('/api/registry', () => { registryFetches += 1; return HttpResponse.json(REGISTRY) }),
+      http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+        path: 'CDM/m_FIX/_ETL_m_FIX.json',
+        fileName: '_ETL_m_FIX.json',
+        sizeBytes: 321,
+        modifiedAt: '2026-07-31T12:00:00Z',
+        content: MINI,
+      })),
+    )
+    const openRegistryPicker = async () => {
+      fireEvent.click(screen.getByText('source table'))
+      await screen.findByText('Add source table')
+      fireEvent.click(screen.getByRole('button', { name: 'Pick from registry' }))
+    }
+
+    // Any edit at all — the point is the save, not what changed.
+    const formula = await loadAndSelectT()
+
+    await openRegistryPicker()
+    await waitFor(() => expect(registryFetches).toBe(1))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    fireEvent.change(formula, { target: { value: '2' } })
+    fireEvent.blur(formula)
+    expect(await screen.findByText(/unsaved change/)).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Save Changes'))
+    await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
+
+    // A save can add or remove table names, so the cached inventory is now
+    // provably out of date — the next picker must ask again.
+    await openRegistryPicker()
+    await waitFor(() => expect(registryFetches).toBe(2))
   })
 
   it('a second save after the first successful create PUTs (never POSTs again) with the freshly-created baseModified', async () => {

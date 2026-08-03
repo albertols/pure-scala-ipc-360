@@ -304,6 +304,107 @@ describe('NodeConfigDialog — connection picker', () => {
   })
 })
 
+// Final whole-branch review, BLOCKING 3. `IpcConnections.fanInVerdict` — the
+// PowerCenter constraint pairwise `mayFeed` adjacency cannot express, which the
+// user explicitly ruled in during planning ("add fan-in now") — had no
+// production caller: only `IpcConnectionsContractTest` invoked it, and this
+// picker read `mayFeed` alone. It is now asked over `POST /api/ipc/fan-in`
+// (server-side, so the rule keeps ONE implementation) and rendered through the
+// SAME disabled-candidate mechanism `mayFeed` already uses.
+describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () => {
+  // Two ACTIVE upstreams (sourceQualifier, filter), each with an empty
+  // `sources[]` of its own — so the only non-empty input group in play is the
+  // one the NEW node is assembling in its "fed by" picker.
+  const FANIN_DRAFT: RecipeJson = {
+    steps: [
+      { target: { name: 'SQ1', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+      { target: { name: 'FLT1', type: 'filter', fields: [{ name: 'C', dataType: 'String' }] }, sources: [] },
+    ],
+    table: { targetTableNames: ['SQ1', 'FLT1'], sourceTableNames: [] },
+  }
+
+  let lastFanInBody: { pairings: { key: string; existingSourceKinds: string[]; candidateKind: string }[] } | null = null
+  function serveFanIn(verdicts: Record<string, string>) {
+    server.use(http.post('/api/ipc/fan-in', async ({ request }) => {
+      lastFanInBody = await request.json() as typeof lastFanInBody
+      return HttpResponse.json({ verdicts })
+    }))
+  }
+  afterEach(() => { lastFanInBody = null })
+
+  it('asks only about candidates joining a NON-EMPTY input group, and never asks about a candidate joining itself', async () => {
+    serveFanIn({})
+    renderDialog({ kind: 'aggregator', draft: FANIN_DRAFT })
+
+    // Nothing selected yet: every candidate would join an EMPTY group, where
+    // fan-in cannot be violated (both `block` conditions require a non-empty
+    // existing group) — so there is nothing to ask.
+    expect(lastFanInBody).toBeNull()
+
+    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+
+    await waitFor(() => expect(lastFanInBody).not.toBeNull(), { timeout: 2000 })
+    // Exactly one question: may `filter` join a group already holding
+    // `sourceQualifier`? SQ1 itself is excluded — removing it from its own
+    // group leaves an empty one, which is trivially fine.
+    expect(lastFanInBody!.pairings).toEqual([
+      { key: 'fedBy:FLT1', existingSourceKinds: ['sourceQualifier'], candidateKind: 'filter' },
+    ])
+  })
+
+  it('a block verdict disables the candidate and states the fan-in reason', async () => {
+    serveFanIn({ 'fedBy:FLT1': 'block' })
+    renderDialog({ kind: 'aggregator', draft: FANIN_DRAFT })
+    const fedBy = within(screen.getByTestId('node-config-fedby'))
+    fireEvent.click(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+
+    await waitFor(() => expect(fedBy.getByRole('button', { name: /FLT1/ })).toBeDisabled(), { timeout: 2000 })
+    expect(fedBy.getByRole('button', { name: /FLT1/ })).toHaveAttribute('title', expect.stringMatching(/fan-in/i))
+    // The already-selected candidate stays clickable — a block must never trap
+    // the operator into a selection they cannot undo.
+    expect(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' })).not.toBeDisabled()
+  })
+
+  it('a warn verdict is surfaced without blocking — "cannot be determined" never refuses a link', async () => {
+    serveFanIn({ 'fedBy:FLT1': 'warn' })
+    renderDialog({ kind: 'aggregator', draft: FANIN_DRAFT })
+    const fedBy = within(screen.getByTestId('node-config-fedby'))
+    fireEvent.click(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+
+    await waitFor(
+      () => expect(fedBy.getByRole('button', { name: /FLT1/ })).toHaveAttribute('title', expect.stringMatching(/fan-in/i)),
+      { timeout: 2000 },
+    )
+    expect(fedBy.getByRole('button', { name: /FLT1/ })).not.toBeDisabled()
+    // ...and it is legible, not title-only.
+    expect(screen.getByTestId('node-config-fanin-warning')).toHaveTextContent(/FLT1/)
+  })
+
+  it('a failed fan-in request never blocks a candidate — refusing an unproven link is worse than permitting it', async () => {
+    server.use(http.post('/api/ipc/fan-in', () => new HttpResponse(null, { status: 500 })))
+    renderDialog({ kind: 'aggregator', draft: FANIN_DRAFT })
+    const fedBy = within(screen.getByTestId('node-config-fedby'))
+    fireEvent.click(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+
+    await waitFor(() => expect(screen.getByText(/error/)).toBeInTheDocument(), { timeout: 2000 })
+    expect(fedBy.getByRole('button', { name: /FLT1/ })).not.toBeDisabled()
+    expect(screen.queryByTestId('node-config-fanin-warning')).not.toBeInTheDocument()
+  })
+
+  it("a feeds candidate is judged against the DOWNSTREAM step's own existing sources", async () => {
+    serveFanIn({})
+    // T already reads S (a `table`), so a new node feeding T would make two
+    // inputs — the fan-in question the "feeds" picker has to ask, with a
+    // different existing group per candidate.
+    renderDialog({ kind: 'filter', draft: MINI })
+
+    await waitFor(() => expect(lastFanInBody).not.toBeNull(), { timeout: 2000 })
+    expect(lastFanInBody!.pairings).toEqual([
+      { key: 'feeds:T', existingSourceKinds: ['table'], candidateKind: 'filter' },
+    ])
+  })
+})
+
 // Fix round 1 (task-10-report.md): IPC-FLW-003 ("no orphan step") reads
 // outbound dot-refs off FIELD FORMULAS, not sources[] membership. A
 // `fields: []` step always failed it regardless of connections, so Insert
@@ -407,6 +508,28 @@ describe('NodeConfigDialog — validation gate', () => {
     expect(added.target!.fields).toEqual([{ name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } }])
     expect(added.sources).toEqual([{ name: 'SQ1', type: 'sourceQualifier' }])
     expect(onCancel).not.toHaveBeenCalled()
+  })
+
+  // Final whole-branch review, BLOCKING 2: every OTHER test in this file
+  // resolves `POST /api/recipes/validate`. On a REJECTED validate,
+  // `useValidation` returns `{checks: [], errors: [], warnings: [],
+  // isValidating: false, failed: true}` — so the colour/text ternaries here,
+  // which never consulted `validation.failed`, deterministically took the
+  // green branch and printed "0 errors · 0 warnings" while `canInsert`
+  // (which DOES consult `failed`) held Insert disabled with no stated reason.
+  // A green all-clear next to a dead button. Same class of bug the team
+  // already fixed once for `ConformanceChip`; `ValidationState`'s javadoc
+  // named only that one consumer.
+  it('a REJECTED validate renders as an explicit failure, never as a green "0 errors · 0 warnings"', async () => {
+    server.use(http.post('/api/recipes/validate', () => new HttpResponse(null, { status: 500 })))
+    renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'FLT2' } })
+    selectSQ1AndMapFieldA()
+
+    expect(await screen.findByText(/Conformance check failed to run/i, {}, { timeout: 2000 })).toBeInTheDocument()
+    expect(screen.queryByText(/0 errors · 0 warnings/)).not.toBeInTheDocument()
+    // The disabled Insert now has a stated reason rather than being mute.
+    expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
   })
 })
 
@@ -685,6 +808,28 @@ describe('NodeConfigDialog — target DDL columns as fields (Task 16)', () => {
     await waitFor(() => expect(screen.getByText(/error/)).toBeInTheDocument(), { timeout: 2000 })
     expect(screen.queryByTestId('node-config-targetddl')).not.toBeInTheDocument()
     expect(screen.queryByText(/DDL/)).not.toBeInTheDocument()
+    // ...and the healthy-registry no-match state says nothing about a failure.
+    expect(screen.queryByTestId('node-config-targetddl-unavailable')).not.toBeInTheDocument()
+  })
+
+  // Final whole-branch review, BLOCKING 2 (second half): `TargetDdlOffer`
+  // destructured only `data`, so a FAILED `GET /api/registry` produced
+  // `variants.length === 0` -> `return null` — byte-identical to the genuine
+  // no-match state directly above, which this component's own doc comment
+  // documents as explicitly NOT an error ("the normal case for a table being
+  // authored for the first time"). An operator authoring a target that DOES
+  // already exist in the corpus would be told, silently, that it is new.
+  it('a FAILED registry fetch is distinguishable from a genuine no-match', async () => {
+    server.use(http.get('/api/registry', () => new HttpResponse(null, { status: 500 })))
+    renderDialogWithQuery({ kind: 'table', draft: DRAFT_WITH_FIELDS })
+    // A name that DOES exist in the corpus fixture — with a healthy registry
+    // this would render the one-variant offer; the failure must not silently
+    // present it as "no match".
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'DWH_ORDERS_FACT' } })
+
+    const note = await screen.findByTestId('node-config-targetddl-unavailable', {}, { timeout: 2000 })
+    expect(note).toHaveTextContent(/could not be checked/i)
+    expect(screen.queryByTestId('node-config-targetddl')).not.toBeInTheDocument()
   })
 
   it('a divergent name never offers the union — it names the conflict and requires a choice', async () => {
