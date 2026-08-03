@@ -154,6 +154,14 @@ async function loadAndSelectT() {
   return screen.findByDisplayValue('1')
 }
 
+// The end-to-end walk below is this suite's heaviest test (full tree + canvas
+// + raw-JSON panel + every drawer tab) and sits just past vitest's 5000ms
+// default when the suite's workers contend on a loaded box — the same implicit
+// budget ExpressionDock.test.tsx already makes explicit for its 150-row
+// renders. It asserts DOM structure, never render speed, so the budget is the
+// wrong contract to leave implicit.
+const HEAVY_WALK_TIMEOUT = 20_000
+
 describe('ETLModifier — real recipes on the shared canvas', () => {
   it('shows the empty hint, then renders the real recipe canvas after selecting an _ETL_*.json file', async () => {
     renderModifier()
@@ -201,7 +209,7 @@ describe('ETLModifier — real recipes on the shared canvas', () => {
 
     // DDL section absent for an empty /api/ddl map.
     expect(screen.queryByText('BigQuery DDL Schema')).not.toBeInTheDocument()
-  })
+  }, HEAVY_WALK_TIMEOUT)
 
   // Superseded by Task 14's Explorer scoping (below): a non-recipe .json leaf
   // like BIZLINK.json is now excluded from Tab 2's tree entirely by
@@ -1781,5 +1789,116 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     expect(detail).toHaveStyle({ color: 'var(--red)' })
     // Not a silent failure: the edit is still unsaved, still on screen.
     expect(screen.getByText('1 unsaved change')).toBeInTheDocument()
+  })
+})
+
+// ─── UX round 4: click reliability, explicit close, drawer Transformations ───
+//
+// Round-4 report: opening the Inspector was a coin flip in practice — the
+// header click TOGGLED selection (a double-click flashed the panel open and
+// shut), the only way to close it was the same hidden re-click gesture, and
+// the drawer had no Transformations list at all. These tests pin the new
+// contract: node clicks always select, closing is explicit (✕ / background
+// click), and the drawer lists the transformation band next to Source/Target.
+
+describe('ETLModifier — UX round 4 (click reliability + drawer transformations)', () => {
+  it('a second header click on the selected node keeps the Inspector open (no toggle)', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    const header = await screen.findByText('T', { selector: 'text' })
+
+    fireEvent.click(header)
+    expect(await screen.findByTestId('inspector-dock')).toBeInTheDocument()
+
+    // The old handleSelectNode toggled to null here — a habitual double-click
+    // opened the panel and instantly closed it ("it barely appears").
+    fireEvent.click(header)
+    expect(screen.getByTestId('inspector-dock')).toBeInTheDocument()
+    expect(screen.getByText('Edit — T')).toBeInTheDocument()
+  })
+
+  it('the Inspector ✕ button closes the dock', async () => {
+    await loadAndSelectT()
+    expect(screen.getByTestId('inspector-dock')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }))
+    expect(screen.queryByTestId('inspector-dock')).not.toBeInTheDocument()
+  })
+
+  it('a click that targets the node WRAPPER <g> never counts as background (double-click retarget)', async () => {
+    // Live-browser finding (round 4): the second click of a double-click
+    // arrives with `e.target` = the wrapper `<g data-testid="ipc-node-…"
+    // style="touch-action: none">` rather than any inner element — Chrome
+    // retargets it during the second pointerdown's capture. A style-substring
+    // exclusion (`g[style*="pointer"]`) misses that wrapper, so the background
+    // handler treated the double-click's own second click as "empty canvas"
+    // and closed the panel the first click had just opened — the exact flash
+    // the round set out to kill. The exclusion must be structural.
+    await loadAndSelectT()
+    expect(screen.getByTestId('inspector-dock')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('ipc-node-T'))
+    expect(screen.getByTestId('inspector-dock')).toBeInTheDocument()
+  })
+
+  it('a clean click on the canvas background closes the Inspector; a pan does not', async () => {
+    await loadAndSelectT()
+    const root = screen.getByTestId('ipc-canvas-root')
+
+    // Press-move-release = a pan gesture. The click event that follows a pan
+    // carries the release coordinates, far from the press — it must NOT close.
+    fireEvent.pointerDown(root, { clientX: 10, clientY: 10 })
+    fireEvent.pointerMove(root, { clientX: 80, clientY: 60 })
+    fireEvent.pointerUp(root, { clientX: 80, clientY: 60 })
+    fireEvent.click(root, { clientX: 80, clientY: 60 })
+    expect(screen.getByTestId('inspector-dock')).toBeInTheDocument()
+
+    // Press-release in place = a real background click — deselects.
+    fireEvent.pointerDown(root, { clientX: 120, clientY: 120 })
+    fireEvent.pointerUp(root, { clientX: 120, clientY: 120 })
+    fireEvent.click(root, { clientX: 120, clientY: 120 })
+    expect(screen.queryByTestId('inspector-dock')).not.toBeInTheDocument()
+  })
+
+  it('the Transformations drawer tab lists transformation-band steps and clicking one opens its Inspector', async () => {
+    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 200,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: {
+        steps: [
+          { target: { name: 'SQ_STEP', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+          { target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] }, sources: [] },
+        ],
+        table: { targetTableNames: ['T'], sourceTableNames: [] },
+      },
+    })))
+
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('SQ_STEP', { selector: 'text' })
+
+    // The tab button — distinct from the canvas band label (an svg <text>).
+    fireEvent.click(screen.getByRole('button', { name: /^Transformations$/ }))
+
+    // The transformation-band step is listed; the target-band step (TGT T) is
+    // not — the drawer mirrors the canvas's Transformations band exactly.
+    const row = await screen.findByRole('button', { name: /SQ_STEP/ })
+    expect(screen.queryByRole('button', { name: /TGT/ })).not.toBeInTheDocument()
+
+    fireEvent.click(row)
+    expect(await screen.findByTestId('inspector-dock')).toBeInTheDocument()
+    expect(screen.getByText('Edit — SQ_STEP')).toBeInTheDocument()
+  })
+
+  it('the Transformations drawer tab states honestly when the recipe has no transformation steps', async () => {
+    renderModifier()
+    fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
+    await screen.findByText('T', { selector: 'text' })
+
+    // MINI has only a source (S) and a target (T) — nothing in the middle band.
+    fireEvent.click(screen.getByRole('button', { name: /^Transformations$/ }))
+    expect(await screen.findByText('No transformation steps in this recipe.')).toBeInTheDocument()
   })
 })

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ETLNode, Port } from '../../types'
 
 export const NODE_WIDTH = 195
@@ -44,6 +45,7 @@ export function NodeBox({
   compact = false,
   onPortClick,
   onPortRowClick,
+  hoverHighlight = false,
 }: {
   node: ETLNode
   isSelected: boolean
@@ -68,9 +70,26 @@ export function NodeBox({
    * than start a wire. When absent, a row click simply bubbles to the node's own
    * `onClick`, which is Tab 1's unchanged behavior. */
   onPortRowClick?: (nodeId: string, port: Port) => void
+  /** UX round 4 — optional, behavior-only, Tab 2 only: paint the body stroke
+   * in the kind color while the pointer is over the node, so a box reads as
+   * clickable BEFORE it is clicked ("show the boxes more clickable"). Tab 1
+   * never passes this, so its nodes gain no handlers and no visual change —
+   * same opt-in idiom as `onPortClick`/`onPortRowClick` above (ADR-0005: the
+   * contract covers what is drawn at rest, not an explicitly-asked-for hover
+   * affordance on another tab). */
+  hoverHighlight?: boolean
 }) {
   const style = NODE_STYLES[node.type] ?? NODE_STYLES.source
   const h = getNodeHeight(node, compact)
+  const [hovered, setHovered] = useState(false)
+  // Selection always wins: hover brightens an unselected node's stroke to the
+  // kind color at width 1.5; a selected node keeps its 2px selection stroke.
+  const highlighted = hoverHighlight && hovered
+  const bodyStroke = isSelected || highlighted ? style.color : style.border
+  const bodyStrokeWidth = isSelected ? 2 : highlighted ? 1.5 : 1
+  const hoverHandlers = hoverHighlight
+    ? { onPointerEnter: () => setHovered(true), onPointerLeave: () => setHovered(false) }
+    : {}
 
   // Zoom-collapse pill (Task 6): below zoom 0.65 the caller passes
   // compact=true. Mirrors OperationalCard.tsx's compact pill VALUES (rx,
@@ -85,13 +104,14 @@ export function NodeBox({
   if (compact) {
     const w = Math.min(200, Math.max(90, 24 + node.name.length * 6))
     return (
-      <g onClick={onClick} style={{ cursor: 'pointer' }}>
+      <g onClick={onClick} style={{ cursor: 'pointer' }} {...hoverHandlers}>
         <rect
+          data-testid={`node-body-${node.id}`}
           x={node.x} y={node.y}
           width={w} height={h} rx={16}
           fill={style.bg}
-          stroke={isSelected ? style.color : style.border}
-          strokeWidth={isSelected ? 2 : 1}
+          stroke={bodyStroke}
+          strokeWidth={bodyStrokeWidth}
         />
         <rect x={node.x + 10} y={node.y + h / 2 - 3} width={6} height={6} rx={3} fill={style.color} />
         <text x={node.x + 22} y={node.y + h / 2 + 3.5} fill="#c8d3e8"
@@ -104,16 +124,17 @@ export function NodeBox({
   }
 
   return (
-    <g onClick={onClick} style={{ cursor: 'pointer' }}>
+    <g onClick={onClick} style={{ cursor: 'pointer' }} {...hoverHandlers}>
       {/* drop shadow */}
       <rect x={node.x + 2} y={node.y + 3} width={NODE_WIDTH} height={h} rx={7} fill="rgba(0,0,0,0.45)" />
       {/* body */}
       <rect
+        data-testid={`node-body-${node.id}`}
         x={node.x} y={node.y}
         width={NODE_WIDTH} height={h} rx={7}
         fill={style.bg}
-        stroke={isSelected ? style.color : style.border}
-        strokeWidth={isSelected ? 2 : 1}
+        stroke={bodyStroke}
+        strokeWidth={bodyStrokeWidth}
       />
       {/* header fill */}
       <rect x={node.x} y={node.y} width={NODE_WIDTH} height={NODE_HEADER_H} rx={7} fill={`${style.color}14`} />

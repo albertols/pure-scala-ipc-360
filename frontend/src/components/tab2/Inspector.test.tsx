@@ -349,3 +349,56 @@ describe('Inspector — declared source table', () => {
     expect(container).toBeEmptyDOMElement()
   })
 })
+
+// ─── UX round 4: explicit close affordance ───────────────────────────────────
+//
+// Closing used to require re-clicking the very node that opened the panel — a
+// hidden gesture (and impossible once the panel covered that node). The header
+// now carries an explicit ✕ wired to `onClose`; when the caller passes none
+// (older embeddings, tests that don't care) no button renders at all.
+
+describe('Inspector — close affordance (UX round 4)', () => {
+  const draft = {
+    steps: [{ target: { name: 'SQ1', type: 'sourceQualifier', fields: [], selectDistinct: false }, sources: [] }],
+    table: emptyTable(),
+  }
+
+  it('renders a ✕ that fires onClose', () => {
+    const onClose = vi.fn()
+    render(
+      <Inspector
+        draft={draft}
+        node={node('SQ1', 'sq')}
+        keySchema={KEY_SCHEMA}
+        onChange={vi.fn()}
+        onDelete={vi.fn()}
+        onFocusFormula={vi.fn()}
+        onClose={onClose}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }))
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders no close button when onClose is not provided', () => {
+    renderInspector({ draft, node: node('SQ1', 'sq') })
+    expect(screen.queryByRole('button', { name: 'Close inspector' })).not.toBeInTheDocument()
+  })
+
+  it('the declared-source-table panel (no step occurrence) carries the same ✕', () => {
+    const onClose = vi.fn()
+    render(
+      <Inspector
+        draft={{ steps: [], table: { targetTableNames: [], sourceTableNames: ['LONE'] } }}
+        node={node('LONE', 'source')}
+        keySchema={KEY_SCHEMA}
+        onChange={vi.fn()}
+        onDelete={vi.fn()}
+        onFocusFormula={vi.fn()}
+        onClose={onClose}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }))
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+})

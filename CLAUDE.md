@@ -16,8 +16,12 @@ platform-agnostic. A multi-module Maven repo:
   canvas/detail panel/search/zoom, Tab 2 (ETL Modifier)'s banded `IpcCanvas` (drag,
   auto-layout, per-node conformance dots) inside a fixed-height editor shell (docked
   Inspector, two draggable splitters + a corner grip whose sizes persist to
-  `localStorage`, a collapsible Source/Target/DDL/Edge drawer, and a 25-entry
-  undo/redo stack), a schema-driven Inspector covering every recipe key for all 20 of
+  `localStorage`, a collapsible Source/Transformations/Target/DDL/Edge drawer, and a
+  25-entry undo/redo stack; UX round 4: node clicks always select — closing the
+  Inspector is explicit (header ✕, or a clean canvas-background click) instead of the
+  old re-click toggle — boxes hover-highlight, selection auto-pans a clipped node back
+  into view, and the Expressions dock collapses to a 36px strip), a schema-driven
+  Inspector covering every recipe key for all 20 of
   the ruleset's `source:`/`target:` kinds — `union` (10) and `joiner` (5) sources now
   get canvas nodes too, closing spec `2026-08-01-etl-modifier-redesign-design.md` §13
   deviation 3, though their 2197 `unionTables[].fieldMapping` pairs render read-only
