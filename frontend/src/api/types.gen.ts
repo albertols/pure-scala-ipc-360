@@ -292,6 +292,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["diagnostics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ddl/{*path}": {
         parameters: {
             query?: never;
@@ -764,6 +780,72 @@ export interface components {
             port?: string;
             formula?: string;
             origin?: string;
+        };
+        ControlSchema: {
+            configured?: string;
+            resolvedReal?: string;
+            realExists?: boolean;
+            requiredChild?: string;
+            realUsable?: boolean;
+            mockPath?: string;
+            mockUsable?: boolean;
+            tier?: string;
+            status?: string;
+            hint?: string;
+            scan?: components["schemas"]["Scan"];
+        };
+        DiagnosticsDto: {
+            status?: string;
+            corpus?: components["schemas"]["RootStatus"];
+            dwhControl?: components["schemas"]["ControlSchema"];
+            composer?: components["schemas"]["RootStatus"];
+        };
+        FileScan: {
+            path?: string;
+            /** Format: int64 */
+            bytes?: number;
+            /** Format: int32 */
+            anchorHits?: number;
+            /** Format: int32 */
+            rowsParsed?: number;
+            /** Format: int32 */
+            rowsSkipped?: number;
+            firstSkipReason?: string;
+        };
+        InsertTarget: {
+            table?: string;
+            /** Format: int32 */
+            count?: number;
+        };
+        RootStatus: {
+            name?: string;
+            configured?: string;
+            resolved?: string;
+            exists?: boolean;
+            requiredChild?: string;
+            tier?: string;
+            status?: string;
+            hint?: string;
+            counts?: {
+                [key: string]: number;
+            };
+        };
+        Scan: {
+            anchorTable?: string;
+            anchor?: string;
+            expectedLayerDirs?: string[];
+            presentDirs?: string[];
+            unexpectedDirs?: string[];
+            /** Format: int32 */
+            filesRead?: number;
+            /** Format: int32 */
+            anchorHits?: number;
+            /** Format: int32 */
+            rowsParsed?: number;
+            /** Format: int32 */
+            rowsSkipped?: number;
+            files?: components["schemas"]["FileScan"][];
+            insertTargetsFound?: components["schemas"]["InsertTarget"][];
         };
         AppConfigDto: {
             gcpProjectId?: string;
@@ -1246,6 +1328,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ExpressionEntryDto"][];
+                };
+            };
+        };
+    };
+    diagnostics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DiagnosticsDto"];
                 };
             };
         };
