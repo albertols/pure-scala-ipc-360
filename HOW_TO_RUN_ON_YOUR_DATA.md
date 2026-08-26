@@ -72,6 +72,8 @@ $EDITOR config.json
   "composerRoot":   "/abs/path/to/your/composer",
   "dwhControlRoot": "/abs/path/to/your/DWH_CONTROL",
   "gcpProjectId":   "your-gcp-project-id",
+  "layerToLayerTable": "CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG",
+  "layerDirs":      ["STG", "ODS", "DWH", "CDM", "RDM", "QDM", "ETL", "OUTPUT"],
   "javaHome":       "",
   "nodeBin":        ""
 }
@@ -83,6 +85,8 @@ $EDITOR config.json
 | `composerRoot` | `ETL360_COMPOSER_ROOT` | Root of the composer export holding b15 CSVs (§3.2) |
 | `dwhControlRoot` | `ETL360_DWH_CONTROL_ROOT` | Root of the control-schema export (§3.3) |
 | `gcpProjectId` | `ETL360_GCP_PROJECT` | Project id for Dataproc/Logging deep links |
+| `layerToLayerTable` | `ETL360_L2L_TABLE` | The control table your `INSERT INTO … VALUES` statements target (§3.3). The default is an **anonymized** sample value — yours will differ |
+| `layerDirs` | `ETL360_L2L_LAYER_DIRS` | Layer directory names under `LAYER_TO_LAYER/` (§3.3). Array or comma-separated string |
 | `javaHome` | `JAVA_HOME` | JDK 17+ home; empty = auto-detect |
 | `nodeBin` | `PATH` | A Node `bin/` directory; empty = auto-detect |
 
@@ -177,16 +181,33 @@ INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES (
 )
 ```
 
-Two hard constraints here:
+Three constraints here — one hard, two configurable:
 
 1. **`LAYER_TO_LAYER/` must exist under the root.** A control-schema export from before
    that layout (e.g. one holding only `2.1.STG_TO_ODS/` folders) is rejected — this is
    deliberate, because such a root used to win the "real" tier and then serve an empty
-   relationships graph with no explanation.
-2. **The layer directory names *are* hardcoded** to `STG ODS DWH CDM RDM QDM ETL OUTPUT`.
-   A `statements.sql` under any other directory name is silently skipped, no warning.
-   If your control schema uses different layer names, that is a code change in
-   `LayerToLayerService.LAYER_DIRS`, not something `config.json` can fix.
+   relationships graph with no explanation. This one is not configurable.
+2. **The layer directory names** default to `STG ODS DWH CDM RDM QDM ETL OUTPUT`. A
+   `statements.sql` under any other directory name is skipped. If your control schema uses
+   different layer names, set `layerDirs` in `config.json` (array or comma-separated string):
+
+   ```json
+   "layerDirs": ["RAW_ZONE", "STG", "ODS", "CURATED"]
+   ```
+3. **The control table name** defaults to `CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG` — which
+   is an **anonymized sample value**, not IPC vocabulary. Only statements beginning
+   `INSERT INTO <that table> VALUES` are parsed; yours almost certainly names a different
+   table, so set `layerToLayerTable`:
+
+   ```json
+   "layerToLayerTable": "CTL.YOUR_LAYER_TO_LAYER_CONFIG"
+   ```
+
+   You do not have to guess it: `GET /api/diagnostics` (and Tab 3's own panel) reports the
+   `INSERT INTO` identifiers actually found in your files. See §5.
+
+Neither (2) nor (3) errors when wrong — the scan simply matches nothing and Tab 3 renders
+an empty graph, which is what §5's diagnostics check exists to catch.
 
 A malformed individual row is skipped and logged (`Skipping malformed LayerToLayer row`)
 without failing the rest of the file; the count is surfaced as `skippedRows`.
@@ -262,13 +283,35 @@ Read it like this:
   synthetic sample data; re-check the paths in §3.2 / §3.3. **`absent`** → neither your
   root nor the committed mock mirror is usable.
 
+**The one command that answers "why is it empty?":**
+
+```bash
+curl -s localhost:8080/api/diagnostics | python3 -m json.tool
+```
+
+It reports, per root, what you configured, where it resolved, which tier won, and — for the
+control schema — a deliberately **staged** set of counts. The first one that reads zero is the
+step that failed, and each has a different fix:
+
+| Reads zero | Means | Fix |
+|---|---|---|
+| `presentDirs` | `LAYER_TO_LAYER/` has no subdirectories | wrong root — §3.3 |
+| `filesRead` (with `unexpectedDirs` non-empty) | your layer dirs are named something else | `layerDirs` — §3.3 (2) |
+| `anchorHits` | your control table is named something else | `layerToLayerTable` — §3.3 (3); `insertTargetsFound[]` tells you the value to use |
+| `rowsParsed` (with `rowsSkipped` > 0) | rows match but are malformed | check the row grammar above |
+
+The same report renders in the GUI: Tab 3 carries a `data: real\|mock\|absent` chip at all
+times, and when the graph is empty it expands the whole report under *No relationship entries* —
+including the resolved path of the tier actually being read. You never have to leave the app to
+find out which root is wrong.
+
 Two more checks worth running once, since they fail quietly rather than loudly:
 
 ```bash
 curl -s localhost:8080/api/relationships | python3 -m json.tool | tail -8
 #   meta.entryCount   → control-schema rows actually parsed (0 = §3.3 is wrong)
 #   meta.skippedRows  → malformed rows dropped; should be 0
-#   meta.layers       → which of the eight hardcoded layer dirs were found
+#   meta.layers       → which configured layer dirs were found
 
 curl -s localhost:8080/api/operational/dates
 #   {"dates":["2026-08-20", ...],"mode":"real"}  ← every b15 date dir it accepted
@@ -289,7 +332,9 @@ proxy `localhost:8080` in `frontend/vite.config.ts`. Override the frontend port 
 | Symptom | Cause | Fix |
 |---|---|---|
 | `mode mock` despite a configured path | Root exists but lacks its required substructure | §3.2 needs the full `dwh/config/cluster_tuning/inputs` chain; §3.3 needs `LAYER_TO_LAYER/` |
-| Tab 3 relationships graph is empty | Control-schema layer dirs are named something other than the eight hardcoded ones | Rename the directories, or extend `LayerToLayerService.LAYER_DIRS` |
+| Tab 3 relationships graph is empty | One of four silent-skip paths — the panel under *No relationship entries* names which | Read the staged counts (§5); usually `layerToLayerTable` or `layerDirs` |
+| `anchorHits: 0` with files read | Your control table is not `CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG` | Set `layerToLayerTable` to the value `insertTargetsFound[]` reports (§3.3) |
+| `filesRead: 0` with `unexpectedDirs` listed | Your layer dirs are named something else | Set `layerDirs` to those names (§3.3) |
 | Tabs 3/4 show `SYN`-marked mappings you have never seen | Committed synthetic mock tier is serving | Check `composerMode`/`dwhControlMode` — see §5 |
 | Tree renders, Tab 2 says no recipe | `_ETL_*.json` not generated | Run §4 |
 | Parser run reports success but writes nothing | Absolute `--xmlPath` pointing at a single file | Pass the directory instead (§4) |
@@ -336,6 +381,8 @@ settings `config.json` does not expose:
 | `ETL360_DWH_CONTROL_ROOT` | Same as `dwhControlRoot` |
 | `ETL360_COMPOSER_ROOT` | Same as `composerRoot` |
 | `ETL360_GCP_PROJECT` | Same as `gcpProjectId` |
+| `ETL360_L2L_TABLE` | Same as `layerToLayerTable` |
+| `ETL360_L2L_LAYER_DIRS` | Same as `layerDirs` (comma-separated) |
 | **`ETL360_GCP_REGION`** | GCP region for deep links — **no `config.json` field** |
 | **`ETL360_MOCK_ROOT`** | Where the mock fallback tier lives — **no `config.json` field** |
 
@@ -358,9 +405,9 @@ re-check the section that depends on it:
 | §3 root usability + mock fallback | `backend/.../config/DataRoots.java` (`LAYER_TO_LAYER`, `COMPOSER_INPUTS`) |
 | §3.1 corpus walk, layer inference, exclusions | `backend/.../service/CorpusService.java` |
 | §3.2 b15 filename, date pattern, CSV headers | `backend/.../service/OperationalService.java` |
-| §3.3 hardcoded layer dirs, row grammar | `backend/.../service/LayerToLayerService.java` |
+| §3.3 layer dirs, control table, row grammar | `backend/.../service/LayerToLayerService.java`, `backend/.../config/Etl360Properties.java` (`LayerToLayer`) |
 | §4 parser flags, traversal, path quirk | `parser/.../xmltojson/XMLParser.scala`, `parser/.../utils/dir/ScalaFileUtils.scala` |
-| §5 verification fields | `backend/.../api/HealthController.java`, `backend/.../api/ConfigController.java` |
+| §5 verification fields | `backend/.../api/HealthController.java`, `backend/.../api/ConfigController.java`, `backend/.../service/DiagnosticsService.java`, `docs/adr/0013-data-root-diagnostics.md` |
 | §5 frontend port/proxy | `frontend/vite.config.ts` |
 
 Related reading: root `README.md` (dev harness, make targets), `docs/architecture.md`

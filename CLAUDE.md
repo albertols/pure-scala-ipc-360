@@ -38,7 +38,8 @@ platform-agnostic. A multi-module Maven repo:
   Explorer/expression dock (formulas clamped, list capped at 150 with an honest count),
   focus mode (`?focus=<recipePath>`), and save/history/rollback (the backend's write
   API, `PUT`/`POST`/`validate`/`history`/`rollback` on `/api/recipes`), Tab 3 (ETL
-  Operational)'s relationships graph + operational summary, and Tab 4 (ETL DAG)'s
+  Operational)'s relationships graph + operational summary (with a `data: real|mock|absent` chip,
+  and the `/api/diagnostics` data-root report under an empty graph — ADR-0013), and Tab 4 (ETL DAG)'s
   clusters/run history all consume the live corpus. Tab 2's seven sanctioned visual
   departures (`2026-08-01-etl-modifier-ux2-design.md` §10) are **pending human visual
   sign-off** — the mechanisms are unit-tested, the rendered result is not observed.
@@ -157,6 +158,10 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   authoring inventory: 108 source tables, 87 target tables, 180 DDL names — 11 of them
   carrying divergent `variants[]` — and 8 layers) and `POST /api/recipes/{*path}`. All
   four are covered by backend contract tests rather than a `validate-loop` curl.
+  `GET /api/diagnostics` (ADR-0013) reports per data root the resolved absolute path, the tier
+  that won, and — for the control schema — staged scan counts (`presentDirs` → `filesRead` →
+  `anchorHits` → `rowsParsed`) plus the `INSERT INTO <table>` identifiers actually found, so an
+  empty Tab 3 names its own cause. Both contract-tested and gated in `validate-loop`.
 
 ## Corpus caveats
 
@@ -187,6 +192,12 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   `statements.sql`, so adding the 12 CAS recipe names shifts every index after the
   insertion point — re-running it would silently rewrite the existing SYN/real b15
   rows. CAS b15 rows are owned exclusively by `mock_etl_data.mts --emit b15`.
+- The control-schema **vocabulary is anonymized too**: `CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG`
+  and the eight layer directory names are this corpus's sample values, not IPC law. Both are
+  configurable since ADR-0013 (`etl360.layer-to-layer.anchor-table`/`.layer-dirs`, `config.json`
+  `layerToLayerTable`/`layerDirs`) with the current values as defaults — a real export that misses
+  on either parses to zero rows *silently*, which is what `GET /api/diagnostics` exists to explain.
+  Never hardcode a second copy of either value; read them from `Etl360Properties.LayerToLayer`.
 - Four recipe `type` values (`BERYLFALLS`, `ASHPATH2`, `CEDARWICK2`, `EARLYGLADE`) and
   one structural key (`greencliff`) are anonymizer output, not IPC vocabulary — resolved
   to their canonical kind/key (`sourceQualifier`/`joinerInput`/`storedProcedure`/
@@ -222,7 +233,7 @@ checklist): `docs/visual-guide.md`.
   `LayerToLayerService`, `Etl360Properties`, `scripts/dev.sh`, `XMLParser.scala`,
   `frontend/vite.config.ts`) — change one of those and update the doc in the same commit.
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0012`
+- Design rationale: `docs/adr/0001`–`0013`
 - `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,
   alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
   expression grammar. Start at `docs/ipc/README.md`.
