@@ -69,6 +69,36 @@ export function ExpressionDock({
     return next
   })
 
+  // Pane-level collapse (UX round 4) — distinct from the per-formula clamp
+  // toggle above. The dock is a fixed 260px column the canvas can never
+  // reclaim; collapsed it becomes a slim strip whose single affordance
+  // expands it back. Local state on purpose: the dock always mounts expanded,
+  // and (like the Explorer's own collapse) the preference is per-session.
+  const [collapsed, setCollapsed] = useState(false)
+
+  if (collapsed) {
+    return (
+      <div style={{
+        width: 36, flexShrink: 0,
+        background: 'var(--surface)',
+        borderLeft: '1px solid var(--border)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        paddingTop: 8, gap: 8,
+      }}>
+        <button
+          aria-label="Expand expressions"
+          title="Expand expressions"
+          onClick={() => setCollapsed(false)}
+          style={{
+            background: 'transparent', border: 'none', cursor: 'pointer', padding: 2,
+            color: '#7b88aa', fontSize: 12, fontFamily: 'JetBrains Mono, monospace',
+          }}
+        >«</button>
+        <span style={{ fontSize: 12, color: '#a78bfa', fontFamily: 'JetBrains Mono, monospace' }}>ƒ</span>
+      </div>
+    )
+  }
+
   return (
     <div style={{
       width: 260, flexShrink: 0,
@@ -83,6 +113,16 @@ export function ExpressionDock({
           <span style={{ fontSize: 10, fontWeight: 600, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             Expressions
           </span>
+          <div style={{ flex: 1 }} />
+          <button
+            aria-label="Collapse expressions"
+            title="Collapse expressions"
+            onClick={() => setCollapsed(true)}
+            style={{
+              background: 'transparent', border: 'none', cursor: 'pointer', padding: 2,
+              color: '#7b88aa', fontSize: 12, fontFamily: 'JetBrains Mono, monospace',
+            }}
+          >»</button>
         </div>
         <input
           value={filter}

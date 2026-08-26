@@ -242,6 +242,33 @@ function DeleteControl({ draft, nodeId, onDelete }: { draft: RecipeJson; nodeId:
 
 // ─── Inspector ───────────────────────────────────────────────────────────────
 
+/** The dock's title row, shared by both panel variants below. UX round 4: it
+ * carries the explicit ✕ — before this, the only way to close the Inspector
+ * was re-clicking the node that opened it, a hidden gesture that stopped
+ * working entirely once the dock covered that very node. Rendered only when
+ * the caller wires `onClose`, so embeddings that manage dismissal themselves
+ * gain no dead button. */
+function HeaderRow({ title, onClose }: { title: string; onClose?: () => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+      <span style={{ fontSize: 14, color: '#4f9cf9', fontFamily: 'JetBrains Mono, monospace' }}>✎</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8' }}>{title}</span>
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      {onClose && (
+        <button
+          aria-label="Close inspector"
+          title="Close"
+          onClick={onClose}
+          style={{
+            background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 2px',
+            color: '#7b88aa', fontSize: 14, lineHeight: 1, fontFamily: 'JetBrains Mono, monospace',
+          }}
+        >×</button>
+      )}
+    </div>
+  )
+}
+
 export function Inspector({
   draft,
   node,
@@ -252,6 +279,7 @@ export function Inspector({
   onDelete,
   onFocusFormula,
   focusField = null,
+  onClose,
 }: {
   draft: RecipeJson
   node: ETLNode
@@ -281,6 +309,8 @@ export function Inspector({
    * into view and outlined. `null` (the default, and what every other selection
    * path resets to) outlines nothing. */
   focusField?: string | null
+  /** UX round 4: the header ✕. Optional — no button renders without it. */
+  onClose?: () => void
 }) {
   const targetStep = findTargetStep(draft, node.id)
   const sourceOcc = !targetStep ? findSourceOccurrence(draft, node.id) : undefined
@@ -310,11 +340,7 @@ export function Inspector({
     if (!declared) return null
     return (
       <section>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <span style={{ fontSize: 14, color: '#4f9cf9', fontFamily: 'JetBrains Mono, monospace' }}>✎</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8' }}>{`Edit — ${node.id}`}</span>
-          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        </div>
+        <HeaderRow title={`Edit — ${node.id}`} onClose={onClose} />
         <div style={{
           padding: 16, background: 'var(--surface)',
           border: '1px solid var(--border)', borderRadius: 7,
@@ -354,11 +380,7 @@ export function Inspector({
 
   return (
     <section>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 14, color: '#4f9cf9', fontFamily: 'JetBrains Mono, monospace' }}>✎</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8' }}>{`Edit — ${node.id}`}</span>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
+      <HeaderRow title={`Edit — ${node.id}`} onClose={onClose} />
       <div style={{
         padding: 16, background: 'var(--surface)',
         border: '1px solid var(--border)', borderRadius: 7,

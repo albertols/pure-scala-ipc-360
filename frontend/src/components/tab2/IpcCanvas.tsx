@@ -1,6 +1,43 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import type { ETLNode, Connection, Port } from '../../types'
 import { NodeBox, getNodeHeight, getPortY, buildPath, NODE_WIDTH } from '../tab1/NodeBox'
+
+/** Movement budget (px, client space) separating a click from a pan: the
+ * click event a pan gesture emits on release carries the release coordinates,
+ * so anything that travelled further than a hand tremor is not a "click on
+ * the background" and must not deselect. */
+const CLICK_SLOP_PX = 4
+
+/** Pan margin (px) kept between a revealed node and the viewport edge. */
+const REVEAL_MARGIN_PX = 16
+
+/** UX round 4: the pan that brings a node's screen rect fully inside `view`,
+ * or `null` when it already is. Screen rect = `pan + rect * zoom` (the content
+ * svg is translated by pan and its viewBox scales by zoom). When a node is
+ * larger than the view itself, its LEFT/TOP edge wins — that's where the
+ * header (the natural click target) sits. Pure so the geometry is unit-tested
+ * directly; the component applies it in an effect whenever selection lands on
+ * a node the docked Inspector would otherwise have swallowed. */
+export function revealPan(
+  view: { w: number; h: number },
+  pan: { x: number; y: number },
+  zoom: number,
+  rect: { x: number; y: number; w: number; h: number },
+  margin = REVEAL_MARGIN_PX,
+): { x: number; y: number } | null {
+  const x1 = pan.x + rect.x * zoom
+  const x2 = x1 + rect.w * zoom
+  const y1 = pan.y + rect.y * zoom
+  const y2 = y1 + rect.h * zoom
+  let dx = 0
+  let dy = 0
+  if (x2 > view.w - margin) dx = view.w - margin - x2
+  if (x1 + dx < margin) dx = margin - x1
+  if (y2 > view.h - margin) dy = view.h - margin - y2
+  if (y1 + dy < margin) dy = margin - y1
+  if (dx === 0 && dy === 0) return null
+  return { x: pan.x + dx, y: pan.y + dy }
+}
 
 /** True when two connections refer to the same edge (all four endpoints equal). */
 function sameConnection(a: Connection | null | undefined, b: Connection): boolean {
@@ -64,6 +101,11 @@ export function IpcCanvas(props: {
   onPortRowClick?: (nodeId: string, port: Port) => void
   onSelectEdge?: (conn: Connection) => void
   selectedEdge?: Connection | null
+  /** UX round 4: a clean click (pointer travelled ≤ CLICK_SLOP_PX) on the
+   * canvas BACKGROUND — not on a node, edge, port or control. The caller
+   * deselects, which is what closes the docked Inspector without hunting for
+   * the (possibly now-covered) node that opened it. */
+  onBackgroundClick?: () => void
   onDropType?: (type: string) => void
   /** Expression-dock drop target (Task 14): a `text/etl-formula` payload
    * dropped anywhere on the canvas routes through the SAME handler the
@@ -80,6 +122,7 @@ export function IpcCanvas(props: {
   const {
     nodes, connections, selectedNode, onSelectNode, offsets,
     onMoveNode, onAutoLayout, onPortClick, onPortRowClick, onSelectEdge, selectedEdge, onDropType, onDropFormula, nodeStatus,
+    onBackgroundClick,
   } = props
 
   const [pan, setPan] = useState({ x: 30, y: 30 })
@@ -87,6 +130,10 @@ export function IpcCanvas(props: {
   const panDragging = useRef(false)
   const lastPan = useRef({ x: 0, y: 0 })
   const nodeDrag = useRef<NodeDrag | null>(null)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  // Where the current gesture pressed down (client space) — lets the click
+  // handler below tell a background CLICK from the click event a pan emits.
+  const downPos = useRef<{ x: number; y: number } | null>(null)
 
   const compact = zoom < 0.65
 
@@ -112,6 +159,10 @@ export function IpcCanvas(props: {
   }, [])
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
+    // Recorded for EVERY press (before any guard): the click-vs-pan test in
+    // handleBackgroundClick below needs the press position even when this
+    // handler goes on to bail out of starting a pan.
+    downPos.current = { x: e.clientX, y: e.clientY }
     // Guard: a node drag already claimed this gesture (its own onPointerDown
     // ran first, during the same bubble phase) — pan must not also start.
     if (nodeDrag.current) return
@@ -119,6 +170,48 @@ export function IpcCanvas(props: {
     panDragging.current = true
     lastPan.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
   }, [pan])
+
+  // UX round 4: a clean background click deselects (the caller closes the
+  // Inspector). Exclusions, in order: anything inside a node's WRAPPER `<g>`
+  // (structural, by data-testid — live-browser finding: the second click of a
+  // double-click retargets to that wrapper, whose only inline style is
+  // `touch-action: none`, so a cursor-substring check missed it and the
+  // handler closed the panel the first click had just opened), anything
+  // interactive by its own inline cursor (edge hit `<path>`s — their handlers
+  // stopPropagation anyway, this is belt-and-braces), the HTML controls
+  // overlaying the canvas (zoom/auto-layout buttons), and any gesture that
+  // travelled beyond the click slop (a pan's release click).
+  const handleBackgroundClick = useCallback((e: React.MouseEvent) => {
+    if (!onBackgroundClick) return
+    const target = e.target as Element
+    if (target.closest('[data-testid^="ipc-node-"], g[style*="pointer"], path[style*="pointer"], button')) return
+    const d = downPos.current
+    if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) > CLICK_SLOP_PX) return
+    onBackgroundClick()
+  }, [onBackgroundClick])
+
+  // Reveal-on-select (UX round 4): when selection lands on a node that sits
+  // (partly) outside the visible viewport — typically because the docked
+  // Inspector just claimed the right third of it — pan the minimal distance
+  // that brings the node back inside. Keyed on the selected id ONLY: pans and
+  // zooms the operator makes while a node stays selected are their own.
+  useEffect(() => {
+    if (!selectedNode) return
+    const el = rootRef.current
+    if (!el || el.clientWidth === 0) return // jsdom / not laid out yet
+    const n = nodes.find(node => node.id === selectedNode)
+    if (!n) return
+    const off = offsets[n.id]
+    const rect = {
+      x: n.x + (off?.x ?? 0),
+      y: n.y + (off?.y ?? 0),
+      w: NODE_WIDTH,
+      h: getNodeHeight(n, zoom < 0.65),
+    }
+    const next = revealPan({ w: el.clientWidth, h: el.clientHeight }, pan, zoom, rect)
+    if (next) setPan(next)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode])
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (nodeDrag.current) {
@@ -153,9 +246,11 @@ export function IpcCanvas(props: {
 
   return (
     <div
+      ref={rootRef}
       data-testid="ipc-canvas-root"
       style={{ flex: 1, background: 'var(--bg)', position: 'relative', overflow: 'hidden', cursor: 'grab' }}
       onWheel={onWheel}
+      onClick={handleBackgroundClick}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -249,6 +344,7 @@ export function IpcCanvas(props: {
                 compact={compact}
                 onPortClick={onPortClick}
                 onPortRowClick={onPortRowClick}
+                hoverHighlight
               />
               {status && (
                 <circle

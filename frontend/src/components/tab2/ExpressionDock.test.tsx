@@ -182,3 +182,25 @@ describe('ExpressionDock (Task 1 — clamp and cap)', () => {
     expect(screen.queryByText(/showing/i)).not.toBeInTheDocument()
   })
 })
+
+// ─── UX round 4: pane-level collapse ─────────────────────────────────────────
+//
+// The dock is a fixed 260px column that the canvas can never reclaim. Round 4
+// adds a pane-level collapse (distinct from the per-formula clamp toggle): the
+// header chevron shrinks the dock to a slim strip whose single affordance
+// expands it back. State is local — the dock always mounts expanded.
+
+describe('ExpressionDock — pane collapse (UX round 4)', () => {
+  it('collapses to a strip without the filter/list, then expands back', () => {
+    renderDock()
+    expect(screen.getByPlaceholderText('Filter expressions…')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse expressions' }))
+    expect(screen.queryByPlaceholderText('Filter expressions…')).not.toBeInTheDocument()
+    expect(screen.queryByText('ODS_SYN_ORDERS.AMOUNT')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand expressions' }))
+    expect(screen.getByPlaceholderText('Filter expressions…')).toBeInTheDocument()
+    expect(screen.getByText('ODS_SYN_ORDERS.AMOUNT')).toBeInTheDocument()
+  })
+})
