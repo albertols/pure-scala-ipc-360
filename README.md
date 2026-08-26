@@ -17,7 +17,8 @@ standalone tool, unchanged in behavior.
 - **JDK 17+** — no JDK is preinstalled on a bare machine; install a distribution such as
   [Eclipse Temurin](https://adoptium.net/) if `java -version` doesn't already report 17+.
 - **Maven 3.9+**
-- **Node 20+**
+- **Node 22+** — 22.6+ if you run `make validate-loop`, whose sweep scripts use
+  `node --experimental-strip-types`.
 - **pnpm 9+**
 
 The frontend also expects `frontend/.figma/make/site.json` to exist — it's a committed
@@ -110,11 +111,21 @@ Each data root can be in one of a few modes, reported by `GET /api/config` and
 
 ## Run the 360 suite on your own data
 
+**Full setup guide: [`HOW_TO_RUN_ON_YOUR_DATA.md`](HOW_TO_RUN_ON_YOUR_DATA.md)** — the
+single source of truth for pointing this app at your own IPC exports: prerequisites
+(including corp-network specifics), the exact layout each data root must have,
+generating recipes from raw XML, verifying you are on real data rather than the
+synthetic fallback, and a troubleshooting table. Keep it updated when any of those
+change; it lists its own source-of-truth files per section.
+
+The short version:
+
 ```bash
 git pull
 cp config.example.json config.json   # git-ignored — yours to edit
 $EDITOR config.json                  # point the 4 data fields at your exports
-make dev                             # resolved config echoes at [1/4]; dry-run: bash scripts/dev.sh --check-config
+bash scripts/dev.sh --check-config   # dry run: resolved paths + real/mock mode per root
+make dev                             # the same table echoes at [1/4]
 ```
 
 `config.json` is **optional** — with no file at all, `make dev` boots on the committed
@@ -123,39 +134,23 @@ layering in `docs/adr/0009-config-json-entrypoint.md`):
 
 | Field | Feeds | Expected layout |
 |---|---|---|
-| `xmltobqPath` | `ETL360_CORPUS_ROOT` | IPC XML corpus, see tree below |
-| `composerRoot` | `ETL360_COMPOSER_ROOT` | b15 CSV history, see tree below |
-| `dwhControlRoot` | `ETL360_DWH_CONTROL_ROOT` | `LAYER_TO_LAYER/` statements, see below |
+| `xmltobqPath` | `ETL360_CORPUS_ROOT` | IPC XML corpus + parser output next to it |
+| `composerRoot` | `ETL360_COMPOSER_ROOT` | b15 CSV history |
+| `dwhControlRoot` | `ETL360_DWH_CONTROL_ROOT` | `LAYER_TO_LAYER/` statements |
 | `gcpProjectId` | `ETL360_GCP_PROJECT` | project id for Dataproc/Logging deep links |
 | `javaHome` | `JAVA_HOME` | JDK 17+ home (e.g. an IDE-bundled JBR) |
-| `nodeBin` | `PATH` | a Node ≥ 22.6 `bin/` directory |
+| `nodeBin` | `PATH` | a Node 22+ `bin/` directory |
 
-Expected layouts (layers: `STG ODS DWH CDM RDM QDM ETL OUTPUT`):
+A data root that is missing — or present but not carrying the substructure its reader
+needs — falls back to the committed synthetic mock tier **silently**, so check
+`dwhControlMode`/`composerMode` in `GET /api/health` before trusting what you see.
+Note the inverse, too: pointing `composerRoot`/`dwhControlRoot` at the committed mock
+dirs serves the same data but reports mode `real` — an explicitly configured directory
+wins the real tier.
 
-```
-<xmltobqPath>/<LAYER>/m_NAME.xml          # IPC Powermart export
-<xmltobqPath>/<LAYER>/m_NAME/             # parser output, next to the XML
-    _ETL_m_NAME.json                      #   recipe
-    <TABLE>.json                          #   BigQuery DDL per table
-
-<composerRoot>/dwh/config/cluster_tuning/inputs/<YYYY_MM_DD>/
-    b15_application_end_with_recipe_null_status.csv
-    # columns: cluster_name,recipe_filename,job_id,app_start_iso,
-    #          avg_job_duration_in_mins_sec,status,message
-
-<dwhControlRoot>/LAYER_TO_LAYER/<LAYER>/statements.sql
-    # rows: INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES
-    #   ('DWH','src/...','_ETL_m_X.json','wf_X','TARGET_TABLE',3,
-    #    [STRUCT('SRC_TABLE', true, 0)], ['LKP_X'],
-    #    [STRUCT('TARGET_TABLE','TRUNCATE_INSERT')],
-    #    [STRUCT('TARGET_TABLE','DAILY','LOAD_DATE','UNKNOWN_SUBPARTITION')])
-```
-
-Note: pointing `composerRoot`/`dwhControlRoot` at the committed mock dirs serves the
-same data but reports mode `real` in `/api/config` — an explicitly configured
-directory wins the real tier. Diagrams (architecture, per-tab data flow, config
-resolution): `docs/visual-guide.md` — screenshots are pending a short human capture
-pass, tracked as a checklist in that same doc.
+Diagrams (architecture, per-tab data flow, config resolution): `docs/visual-guide.md` —
+screenshots are pending a short human capture pass, tracked as a checklist in that same
+doc.
 
 ## Synthetic operational data & the b15 generator
 
@@ -196,6 +191,7 @@ python3 scripts/gen_b15_history.py --anchor 2026-08-05 --days 21
 │   ├── regen_corpus.sh        # regenerate corpus into a temp dir, diff vs committed
 │   ├── validate_loop.sh       # frontend→middleware→backend gate over the mock operational data
 │   └── gen_b15_history.py     # deterministic b15 job-history CSV generator
+├── HOW_TO_RUN_ON_YOUR_DATA.md   # setup guide for running on your own IPC exports
 ├── config.example.json          # template for config.json (git-ignored — copy it, don't edit the template)
 ├── .env.example                # ETL360_* env var reference
 ├── pom.xml                     # parent Maven aggregator (parser, backend)

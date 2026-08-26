@@ -214,6 +214,13 @@ checklist): `docs/visual-guide.md`.
 
 ## More
 
+- Running the suite on someone else's data (own IPC exports, corp laptops):
+  root `HOW_TO_RUN_ON_YOUR_DATA.md` — the single source of truth for config fields,
+  the layout each data root must have, the parser run that produces recipes, and the
+  real/mock verification step. **Keep it current**: it ends with a per-section table of
+  the files its claims derive from (`DataRoots`, `CorpusService`, `OperationalService`,
+  `LayerToLayerService`, `Etl360Properties`, `scripts/dev.sh`, `XMLParser.scala`,
+  `frontend/vite.config.ts`) — change one of those and update the doc in the same commit.
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
 - Design rationale: `docs/adr/0001`–`0012`
 - `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,

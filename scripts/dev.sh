@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ETL 360 dev boot: resolve config (config.json / .env / environment / auto-detect),
 # build backend, boot backend + frontend. `--check-config` prints the resolution
-# table and exits. Layering: ADR-0009. HOW-TO: README "Run the 360 suite on your own data".
+# table and exits. Layering: ADR-0009. HOW-TO: HOW_TO_RUN_ON_YOUR_DATA.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
