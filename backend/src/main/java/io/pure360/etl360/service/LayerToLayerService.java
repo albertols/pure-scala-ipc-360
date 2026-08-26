@@ -2,6 +2,7 @@ package io.pure360.etl360.service;
 
 import io.pure360.etl360.api.dto.LayerToLayerEntryDto;
 import io.pure360.etl360.config.DataRoots;
+import io.pure360.etl360.config.Etl360Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,15 +15,22 @@ import java.util.*;
 @Service
 public class LayerToLayerService {
     private static final Logger log = LoggerFactory.getLogger(LayerToLayerService.class);
-    static final List<String> LAYER_DIRS = List.of("STG", "ODS", "DWH", "CDM", "RDM", "QDM", "ETL", "OUTPUT");
-    private static final String ANCHOR = "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES";
-
     private final DataRoots roots;
+    private final Etl360Properties.LayerToLayer vocabulary;
     private List<LayerToLayerEntryDto> entries;
     private int skipped;
     private long cachedMtime = -1;
 
-    public LayerToLayerService(DataRoots roots) { this.roots = roots; }
+    public LayerToLayerService(DataRoots roots, Etl360Properties props) {
+        this.roots = roots;
+        this.vocabulary = props.layerToLayer();
+    }
+
+    /** The layer directory names scanned under {@code LAYER_TO_LAYER/}, in scan order. */
+    public List<String> layerDirs() { return vocabulary.layerDirs(); }
+
+    /** The {@code INSERT INTO <table> VALUES} literal statements are anchored on. */
+    public String anchor() { return vocabulary.anchor(); }
 
     public synchronized List<LayerToLayerEntryDto> entries() { load(); return entries; }
     public synchronized int skippedRows() { load(); return skipped; }
@@ -31,15 +39,15 @@ public class LayerToLayerService {
         Optional<Path> dwh = roots.dwhControl();
         if (dwh.isEmpty()) { entries = List.of(); skipped = 0; return; }
         Path base = dwh.get().resolve("LAYER_TO_LAYER");
-        long newest = LAYER_DIRS.stream().map(d -> base.resolve(d).resolve("statements.sql"))
+        long newest = layerDirs().stream().map(d -> base.resolve(d).resolve("statements.sql"))
             .filter(Files::isRegularFile).mapToLong(this::mtime).max().orElse(0);
         if (entries != null && newest == cachedMtime) return;
         List<LayerToLayerEntryDto> out = new ArrayList<>();
         int bad = 0;
-        for (String dir : LAYER_DIRS) {
+        for (String dir : layerDirs()) {
             Path f = base.resolve(dir).resolve("statements.sql");
             if (!Files.isRegularFile(f)) continue;
-            for (String stmt : statements(read(f))) {
+            for (String stmt : statements(read(f), anchor())) {
                 try { out.add(parseRow(stmt)); }
                 catch (RuntimeException e) { bad++; log.warn("Skipping malformed LayerToLayer row in {}: {}", f, e.getMessage()); }
             }
@@ -48,11 +56,11 @@ public class LayerToLayerService {
     }
 
     /** Extract the parenthesized VALUES(...) body of each anchored statement (balanced parens, quote-aware). */
-    static List<String> statements(String content) {
+    static List<String> statements(String content, String anchor) {
         List<String> result = new ArrayList<>();
         int idx = 0;
-        while ((idx = content.indexOf(ANCHOR, idx)) >= 0) {
-            int open = content.indexOf('(', idx + ANCHOR.length());
+        while ((idx = content.indexOf(anchor, idx)) >= 0) {
+            int open = content.indexOf('(', idx + anchor.length());
             if (open < 0) break;
             int depth = 0; boolean inStr = false; int i = open;
             for (; i < content.length(); i++) {

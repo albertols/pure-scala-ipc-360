@@ -17,7 +17,7 @@ class RelationshipServiceTest {
         var props = new Etl360Properties("unused", mockRoot.resolve("DWH_CONTROL").toString(),
             mockRoot.toString(), "unused-composer",
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
-        LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props));
+        LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props), props);
         CorpusService corpus = new CorpusService(corpusRoot);
         return new RelationshipService(l2l, corpus);
     }
@@ -126,7 +126,7 @@ class RelationshipServiceTest {
         var props = new Etl360Properties("unused", dir.getParent().getParent().toString(),
             tmp.resolve("unused-mock").toString(), "unused-composer",
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
-        LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props));
+        LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props), props);
         CorpusService emptyCorpus = new CorpusService(Files.createDirectories(tmp.resolve("empty-corpus")));
         RelationshipService svc = new RelationshipService(l2l, emptyCorpus);
 
@@ -169,7 +169,7 @@ class RelationshipServiceTest {
         var props = new Etl360Properties("unused", tmp.resolve("DWH_CONTROL").toString(),
             tmp.resolve("unused-mock").toString(), "unused-composer",
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
-        LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props));
+        LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props), props);
         CorpusService emptyCorpus = new CorpusService(Files.createDirectories(tmp.resolve("empty-corpus")));
         RelationshipService svc = new RelationshipService(l2l, emptyCorpus);
 
