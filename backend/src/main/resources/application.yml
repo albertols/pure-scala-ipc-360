@@ -6,6 +6,13 @@ etl360:
   dwh-control-root: ${ETL360_DWH_CONTROL_ROOT:parser/src/main/resources/DWH_CONTROL}
   mock-root: ${ETL360_MOCK_ROOT:backend/src/main/resources/mock}
   composer-root: ${ETL360_COMPOSER_ROOT:parser/src/main/resources/composer}
+  # Control-schema vocabulary. Both defaults are ANONYMIZED sample values matching this repo's
+  # corpus, NOT IPC vocabulary — a real export names its own control table and may use its own
+  # layer directory names. A mismatch in either does not error; it parses to zero rows and Tab 3
+  # renders an empty graph, which is what GET /api/diagnostics exists to explain.
+  layer-to-layer:
+    anchor-table: ${ETL360_L2L_TABLE:CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG}
+    layer-dirs: ${ETL360_L2L_LAYER_DIRS:STG,ODS,DWH,CDM,RDM,QDM,ETL,OUTPUT}
   gcp:
     project-id: ${ETL360_GCP_PROJECT:db-dev-example-project}
     region: ${ETL360_GCP_REGION:europe-southwest1}

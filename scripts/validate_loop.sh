@@ -27,6 +27,23 @@ H=$(curl -sf localhost:8080/api/health) || fail "health"
 echo "$H" | grep -Eq '"dwhControlMode":"(real|mock)"' || fail "dwhControlMode absent"
 echo "$H" | grep -Eq '"composerMode":"(real|mock)"' || fail "composerMode absent"
 curl -sf localhost:8080/api/relationships | grep -q '"nodes"' || fail "relationships"
+# The relationships graph coming back EMPTY is a silent failure — /api/diagnostics is the only
+# thing that says which of the four skip paths caused it, so gate on the report AND print it.
+# On the committed mock tier every root resolves, so anything but ok is a real regression;
+# a developer machine carrying a real DWH_CONTROL/composer resolves ok too.
+DIAG=$(curl -sf localhost:8080/api/diagnostics) || fail "diagnostics"
+echo "$DIAG" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+c = d["dwhControl"]; s = c["scan"]
+print(f"[validate-loop] data roots: corpus={d["corpus"]["status"]} "
+      f"dwhControl={c["status"]}(tier {c["tier"]}, rows {s["rowsParsed"]}) "
+      f"composer={d["composer"]["status"]}(tier {d["composer"]["tier"]})")
+for section in (d["corpus"], c, d["composer"]):
+    if section["status"] != "ok":
+        print(f"[validate-loop]   hint: {section["hint"]}")
+sys.exit(0 if d["status"] == "ok" else 1)
+' || fail "diagnostics reports a KO data root (see hint above)"
 DATES=$(curl -sf localhost:8080/api/operational/dates) || fail "dates"
 echo "$DATES" | grep -q '2026-07-29' || fail "anchor date missing"
 curl -sf localhost:8080/api/operational/2026-07-29 | grep -q '"rows"' || fail "snapshot"

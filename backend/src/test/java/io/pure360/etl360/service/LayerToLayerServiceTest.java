@@ -17,7 +17,7 @@ class LayerToLayerServiceTest {
         var props = new Etl360Properties("unused", mockRoot.resolve("DWH_CONTROL").toString(),
             mockRoot.toString(), "unused-composer",
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
-        return new LayerToLayerService(new DataRoots(props));
+        return new LayerToLayerService(new DataRoots(props), props);
     }
 
     /** Wires a LayerToLayerService against a scratch DWH_CONTROL/LAYER_TO_LAYER/ODS/statements.sql
@@ -27,7 +27,18 @@ class LayerToLayerServiceTest {
         var props = new Etl360Properties("unused", dwhControlDir.toString(),
             dwhControlDir.resolve("unused-mock").toString(), "unused-composer",
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
-        return new LayerToLayerService(new DataRoots(props));
+        return new LayerToLayerService(new DataRoots(props), props);
+    }
+
+    /** Same as {@link #serviceOver(Path)} but with a non-default control-schema vocabulary —
+     * the corp-export case where the INSERT target table and/or the layer directory names
+     * differ from this repo's anonymized defaults. */
+    private LayerToLayerService serviceOver(Path dwhControlDir, String anchorTable, List<String> layerDirs) {
+        var props = new Etl360Properties("unused", dwhControlDir.toString(),
+            dwhControlDir.resolve("unused-mock").toString(), "unused-composer",
+            new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"),
+            new Etl360Properties.LayerToLayer(anchorTable, layerDirs));
+        return new LayerToLayerService(new DataRoots(props), props);
     }
 
     @Test
@@ -86,7 +97,7 @@ class LayerToLayerServiceTest {
 
     @Test
     void archiveDirIsNotOneOfTheEightLayerDirsSoItsRowsAreIgnored() {
-        assertThat(LayerToLayerService.LAYER_DIRS).doesNotContain("ARCHIVE");
+        assertThat(Etl360Properties.LayerToLayer.DEFAULT_LAYER_DIRS).doesNotContain("ARCHIVE");
         LayerToLayerService s = service();
         assertThat(s.entries()).extracting(LayerToLayerEntryDto::layer).doesNotContain("ARCHIVE");
     }
@@ -95,7 +106,8 @@ class LayerToLayerServiceTest {
     void statementsExtractsBalancedParenBodiesOnly() {
         List<String> bodies = LayerToLayerService.statements(
             "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES ('ODS', 'd', 'r.json', 'wf', 't', 1, "
-                + "[STRUCT('A, B', true, 0)], [], [], [])");
+                + "[STRUCT('A, B', true, 0)], [], [], [])",
+            Etl360Properties.LayerToLayer.DEFAULTS.anchor());
         assertThat(bodies).hasSize(1);
         LayerToLayerEntryDto dto = LayerToLayerService.parseRow(bodies.get(0));
         assertThat(dto.sources().get(0).table()).isEqualTo("A, B");
@@ -137,5 +149,45 @@ class LayerToLayerServiceTest {
         assertThat(s.entries()).hasSize(1);
         assertThat(s.entries().get(0).recipe()).isEqualTo("r2.json");
         assertThat(s.skippedRows()).isEqualTo(1);
+    }
+
+    // --- Configurable control-schema vocabulary. This repo's defaults
+    // (CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG, the eight layer dirs) are ANONYMIZED sample
+    // values; a real corp export names its own control table and may use its own layer dir
+    // names. Both used to be `static final`, so such an export parsed to zero rows with no
+    // warning and Tab 3 rendered an empty graph. ---
+
+    @Test
+    void configuredAnchorTableIsUsedInsteadOfTheDefault(@TempDir Path tmp) throws Exception {
+        Path dir = Files.createDirectories(tmp.resolve("DWH_CONTROL/LAYER_TO_LAYER/ODS"));
+        Files.writeString(dir.resolve("statements.sql"),
+            "INSERT INTO CTL.CORP_L2L_CONFIG VALUES ('ODS', 'd', 'r.json', 'wf', 't', 1, [], [], [], [])");
+
+        LayerToLayerService s = serviceOver(dir.getParent().getParent(),
+            "CTL.CORP_L2L_CONFIG", Etl360Properties.LayerToLayer.DEFAULT_LAYER_DIRS);
+
+        assertThat(s.entries()).hasSize(1);
+        assertThat(s.entries().get(0).recipe()).isEqualTo("r.json");
+    }
+
+    @Test
+    void configuredLayerDirsAreUsedInsteadOfTheDefaultEight(@TempDir Path tmp) throws Exception {
+        Path dir = Files.createDirectories(tmp.resolve("DWH_CONTROL/LAYER_TO_LAYER/RAW"));
+        Files.writeString(dir.resolve("statements.sql"),
+            "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES ('RAW', 'd', 'r.json', 'wf', 't', 1, [], [], [], [])");
+
+        LayerToLayerService s = serviceOver(dir.getParent().getParent(),
+            Etl360Properties.LayerToLayer.DEFAULT_ANCHOR_TABLE, List.of("RAW"));
+
+        assertThat(s.entries()).hasSize(1);
+        assertThat(s.entries().get(0).layer()).isEqualTo("RAW");
+    }
+
+    @Test
+    void defaultVocabularyIsThisReposAnonymizedControlTableAndEightLayerDirs() {
+        assertThat(Etl360Properties.LayerToLayer.DEFAULT_ANCHOR_TABLE)
+            .isEqualTo("CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG");
+        assertThat(Etl360Properties.LayerToLayer.DEFAULT_LAYER_DIRS)
+            .containsExactly("STG", "ODS", "DWH", "CDM", "RDM", "QDM", "ETL", "OUTPUT");
     }
 }

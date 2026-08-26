@@ -26,9 +26,9 @@ import java.util.Optional;
 @Component
 public class DataRoots {
     /** The subdirectory LayerToLayerService needs; a DWH_CONTROL root without it is unusable. */
-    static final String LAYER_TO_LAYER = "LAYER_TO_LAYER";
+    public static final String LAYER_TO_LAYER = "LAYER_TO_LAYER";
     /** The chain OperationalService walks for b15 CSVs; a composer root without it is unusable. */
-    static final String COMPOSER_INPUTS = "dwh/config/cluster_tuning/inputs";
+    public static final String COMPOSER_INPUTS = "dwh/config/cluster_tuning/inputs";
 
     private final Etl360Properties props;
 

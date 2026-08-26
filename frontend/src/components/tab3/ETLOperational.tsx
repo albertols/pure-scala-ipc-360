@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import type { OperationalCard as CardData } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useRelationships, useOperationalSummary, useOperationalDates, useOperational, useAppConfig } from '../../api/queries'
+import { useRelationships, useOperationalSummary, useOperationalDates, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
 import type { RelationshipGraph } from '../../api/queries'
 import { toOperationalGraph, summarizeSnapshot, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { OperationalCard } from '../shared/OperationalCard'
@@ -11,6 +11,7 @@ import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
 import { LoadingState } from '../shared/Spinner'
 import { PreviewOverlay } from './PreviewOverlay'
+import { DataRootsPanel, DataRootsChip } from './DataRootsPanel'
 
 type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
 
@@ -260,6 +261,10 @@ export function ETLOperational() {
   const summary = useOperationalSummary()
   const dates = useOperationalDates()
   const cfg = useAppConfig()
+  // Data-root self-diagnosis: rendered as a toolbar chip always, and expanded into the
+  // full report in the empty state — where it is the only thing standing between the
+  // operator and a blank canvas with no stated cause.
+  const diagnostics = useDiagnostics()
   // Task 16: the raw b15 rows for `selectedDate` — distinct from `summary`
   // above (the all-time per-recipe aggregate `useOperationalSummary()`
   // already loads), needed for the floating chip's exact row count/OK-KO
@@ -328,8 +333,15 @@ export function ETLOperational() {
     )
   }
 
+  // An empty graph is never self-explanatory: a mis-pointed data root, an unreadable control
+  // schema and a genuinely empty corpus all land here. The report says which one it is.
   if (!view || view.cards.length === 0) {
-    return <div style={{ color: 'var(--text-dim)', fontSize: 12, padding: 16 }}>No relationship entries</div>
+    return (
+      <div style={{ padding: 16 }}>
+        <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No relationship entries</div>
+        <DataRootsPanel diagnostics={diagnostics.data} />
+      </div>
+    )
   }
 
   const cards = view.cards.filter(c => {
@@ -403,6 +415,7 @@ export function ETLOperational() {
           colors={{ OK: '#34d399', KO: '#f87171', PENDING: '#4a5570' }} />
 
         <div style={{ flex: 1 }} />
+        <DataRootsChip diagnostics={diagnostics.data} />
         <StatusSummary cards={view.cards} />
 
         {/* zoom */}

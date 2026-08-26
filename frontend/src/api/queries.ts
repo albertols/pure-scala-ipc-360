@@ -74,6 +74,14 @@ export const useOperational = (date: string) =>
 export const useOperationalSummary = () =>
   useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS })
 
+// Data-root self-diagnosis (GET /api/diagnostics): where each root resolved, which
+// tier served it, and — for the control schema — the staged scan counts that say WHICH
+// step produced zero rows. Consumed by Tab 3's chip + empty-state panel.
+export type Diagnostics = components['schemas']['DiagnosticsDto']
+
+export const useDiagnostics = () =>
+  useQuery({ queryKey: ['diagnostics'], queryFn: () => apiGet<Diagnostics>('/diagnostics'), staleTime: STALE_MS })
+
 export type IpcRules = components['schemas']['IpcRulesDto']
 export type IpcRuleMeta = components['schemas']['IpcRuleMetaDto']
 export type IpcKeySpec = components['schemas']['IpcKeySpecDto']

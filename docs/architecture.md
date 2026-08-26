@@ -90,6 +90,7 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 | `GET /api/operational/summary` | Cross-date rollup (`OperationalSummaryDto { dates, recipes[] }`): per-recipe `layer` (`UNKNOWN` if absent from L2L), 14-entry `history`, `okCount`/`koCount`, nearest-rank `avg`/`p50`/`p95DurationMin`, `lastJobId`/`lastClusterName` — computed in `OperationalService`, joined to `LayerToLayerService` by `recipe_filename` |
 | `GET /api/config` | Sanitized runtime config: GCP project/region, Dataproc/Logging URL templates, `dwhControlMode`/`composerMode` |
 | `GET /api/health` | Liveness + corpus stats: XML/recipe counts, corpus root, `dwhControlMode`, `composerMode` |
+| `GET /api/diagnostics` | Data-root self-diagnosis (`docs/adr/0013-data-root-diagnostics.md`): per root the configured value, the resolved absolute path, which tier won and why the other lost. For the control schema it re-walks `LAYER_TO_LAYER/` recording **staged** counts — `presentDirs` → `filesRead` → `anchorHits` → `rowsParsed` — so the first zero identifies the failing step, plus `insertTargetsFound[]` (the `INSERT INTO <table>` identifiers actually in the files) and a one-sentence `hint`. Tab 3 renders it as an always-on tier chip and expands it under an empty graph |
 
 Tab 1 (IPC ETL Viewer) is the first frontend consumer of the mapping endpoints: the
 canvas renders from `/api/mappings/model/{*path}` (via `mappingAdapter.ts`'s

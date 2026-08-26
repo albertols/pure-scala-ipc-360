@@ -132,8 +132,39 @@ const IPC_RULES = {
   keySchema: {},
 }
 
+// Healthy report: everything resolved, control schema served by the mock tier.
+const DIAGNOSTICS = {
+  status: 'ok',
+  corpus: {
+    name: 'corpus', configured: 'parser/src/main/resources/xmltobq',
+    resolved: '/repo/parser/src/main/resources/xmltobq', exists: true,
+    tier: 'real', status: 'ok', hint: '', counts: { xml: 81, recipes: 86 },
+  },
+  dwhControl: {
+    configured: 'parser/src/main/resources/DWH_CONTROL',
+    resolvedReal: '/repo/parser/src/main/resources/DWH_CONTROL', realExists: false,
+    requiredChild: 'LAYER_TO_LAYER', realUsable: false,
+    mockPath: '/repo/backend/src/main/resources/mock/DWH_CONTROL', mockUsable: true,
+    tier: 'mock', status: 'ok', hint: '',
+    scan: {
+      anchorTable: 'CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG',
+      anchor: 'INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES',
+      expectedLayerDirs: ['STG'], presentDirs: ['STG'], unexpectedDirs: [],
+      filesRead: 1, anchorHits: 33, rowsParsed: 33, rowsSkipped: 0,
+      files: [], insertTargetsFound: [],
+    },
+  },
+  composer: {
+    name: 'composer', configured: 'parser/src/main/resources/composer',
+    resolved: '/repo/parser/src/main/resources/composer', exists: false,
+    requiredChild: 'dwh/config/cluster_tuning/inputs',
+    tier: 'mock', status: 'ok', hint: '', counts: { dates: 14 },
+  },
+}
+
 const server = setupServer(
   http.get('/api/relationships', () => HttpResponse.json(GRAPH)),
+  http.get('/api/diagnostics', () => HttpResponse.json(DIAGNOSTICS)),
   http.get('/api/operational/summary', () => HttpResponse.json(SUMMARY)),
   http.get('/api/operational/dates', () => HttpResponse.json(DATES)),
   http.get('/api/operational/2026-07-29', () => HttpResponse.json({ date: '2026-07-29', rows: ROWS_29 })),
@@ -380,5 +411,46 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
 
     expect(await screen.findByText('0 OK')).toBeInTheDocument()
     expect(screen.getByText('1 KO')).toBeInTheDocument()
+  })
+})
+
+/**
+ * The empty canvas is the symptom this whole surface exists for: with a correctly-configured
+ * root and a control schema the scan cannot read, Tab 3 used to say "No relationship entries"
+ * and stop — indistinguishable from a genuinely empty corpus.
+ */
+describe('ETLOperational — data-root diagnostics', () => {
+  it('explains an empty graph with the resolved paths and the actionable hint', async () => {
+    server.use(
+      http.get('/api/relationships', () => HttpResponse.json({
+        nodes: [], edges: [], meta: { entryCount: 0, skippedRows: 0, layers: [] },
+      })),
+      http.get('/api/diagnostics', () => HttpResponse.json({
+        ...DIAGNOSTICS,
+        status: 'ko',
+        dwhControl: {
+          ...DIAGNOSTICS.dwhControl,
+          resolvedReal: '/corp/exports/DWH_CONTROL', realExists: true, realUsable: true,
+          tier: 'real', status: 'ko',
+          hint: 'The files INSERT INTO: CTL.CORP_L2L_CONFIG (×412) — set layerToLayerTable in config.json.',
+          scan: { ...DIAGNOSTICS.dwhControl.scan, filesRead: 8, anchorHits: 0, rowsParsed: 0 },
+        },
+      })),
+    )
+    renderTab()
+
+    expect(await screen.findByText('No relationship entries')).toBeTruthy()
+    // The path actually read, so a wrong dwhControlRoot is visible without leaving the GUI.
+    expect(await screen.findByText('/corp/exports/DWH_CONTROL')).toBeTruthy()
+    expect(screen.getByText(/set layerToLayerTable in config\.json/)).toBeTruthy()
+    // ...and the step that produced the zero.
+    expect(screen.getByText('files read: 8')).toBeTruthy()
+    expect(screen.getByText('anchor hits: 0')).toBeTruthy()
+  })
+
+  it('shows the serving tier in the toolbar even when the graph renders fine', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(screen.getByText('data: mock')).toBeTruthy()
   })
 })
