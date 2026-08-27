@@ -89,6 +89,10 @@ public class B15Reader {
      * A digest of every b15 file's path, mtime and size — stable across calls when nothing on disk
      * changed, different the moment a file or a whole date directory appears, disappears or is
      * rewritten. Parses nothing.
+     *
+     * <p>A file that disappears between {@link #dayDirs()} listing it and the stat below (a real
+     * working directory, not a snapshot) is skipped rather than propagated: this runs on every
+     * cluster-index request now, so a rare race must not turn into a live 500.
      */
     public String fingerprint() {
         StringBuilder sb = new StringBuilder();
@@ -99,7 +103,7 @@ public class B15Reader {
                 sb.append(csv).append('|').append(a.lastModifiedTime().toMillis())
                   .append('|').append(a.size()).append('\n');
             } catch (IOException e) {
-                throw new UncheckedIOException(e);
+                // Raced away since dayDirs() listed it — skip, don't propagate.
             }
         }
         return sb.toString();

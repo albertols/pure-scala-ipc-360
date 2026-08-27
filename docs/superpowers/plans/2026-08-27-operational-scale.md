@@ -534,7 +534,7 @@ summary semantics are unchanged — only the I/O path moves."
 
 **Deliberate scope boundary:** this service resolves **no layers**. `layer` is an L2L fact, not a b15 one; resolving it here would drag `LayerToLayerService` into a class that is otherwise a pure function of the b15 files, and make it untestable without the control schema. Task 4's controller joins the layer in.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `backend/src/test/java/io/pure360/etl360/service/ClusterIndexServiceTest.java`:
 
@@ -681,7 +681,7 @@ class ClusterIndexServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ClusterIndexServiceTest
@@ -689,7 +689,7 @@ mvn -q -pl backend test -Dtest=ClusterIndexServiceTest
 
 Expected: FAIL — `cannot find symbol: class ClusterIndexService`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `backend/src/main/java/io/pure360/etl360/service/ClusterIndexService.java`:
 
@@ -846,7 +846,7 @@ public class ClusterIndexService {
 
 **Note on `Map.copyOf`:** it does not preserve iteration order. `byCluster` is consumed by key lookup and by Task 4's controller, which sorts explicitly before serializing — so ordering is asserted at the wire, not relied upon here.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 mvn -q -pl backend test -Dtest=ClusterIndexServiceTest
@@ -854,7 +854,7 @@ mvn -q -pl backend test -Dtest=ClusterIndexServiceTest
 
 Expected: PASS, 8 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/ClusterIndexService.java \

@@ -5,6 +5,7 @@ import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.config.Etl360Properties;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -80,5 +81,50 @@ class B15ReaderTest {
         writeCsv(tmp, "2026_07_19", "c,r.json,j,2026-07-19T01:00:00.000Z,1m 0sec,SUCCESS,\n");
 
         assertThat(reader.fingerprint()).isNotEqualTo(before);
+    }
+
+    @Test
+    void fingerprintSkipsAB15CsvThatVanishesBetweenListingAndStatInsteadOfThrowing(
+            @org.junit.jupiter.api.io.TempDir Path tmp) throws Exception {
+        Path csv = writeCsv(tmp, "2026_07_18", "c,r.json,j,2026-07-18T01:00:00.000Z,1m 0sec,SUCCESS,\n");
+        B15Reader reader = readerOver(tmp);
+        byte[] body = Files.readAllBytes(csv);
+        String before = reader.fingerprint();
+
+        // dayDirs() re-verifies the CSV is present before every fingerprint() call, so a plain
+        // delete-then-call never reaches the race: it just gets filtered out cleanly. Force the
+        // actual TOCTOU window — the CSV vanishing *between* dayDirs()'s listing check and
+        // fingerprint()'s own stat, inside the same call — with a background thread that keeps
+        // deleting and recreating the file while the foreground hammers fingerprint().
+        java.util.concurrent.atomic.AtomicBoolean stop = new java.util.concurrent.atomic.AtomicBoolean(false);
+        java.util.concurrent.atomic.AtomicReference<Throwable> failure = new java.util.concurrent.atomic.AtomicReference<>();
+        Thread flapper = new Thread(() -> {
+            while (!stop.get()) {
+                try {
+                    Files.deleteIfExists(csv);
+                    Files.write(csv, body);
+                } catch (IOException ignored) {
+                    // benign: the foreground may be mid-stat while we're mid-write
+                }
+            }
+        });
+        flapper.start();
+        try {
+            for (int i = 0; i < 20_000 && failure.get() == null; i++) {
+                try {
+                    reader.fingerprint();
+                } catch (Throwable t) {
+                    failure.set(t);
+                }
+            }
+        } finally {
+            stop.set(true);
+            flapper.join();
+        }
+
+        assertThat(failure.get()).as("fingerprint() must skip a raced-away file, not throw").isNull();
+        Files.deleteIfExists(csv);
+        Files.write(csv, body);
+        assertThat(reader.fingerprint()).isNotEqualTo(before).isNotBlank();
     }
 }
