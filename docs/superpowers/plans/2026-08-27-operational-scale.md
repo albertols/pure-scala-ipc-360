@@ -2406,7 +2406,7 @@ as jobId. Consumers are fixed in the next task."
 
 **Why:** cards cap history at 5 status cells with no date, job id or timestamp (`types.ts:122` is a bare `StatusType[]`), so no run can be picked and no link can be scoped to a chosen execution. The user asked for 10, selectable, with the unselected runs **still visible**, driving the links — and asked explicitly that Tab 3 and Tab 4 not carry two implementations of it (spec §6.4).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `frontend/src/components/shared/RunPicker.test.tsx`:
 
@@ -2515,7 +2515,7 @@ describe('RunPicker', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test RunPicker
@@ -2523,7 +2523,7 @@ cd frontend && pnpm test RunPicker
 
 Expected: FAIL — `Failed to resolve import "./RunPicker"`.
 
-- [ ] **Step 3: Write the component**
+- [x] **Step 3: Write the component**
 
 Create `frontend/src/components/shared/RunPicker.tsx`:
 
@@ -2670,7 +2670,7 @@ export function RunPicker({ runs, selectedDate, onSelect, accent = '#4f9cf9', li
 }
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 ```bash
 cd frontend && pnpm test RunPicker
@@ -2678,7 +2678,7 @@ cd frontend && pnpm test RunPicker
 
 Expected: PASS, 12 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/shared/RunPicker.tsx \
