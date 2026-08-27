@@ -6,7 +6,6 @@ import io.pure360.etl360.api.dto.OperationalSnapshotDto;
 import io.pure360.etl360.api.dto.OperationalSummaryDto;
 import io.pure360.etl360.api.dto.OperationalSummaryDto.HistoryEntryDto;
 import io.pure360.etl360.api.dto.OperationalSummaryDto.RecipeSummaryDto;
-import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.service.support.InvalidDateException;
 import io.pure360.etl360.service.support.NotFoundException;
 import org.springframework.stereotype.Service;
@@ -26,23 +25,21 @@ import java.util.regex.Pattern;
 
 /**
  * Reads dated b15 "application end" CSV snapshots from
- * {@code <composer>/dwh/config/cluster_tuning/inputs/<YYYY_MM_DD>/}. The composer root itself
- * is resolved through {@link DataRoots#composer()} (real/mock/absent fallback); when composer
- * is absent entirely, {@link #dates()} returns an empty list and {@link #snapshot(String)}
- * reports "Nearest available: none". Location and parsing of the b15 CSVs themselves are owned
- * by {@link B15Reader}; this service keeps snapshot/summary semantics.
+ * {@code <composer>/dwh/config/cluster_tuning/inputs/<YYYY_MM_DD>/}. Location of the composer
+ * root (real/mock/absent fallback) and parsing of the b15 CSVs themselves are owned by
+ * {@link B15Reader}; when composer is absent entirely, {@link #dates()} returns an empty list
+ * and {@link #snapshot(String)} reports "Nearest available: none". This service keeps
+ * snapshot/summary semantics.
  */
 @Service
 public class OperationalService {
     private static final Pattern DURATION = Pattern.compile("(\\d+)m\\s+(\\d+)sec");
     private static final String UNKNOWN_LAYER = "UNKNOWN";
 
-    private final DataRoots roots;
     private final LayerToLayerService layerToLayer;
     private final B15Reader b15;
 
-    public OperationalService(DataRoots roots, LayerToLayerService layerToLayer, B15Reader b15) {
-        this.roots = roots;
+    public OperationalService(LayerToLayerService layerToLayer, B15Reader b15) {
         this.layerToLayer = layerToLayer;
         this.b15 = b15;
     }
@@ -70,7 +67,7 @@ public class OperationalService {
 
     /**
      * Aggregates the full committed b15 history ({@link #dates()}, mode-aware via the same
-     * {@link DataRoots} resolution as everything else in this service) by recipe. History is one
+     * {@link B15Reader} resolution as everything else in this service) by recipe. History is one
      * entry per date the recipe appears, in ascending date order; {@code layer} is resolved from
      * the first {@link LayerToLayerService} entry matching the recipe filename, or {@code
      * "UNKNOWN"} when the recipe isn't configured there (e.g. b15 rows that predate/outrun L2L
