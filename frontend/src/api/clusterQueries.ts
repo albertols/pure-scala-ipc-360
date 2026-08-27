@@ -50,6 +50,13 @@ export const useScopedRelationships = (clusters: string[]) => {
 export interface RunsResult {
   byRecipe: Record<string, RunT[]>
   isLoading: boolean
+  /**
+   * True if ANY chunk failed. A failed chunk's recipes are simply absent from
+   * `byRecipe` (Object.assign only ever sees `.data`, never an error) — indistinguishable
+   * from "no runs" unless a caller checks this. Surviving chunks' recipes remain in
+   * `byRecipe`: partial data is still useful, it just must not be mistaken for complete data.
+   */
+  isError: boolean
 }
 
 /**
@@ -73,6 +80,7 @@ export function useRuns(recipes: string[], limit = 10): RunsResult {
     combine: results => ({
       byRecipe: Object.assign({}, ...results.map(r => r.data?.byRecipe ?? {})) as Record<string, RunT[]>,
       isLoading: results.some(r => r.isLoading),
+      isError: results.some(r => r.isError),
     }),
   })
 }

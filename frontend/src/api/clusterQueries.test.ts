@@ -5,9 +5,10 @@ import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import type { ReactNode } from 'react'
 import { createElement } from 'react'
-import { chunk, useRuns, useClusterIndex, MAX_RECIPES_PER_REQUEST } from './clusterQueries'
+import { chunk, useRuns, useClusterIndex, useScopedRelationships, MAX_RECIPES_PER_REQUEST } from './clusterQueries'
 
 const seenRecipeCounts: number[] = []
+const seenRelationshipUrls: string[] = []
 
 const server = setupServer(
   http.get('*/api/operational/clusters', () => HttpResponse.json({
@@ -32,10 +33,14 @@ const server = setupServer(
       ]])),
     })
   }),
+  http.get('*/api/relationships', ({ request }) => {
+    seenRelationshipUrls.push(request.url)
+    return HttpResponse.json({ nodes: [], edges: [], meta: {} })
+  }),
 )
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => { server.resetHandlers(); seenRecipeCounts.length = 0 })
+afterEach(() => { server.resetHandlers(); seenRecipeCounts.length = 0; seenRelationshipUrls.length = 0 })
 afterAll(() => server.close())
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -92,5 +97,68 @@ describe('useRuns', () => {
 
     expect(seenRecipeCounts).toEqual([])
     expect(result.current.byRecipe).toEqual({})
+  })
+
+  it('reports isError when one chunk fails, without losing the surviving chunk\'s data', async () => {
+    server.use(
+      http.get('*/api/operational/runs', ({ request }) => {
+        const recipes = new URL(request.url).searchParams.getAll('recipe')
+        seenRecipeCounts.push(recipes.length)
+        // The chunker always sends the leftover remainder (size 1 here) as its own
+        // request — fail exactly that one, so the other 200 recipes must survive.
+        if (recipes.length === 1) return new HttpResponse(null, { status: 500 })
+        return HttpResponse.json({
+          limit: 10,
+          byRecipe: Object.fromEntries(recipes.map(r => [r, [
+            { date: '2026-07-29', clusterName: 'cl-a', jobId: `job-${r}`,
+              appStartIso: '2026-07-29T04:52:00.000Z', durationMin: 1.5, status: 'SUCCESS', message: '' },
+          ]])),
+        })
+      }),
+    )
+
+    const many = Array.from({ length: MAX_RECIPES_PER_REQUEST + 1 }, (_, i) => `r${i}.json`)
+    const { result } = renderHook(() => useRuns(many), { wrapper })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.isError).toBe(true)
+    // The 200-recipe chunk succeeded and must still be present — partial data,
+    // not silently dropped alongside the failed chunk.
+    expect(Object.keys(result.current.byRecipe)).toHaveLength(MAX_RECIPES_PER_REQUEST)
+    expect(result.current.byRecipe['r0.json']).toHaveLength(1)
+  })
+})
+
+describe('useScopedRelationships', () => {
+  it('fetches nothing for an empty cluster list', async () => {
+    const { result } = renderHook(() => useScopedRelationships([]), { wrapper })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(seenRelationshipUrls).toEqual([])
+  })
+
+  it('sends one clusters= entry per element, never a bare clusters=', async () => {
+    const { result } = renderHook(() => useScopedRelationships(['cl-a', 'cl-b']), { wrapper })
+    await waitFor(() => expect(result.current.data).toBeDefined())
+
+    expect(seenRelationshipUrls).toHaveLength(1)
+    const url = new URL(seenRelationshipUrls[0])
+    expect(url.searchParams.getAll('clusters')).toEqual(['cl-a', 'cl-b'])
+    expect(url.search).toBe('?clusters=cl-a&clusters=cl-b')
+  })
+
+  it('shares one cache entry regardless of input order', async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const sharedWrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: qc }, children)
+
+    const { result: r1 } = renderHook(() => useScopedRelationships(['cl-b', 'cl-a']), { wrapper: sharedWrapper })
+    await waitFor(() => expect(r1.current.data).toBeDefined())
+
+    const { result: r2 } = renderHook(() => useScopedRelationships(['cl-a', 'cl-b']), { wrapper: sharedWrapper })
+    await waitFor(() => expect(r2.current.data).toBeDefined())
+
+    // Same cache entry: the second render's data came from cache, not a second request.
+    expect(seenRelationshipUrls).toHaveLength(1)
   })
 })
