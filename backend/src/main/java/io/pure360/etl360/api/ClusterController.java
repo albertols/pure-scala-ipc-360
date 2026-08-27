@@ -3,13 +3,16 @@ package io.pure360.etl360.api;
 import io.pure360.etl360.api.dto.ClusterDetailDto;
 import io.pure360.etl360.api.dto.ClusterIndexDto;
 import io.pure360.etl360.api.dto.LayerToLayerEntryDto;
+import io.pure360.etl360.api.dto.RunsDto;
 import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.service.ClusterIndexService;
 import io.pure360.etl360.service.LayerToLayerService;
+import io.pure360.etl360.service.support.InvalidRequestException;
 import io.pure360.etl360.service.support.NotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
@@ -82,6 +85,40 @@ public class ClusterController {
                 dateIdx.size(), ok, ko, lastDate, lastStatus));
         }
         return new ClusterDetailDto(name, dates, recipes);
+    }
+
+    static final int MAX_RECIPES = 200;
+    static final int MAX_LIMIT = 50;
+    static final int DEFAULT_LIMIT = 10;
+
+    /**
+     * Run history for up to {@link #MAX_RECIPES} recipes at once. The bound exists so a caller
+     * cannot relocate the scale problem into this endpoint; the frontend's useRuns() chunks its
+     * recipe list to respect it, so the limit never surfaces to a user.
+     */
+    @GetMapping("/runs")
+    public RunsDto runs(@RequestParam("recipe") List<String> recipes,
+                        @RequestParam(name = "limit", defaultValue = "" + DEFAULT_LIMIT) int limit) {
+        if (recipes.size() > MAX_RECIPES) {
+            throw new InvalidRequestException("Too many recipes: " + recipes.size()
+                + " — at most " + MAX_RECIPES + " per request. Chunk the list client-side.");
+        }
+        if (limit < 1 || limit > MAX_LIMIT) {
+            throw new InvalidRequestException("limit must be between 1 and " + MAX_LIMIT + ", got " + limit);
+        }
+        Map<String, List<ClusterIndexService.RunEntry>> byRecipe = index.index().runsByRecipe();
+        Map<String, List<RunsDto.RunDto>> out = new LinkedHashMap<>();
+        for (String recipe : recipes) {
+            List<ClusterIndexService.RunEntry> runs = byRecipe.getOrDefault(recipe, List.of());
+            List<RunsDto.RunDto> newestFirst = new ArrayList<>();
+            for (int i = runs.size() - 1; i >= 0 && newestFirst.size() < limit; i--) {
+                ClusterIndexService.RunEntry r = runs.get(i);
+                newestFirst.add(new RunsDto.RunDto(r.date(), r.clusterName(), r.jobId(),
+                    r.appStartIso(), r.durationMin(), r.status(), r.message()));
+            }
+            out.put(recipe, List.copyOf(newestFirst));
+        }
+        return new RunsDto(limit, out);
     }
 
     private Map<String, String> layerByRecipe() {

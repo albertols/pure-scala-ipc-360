@@ -6,6 +6,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -87,5 +88,60 @@ class ClusterEndpointsContractTest {
     void anUnknownClusterIs404() throws Exception {
         mvc.perform(get("/api/operational/clusters/no-such-cluster"))
            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void runsAreNewestFirstAndCarryTheJobIdAndStartTimestampTheLinksNeed() throws Exception {
+        mvc.perform(get("/api/operational/runs")
+                .param("recipe", "_ETL_m_CAS_DWH_EVENTS_FACT.json"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.limit").value(10))
+           .andExpect(jsonPath("$.byRecipe['_ETL_m_CAS_DWH_EVENTS_FACT.json']", hasSize(10)))
+           .andExpect(jsonPath("$.byRecipe['_ETL_m_CAS_DWH_EVENTS_FACT.json'][0].date").value("2026-07-29"))
+           .andExpect(jsonPath("$.byRecipe['_ETL_m_CAS_DWH_EVENTS_FACT.json'][0].jobId").value(notNullValue()))
+           .andExpect(jsonPath("$.byRecipe['_ETL_m_CAS_DWH_EVENTS_FACT.json'][0].appStartIso").value(notNullValue()))
+           .andExpect(jsonPath("$.byRecipe['_ETL_m_CAS_DWH_EVENTS_FACT.json'][0].clusterName").value("cluster-wf-cas-core-4002"));
+    }
+
+    @Test
+    void limitDefaultsToTenAndIsHonoured() throws Exception {
+        mvc.perform(get("/api/operational/runs")
+                .param("recipe", "_ETL_m_CAS_DWH_EVENTS_FACT.json").param("limit", "3"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.limit").value(3))
+           .andExpect(jsonPath("$.byRecipe['_ETL_m_CAS_DWH_EVENTS_FACT.json']", hasSize(3)));
+    }
+
+    @Test
+    void severalRecipesComeBackInOneCall() throws Exception {
+        mvc.perform(get("/api/operational/runs")
+                .param("recipe", "_ETL_m_CAS_DWH_EVENTS_FACT.json")
+                .param("recipe", "_ETL_m_CAS_ODS_EVENTS.json"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.byRecipe['_ETL_m_CAS_DWH_EVENTS_FACT.json']", hasSize(10)))
+           .andExpect(jsonPath("$.byRecipe['_ETL_m_CAS_ODS_EVENTS.json']", hasSize(10)));
+    }
+
+    /** A stable client shape matters more than a compact one: absent means [], never missing. */
+    @Test
+    void aRecipeWithNoRunsMapsToAnEmptyArrayRatherThanBeingOmitted() throws Exception {
+        mvc.perform(get("/api/operational/runs").param("recipe", "_ETL_does_not_exist.json"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.byRecipe['_ETL_does_not_exist.json']", hasSize(0)));
+    }
+
+    @Test
+    void moreThanTwoHundredRecipesIsRejectedWithAMessageNamingTheLimit() throws Exception {
+        var request = get("/api/operational/runs");
+        for (int i = 0; i < 201; i++) request = request.param("recipe", "r" + i + ".json");
+        mvc.perform(request)
+           .andExpect(status().isBadRequest())
+           .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("200")));
+    }
+
+    @Test
+    void limitAboveFiftyIsRejected() throws Exception {
+        mvc.perform(get("/api/operational/runs").param("recipe", "r.json").param("limit", "51"))
+           .andExpect(status().isBadRequest());
     }
 }

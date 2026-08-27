@@ -1183,7 +1183,7 @@ literal segment rather than into OperationalController's /{date} template."
 
 **Bound:** at most `MAX_RECIPES = 200` recipes per request, `limit` default 10 (the user's ask) and max 50. Task 8's hook chunks client-side so the bound never reaches a user as a 400.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `ClusterEndpointsContractTest.java` (add `import static org.hamcrest.Matchers.empty;` and `import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;` is already present):
 
@@ -1244,7 +1244,7 @@ Append to `ClusterEndpointsContractTest.java` (add `import static org.hamcrest.M
     }
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ClusterEndpointsContractTest
@@ -1252,7 +1252,7 @@ mvn -q -pl backend test -Dtest=ClusterEndpointsContractTest
 
 Expected: FAIL — 404 on `/api/operational/runs`.
 
-- [ ] **Step 3: Write the DTO**
+- [x] **Step 3: Write the DTO**
 
 Create `backend/src/main/java/io/pure360/etl360/api/dto/RunsDto.java`:
 
@@ -1277,7 +1277,7 @@ public record RunsDto(int limit, Map<String, List<RunDto>> byRecipe) {
 }
 ```
 
-- [ ] **Step 4: Add the endpoint**
+- [x] **Step 4: Add the endpoint**
 
 Append to `ClusterController`:
 
@@ -1319,7 +1319,7 @@ Append to `ClusterController`:
 
 Add imports: `io.pure360.etl360.api.dto.RunsDto`, `org.springframework.web.bind.annotation.RequestParam`.
 
-- [ ] **Step 5: Confirm the 400 exception type**
+- [x] **Step 5: Confirm the 400 exception type**
 
 Check which exception `ApiExceptionHandler` maps to 400 with a `detail` field:
 
@@ -1334,7 +1334,7 @@ Use the existing 400-mapped exception. If only `InvalidDateException` exists, cr
 `@ExceptionHandler` clause for it in `ApiExceptionHandler` mirroring the `InvalidDateException`
 clause exactly — same status, same problem-detail shape. Import it in `ClusterController`.
 
-- [ ] **Step 6: Run the tests**
+- [x] **Step 6: Run the tests**
 
 ```bash
 mvn -q -pl backend test -Dtest=ClusterEndpointsContractTest
@@ -1342,7 +1342,7 @@ mvn -q -pl backend test -Dtest=ClusterEndpointsContractTest
 
 Expected: PASS, 13 tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/dto/RunsDto.java \

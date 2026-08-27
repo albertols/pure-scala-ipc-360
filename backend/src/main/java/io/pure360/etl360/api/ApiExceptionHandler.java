@@ -2,6 +2,7 @@ package io.pure360.etl360.api;
 
 import io.pure360.etl360.service.support.InvalidCorpusPathException;
 import io.pure360.etl360.service.support.InvalidDateException;
+import io.pure360.etl360.service.support.InvalidRequestException;
 import io.pure360.etl360.service.support.NotFoundException;
 import io.pure360.etl360.service.support.RecipeAlreadyExistsException;
 import io.pure360.etl360.service.support.StaleRecipeException;
@@ -52,6 +53,13 @@ public class ApiExceptionHandler {
     ProblemDetail invalidDate(InvalidDateException e) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
         pd.setTitle("Invalid date");
+        return pd;
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    ProblemDetail badRequest(InvalidRequestException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        pd.setTitle("Invalid request");
         return pd;
     }
 
