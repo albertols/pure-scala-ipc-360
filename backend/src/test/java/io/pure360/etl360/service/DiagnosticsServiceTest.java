@@ -96,6 +96,24 @@ class DiagnosticsServiceTest {
         assertThat(d.dwhControl().hint()).contains("RAW").contains("layerDirs");
     }
 
+    /**
+     * The INSERT-target sweep must cover directories OUTSIDE the configured layer list. That is
+     * precisely the case where it earns its keep: when the layer names are what's wrong, every
+     * configured directory holds nothing to look at, and a sweep restricted to the files the scan
+     * actually read would report "found: none" for a root full of perfectly readable statements.
+     */
+    @Test
+    void insertTargetSweepCoversLayerDirsTheScanItselfNeverReads(@TempDir Path tmp) throws Exception {
+        writeStatements(tmp, "RAW", "INSERT INTO CTL.CORP_L2L_CONFIG VALUES " + VALID_ROW);
+
+        DiagnosticsDto d = serviceOver(propsOver(tmp)).report();
+
+        assertThat(d.dwhControl().scan().filesRead()).isZero();          // RAW is not configured...
+        assertThat(d.dwhControl().scan().insertTargetsFound())           // ...but it is still swept
+            .extracting(DiagnosticsDto.InsertTarget::table)
+            .containsExactly("CTL.CORP_L2L_CONFIG");
+    }
+
     @Test
     void configuringThatLayerDirNameFlipsTheSameRootToOk(@TempDir Path tmp) throws Exception {
         writeStatements(tmp, "RAW", Etl360Properties.LayerToLayer.DEFAULTS.anchor() + " " + VALID_ROW);

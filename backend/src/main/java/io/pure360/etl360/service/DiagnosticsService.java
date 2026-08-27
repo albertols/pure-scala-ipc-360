@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -137,24 +138,34 @@ public class DiagnosticsService {
         List<String> expected = layerToLayer.layerDirs();
         List<String> unexpected = present.stream().filter(d -> !expected.contains(d)).toList();
 
+        // Read each statements.sql ONCE. The anchor scan wants the configured directories and the
+        // INSERT-target sweep wants every present one — overlapping sets, and on a real control
+        // schema each file carries thousands of statements, so a second read per request is pure
+        // waste. Insertion-ordered by `present` so the sweep's tie-break stays deterministic.
+        Map<String, String> contentByDir = new LinkedHashMap<>();
+        for (String dir : present) {
+            Path file = base.resolve(dir).resolve(STATEMENTS_FILE);
+            if (Files.isRegularFile(file)) contentByDir.put(dir, read(file));
+        }
+
         String anchor = layerToLayer.anchor();
         List<DiagnosticsDto.FileScan> files = new ArrayList<>();
         int anchorHits = 0, parsed = 0, skipped = 0;
         for (String dir : expected) {
-            Path file = base.resolve(dir).resolve(STATEMENTS_FILE);
-            if (!Files.isRegularFile(file)) continue;
-            DiagnosticsDto.FileScan scanned = scanFile(file, anchor);
+            String content = contentByDir.get(dir);
+            if (content == null) continue;
+            DiagnosticsDto.FileScan scanned =
+                scanFile(base.resolve(dir).resolve(STATEMENTS_FILE), content, anchor);
             files.add(scanned);
             anchorHits += scanned.anchorHits();
             parsed += scanned.rowsParsed();
             skipped += scanned.rowsSkipped();
         }
         return new DiagnosticsDto.Scan(vocabulary().anchorTable(), anchor, expected, present, unexpected,
-            files.size(), anchorHits, parsed, skipped, files, insertTargets(base, present));
+            files.size(), anchorHits, parsed, skipped, files, insertTargets(contentByDir.values()));
     }
 
-    private DiagnosticsDto.FileScan scanFile(Path file, String anchor) {
-        String content = read(file);
+    private DiagnosticsDto.FileScan scanFile(Path file, String content, String anchor) {
         int parsed = 0, skipped = 0;
         String firstSkipReason = null;
         List<String> bodies = LayerToLayerService.statements(content, anchor);
@@ -175,14 +186,13 @@ public class DiagnosticsService {
      * Every {@code INSERT INTO <table>} identifier present under {@code LAYER_TO_LAYER/}, most
      * frequent first — swept across ALL subdirectories, including ones outside the configured
      * layer list, because when the layer names are what's wrong the configured dirs hold nothing
-     * to look at. This is what turns "0 rows" into "your files say CTL.CORP_L2L_CONFIG".
+     * to look at. This is what turns "0 rows" into "your files say CTL.CORP_L2L_CONFIG", so
+     * {@code contents} must stay the whole present set and never shrink to the scanned files.
      */
-    private List<DiagnosticsDto.InsertTarget> insertTargets(Path base, List<String> presentDirs) {
+    private List<DiagnosticsDto.InsertTarget> insertTargets(Collection<String> contents) {
         Map<String, Integer> counts = new LinkedHashMap<>();
-        for (String dir : presentDirs) {
-            Path file = base.resolve(dir).resolve(STATEMENTS_FILE);
-            if (!Files.isRegularFile(file)) continue;
-            Matcher m = INSERT_TARGET.matcher(read(file));
+        for (String content : contents) {
+            Matcher m = INSERT_TARGET.matcher(content);
             while (m.find()) counts.merge(m.group(1), 1, Integer::sum);
         }
         return counts.entrySet().stream()
