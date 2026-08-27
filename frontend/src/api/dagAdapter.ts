@@ -83,11 +83,6 @@ function layoutTasks(tasks: DagTask[], members: RelNodeT[]) {
 
 export type B15RowT = components['schemas']['B15RowDto']
 
-export const DEFAULT_DATAPROC_JOB_URL = 'https://console.cloud.google.com/dataproc/jobs/{jobId}?project={project}&region={region}'
-export const DEFAULT_DATAPROC_CLUSTER_URL = 'https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}'
-export const DEFAULT_LOGGING_URL = 'https://console.cloud.google.com/logs/query;query=resource.labels.job_id%3D%22{jobId}%22?project={project}'
-// ^ byte-mirrors backend application.yml gcp templates (the served AppConfigDto normally supplies them)
-
 export function parseDurationSec(v: string | undefined): number {
   const m = /^(\d+)m\s+(\d+)sec$/.exec((v ?? '').trim())
   return m ? Number(m[1]) * 60 + Number(m[2]) : 0
@@ -148,6 +143,4 @@ export function toOperationalCard(task: DagTask, dates: string[],
   }
 }
 
-export function fillGcpUrl(template: string | undefined, fallback: string, vars: Record<string, string>): string {
-  return (template || fallback).replace(/\{(\w+)\}/g, (_, k: string) => encodeURIComponent(vars[k] ?? ''))
-}
+export { fillGcpUrl, DEFAULT_DATAPROC_JOB_URL, DEFAULT_DATAPROC_CLUSTER_URL, DEFAULT_LOGGING_URL } from './gcpLinks'

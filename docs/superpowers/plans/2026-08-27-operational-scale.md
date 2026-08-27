@@ -1833,7 +1833,7 @@ Both are pinned by mutation-verified tests: removing the `TreeSet` reddens two
 1. **Matrix-safe encoding.** The console reads `;key=value` *path matrix* segments and expects an unencoded RFC-3339 timestamp there. Today's `fillGcpUrl` `encodeURIComponent`s everything, which would emit `%3A` for every colon in the timestamp. Placeholders declared matrix-safe (`cursorTimestamp`, `duration`) keep their colons.
 2. **Empty-segment collapse.** With no resolvable run, `;cursorTimestamp=;` must not appear at all — the link has to degrade to the job-id-only query that already works.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `frontend/src/api/gcpLinks.test.ts`:
 
@@ -1941,7 +1941,7 @@ describe('buildDataprocJobUrl / buildDataprocClusterUrl', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test gcpLinks
@@ -1949,7 +1949,7 @@ cd frontend && pnpm test gcpLinks
 
 Expected: FAIL — `Failed to resolve import "./gcpLinks"`.
 
-- [ ] **Step 3: Write `gcpLinks.ts`**
+- [x] **Step 3: Write `gcpLinks.ts`**
 
 Create `frontend/src/api/gcpLinks.ts`:
 
@@ -2023,7 +2023,7 @@ export function buildDataprocClusterUrl(cfg: AppConfig | undefined, v: { cluster
 }
 ```
 
-- [ ] **Step 4: Point `dagAdapter.ts` at the new home**
+- [x] **Step 4: Point `dagAdapter.ts` at the new home**
 
 In `frontend/src/api/dagAdapter.ts`, delete the `DEFAULT_DATAPROC_JOB_URL`, `DEFAULT_DATAPROC_CLUSTER_URL`, `DEFAULT_LOGGING_URL` constants and the `fillGcpUrl` function, and re-export from the new module so existing importers keep compiling until Task 10 moves them:
 
@@ -2033,7 +2033,7 @@ export { fillGcpUrl, DEFAULT_DATAPROC_JOB_URL, DEFAULT_DATAPROC_CLUSTER_URL, DEF
 
 `frontend/src/api/dagAdapter.test.ts` currently asserts `fillGcpUrl` and `DEFAULT_LOGGING_URL`. Move those two cases out of it — they now live in `gcpLinks.test.ts` — and delete them from `dagAdapter.test.ts`.
 
-- [ ] **Step 5: Add `loggingDuration` to the backend config**
+- [x] **Step 5: Add `loggingDuration` to the backend config**
 
 In `Etl360Properties.java`, replace the `Gcp` record with:
 
@@ -2068,7 +2068,7 @@ In `application.yml`, under `etl360.gcp`:
 
 In `AppConfigDto.java` add `String loggingDuration` after `loggingUrl`; in `ConfigController.config()` pass `gcp.loggingDuration()` in the matching position.
 
-- [ ] **Step 6: Assert the served config carries it**
+- [x] **Step 6: Assert the served config carries it**
 
 Append to `backend/src/test/java/io/pure360/etl360/api/ConfigControllerTest.java`:
 
@@ -2083,7 +2083,7 @@ Append to `backend/src/test/java/io/pure360/etl360/api/ConfigControllerTest.java
     }
 ```
 
-- [ ] **Step 7: Map the config key in `dev.sh` and the example config**
+- [x] **Step 7: Map the config key in `dev.sh` and the example config**
 
 In `scripts/dev.sh`, alongside the existing `resolve` lines:
 
@@ -2105,7 +2105,7 @@ bash scripts/dev.sh --check-config
 
 Expected: the resolution dry-run prints without error and lists the new key.
 
-- [ ] **Step 8: Regenerate the API types and run both suites**
+- [x] **Step 8: Regenerate the API types and run both suites**
 
 ```bash
 mvn -q -am -pl backend install -DskipTests && (cd backend && mvn -q spring-boot:run &) && sleep 25
@@ -2117,7 +2117,7 @@ cd frontend && pnpm test gcpLinks dagAdapter && pnpm exec tsc --noEmit
 
 Expected: all PASS; `types.gen.ts` now carries `loggingDuration`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add frontend/src/api/gcpLinks.ts frontend/src/api/gcpLinks.test.ts \

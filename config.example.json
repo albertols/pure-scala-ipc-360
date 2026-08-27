@@ -3,6 +3,7 @@
   "composerRoot": "backend/src/main/resources/mock/composer",
   "dwhControlRoot": "backend/src/main/resources/mock/DWH_CONTROL",
   "gcpProjectId": "my-gcp-project",
+  "gcpLoggingDuration": "P31D",
   "layerToLayerTable": "CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG",
   "layerDirs": ["STG", "ODS", "DWH", "CDM", "RDM", "QDM", "ETL", "OUTPUT"],
   "javaHome": "",

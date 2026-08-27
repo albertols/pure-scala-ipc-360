@@ -25,13 +25,13 @@ class ConfigControllerTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper objectMapper;
 
-    // The exact AppConfigDto field set — nothing secret-ish beyond these 8 belongs here.
+    // The exact AppConfigDto field set — nothing secret-ish beyond these 9 belongs here.
     private static final Set<String> EXPECTED_FIELDS = Set.of(
         "gcpProjectId", "region", "dataprocJobUrl", "dataprocClusterUrl",
-        "loggingUrl", "dwhControlMode", "composerMode", "corpusRoot");
+        "loggingUrl", "loggingDuration", "dwhControlMode", "composerMode", "corpusRoot");
 
     @Test
-    void servesSanitizedConfigWithExactlyTheEightExpectedFields() throws Exception {
+    void servesSanitizedConfigWithExactlyTheNineExpectedFields() throws Exception {
         String body = mvc.perform(get("/api/config"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.dwhControlMode").value(in(List.of("real", "mock", "absent"))))
@@ -44,5 +44,14 @@ class ConfigControllerTest {
             .collect(Collectors.toSet());
 
         assertThat(actualFields).containsExactlyInAnyOrderElementsOf(EXPECTED_FIELDS);
+    }
+
+    @Test
+    void servesTheLoggingDurationAndACursorAwareLoggingTemplate() throws Exception {
+        mvc.perform(get("/api/config"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.loggingDuration").value("P31D"))
+           .andExpect(jsonPath("$.loggingUrl").value(org.hamcrest.Matchers.containsString("{cursorTimestamp}")))
+           .andExpect(jsonPath("$.loggingUrl").value(org.hamcrest.Matchers.containsString("{duration}")));
     }
 }

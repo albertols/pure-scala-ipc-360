@@ -54,6 +54,7 @@ resolve ETL360_DWH_CONTROL_ROOT dwhControlRoot; SRC_DWH=$RES_SRC
 resolve ETL360_GCP_PROJECT gcpProjectId;        SRC_GCP=$RES_SRC
 resolve ETL360_L2L_TABLE layerToLayerTable;     SRC_L2L_TABLE=$RES_SRC
 resolve ETL360_L2L_LAYER_DIRS layerDirs;        SRC_L2L_DIRS=$RES_SRC
+resolve ETL360_GCP_LOGGING_DURATION gcpLoggingDuration; SRC_GCP_DUR=$RES_SRC
 
 # Toolchains: config.json OUTRANKS ambient env (machine-global JAVA_HOME/PATH are the
 # usual noise — on this repo's dev machine `java_home -v 17` returns an Azul 11).
@@ -101,6 +102,7 @@ CORPUS="${ETL360_CORPUS_ROOT:-parser/src/main/resources/xmltobq}"
 DWH="${ETL360_DWH_CONTROL_ROOT:-parser/src/main/resources/DWH_CONTROL}"
 COMPOSER="${ETL360_COMPOSER_ROOT:-parser/src/main/resources/composer}"
 GCP="${ETL360_GCP_PROJECT:-db-dev-example-project}"
+GCP_DUR="${ETL360_GCP_LOGGING_DURATION:-P31D}"
 # MUST mirror Etl360Properties.LayerToLayer.DEFAULT_* — a wrong value here parses to zero rows
 # and an empty Tab 3, so the table below prints what will actually be scanned for.
 L2L_TABLE="${ETL360_L2L_TABLE:-CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG}"
@@ -119,6 +121,7 @@ row xmltobq     "$CORPUS"   "$SRC_CORPUS"
 row DWH_CONTROL "$DWH"      "$SRC_DWH, mode $(mode "$DWH" DWH_CONTROL LAYER_TO_LAYER)"
 row composer    "$COMPOSER" "$SRC_COMPOSER, mode $(mode "$COMPOSER" composer dwh/config/cluster_tuning/inputs)"
 row gcp-project "$GCP"      "$SRC_GCP"
+row gcp-log-dur "$GCP_DUR"  "$SRC_GCP_DUR"
 row l2l-table   "$L2L_TABLE" "$SRC_L2L_TABLE"
 row l2l-dirs    "$L2L_DIRS"  "$SRC_L2L_DIRS"
 row JAVA_HOME   "${JAVA_HOME:-—}" "$SRC_JAVA"

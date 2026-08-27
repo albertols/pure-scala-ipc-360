@@ -18,4 +18,5 @@ etl360:
     region: ${ETL360_GCP_REGION:europe-southwest1}
     dataproc-job-url: "https://console.cloud.google.com/dataproc/jobs/{jobId}?project={project}&region={region}"
     dataproc-cluster-url: "https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}"
-    logging-url: "https://console.cloud.google.com/logs/query;query=resource.labels.job_id%3D%22{jobId}%22?project={project}"
+    logging-url: "https://console.cloud.google.com/logs/query;query=resource.labels.job_id%3D%22{jobId}%22;cursorTimestamp={cursorTimestamp};duration={duration}?project={project}"
+    logging-duration: ${ETL360_GCP_LOGGING_DURATION:P31D}

@@ -7,5 +7,5 @@ package io.pure360.etl360.api.dto;
  * layout beyond the corpus root itself) belongs here.
  */
 public record AppConfigDto(String gcpProjectId, String region, String dataprocJobUrl,
-                            String dataprocClusterUrl, String loggingUrl,
+                            String dataprocClusterUrl, String loggingUrl, String loggingDuration,
                             String dwhControlMode, String composerMode, String corpusRoot) {}

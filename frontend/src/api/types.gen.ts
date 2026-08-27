@@ -196,6 +196,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/operational/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["runs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/operational/dates": {
         parameters: {
             query?: never;
@@ -204,6 +220,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["dates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operational/clusters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["clusters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operational/clusters/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cluster"];
         put?: never;
         post?: never;
         delete?: never;
@@ -435,6 +483,9 @@ export interface components {
             /** Format: int32 */
             skippedRows?: number;
             layers?: string[];
+            scopedClusters?: string[];
+            /** Format: int32 */
+            neighborCount?: number;
         };
         NodeDto: {
             id?: string;
@@ -448,6 +499,8 @@ export interface components {
             executionOrder?: number;
             writeMode?: string;
             partitionType?: string;
+            clusterNames?: string[];
+            neighbor?: boolean;
         };
         RelationshipsDto: {
             nodes?: components["schemas"]["NodeDto"][];
@@ -522,9 +575,74 @@ export interface components {
             lastJobId?: string;
             lastClusterName?: string;
         };
+        RunDto: {
+            date?: string;
+            clusterName?: string;
+            jobId?: string;
+            appStartIso?: string;
+            /** Format: double */
+            durationMin?: number;
+            status?: string;
+            message?: string;
+        };
+        RunsDto: {
+            /** Format: int32 */
+            limit?: number;
+            byRecipe?: {
+                [key: string]: components["schemas"]["RunDto"][];
+            };
+        };
         OperationalDatesDto: {
             dates?: string[];
             mode?: string;
+        };
+        ClusterIndexDto: {
+            mode?: string;
+            dates?: string[];
+            totals?: components["schemas"]["TotalsDto"];
+            clusters?: components["schemas"]["ClusterSummaryDto"][];
+        };
+        ClusterSummaryDto: {
+            name?: string;
+            /** Format: int32 */
+            recipeCount?: number;
+            dateIdx?: number[];
+            /** Format: int32 */
+            rows?: number;
+            /** Format: int32 */
+            ok?: number;
+            /** Format: int32 */
+            ko?: number;
+            lastDate?: string;
+            lastStatus?: string;
+        };
+        TotalsDto: {
+            /** Format: int32 */
+            clusters?: number;
+            /** Format: int32 */
+            recipes?: number;
+            /** Format: int32 */
+            dates?: number;
+            /** Format: int32 */
+            rows?: number;
+        };
+        ClusterDetailDto: {
+            name?: string;
+            dates?: string[];
+            recipes?: components["schemas"]["RecipeInClusterDto"][];
+        };
+        RecipeInClusterDto: {
+            recipeFilename?: string;
+            layer?: string;
+            dateIdx?: number[];
+            /** Format: int32 */
+            rows?: number;
+            /** Format: int32 */
+            ok?: number;
+            /** Format: int32 */
+            ko?: number;
+            lastDate?: string;
+            lastStatus?: string;
         };
         ConnectorDto: {
             fromField?: string;
@@ -853,6 +971,7 @@ export interface components {
             dataprocJobUrl?: string;
             dataprocClusterUrl?: string;
             loggingUrl?: string;
+            loggingDuration?: string;
             dwhControlMode?: string;
             composerMode?: string;
             corpusRoot?: string;
@@ -1102,7 +1221,9 @@ export interface operations {
     };
     relationships: {
         parameters: {
-            query?: never;
+            query?: {
+                clusters?: string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1206,6 +1327,29 @@ export interface operations {
             };
         };
     };
+    runs: {
+        parameters: {
+            query: {
+                recipe: string[];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RunsDto"];
+                };
+            };
+        };
+    };
     dates: {
         parameters: {
             query?: never;
@@ -1222,6 +1366,48 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["OperationalDatesDto"];
+                };
+            };
+        };
+    };
+    clusters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ClusterIndexDto"];
+                };
+            };
+        };
+    };
+    cluster: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ClusterDetailDto"];
                 };
             };
         };

@@ -24,7 +24,22 @@ public record Etl360Properties(String corpusRoot, String dwhControlRoot, String 
     }
 
     public record Gcp(String projectId, String region, String dataprocJobUrl,
-                      String dataprocClusterUrl, String loggingUrl) {}
+                      String dataprocClusterUrl, String loggingUrl, String loggingDuration) {
+        public static final String DEFAULT_LOGGING_DURATION = "P31D";
+
+        /** Binding constructor: substitutes the default for an unset/blank logging-duration. */
+        @ConstructorBinding
+        public Gcp {
+            loggingDuration = loggingDuration == null || loggingDuration.isBlank()
+                ? DEFAULT_LOGGING_DURATION : loggingDuration.trim();
+        }
+
+        /** Pre-loggingDuration arity, kept so existing test call sites stay readable. */
+        public Gcp(String projectId, String region, String dataprocJobUrl,
+                   String dataprocClusterUrl, String loggingUrl) {
+            this(projectId, region, dataprocJobUrl, dataprocClusterUrl, loggingUrl, DEFAULT_LOGGING_DURATION);
+        }
+    }
 
     /**
      * The control-schema vocabulary {@link io.pure360.etl360.service.LayerToLayerService} scans for.

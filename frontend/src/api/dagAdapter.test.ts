@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { toDagClusters, UNGROUPED, type RelationshipsT } from './dagAdapter'
-import { clusterRuns, fillGcpUrl, overlayRun, parseDurationSec, statusFromB15, toOperationalCard,
-  DEFAULT_LOGGING_URL, type B15RowT } from './dagAdapter'
+import { clusterRuns, overlayRun, parseDurationSec, statusFromB15, toOperationalCard,
+  type B15RowT } from './dagAdapter'
 
 // Mini RelationshipsDto: two workflows + cross-workflow table dependency
 // (STG writes FIX_STG_A, ODS reads it) + lookup-mediated dep + intra-cluster chain.
@@ -141,12 +141,6 @@ describe('run-history aggregation', () => {
     expect(card.jobId).toBe('application_1774840360_11000')
     const b = ods.tasks.find(t => t.task_id === '_ETL_m_FIX_ODS_B.json')!
     expect(toOperationalCard(b, DATES, ROWS, '2026-07-29').status).toBe('PENDING')  // never ran
-  })
-
-  it('fillGcpUrl: fills {placeholders} encoded, template wins over fallback', () => {
-    expect(fillGcpUrl(undefined, DEFAULT_LOGGING_URL, { jobId: 'application_1', project: 'mock-project' }))
-      .toBe('https://console.cloud.google.com/logs/query;query=resource.labels.job_id%3D%22application_1%22?project=mock-project')
-    expect(fillGcpUrl('https://x/{a}?p={b}', 'unused', { a: 'v 1', b: 'w' })).toBe('https://x/v%201?p=w')
   })
 })
 
