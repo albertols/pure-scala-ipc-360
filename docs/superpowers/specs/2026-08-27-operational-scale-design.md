@@ -229,8 +229,21 @@ and `scripts/relationships_sweep.mts` keep calling exactly what they call today.
   2. filter L2L entries to that recipe set and build nodes/edges through the *existing*
      `RelationshipService` construction — no second graph builder;
   3. **1-hop expansion** (user decision): for every table in the subset, include L2L entries
-     outside the subset that read or write it; their recipe nodes and the tables directly attached
-     to them are added and flagged `neighbor: true`. Neighbours are **not** expanded further.
+     outside the subset that read or write it; their **recipe nodes** are added and flagged
+     `neighbor: true`, along with the edges joining them to tables the core subgraph already holds.
+     Neighbours are **not** expanded further.
+
+     > **Corrected during implementation (Task 6).** This clause originally also added "the tables
+     > directly attached to" a neighbour recipe. That is two hops, not one — core table → neighbour
+     > recipe → the neighbour's *other* tables — and it contradicted this spec's own
+     > `neighboursAreNotExpandedASecondTime` test, which requires every edge to have at least one
+     > core endpoint. The implementer found the contradiction because the test failed against the
+     > code this spec prescribed. The one-hop reading also matches the option actually chosen in
+     > session ("the directly-adjacent nodes from other clusters").
+     >
+     > **Consequence for consumers:** every node carrying `neighbor: true` is a **recipe**. No table
+     > is ever flagged. `NodeDto.neighbor` remains declared on table nodes so that widening the rule
+     > later needs no wire change, but today it is never populated on one.
 
 `NodeDto` gains two fields, both `@JsonInclude(NON_NULL)` so the unscoped response is unchanged:
 
