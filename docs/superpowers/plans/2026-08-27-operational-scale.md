@@ -2165,7 +2165,7 @@ logging-url gains {cursorTimestamp}/{duration}; logging-duration is configurable
 
 **Why:** the `/runs` endpoint is bounded at 200 recipes (Task 5). A real cluster or DAG can exceed that, and the bound must never surface to a user as a 400 — so chunking lives in exactly one hook rather than being reimplemented per tab (spec §5.5 client rule).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `frontend/src/api/clusterQueries.test.ts`:
 
@@ -2268,7 +2268,7 @@ describe('useRuns', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test clusterQueries
@@ -2276,7 +2276,7 @@ cd frontend && pnpm test clusterQueries
 
 Expected: FAIL — `Failed to resolve import "./clusterQueries"`.
 
-- [ ] **Step 3: Write `clusterQueries.ts`**
+- [x] **Step 3: Write `clusterQueries.ts`**
 
 ```ts
 import { useQueries, useQuery } from '@tanstack/react-query'
@@ -2363,7 +2363,9 @@ export function useRuns(recipes: string[], limit = 10): RunsResult {
 
 In `frontend/src/types.ts`, delete the `appId?: string` line from `OperationalCard` (`:131`). Leave `jobId?: string`. TypeScript will now flag every consumer — that is the point; Task 10 fixes them.
 
-- [ ] **Step 5: Run the tests**
+**Moved to Task 11 by explicit ruling** (Task 8 brief addendum, 2026-08-28): `appId`'s two consumers (`OperationalCard.tsx`, `dagAdapter.ts`) aren't rewritten until Tasks 10–11, so dropping the field here would leave `tsc --noEmit` red across three commits. Task 11 removes the field and both consumers together.
+
+- [x] **Step 5: Run the tests**
 
 ```bash
 cd frontend && pnpm test clusterQueries
@@ -2371,7 +2373,7 @@ cd frontend && pnpm test clusterQueries
 
 Expected: PASS, 6 tests. (`tsc --noEmit` will still fail on `appId` consumers until Task 10 — that is expected and is checked there, not here.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/api/clusterQueries.ts frontend/src/api/clusterQueries.test.ts \
