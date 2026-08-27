@@ -1693,9 +1693,14 @@ real `ClusterIndexService` over a `B15Reader` pointed at a composer root with no
 
 ```java
     private static ClusterIndexService emptyIndex() {
+        // mockRoot must ALSO be a bogus path. DataRoots falls back to the mock tier whenever the
+        // real composer root is absent, so passing the real "backend/src/main/resources/mock" here
+        // would silently hand back the committed 14-day, 21-cluster index — the opposite of empty.
+        // (Task 3's implementer hit exactly this: its "absent composer yields an empty index" test
+        // passed against real mock data until the mockRoot was bogused out too.)
         Etl360Properties props = new Etl360Properties(
             "parser/src/main/resources/xmltobq", "does/not/exist",
-            "backend/src/main/resources/mock", "does/not/exist/either", null);
+            "does/not/exist/mock", "does/not/exist/either", null);
         return new ClusterIndexService(new B15Reader(new DataRoots(props)));
     }
 ```
