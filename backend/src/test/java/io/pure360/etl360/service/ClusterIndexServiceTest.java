@@ -130,18 +130,23 @@ class ClusterIndexServiceTest {
     }
 
     /**
-     * clustersOf() documents "name-ascending", but it iterates Index.byCluster(), which build()
-     * hands to Map.copyOf — an immutable map whose iteration order is UNSPECIFIED and, on this
-     * JDK, re-randomized per JVM run by ImmutableCollections.SALT. The pre-existing
-     * recipesIn/clustersOf test only ever asserts a single-element result, which is ordered by
-     * definition, so nothing caught it; /api/relationships?clusters= puts the list on the wire,
-     * where a per-run reordering breaks caching and diffing.
+     * clustersOf()'s "name-ascending" contract, which nothing verified before: the pre-existing
+     * recipesIn/clustersOf test only asserts a single-element result, which is ordered by
+     * definition. The list ships as NodeDto.clusterNames on /api/relationships?clusters=, so a
+     * per-run reordering would break response caching and diffing.
      *
-     * <p>The names are deliberate. MapN's iteration order is some rotation (forwards or backwards)
-     * of a fixed, hash-derived table order, so short keys whose table order happens to BE
-     * alphabetical (e.g. "cl-a".."cl-j") let an unsorted implementation pass ~1 run in 20. These
-     * ten hash into a table order that is not a rotation of their sorted order, so no SALT value
-     * can make the unsorted implementation pass.
+     * <p>Two deliberate choices keep this test honest, and both must survive any refactor:
+     *
+     * <p>1. The rows are written in a SCRAMBLED order, so the expectation cannot be met by
+     * accident. The guarantee now lives in build()'s TreeSet accumulator for
+     * Index.clustersByRecipe; swap that TreeSet for a LinkedHashSet and this test must go red.
+     * Alphabetical rows would let insertion order stand in for the sort and hide that.
+     *
+     * <p>2. The names are long and varied. clustersOf() used to scan Index.byCluster(), whose
+     * Map.copyOf iteration order is a rotation of a fixed hash-derived order — so short keys whose
+     * table order happens to BE alphabetical (e.g. "cl-a".."cl-j") let an unsorted implementation
+     * pass roughly 1 run in 20, which is exactly what happened on the first attempt at this test.
+     * These ten do not rotate to sorted order. Keep them if the scan ever comes back.
      */
     @Test
     void clustersOfIsNameAscendingForARecipeThatRanInManyClusters(@TempDir Path tmp) throws Exception {
@@ -150,14 +155,40 @@ class ClusterIndexServiceTest {
             "cluster-wf-delta-4004", "cluster-wf-echo-5005", "cluster-wf-foxtrot-6006",
             "cluster-wf-golf-7007", "cluster-wf-hotel-8008", "cluster-wf-india-9009",
             "cluster-wf-juliett-1010"};
+        int[] scrambled = {6, 2, 9, 0, 7, 4, 1, 8, 3, 5};
         String[] rows = new String[clusters.length];
-        for (int i = 0; i < clusters.length; i++) {
-            rows[i] = clusters[i] + ",shared.json,j" + i + ",2026-07-18T0" + i
+        for (int i = 0; i < scrambled.length; i++) {
+            rows[i] = clusters[scrambled[i]] + ",shared.json,j" + i + ",2026-07-18T0" + i
                 + ":00:00.000Z,1m 0sec,SUCCESS,";
         }
         day(tmp, "2026_07_18", rows);
 
         assertThat(serviceOver(tmp).clustersOf("shared.json")).containsExactly(clusters);
+    }
+
+    /**
+     * clustersOf() is a lookup into a map built once, not a per-call scan of byCluster: that scan
+     * re-entered index() — and therefore B15Reader.fingerprint(), a stat sweep over every dated
+     * export — once per recipe on a scoped relationships request. Asserts the map directly, so the
+     * inverse index is covered even if clustersOf() is ever reimplemented again.
+     */
+    @Test
+    void clustersByRecipeIsABuildTimeInverseIndexWithNameAscendingValues(@TempDir Path tmp) throws Exception {
+        day(tmp, "2026_07_18",
+            "cl-zulu,shared.json,j1,2026-07-18T01:00:00.000Z,1m 0sec,SUCCESS,",
+            "cl-alpha,shared.json,j2,2026-07-18T02:00:00.000Z,1m 0sec,SUCCESS,",
+            "cl-mike,shared.json,j3,2026-07-18T03:00:00.000Z,1m 0sec,SUCCESS,",
+            "cl-zulu,solo.json,j4,2026-07-18T04:00:00.000Z,1m 0sec,SUCCESS,");
+        ClusterIndexService service = serviceOver(tmp);
+
+        var clustersByRecipe = service.index().clustersByRecipe();
+
+        assertThat(clustersByRecipe).containsOnlyKeys("shared.json", "solo.json");
+        // Written zulu, alpha, mike — comes back ascending, so this is the sort and not row order.
+        assertThat(clustersByRecipe.get("shared.json")).containsExactly("cl-alpha", "cl-mike", "cl-zulu");
+        assertThat(clustersByRecipe.get("solo.json")).containsExactly("cl-zulu");
+        assertThat(service.clustersOf("shared.json")).containsExactly("cl-alpha", "cl-mike", "cl-zulu");
+        assertThat(service.clustersOf("unknown.json")).isEmpty();
     }
 
     @Test

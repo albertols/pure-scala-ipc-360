@@ -6,13 +6,13 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Indexes the whole committed b15 history once, so the cluster pane, the calendar, the run picker
@@ -39,8 +39,16 @@ public class ClusterIndexService {
     /** No table count: b15 knows nothing about tables, and inventing one here would be a lie. */
     public record Totals(int clusters, int recipes, int dates, int rows) {}
 
+    /**
+     * @param clustersByRecipe the build-time inverse of {@code byCluster}: recipe filename -> the
+     *        clusters it ran in, <b>name-ascending</b>. Built in the same row loop that builds
+     *        {@code byCluster}, so it costs nothing, and it is what makes {@link #clustersOf} O(1).
+     *        Scanning {@code byCluster} per recipe instead made a scoped relationships request cost
+     *        one {@link B15Reader#fingerprint()} stat sweep PER RECIPE.
+     */
     public record Index(List<String> dates, Map<String, ClusterEntry> byCluster,
-                        Map<String, List<RunEntry>> runsByRecipe, Totals totals) {}
+                        Map<String, List<RunEntry>> runsByRecipe,
+                        Map<String, List<String>> clustersByRecipe, Totals totals) {}
 
     private static final String OK = "SUCCESS";
     private static final String KO = "FAILED";
@@ -68,7 +76,13 @@ public class ClusterIndexService {
 
     /** Every recipe filename that ran in any of {@code clusterNames}. Unknown names contribute none. */
     public Set<String> recipesIn(Collection<String> clusterNames) {
-        Map<String, ClusterEntry> byCluster = index().byCluster();
+        return recipesIn(index(), clusterNames);
+    }
+
+    /** As {@link #recipesIn(Collection)}, for a caller that already holds the index and must not
+     * pay another {@link B15Reader#fingerprint()} sweep to reuse it. */
+    public Set<String> recipesIn(Index index, Collection<String> clusterNames) {
+        Map<String, ClusterEntry> byCluster = index.byCluster();
         Set<String> out = new LinkedHashSet<>();
         for (String name : clusterNames) {
             ClusterEntry entry = byCluster.get(name);
@@ -80,19 +94,14 @@ public class ClusterIndexService {
     /**
      * The clusters a recipe has run in, name-ascending. Empty for a recipe absent from b15.
      *
-     * <p>The sort is not cosmetic and cannot be dropped in favour of build()'s TreeMap ordering:
-     * {@link #build()} hands {@code byCluster} to {@code Map.copyOf}, whose iteration order is
-     * unspecified and, on this JDK, re-randomized per JVM run. This list goes on the wire as
-     * {@code NodeDto.clusterNames}, so without sorting here the same request would answer
-     * differently across restarts.
+     * <p>The ordering is not cosmetic: this list goes on the wire as {@code NodeDto.clusterNames},
+     * so an unordered one would make the same request answer differently across restarts. It is
+     * guaranteed at build time by {@link Index#clustersByRecipe}'s {@code TreeSet} accumulator,
+     * NOT by this method — a scan of {@code byCluster} here would inherit {@code Map.copyOf}'s
+     * unspecified, SALT-randomized iteration order, and would also make each call a linear pass.
      */
     public List<String> clustersOf(String recipeFilename) {
-        List<String> out = new ArrayList<>();
-        for (ClusterEntry entry : index().byCluster().values()) {
-            if (entry.recipes().contains(recipeFilename)) out.add(entry.name());
-        }
-        out.sort(Comparator.naturalOrder());
-        return List.copyOf(out);
+        return index().clustersByRecipe().getOrDefault(recipeFilename, List.of());
     }
 
     private Index build() {
@@ -106,6 +115,8 @@ public class ClusterIndexService {
         Map<String, String> lastDateByCluster = new TreeMap<>();
         Map<String, String> lastStatusByCluster = new TreeMap<>();
         Map<String, List<RunEntry>> runsByRecipe = new LinkedHashMap<>();
+        // TreeSet values: this is where clustersOf()'s name-ascending guarantee actually lives.
+        Map<String, Set<String>> clustersByRecipeAcc = new LinkedHashMap<>();
         Set<String> allRecipes = new LinkedHashSet<>();
         int rowTotal = 0;
 
@@ -119,8 +130,9 @@ public class ClusterIndexService {
                 String recipe = row.recipeFilename();
                 allRecipes.add(recipe);
 
+                clustersByRecipeAcc.computeIfAbsent(recipe, k -> new TreeSet<>()).add(cluster);
                 dateIdxByCluster.computeIfAbsent(cluster, k -> new LinkedHashSet<>()).add(i);
-                recipesByCluster.computeIfAbsent(cluster, k -> new java.util.TreeSet<>()).add(recipe);
+                recipesByCluster.computeIfAbsent(cluster, k -> new TreeSet<>()).add(recipe);
                 int[] counts = countsByCluster.computeIfAbsent(cluster, k -> new int[3]);
                 counts[0]++;
                 if (OK.equals(row.status())) counts[1]++;
@@ -150,7 +162,10 @@ public class ClusterIndexService {
         Map<String, List<RunEntry>> runs = new LinkedHashMap<>();
         runsByRecipe.forEach((recipe, list) -> runs.put(recipe, List.copyOf(list)));
 
-        return new Index(dates, Map.copyOf(byCluster), Map.copyOf(runs),
+        Map<String, List<String>> clustersByRecipe = new LinkedHashMap<>();
+        clustersByRecipeAcc.forEach((recipe, set) -> clustersByRecipe.put(recipe, List.copyOf(set)));
+
+        return new Index(dates, Map.copyOf(byCluster), Map.copyOf(runs), Map.copyOf(clustersByRecipe),
             new Totals(byCluster.size(), allRecipes.size(), dates.size(), rowTotal));
     }
 }

@@ -1783,6 +1783,24 @@ the RED was reproducible across three JVM runs.
 **Step 7 actual:** 248 tests / 42 classes, `failures=0 errors=0`; 42 surefire reports vs. 42
 `*Test.java` files.
 
+**Fix round (coordinator override of the review's "non-blocking" label):** the first cut called
+`clusterIndex.clustersOf()` once per core and per neighbour recipe, and every one of those calls
+re-entered `ClusterIndexService.index()` -> `B15Reader.fingerprint()`, which directory-streams and
+stats every dated export. A scoped request therefore cost `R+1` stat sweeps (~200k syscalls at
+D=365, R=300; worse on a network filesystem) — a syscall storm inside the fix for a payload
+problem. Two changes: (1) `graph()` reads the index **once** at the top of the scoped branch and
+threads `Map<String, List<String>> clustersByRecipe` down to `addEntry`, whose nullness now also
+carries "am I scoped"; `ClusterIndexService.recipesIn` gained an `(Index, Collection)` overload so
+reusing the hoisted index does not cost a second sweep. (2) `Index` gained
+`clustersByRecipe` — the build-time inverse of `byCluster`, populated in the existing row loop with
+a `TreeSet` accumulator — so `clustersOf()` is an O(1) lookup and **Ruling 9's ordering guarantee
+moved from a per-call `.sorted()` to build time**. `clustersOf`'s public signature is unchanged.
+Both are pinned by mutation-verified tests: removing the `TreeSet` reddens two
+`ClusterIndexServiceTest` cases, and removing the hoist reddens
+`RelationshipServiceTest.aScopedGraphReadsTheClusterIndexOnceAndAnUnscopedOneNotAtAll`
+(`expected: 1 but was: 5`). The unscoped path still never touches `ClusterIndexService`.
+**Post-fix:** 250 tests / 42 classes, `failures=0 errors=0`.
+
 ---
 
 # Part 2 — Unified run history & GCP deep links

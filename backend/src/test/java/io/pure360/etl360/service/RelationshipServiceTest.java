@@ -27,6 +27,13 @@ class RelationshipServiceTest {
         return new ClusterIndexService(new B15Reader(new DataRoots(props)));
     }
 
+    /** Counts how many times the graph builder re-reads the cluster index. */
+    private static final class CountingIndex extends ClusterIndexService {
+        int calls;
+        CountingIndex(B15Reader b15) { super(b15); }
+        @Override public Index index() { calls++; return super.index(); }
+    }
+
     private RelationshipService service() {
         Path mockRoot = Path.of("src/test/resources/fixture-mock").toAbsolutePath();
         Path corpusRoot = Path.of("src/test/resources/fixture-corpus").toAbsolutePath();
@@ -201,5 +208,67 @@ class RelationshipServiceTest {
         // Distinct layers come back sorted (DWH < ODS alphabetically), not in encounter order
         // (ODS was encountered first).
         assertThat(graph.meta().layers()).containsExactly("DWH", "ODS");
+    }
+
+    /**
+     * A scoped request must read the cluster index ONCE, not once per recipe.
+     *
+     * <p>ClusterIndexService.index() re-checks B15Reader.fingerprint() on every call, and that
+     * fingerprint stats every dated export directory. The first cut of this feature called
+     * clusterIndex.clustersOf() inside the node loop, so a scoped request cost R+1 stat sweeps —
+     * unnoticeable against the 14-day mock, roughly 200k syscalls at 365 exports x 300 scoped
+     * recipes, and far worse over a network filesystem. Shipping a syscall storm inside the fix
+     * for a payload problem would be self-defeating, so the count is pinned here.
+     *
+     * <p>The fixture is deliberately R > 1 (two core recipes plus one neighbour): with a single
+     * recipe the per-recipe and once-per-request costs are indistinguishable.
+     */
+    @Test
+    void aScopedGraphReadsTheClusterIndexOnceAndAnUnscopedOneNotAtAll(@TempDir Path tmp) throws Exception {
+        Path ods = Files.createDirectories(tmp.resolve("DWH_CONTROL/LAYER_TO_LAYER/ODS"));
+        Files.writeString(ods.resolve("statements.sql"), String.join("\n",
+            row("r_a.json", "T_A", "SRC_SHARED"),
+            row("r_b.json", "T_B", "SRC_SHARED"),
+            row("r_c.json", "T_C", "T_A")) + "\n");   // r_c reads T_A -> a 1-hop neighbour
+        Path day = Files.createDirectories(
+            tmp.resolve("composer/dwh/config/cluster_tuning/inputs/2026_07_18"));
+        Files.writeString(day.resolve(B15Reader.B15_FILENAME),
+            "cluster_name,recipe_filename,job_id,app_start_iso,"
+                + "avg_job_duration_in_mins_sec,status,message\n"
+                + "cl-x,r_a.json,j1,2026-07-18T01:00:00.000Z,1m 0sec,SUCCESS,\n"
+                + "cl-x,r_b.json,j2,2026-07-18T02:00:00.000Z,1m 0sec,SUCCESS,\n");
+
+        var props = new Etl360Properties("unused", tmp.resolve("DWH_CONTROL").toString(),
+            tmp.resolve("unused-mock").toString(), tmp.resolve("composer").toString(),
+            new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
+        var roots = new DataRoots(props);
+        CountingIndex counting = new CountingIndex(new B15Reader(roots));
+        RelationshipService svc = new RelationshipService(new LayerToLayerService(roots, props),
+            new CorpusService(Files.createDirectories(tmp.resolve("empty-corpus"))), counting);
+
+        RelationshipsDto scoped = svc.graph(List.of("cl-x"));
+
+        assertThat(counting.calls).as("one index read per scoped request, not one per recipe").isEqualTo(1);
+        // Non-vacuity: the clusterNames/neighbour work that used to re-read the index really ran.
+        assertThat(scoped.nodes()).filteredOn(n -> n.id().equals("recipe:r_a.json"))
+            .singleElement().satisfies(n -> {
+                assertThat(n.clusterNames()).containsExactly("cl-x");
+                assertThat(n.neighbor()).isNull();
+            });
+        assertThat(scoped.nodes()).filteredOn(n -> n.id().equals("recipe:r_c.json"))
+            .singleElement().satisfies(n -> assertThat(n.neighbor()).isTrue());
+        assertThat(scoped.meta().neighborCount()).isEqualTo(1);
+
+        counting.calls = 0;
+        svc.graph();
+        assertThat(counting.calls).as("the unscoped path must not touch the cluster index").isZero();
+    }
+
+    private static String row(String recipe, String target, String source) {
+        return "INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES "
+            + "('ODS', 'dir', '" + recipe + "', 'wf', '" + target + "', 1, "
+            + "[STRUCT('" + source + "', true, 0)], [], "
+            + "[STRUCT('" + target + "', 'APPEND')], "
+            + "[STRUCT('" + target + "', 'DAILY', 'LOAD_DATE', 'NONE')])";
     }
 }

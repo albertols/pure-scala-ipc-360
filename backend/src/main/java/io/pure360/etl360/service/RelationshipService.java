@@ -27,6 +27,10 @@ import java.util.Set;
  * write-mode/partition data would be silently discarded by the node-dedup's first-writer-wins
  * {@code putIfAbsent} — an ordering hazard, not a logic error in the later entry's data.
  *
+ * <p>A scoped request consults {@link ClusterIndexService} exactly ONCE — see the comment on the
+ * {@code clustersByRecipe} local in {@link #graph(Collection)}. The unscoped request does not
+ * consult it at all, which is load-bearing for the byte-identity of the unscoped response.
+ *
  * <p><b>Scoping is one hop.</b> {@link #graph(Collection)} builds the core subgraph from the
  * entries whose recipe ran in the requested clusters, then adds the recipes adjacent to the tables
  * that subgraph already holds, flagged {@code neighbor=true} so the UI can dim them. A neighbour
@@ -96,8 +100,16 @@ public class RelationshipService {
 
         List<LayerToLayerEntryDto> core = entries;
         List<LayerToLayerEntryDto> rest = List.of();
+        // Non-null ONLY when scoped, and fetched EXACTLY ONCE per request: ClusterIndexService.index()
+        // re-checks B15Reader.fingerprint(), which stats every dated export directory. Reading it per
+        // recipe (which is what calling clusterIndex.clustersOf() inside the node loop does) turns a
+        // scoped request into R+1 stat sweeps — invisible on the 14-day mock, ~200k syscalls at
+        // 365 exports x 300 scoped recipes, and worse again over a network filesystem.
+        Map<String, List<String>> clustersByRecipe = null;
         if (scoped) {
-            Set<String> inScope = clusterIndex.recipesIn(clusterNames);
+            ClusterIndexService.Index index = clusterIndex.index();
+            clustersByRecipe = index.clustersByRecipe();
+            Set<String> inScope = clusterIndex.recipesIn(index, clusterNames);
             core = entries.stream().filter(e -> inScope.contains(e.recipe())).toList();
             rest = entries.stream().filter(e -> !inScope.contains(e.recipe())).toList();
         }
@@ -106,7 +118,7 @@ public class RelationshipService {
         // neighbour by a later, adjacent entry that also references it.
         for (LayerToLayerEntryDto entry : core) {
             addEntry(entry, nodes, edges, recipePathByFileName, writerLayerByTable,
-                writeModeByTable, partitionTypeByTable, scoped, false, null);
+                writeModeByTable, partitionTypeByTable, clustersByRecipe, false, null);
         }
 
         int neighborCount = 0;
@@ -116,7 +128,7 @@ public class RelationshipService {
                 if (!touchesAny(entry, coreNodeIds)) continue;
                 int before = nodes.size();
                 addEntry(entry, nodes, edges, recipePathByFileName, writerLayerByTable,
-                    writeModeByTable, partitionTypeByTable, true, true, coreNodeIds);
+                    writeModeByTable, partitionTypeByTable, clustersByRecipe, true, coreNodeIds);
                 neighborCount += nodes.size() - before;
             }
         }
@@ -142,6 +154,9 @@ public class RelationshipService {
     }
 
     /**
+     * @param clustersByRecipe {@code null} on the unscoped path — which is what keeps
+     *        {@code NodeDto.clusterNames} absent from the unscoped response, and what keeps that
+     *        path from touching {@link ClusterIndexService} at all.
      * @param attachOnlyTo {@code null} for a core entry — it contributes every node and edge it
      *        declares. For a <b>neighbour</b> entry this is the set of node ids the core subgraph
      *        already holds, and the entry contributes only its recipe node plus the edges joining
@@ -153,14 +168,14 @@ public class RelationshipService {
             Map<String, RelationshipsDto.NodeDto> nodes, Set<RelationshipsDto.EdgeDto> edges,
             Map<String, String> recipePathByFileName, Map<String, String> writerLayerByTable,
             Map<String, String> writeModeByTable, Map<String, String> partitionTypeByTable,
-            boolean scoped, boolean neighbor, Set<String> attachOnlyTo) {
+            Map<String, List<String>> clustersByRecipe, boolean neighbor, Set<String> attachOnlyTo) {
         String recipeId = "recipe:" + entry.recipe();
         String recipePath = recipePathByFileName.get(entry.recipe());
         boolean hasRecipe = recipePath != null;
         String mappingPath = hasRecipe ? parentDir(recipePath) : null;
         addNode(nodes, new RelationshipsDto.NodeDto(recipeId, "recipe", entry.recipe(), entry.layer(),
             mappingPath, hasRecipe, entry.workflow(), entry.executionOrder(), null, null,
-            scoped ? clusterIndex.clustersOf(entry.recipe()) : null,
+            clustersByRecipe == null ? null : clustersByRecipe.getOrDefault(entry.recipe(), List.of()),
             neighbor ? Boolean.TRUE : null));
 
         String targetId = "table:" + entry.target();
