@@ -1377,7 +1377,7 @@ shape is stable."
 
 **Invariant that must not break:** the `writerLayerByTable` / `writeModeByTable` / `partitionTypeByTable` maps are built from the **whole** entries list even when scoped. They describe physical tables, not the selection — building them from the scoped subset would make a table's `writeMode` depend on which clusters you happen to have selected. The existing class comment explains the ordering hazard; scoping must not reintroduce it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `backend/src/test/java/io/pure360/etl360/ScopedRelationshipsContractTest.java`:
 
@@ -1508,7 +1508,7 @@ class ScopedRelationshipsContractTest {
 }
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ScopedRelationshipsContractTest
@@ -1516,7 +1516,7 @@ mvn -q -pl backend test -Dtest=ScopedRelationshipsContractTest
 
 Expected: FAIL — the scoped request returns the full graph, so the subset and neighbour assertions fail.
 
-- [ ] **Step 3: Extend the DTO**
+- [x] **Step 3: Extend the DTO**
 
 In `RelationshipsDto.java`, extend the two nested records (keeping every existing field in place and in order, so the unscoped JSON is unchanged):
 
@@ -1546,7 +1546,7 @@ In `RelationshipsDto.java`, extend the two nested records (keeping every existin
     }
 ```
 
-- [ ] **Step 4: Scope the service**
+- [x] **Step 4: Scope the service**
 
 In `RelationshipService.java`: inject `ClusterIndexService clusterIndex` alongside the existing two dependencies, keep `graph()` as `return graph(List.of());`, and restructure the builder:
 
@@ -1673,7 +1673,7 @@ In `RelationshipService.java`: inject `ClusterIndexService clusterIndex` alongsi
 
 `clustersOf` is called once per core/neighbour recipe. It scans `byCluster` linearly; at ~1 300 clusters × a few hundred scoped recipes that is acceptable for a scoped request and never runs at all when unscoped. **Do not** call it in the unscoped path.
 
-- [ ] **Step 5: Accept the parameter in the controller**
+- [x] **Step 5: Accept the parameter in the controller**
 
 ```java
     @GetMapping("/relationships")
@@ -1685,7 +1685,7 @@ In `RelationshipService.java`: inject `ClusterIndexService clusterIndex` alongsi
 
 Spring binds both `?clusters=a,b` and repeated `?clusters=a&clusters=b` into `List<String>`, so both call shapes work with no extra parsing.
 
-- [ ] **Step 6: Fix the three existing `RelationshipService` call sites**
+- [x] **Step 6: Fix the three existing `RelationshipService` call sites**
 
 `RelationshipServiceTest` constructs the service directly at `:22`, `:131` and `:174`
 (`new RelationshipService(l2l, corpus)`). The added constructor parameter breaks all three. Build a
@@ -1709,7 +1709,7 @@ and pass `emptyIndex()` as the third argument at all three sites. An empty index
 those tests: they exercise the **unscoped** path, which never consults the index at all. Do not
 introduce a mocking library — the repo uses none.
 
-- [ ] **Step 7: Run the scoped tests, then the whole suite**
+- [x] **Step 7: Run the scoped tests, then the whole suite**
 
 ```bash
 mvn -q -pl backend test -Dtest=ScopedRelationshipsContractTest
@@ -1724,7 +1724,7 @@ Expected: scoped test PASS (8 tests); full suite `failures=0 errors=0`, total **
 `relationships_sweep`-adjacent assertions fail, the **unscoped path has moved** — fix the code, never
 the test.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/RelationshipService.java \
@@ -1744,6 +1744,39 @@ test asserts none of their names appear in it. Table write-mode/partition maps
 are still built from the whole entries list, so physical table facts cannot
 change with the selection."
 ```
+
+**Deviation 1 (Step 4 code vs. Step 1 test — the test wins):** as written, Step 4's `addEntry`
+gave every *neighbour* entry its full node/edge set, including tables the core subgraph does not
+hold. That is a second hop, and Step 1's `neighboursAreNotExpandedASecondTime` fails on it
+(`edge recipe:_ETL_m_CAS_DWH_EVENTS_FACT.json -> table:CAS_DWH_EVENTS_FACT joins two
+neighbours`). `addEntry` therefore takes an extra `Set<String> attachOnlyTo` — `null` for a core
+entry, the core node-id set for a neighbour — and a neighbour contributes only its recipe node
+plus the edges joining it to tables already present. Consequence for Tasks 12–14: **every node
+flagged `neighbor: true` is a recipe**; no table is ever a neighbour, so `tableNode` dropped the
+`boolean neighbor` parameter Step 4 asked for rather than carry a provably-always-false argument.
+`NodeDto.neighbor` stays declared for tables, so widening the rule later needs no wire change.
+
+**Deviation 2 (Step 1's invariant-2 test strengthened):**
+`tableWriteModeIsResolvedFromTheWholeGraphNotTheSelection` skipped scoped nodes without a
+`writeMode`, so it compared value-vs-value only. Narrowing the lookup maps to the selection does
+not corrupt those fields, it DROPS them — verified by mutation: with the maps built from the
+scoped subset the test stayed green. It now compares `layer`/`writeMode`/`partitionType`
+absent-vs-present across every table in both graphs, and names `table:CAS_ODS_EVENTS` (in the
+cas-core-4002 scope, written from cas-load-4001) as the non-vacuous case. The same mutation now
+fails it on `layer` (`expected "ODS" but was "DWH"`).
+
+**Deviation 3 (outside this task's file set, under an explicit coordinator ruling):**
+`ClusterIndexService.clustersOf()` documented "name-ascending" but iterated `Index.byCluster()`,
+which `build()` hands to `Map.copyOf` — iteration order unspecified and SALT-randomized per JVM
+run. Task 6 is what makes it observable, since the list ships as `NodeDto.clusterNames`. Added
+`out.sort(Comparator.naturalOrder())` plus a `ClusterIndexServiceTest` case over a recipe in ten
+clusters. The cluster names in that test are deliberate: `MapN` iteration is a rotation of a
+fixed hash-derived order, so short keys whose table order happens to be alphabetical let the
+unsorted code pass ~1 run in 20 (observed). The chosen names do not rotate to sorted order, so
+the RED was reproducible across three JVM runs.
+
+**Step 7 actual:** 248 tests / 42 classes, `failures=0 errors=0`; 42 surefire reports vs. 42
+`*Test.java` files.
 
 ---
 

@@ -129,6 +129,37 @@ class ClusterIndexServiceTest {
         assertThat(service.clustersOf("unknown.json")).isEmpty();
     }
 
+    /**
+     * clustersOf() documents "name-ascending", but it iterates Index.byCluster(), which build()
+     * hands to Map.copyOf — an immutable map whose iteration order is UNSPECIFIED and, on this
+     * JDK, re-randomized per JVM run by ImmutableCollections.SALT. The pre-existing
+     * recipesIn/clustersOf test only ever asserts a single-element result, which is ordered by
+     * definition, so nothing caught it; /api/relationships?clusters= puts the list on the wire,
+     * where a per-run reordering breaks caching and diffing.
+     *
+     * <p>The names are deliberate. MapN's iteration order is some rotation (forwards or backwards)
+     * of a fixed, hash-derived table order, so short keys whose table order happens to BE
+     * alphabetical (e.g. "cl-a".."cl-j") let an unsorted implementation pass ~1 run in 20. These
+     * ten hash into a table order that is not a rotation of their sorted order, so no SALT value
+     * can make the unsorted implementation pass.
+     */
+    @Test
+    void clustersOfIsNameAscendingForARecipeThatRanInManyClusters(@TempDir Path tmp) throws Exception {
+        String[] clusters = {
+            "cluster-wf-alpha-1001", "cluster-wf-bravo-2002", "cluster-wf-charlie-3003",
+            "cluster-wf-delta-4004", "cluster-wf-echo-5005", "cluster-wf-foxtrot-6006",
+            "cluster-wf-golf-7007", "cluster-wf-hotel-8008", "cluster-wf-india-9009",
+            "cluster-wf-juliett-1010"};
+        String[] rows = new String[clusters.length];
+        for (int i = 0; i < clusters.length; i++) {
+            rows[i] = clusters[i] + ",shared.json,j" + i + ",2026-07-18T0" + i
+                + ":00:00.000Z,1m 0sec,SUCCESS,";
+        }
+        day(tmp, "2026_07_18", rows);
+
+        assertThat(serviceOver(tmp).clustersOf("shared.json")).containsExactly(clusters);
+    }
+
     @Test
     void anAbsentComposerYieldsAnEmptyIndexRatherThanThrowing(@TempDir Path tmp) {
         var index = serviceOver(tmp.resolve("nothing-here")).index();

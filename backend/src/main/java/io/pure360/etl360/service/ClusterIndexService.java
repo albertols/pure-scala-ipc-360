@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -76,12 +77,21 @@ public class ClusterIndexService {
         return out;
     }
 
-    /** The clusters a recipe has run in, name-ascending. Empty for a recipe absent from b15. */
+    /**
+     * The clusters a recipe has run in, name-ascending. Empty for a recipe absent from b15.
+     *
+     * <p>The sort is not cosmetic and cannot be dropped in favour of build()'s TreeMap ordering:
+     * {@link #build()} hands {@code byCluster} to {@code Map.copyOf}, whose iteration order is
+     * unspecified and, on this JDK, re-randomized per JVM run. This list goes on the wire as
+     * {@code NodeDto.clusterNames}, so without sorting here the same request would answer
+     * differently across restarts.
+     */
     public List<String> clustersOf(String recipeFilename) {
         List<String> out = new ArrayList<>();
         for (ClusterEntry entry : index().byCluster().values()) {
             if (entry.recipes().contains(recipeFilename)) out.add(entry.name());
         }
+        out.sort(Comparator.naturalOrder());
         return List.copyOf(out);
     }
 

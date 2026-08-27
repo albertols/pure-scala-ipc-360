@@ -11,6 +11,22 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class RelationshipServiceTest {
+
+    /**
+     * A ClusterIndexService over a composer root that holds nothing. Every test here exercises the
+     * UNSCOPED path, which never consults the index, so an empty one is the honest fixture.
+     *
+     * <p>mockRoot must ALSO be a bogus path. DataRoots falls back to the mock tier whenever the
+     * real composer root is absent, so passing the real "backend/src/main/resources/mock" here
+     * would silently hand back the committed 14-day, 21-cluster index — the opposite of empty.
+     */
+    private static ClusterIndexService emptyIndex() {
+        Etl360Properties props = new Etl360Properties(
+            "parser/src/main/resources/xmltobq", "does/not/exist",
+            "does/not/exist/mock", "does/not/exist/either", null);
+        return new ClusterIndexService(new B15Reader(new DataRoots(props)));
+    }
+
     private RelationshipService service() {
         Path mockRoot = Path.of("src/test/resources/fixture-mock").toAbsolutePath();
         Path corpusRoot = Path.of("src/test/resources/fixture-corpus").toAbsolutePath();
@@ -19,7 +35,7 @@ class RelationshipServiceTest {
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
         LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props), props);
         CorpusService corpus = new CorpusService(corpusRoot);
-        return new RelationshipService(l2l, corpus);
+        return new RelationshipService(l2l, corpus, emptyIndex());
     }
 
     @Test
@@ -128,7 +144,7 @@ class RelationshipServiceTest {
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
         LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props), props);
         CorpusService emptyCorpus = new CorpusService(Files.createDirectories(tmp.resolve("empty-corpus")));
-        RelationshipService svc = new RelationshipService(l2l, emptyCorpus);
+        RelationshipService svc = new RelationshipService(l2l, emptyCorpus, emptyIndex());
 
         assertThat(l2l.entries()).hasSize(3); // duplicate row1 parses as two distinct entries
 
@@ -171,7 +187,7 @@ class RelationshipServiceTest {
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
         LayerToLayerService l2l = new LayerToLayerService(new DataRoots(props), props);
         CorpusService emptyCorpus = new CorpusService(Files.createDirectories(tmp.resolve("empty-corpus")));
-        RelationshipService svc = new RelationshipService(l2l, emptyCorpus);
+        RelationshipService svc = new RelationshipService(l2l, emptyCorpus, emptyIndex());
 
         assertThat(l2l.entries()).extracting(e -> e.layer()).containsExactly("ODS", "DWH"); // processing order
 

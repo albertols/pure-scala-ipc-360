@@ -4,6 +4,8 @@ import io.pure360.etl360.api.dto.RelationshipsDto;
 import io.pure360.etl360.service.RelationshipService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
 public class RelationshipController {
@@ -14,7 +16,8 @@ public class RelationshipController {
     }
 
     @GetMapping("/relationships")
-    public RelationshipsDto relationships() {
-        return relationships.graph();
+    public RelationshipsDto relationships(
+            @RequestParam(name = "clusters", required = false) List<String> clusters) {
+        return relationships.graph(clusters == null ? List.of() : clusters);
     }
 }

@@ -10,9 +10,25 @@ public record RelationshipsDto(List<NodeDto> nodes, List<EdgeDto> edges, MetaDto
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record NodeDto(String id, String kind, String name, String layer,
                           String mappingPath, Boolean hasRecipe, String workflow,
-                          Integer executionOrder, String writeMode, String partitionType) {}
+                          Integer executionOrder, String writeMode, String partitionType,
+                          List<String> clusterNames, Boolean neighbor) {
+
+        /** Pre-scoping arity — every unscoped call site keeps its existing shape. */
+        public NodeDto(String id, String kind, String name, String layer, String mappingPath,
+                       Boolean hasRecipe, String workflow, Integer executionOrder,
+                       String writeMode, String partitionType) {
+            this(id, kind, name, layer, mappingPath, hasRecipe, workflow, executionOrder,
+                 writeMode, partitionType, null, null);
+        }
+    }
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record EdgeDto(String from, String to, String kind) {}   // kind: source|lookup|writes
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record MetaDto(int entryCount, int skippedRows, List<String> layers) {}
+    public record MetaDto(int entryCount, int skippedRows, List<String> layers,
+                          List<String> scopedClusters, Integer neighborCount) {
+
+        public MetaDto(int entryCount, int skippedRows, List<String> layers) {
+            this(entryCount, skippedRows, layers, null, null);
+        }
+    }
 }
