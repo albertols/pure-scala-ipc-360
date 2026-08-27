@@ -91,7 +91,7 @@ Backend **212** tests, 38 test classes = 38 surefire reports, 0 failures. Fronte
 
 The three new cluster names deliberately **cut across** `workflow` boundaries (the CAS family has 8 workflows). That is the point: `cluster_name` (b15) and `workflow` (L2L column 4) are different facts from different sources (spec §2), and the mock must prove the code never conflates them.
 
-- [ ] **Step 1: Record the current shape, so the change is provable**
+- [x] **Step 1: Record the current shape, so the change is provable**
 
 ```bash
 cd backend/src/main/resources/mock/composer/dwh/config/cluster_tuning/inputs
@@ -104,7 +104,7 @@ cd -
 
 Expected: `clusters=30 recipes=30 pairs=30 rows=417` — one recipe per cluster.
 
-- [ ] **Step 2: Reassign the 12 CAS mappings to three clusters**
+- [x] **Step 2: Reassign the 12 CAS mappings to three clusters**
 
 Edit `scripts/mock_etl_data.manifest.json`, setting each mapping's `b15.cluster` to:
 
@@ -125,7 +125,7 @@ Edit `scripts/mock_etl_data.manifest.json`, setting each mapping's `b15.cluster`
 
 5 / 4 / 3. Names keep the existing anonymized `cluster-wf-<family>-<slug>-<n>` shape. **Change only the `b15.cluster` string** — every other manifest field (`baseSeconds`, `spreadSeconds`, `koDates`, `koMessage`) stays exactly as-is, so durations, statuses and the incident-day cascade are unchanged and the row count cannot move.
 
-- [ ] **Step 3: Regenerate the CAS b15 block**
+- [x] **Step 3: Regenerate the CAS b15 block**
 
 ```bash
 node --experimental-strip-types scripts/mock_etl_data.mts --emit b15
@@ -133,7 +133,7 @@ node --experimental-strip-types scripts/mock_etl_data.mts --emit b15
 
 This strips and re-appends only the marker-delimited CAS block in each dated CSV. It is byte-idempotent; the 18 SYN clusters are untouched.
 
-- [ ] **Step 4: Verify the new shape and that nothing else moved**
+- [x] **Step 4: Verify the new shape and that nothing else moved**
 
 ```bash
 cd backend/src/main/resources/mock/composer/dwh/config/cluster_tuning/inputs
@@ -155,7 +155,7 @@ git diff backend/src/main/resources/mock/composer | grep '^[-+]cluster-wf-syn' |
 
 Expected: only `cluster-wf-cas-*` lines appear in the diff; **zero** `cluster-wf-syn-*` lines.
 
-- [ ] **Step 5: Run the drift check and the graph sweep**
+- [x] **Step 5: Run the drift check and the graph sweep**
 
 ```bash
 node --experimental-strip-types scripts/mock_etl_data.mts --check
@@ -164,7 +164,7 @@ mvn -q -am -pl backend test -Dtest=LayerToLayerContractTest,OperationalContractT
 
 Expected: `--check` reports no drift; all three test classes pass. Cluster names appear in neither the relationships graph nor the L2L rows, so these must be unaffected.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/mock_etl_data.manifest.json \

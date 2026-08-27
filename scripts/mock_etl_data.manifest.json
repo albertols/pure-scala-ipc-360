@@ -28,7 +28,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT_RAW"], "expr": "TO_DECIMAL(LTRIM(RTRIM(AMOUNT_RAW)))" },
-      "b15": { "cluster": "cluster-wf-cas-01-4001", "baseSeconds": 480, "spreadSeconds": 240, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-load-4001", "baseSeconds": 480, "spreadSeconds": 240, "koDates": [] }
     },
     {
       "n": 2,
@@ -47,7 +47,7 @@
           "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
       ],
       "derived": { "name": "REF_NAME", "from": ["REF_NAME"], "expr": "UPPER(TRIM(REF_NAME))" },
-      "b15": { "cluster": "cluster-wf-cas-02-4002", "baseSeconds": 300, "spreadSeconds": 120, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-load-4001", "baseSeconds": 300, "spreadSeconds": 120, "koDates": [] }
     },
     {
       "n": 3,
@@ -66,7 +66,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_DESC:varchar2:60"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
-      "b15": { "cluster": "cluster-wf-cas-03-4003", "baseSeconds": 900, "spreadSeconds": 300, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-load-4001", "baseSeconds": 900, "spreadSeconds": 300, "koDates": [] }
     },
     {
       "n": 4,
@@ -85,7 +85,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
-      "b15": { "cluster": "cluster-wf-cas-04-4004", "baseSeconds": 660, "spreadSeconds": 200, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-load-4001", "baseSeconds": 660, "spreadSeconds": 200, "koDates": [] }
     },
     {
       "n": 5,
@@ -106,7 +106,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4", "REF_NAME:varchar2:60"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
-      "b15": { "cluster": "cluster-wf-cas-05-4005", "baseSeconds": 2400, "spreadSeconds": 900,
+      "b15": { "cluster": "cluster-wf-cas-core-4002", "baseSeconds": 2400, "spreadSeconds": 900,
         "koDates": ["2026-07-18", "2026-07-23", "2026-07-29"],
         "koMessage": "Executor lost: shuffle fetch failed (synthetic CAS)" }
     },
@@ -127,7 +127,7 @@
           "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
       ],
       "derived": { "name": "REF_NAME", "from": ["REF_NAME"], "expr": "UPPER(TRIM(REF_NAME))" },
-      "b15": { "cluster": "cluster-wf-cas-06-4006", "baseSeconds": 420, "spreadSeconds": 150, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-load-4001", "baseSeconds": 420, "spreadSeconds": 150, "koDates": [] }
     },
     {
       "n": 7,
@@ -148,7 +148,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
-      "b15": { "cluster": "cluster-wf-cas-07-4007", "baseSeconds": 1200, "spreadSeconds": 400, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-core-4002", "baseSeconds": 1200, "spreadSeconds": 400, "koDates": [] }
     },
     {
       "n": 8,
@@ -171,7 +171,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
-      "b15": { "cluster": "cluster-wf-cas-08-4008", "baseSeconds": 1800, "spreadSeconds": 600, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-core-4002", "baseSeconds": 1800, "spreadSeconds": 600, "koDates": [] }
     },
     {
       "n": 9,
@@ -192,7 +192,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
-      "b15": { "cluster": "cluster-wf-cas-09-4009", "baseSeconds": 540, "spreadSeconds": 180, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-out-4003", "baseSeconds": 540, "spreadSeconds": 180, "koDates": [] }
     },
     {
       "n": 10,
@@ -211,7 +211,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
-      "b15": { "cluster": "cluster-wf-cas-10-4010", "baseSeconds": 240, "spreadSeconds": 90, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-out-4003", "baseSeconds": 240, "spreadSeconds": 90, "koDates": [] }
     },
     {
       "n": 11,
@@ -230,7 +230,7 @@
           "fields": ["EVENT_ID:varchar2:20", "EVENT_TS:varchar2:26", "AMOUNT:number:18.2", "STATUS_RAW:varchar2:4"] }
       ],
       "derived": { "name": "AMOUNT", "from": ["AMOUNT"], "expr": "TRUNC(AMOUNT * 1.0, 2)" },
-      "b15": { "cluster": "cluster-wf-cas-11-4011", "baseSeconds": 360, "spreadSeconds": 120, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-out-4003", "baseSeconds": 360, "spreadSeconds": 120, "koDates": [] }
     },
     {
       "n": 12,
@@ -249,7 +249,7 @@
           "fields": ["REF_ID:varchar2:20", "REF_NAME:varchar2:60"] }
       ],
       "derived": { "name": "REF_NAME", "from": ["REF_NAME"], "expr": "UPPER(TRIM(REF_NAME))" },
-      "b15": { "cluster": "cluster-wf-cas-12-4012", "baseSeconds": 150, "spreadSeconds": 60, "koDates": [] }
+      "b15": { "cluster": "cluster-wf-cas-core-4002", "baseSeconds": 150, "spreadSeconds": 60, "koDates": [] }
     }
   ]
 }
