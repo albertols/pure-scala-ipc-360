@@ -886,7 +886,7 @@ Resolves no layers by design: that is an L2L fact, joined at the controller."
 
 **Route-precedence hazard:** `OperationalController` already maps `@GetMapping("/{date}")` under `/api/operational`. A literal `/clusters` segment wins over the `{date}` template in Spring's path matching — `/dates` and `/summary` already prove that precedence in the same namespace. The first test below asserts it explicitly, so a future mapping change cannot silently route `/clusters` into the snapshot handler and produce an "Invalid date 'clusters'" 400.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `backend/src/test/java/io/pure360/etl360/ClusterEndpointsContractTest.java`:
 
@@ -984,7 +984,7 @@ class ClusterEndpointsContractTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ClusterEndpointsContractTest
@@ -992,7 +992,7 @@ mvn -q -pl backend test -Dtest=ClusterEndpointsContractTest
 
 Expected: FAIL — 404 on `/api/operational/clusters` (no handler yet).
 
-- [ ] **Step 3: Write the DTOs**
+- [x] **Step 3: Write the DTOs**
 
 Create `backend/src/main/java/io/pure360/etl360/api/dto/ClusterIndexDto.java`:
 
@@ -1038,7 +1038,7 @@ public record ClusterDetailDto(String name, List<String> dates, List<RecipeInClu
 }
 ```
 
-- [ ] **Step 4: Write the controller**
+- [x] **Step 4: Write the controller**
 
 Create `backend/src/main/java/io/pure360/etl360/api/ClusterController.java`:
 
@@ -1139,7 +1139,7 @@ public class ClusterController {
 }
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 ```bash
 mvn -q -pl backend test -Dtest=ClusterEndpointsContractTest
@@ -1147,7 +1147,7 @@ mvn -q -pl backend test -Dtest=ClusterEndpointsContractTest
 
 Expected: PASS, 7 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/ClusterController.java \
