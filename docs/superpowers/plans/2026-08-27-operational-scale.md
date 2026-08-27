@@ -159,10 +159,16 @@ Expected: only `cluster-wf-cas-*` lines appear in the diff; **zero** `cluster-wf
 
 ```bash
 node --experimental-strip-types scripts/mock_etl_data.mts --check
-mvn -q -am -pl backend test -Dtest=LayerToLayerContractTest,OperationalContractTest,OperationalSummaryContractTest
+mvn -q -am -pl backend install -DskipTests
+mvn -q -pl backend test -Dtest=LayerToLayerContractTest,OperationalContractTest,OperationalSummaryContractTest
 ```
 
 Expected: `--check` reports no drift; all three test classes pass. Cluster names appear in neither the relationships graph nor the L2L rows, so these must be unaffected.
+
+**Do not add `-am` to a `-Dtest` run.** `-am` also builds `parser`, surefire applies the same
+`-Dtest` filter there, `parser` contains none of these classes, and the reactor fails with "No tests
+matching pattern ... were executed". The two-step form above is the pattern the Environment section
+at the top of this plan already prescribes; every focused re-run in later tasks uses it.
 
 - [x] **Step 6: Commit**
 
