@@ -1490,7 +1490,12 @@ class ScopedRelationshipsContractTest {
         assertThat(g.get("meta").get("scopedClusters").toString()).contains("no-such-cluster");
     }
 
-    /** A table's physical metadata must not depend on which clusters happen to be selected. */
+    /** A table's physical metadata must not depend on which clusters happen to be selected.
+     *
+     *  SUPERSEDED — see Task 6 Deviation 2. This version is VACUOUS: `if (!n.hasNonNull("writeMode"))
+     *  continue;` skips every node the forbidden mutation strips, and `layer` is never compared, so
+     *  it stays green when the lookup maps ARE narrowed to the scoped subset. Verified by mutation.
+     *  Do not copy this block; read the shipped ScopedRelationshipsContractTest instead. */
     @Test
     void tableWriteModeIsResolvedFromTheWholeGraphNotTheSelection() throws Exception {
         JsonNode scoped = graph("?clusters=cluster-wf-cas-core-4002");
