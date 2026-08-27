@@ -209,7 +209,7 @@ New floors: 21 clusters / 30 recipes / 14 dates / 417 rows."
 
 **Deliberate refinement over spec §5.1:** the spec sketches this as "extract the CSV parse". It also takes over `inputsDir()`/`dates()`/date→path resolution, because Task 3 needs exactly the same location logic and duplicating it would let the two drift. One class owns "the b15 corpus on disk"; `OperationalService` keeps snapshot/summary semantics.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `backend/src/test/java/io/pure360/etl360/service/B15ReaderTest.java`:
 
@@ -300,7 +300,7 @@ class B15ReaderTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=B15ReaderTest
@@ -308,7 +308,7 @@ mvn -q -pl backend test -Dtest=B15ReaderTest
 
 Expected: FAIL — `cannot find symbol: class B15Reader`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `backend/src/main/java/io/pure360/etl360/service/B15Reader.java`:
 
@@ -467,7 +467,7 @@ public class B15Reader {
 
 Add `import java.util.Comparator;` to the import block.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 mvn -q -pl backend test -Dtest=B15ReaderTest
@@ -475,7 +475,7 @@ mvn -q -pl backend test -Dtest=B15ReaderTest
 
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Move `OperationalService` onto the reader**
+- [x] **Step 5: Move `OperationalService` onto the reader**
 
 In `OperationalService.java`: inject `B15Reader b15` alongside the existing `DataRoots roots` and `LayerToLayerService layerToLayer`, then
 
@@ -485,7 +485,7 @@ In `OperationalService.java`: inject `B15Reader b15` alongside the existing `Dat
 
 Keep `parseDurationMin`, `nearestRank`, `nearestAvailable` and the whole of `summary()` unchanged — behaviour must not move, only the I/O path.
 
-- [ ] **Step 6: Run the full backend suite to prove nothing moved**
+- [x] **Step 6: Run the full backend suite to prove nothing moved**
 
 ```bash
 mvn -q -am -pl backend clean test
@@ -495,7 +495,7 @@ grep -h "^Tests run:" backend/target/surefire-reports/*.txt \
 
 Expected: `failures=0 errors=0`, total **217** (212 baseline + 5 new).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/B15Reader.java \

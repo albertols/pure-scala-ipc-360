@@ -25,7 +25,7 @@ class OperationalServiceTest {
             mockRoot.resolve("nonexistent-composer").toString(),
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
         DataRoots roots = new DataRoots(props);
-        return new OperationalService(roots, new LayerToLayerService(roots, props));
+        return new OperationalService(roots, new LayerToLayerService(roots, props), new B15Reader(roots));
     }
 
     @Test
@@ -120,7 +120,7 @@ class OperationalServiceTest {
         var props = new Etl360Properties("unused", "unused-dwh", tmp.resolve("unused-mock").toString(),
             tmp.toString(), new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
         DataRoots roots = new DataRoots(props);
-        OperationalService svc = new OperationalService(roots, new LayerToLayerService(roots, props));
+        OperationalService svc = new OperationalService(roots, new LayerToLayerService(roots, props), new B15Reader(roots));
 
         var garbage = svc.summary().recipes().stream()
             .filter(r -> r.recipeFilename().equals("_ETL_m_GARBAGE.json"))
