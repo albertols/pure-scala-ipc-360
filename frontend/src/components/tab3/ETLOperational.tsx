@@ -21,6 +21,7 @@ import { DataRootsPanel, DataRootsChip } from './DataRootsPanel'
 import { AvailabilityCalendar } from './AvailabilityCalendar'
 import { nearestAvailableDate } from './dateWindow'
 import { applyWheel, wheelActs } from './canvasGestures'
+import { withoutDeselectedRecipes, narrowSummaryToDates, narrowRunsToDates } from './viewScope'
 
 const nf = new Intl.NumberFormat('en-US')
 
@@ -415,9 +416,32 @@ export function ETLOperational() {
     setTimeMeta({ hour: v.hour, precision: v.precision, isNow: v.isNow })
   }
 
+  // Blocker 2: the pane's DATE checkboxes. `selectedDates` is empty for "no filter"; non-empty it
+  // restricts every operational resolution below to those dates — statuses, history strips, the
+  // rollup stats and the run picker all read the narrowed history, never the full one. This is a
+  // refinement within an already-fetched cluster selection, so it is client-side by design: the
+  // rows are already here, and a refetch would be a round trip to delete data we hold.
+  const scopedSummary = useMemo(
+    () => narrowSummaryToDates(summary.data, view.selectedDates),
+    [summary.data, view.selectedDates],
+  )
+
+  // A date filter that excludes the currently-selected date would resolve every card to PENDING —
+  // a canvas emptied of status by a control the operator used to narrow it. Snap into the filter
+  // instead, the same nearest-date rule the TimePicker and the calendar already apply. Guarded on
+  // membership, so it fires once and cannot loop.
+  useEffect(() => {
+    if (view.selectedDates.length === 0) return
+    if (view.selectedDate !== null && view.selectedDates.includes(view.selectedDate)) return
+    setOperationalView({
+      selectedDate: nearestAvailableDate(
+        view.selectedDate ?? view.selectedDates[0]!, view.selectedDates),
+    })
+  }, [view.selectedDates, view.selectedDate])
+
   const graph = useMemo(
-    () => (rel.data ? toOperationalGraph(rel.data, summary.data, view.selectedDate, view.density) : null),
-    [rel.data, summary.data, view.selectedDate, view.density],
+    () => (rel.data ? toOperationalGraph(rel.data, scopedSummary, view.selectedDate, view.density) : null),
+    [rel.data, scopedSummary, view.selectedDate, view.density],
   )
 
   // Task 15: cycling density re-lays out at the new pitch AND refits the viewport in one store
@@ -426,18 +450,22 @@ export function ETLOperational() {
   const onCycleDensity = () => {
     const next: CardDensity = view.density === 'detailed' ? 'compact'
       : view.density === 'compact' ? 'minimal' : 'detailed'
-    const relaid = toOperationalGraph(rel.data!, summary.data, view.selectedDate, next)
+    const relaid = toOperationalGraph(rel.data!, scopedSummary, view.selectedDate, next)
     setOperationalView({ density: next, ...fitToViewport(relaid.cards, viewportRef.current, next) })
   }
 
   // Filtered BEFORE the early returns: `useRuns` below is a hook and its input is this list.
-  const cards = useMemo(() => (graph?.cards ?? []).filter(c => {
+  // Blocker 2: the pane's RECIPE checkboxes filter here, alongside the toolbar's own filters —
+  // `withoutDeselectedRecipes` drops the unchecked recipe cards, and the canvas's edge pass drops
+  // the edges that touched them. Because `recipeNames` is derived from this list, an unchecked
+  // recipe also stops costing a slot in the run-history request.
+  const cards = useMemo(() => withoutDeselectedRecipes(graph?.cards ?? [], view.deselectedRecipes).filter(c => {
     if (layerFilter !== 'ALL' && c.layer !== layerFilter) return false
     if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
     if (statusFilter !== 'ALL' && c.status !== statusFilter) return false
     if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
     return true
-  }), [graph, layerFilter, kindFilter, statusFilter, searchQuery])
+  }), [graph, view.deselectedRecipes, layerFilter, kindFilter, statusFilter, searchQuery])
 
   const recipeNames = useMemo(
     () => cards.filter(c => c.kind === 'recipe').map(c => c.name),
@@ -446,6 +474,11 @@ export function ETLOperational() {
   // `/api/operational/runs` is bounded at 200 recipes per request; `useRuns` chunks and merges,
   // so a 400-recipe cluster costs two requests rather than a 400.
   const runs = useRuns(recipeNames, 10)
+  // Same date filter, applied to the run picker's own source.
+  const runsByRecipe = useMemo(
+    () => narrowRunsToDates(runs.byRecipe, view.selectedDates),
+    [runs.byRecipe, view.selectedDates],
+  )
 
   // Task 16: date-scoped chip counts, derived client-side from `graph` + `snapshot` (the selected
   // date's raw b15 rows) — no new endpoint.
@@ -517,12 +550,18 @@ export function ETLOperational() {
   }, [selectedClusterRows, availableDates])
   const selectionDateCount = selectionDates.length
 
+  // Counts the cards actually on the canvas, so unchecking a recipe in the pane moves this number
+  // too rather than leaving the strip stating a scope the canvas no longer shows.
+  const shownCards = useMemo(
+    () => withoutDeselectedRecipes(graph?.cards ?? [], view.deselectedRecipes),
+    [graph, view.deselectedRecipes],
+  )
   const selectionSummary: SelectionSummary | null = graph ? {
-    recipes: graph.cards.filter(c => c.kind === 'recipe' && !c.neighbor).length,
+    recipes: shownCards.filter(c => c.kind === 'recipe' && !c.neighbor).length,
     dates: selectionDateCount,
     ok: selectedClusterRows.reduce((n, c) => n + (c.ok ?? 0), 0),
     ko: selectedClusterRows.reduce((n, c) => n + (c.ko ?? 0), 0),
-    nodes: graph.cards.length,
+    nodes: shownCards.length,
     neighbors: neighborCount,
   } : null
 
@@ -629,6 +668,12 @@ export function ETLOperational() {
     )
   }
 
+  const paneFilterCount = view.deselectedRecipes.length + view.selectedDates.length
+  const paneFilterLabel = [
+    view.deselectedRecipes.length > 0 ? `${nf.format(view.deselectedRecipes.length)} recipes hidden` : '',
+    view.selectedDates.length > 0 ? `${nf.format(view.selectedDates.length)} of ${nf.format(availableDates.length)} days` : '',
+  ].filter(Boolean).join(' · ')
+
   const selectedCard = view.selectedNode ? graph.cards.find(c => c.id === view.selectedNode) : null
 
   const previewTarget = selectedCard
@@ -638,7 +683,7 @@ export function ETLOperational() {
   // GCP quick links: every URL comes from `gcpLinks.ts`'s builders over the served templates —
   // anchored on the SELECTED run (its job id and its `app_start_iso` cursor) when one exists,
   // degrading to the card's own last job id when the run history is unavailable.
-  const selectedRuns = selectedCard ? (runs.byRecipe[selectedCard.name] ?? []) : []
+  const selectedRuns = selectedCard ? (runsByRecipe[selectedCard.name] ?? []) : []
   const selectedRun = pickDefaultRun(selectedRuns, view.selectedRunDate)
   const linkJobId = selectedRun?.jobId || selectedCard?.jobId || ''
   const clusterName = selectedRun?.clusterName
@@ -702,8 +747,26 @@ export function ETLOperational() {
             Run history unavailable
           </span>
         )}
+        {/* The pane's two refinements are applied to the canvas but LIVE in a collapsible
+            drawer inside the pane, so a filter set for one cluster would otherwise keep hiding
+            cards after the operator moved on to another with no visible cause. Say so, and make
+            the control that undoes it reachable from the canvas. */}
+        {paneFilterCount > 0 && (
+          <button
+            aria-label="Clear pane filters"
+            title="Recipe/date filters set in the cluster pane. Click to clear them."
+            onClick={() => setOperationalView({ deselectedRecipes: [], selectedDates: [] })}
+            style={{
+              padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
+              fontFamily: 'JetBrains Mono, monospace', color: 'var(--text)',
+              background: 'var(--surface-3)', border: '1px solid var(--border)',
+            }}
+          >
+            {paneFilterLabel}
+          </button>
+        )}
         <DataRootsChip diagnostics={diagnostics.data} />
-        <StatusSummary cards={graph.cards} />
+        <StatusSummary cards={shownCards} />
 
         {/* density — Task 15: an explicit control, not something zoom implies. Cycling re-lays
             out at the new pitch AND refits the viewport (onCycleDensity), so "fitting more flow
@@ -757,7 +820,7 @@ export function ETLOperational() {
           pan={view.pan}
           onPan={onPan}
           summaryItems={summaryItems}
-          runsByRecipe={runs.byRecipe}
+          runsByRecipe={runsByRecipe}
           density={view.density}
           containerRef={graphContainerRef}
           selectedRunDate={view.selectedRunDate}

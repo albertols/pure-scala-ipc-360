@@ -605,6 +605,66 @@ describe('ETLOperational — cluster-scoped loading', () => {
     expect(queries[0]).toBe('?clusters=cl-a&clusters=cl-b')
   })
 
+  // Blocker 2: `deselectedRecipes` and `selectedDates` were written by ClusterPane and read
+  // NOWHERE but their own `checked` attribute — the checkboxes moved but nothing filtered.
+  // Spec §7.1 says the chevron reveals recipe and date checkboxes "both of which further filter
+  // the canvas", so these two assert the EFFECT, not the store write.
+  it('removes a card from the canvas when its recipe is unchecked in the pane', async () => {
+    renderTab(['cl-a'])
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    act(() => setOperationalView({ deselectedRecipes: ['_ETL_m_CAS_T.json'] }))
+
+    await waitFor(() => expect(screen.queryByTestId('node-r')).not.toBeInTheDocument())
+    // The tables it joined stay — only the recipe card and the edges touching it go.
+    expect(screen.getByTestId('node-t_src')).toBeInTheDocument()
+  })
+
+  it('restricts the status resolution to the checked dates', async () => {
+    renderTab(['cl-a'])
+    // Default selectedDate is the latest (2026-07-29), where the fixture recipe is SUCCESS.
+    // Scoped to the recipe's own card: the toolbar renders an "OK" Status filter chip too.
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(within(screen.getByTestId('node-r')).getByText('OK')).toBeInTheDocument()
+
+    // Check only the earlier date, on which the same recipe FAILED. The selected date snaps
+    // into the filter, so the canvas re-resolves against 07-28 rather than blanking.
+    act(() => setOperationalView({ selectedDates: ['2026-07-28'] }))
+
+    await waitFor(() =>
+      expect(within(screen.getByTestId('node-r')).getByText('KO')).toBeInTheDocument())
+    expect(within(screen.getByTestId('node-r')).queryByText('OK')).not.toBeInTheDocument()
+  })
+
+  it('leaves every card status unresolved-but-honest when no run falls on a checked date', async () => {
+    renderTab(['cl-a'])
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    // A date the fixture history has no entry for: PENDING, not a carried-forward OK.
+    act(() => setOperationalView({ selectedDates: ['2026-07-27'] }))
+
+    await waitFor(() =>
+      expect(within(screen.getByTestId('node-r')).getByText('PENDING')).toBeInTheDocument())
+  })
+
+  // The pane's filters live in a collapsible drawer inside the pane, so an active one must not
+  // hide cards silently once the operator has moved on to a different cluster.
+  it('names the active pane filters on the toolbar and clears them on click', async () => {
+    renderTab(['cl-a'])
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(screen.queryByLabelText('Clear pane filters')).not.toBeInTheDocument()
+
+    act(() => setOperationalView({ deselectedRecipes: ['_ETL_m_CAS_T.json'], selectedDates: ['2026-07-28'] }))
+
+    const chip = await screen.findByLabelText('Clear pane filters')
+    expect(chip.textContent).toContain('1 recipes hidden')
+    expect(chip.textContent).toContain('1 of 2 days')
+
+    fireEvent.click(chip)
+    expect(await screen.findByTestId('node-r')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Clear pane filters')).not.toBeInTheDocument()
+  })
+
   it('returns to the prompt when the last cluster is deselected, without refetching the index', async () => {
     let indexCalls = 0
     server.use(http.get('*/api/operational/clusters', () => {
