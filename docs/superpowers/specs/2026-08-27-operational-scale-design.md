@@ -639,3 +639,31 @@ docs, screenshots or commit messages. They were used to diagnose the URL *shape*
 - Every fixture and every asserted number in this spec comes from the committed anonymized mock.
 - Screenshots committed during the browser acceptance pass are taken against the committed mock
   data, never against a real export, and are reviewed for identifiers before committing.
+
+### Browser acceptance walk — observed 2026-08-28
+
+Driven in Chrome against `http://localhost:8443` with `ETL360_DWH_CONTROL_ROOT`/`ETL360_COMPOSER_ROOT`
+pinned to the committed mock tiers, so every figure below is the mock corpus (21 clusters / 30
+recipes / 14 dates / 417 rows) and no real export was rendered or captured. Note the UI's chip reads
+`data: real` because the mock paths were supplied *as* the real roots — the same thing
+`scripts/validate_loop.sh` does; the totals confirm which data it is.
+
+| Was PENDING | Now | Observed |
+|---|---|---|
+| **11 — Cloud Logging deep link** | **PASS** | The live `Logging` href is `console.cloud.google.com/logs/query`, carries `query=resource.labels.job_id`, a `;cursorTimestamp=` with **literal colons** (no `%3A`), `;duration=P…` and `project=`; it does **not** use the `?resource.type=dataproc_job` shape the console rejects, and contains no bare empty `;key=` segment. `job_id` and `Logging` resolve to the same job id. Asserted structurally rather than by opening the console — the mock's job ids and project are synthetic, so a real console round trip would prove nothing. |
+| **6 — density re-layout** | **PASS** | Switching Detailed → Compact re-packed the graph *and* auto-refitted: zoom 85% → 51%, whole subgraph visible. Not merely smaller cards. |
+| **7 — calendar** | **PASS** | July 2026, Monday-first; the 14 days with data lit, 1–15 and 30–31 dim, day 29 ringed as selected, legend naming all four states. Escape dismisses it. |
+| **8 — DOM wheel wiring** | **PASS** | Real `WheelEvent`s on the canvas: ⌘+wheel 51% → 83%, ctrl+wheel (trackpad pinch) back to 51%; Shift+wheel moved X only; plain wheel moved Y only. This was the half `applyWheel`'s pure tests could not reach. |
+| **9 — state across tab switches** | **PASS** | Tab 3 → Tab 4 → Tab 3 twice. Density, cluster chip and zoom identical throughout. The first return issued 3 fetches — all Tab 4 mounting for the first time; the **second** round trip issued **zero**. |
+| **14 — card contrast** | **PASS** | 0 of 14 rendered cards contain `#4a5570`. The 96 remaining occurrences are surrounding chrome and the other tabs, outside this sub-project's scope. |
+| **1 — only the cluster index when nothing is selected** | **PASS** (re-confirmed live) | With no selection the tab fetched `/api/operational/clusters` and nothing else — no `/api/relationships`, no `/api/operational/summary`, no dates, no per-date snapshot. |
+| **12 — no `app_id`** | **PASS** (re-confirmed live) | `app_id` appears zero times in the rendered document. |
+
+**Console:** clean on load and throughout — only Vite's dev handshake and React's DevTools notice. No errors, no warnings.
+
+**Not observed:** whether Google's console *renders* the link (needs real credentials and a real job, neither of which may enter this repo), and the seven pending screenshots in `docs/visual-guide.md` for Tabs 1/2/4, which this walk did not cover.
+
+![Tab 3 — nothing selected](../../img/tab3-empty-prompt.png)
+![Tab 3 — one cluster selected, neighbours dimmed](../../img/tab3-cluster-selected.png)
+![Tab 3 — compact density, auto-refitted](../../img/tab3-density-compact.png)
+![Tab 3 — availability calendar](../../img/tab3-calendar.png)
