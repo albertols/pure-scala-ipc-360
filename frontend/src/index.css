@@ -84,3 +84,27 @@ html, body, #root {
 @media (prefers-reduced-motion: reduce) {
   .spinner-arc { animation-duration: 2.4s; }
 }
+
+/* Sub-project 11: landing hero motion (animation utilities, not design tokens — ADR-0005,
+   same standing as .spinner-arc above). Every one has a reduced-motion counterpart. */
+@keyframes mascot-drift { /* slow ken-burns so the still hero breathes */
+  0%, 100% { transform: scale(1.04) translate(0, 0); }
+  50%      { transform: scale(1.08) translate(-1.2%, -0.8%); }
+}
+@keyframes bubble-rise {
+  0%   { transform: translateY(0) scale(0.7); opacity: 0; }
+  15%  { opacity: 0.75; }
+  100% { transform: translateY(-140px) scale(1.1); opacity: 0; }
+}
+@keyframes twig-fall {
+  0%   { transform: translate(0, -20px) rotate(0deg); opacity: 0; }
+  20%  { opacity: 0.9; }
+  100% { transform: translate(-30px, 120px) rotate(220deg); opacity: 0; }
+}
+.mascot-hero  { animation: mascot-drift 24s ease-in-out infinite; }
+.bubble       { animation: bubble-rise 4.5s ease-in infinite; }
+.twig         { animation: twig-fall 5s ease-in infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-hero, .bubble, .twig { animation: none; }
+}

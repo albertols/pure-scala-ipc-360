@@ -1039,7 +1039,7 @@ colour grade rendered *over* it. **The character's pose does not change between 
 into the photograph. This is a known, accepted limitation (spec §5); do not "fix" it by substituting
 drawn artwork.
 
-- [ ] **Step 1: Produce the asset**
+- [x] **Step 1: Produce the asset**
 
 ```bash
 cd /Users/serna/IdeaProjects/pure-scala-ipc-360
@@ -1056,7 +1056,7 @@ sips -g pixelWidth -g pixelHeight frontend/src/assets/mascot-hero.jpg | tail -2
 Expected: ~151,000 bytes, 600×600. **If `$SRC` no longer exists** (it is a session-scoped cache),
 stop and ask the user to re-supply the mascot image rather than substituting any other artwork.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```tsx
 import { describe, expect, it, afterEach } from 'vitest'
@@ -1108,7 +1108,7 @@ describe('MascotScene', () => {
 })
 ```
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 ```bash
 cd frontend && pnpm test MascotScene
@@ -1116,7 +1116,7 @@ cd frontend && pnpm test MascotScene
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 4: Add the keyframes and their reduced-motion rules**
+- [x] **Step 4: Add the keyframes and their reduced-motion rules**
 
 Append to `frontend/src/index.css`, beside the existing `spinner-rotate` block at `:75-86`:
 
@@ -1146,7 +1146,7 @@ Append to `frontend/src/index.css`, beside the existing `spinner-rotate` block a
 }
 ```
 
-- [ ] **Step 5: Write the component**
+- [x] **Step 5: Write the component**
 
 `MascotScene.tsx` renders, in order:
 
@@ -1164,7 +1164,7 @@ Append to `frontend/src/index.css`, beside the existing `spinner-rotate` block a
 The root element carries `data-testid="mascot-scene"` and `data-mood={status}`. Colours come from
 existing tokens only (`--text`, `--text-muted`, `--cyan` for bubbles, `--orange` for twigs).
 
-- [ ] **Step 6: Pin the reduced-motion contract — and note the spec's sketch of it was wrong**
+- [x] **Step 6: Pin the reduced-motion contract — and note the spec's sketch of it was wrong**
 
 Spec §12 lists a `reducedMotion.test.tsx` asserting "no animation classes are applied". **That test
 cannot exist as described.** Reduced motion is handled in CSS (`@media (prefers-reduced-motion: reduce)`),
@@ -1205,7 +1205,7 @@ Run it: `cd frontend && pnpm test reducedMotion` — it must fail if any class i
 from a reduced-motion block, which you can verify by temporarily deleting one class name from the CSS
 rule and re-running.
 
-- [ ] **Step 7: Run the tests, the type check and the build**
+- [x] **Step 7: Run the tests, the type check and the build**
 
 ```bash
 cd frontend && pnpm test MascotScene reducedMotion && pnpm exec tsc --noEmit && pnpm build
@@ -1215,7 +1215,7 @@ ls -l dist/assets/*.jpg 2>/dev/null | awk '{print "  bundled asset bytes:", $5}'
 Expected: PASS (5 tests), `tsc` clean, build clean, and the bundled JPEG ~151 KB. If the bundle grew
 by more than ~200 KB, the wrong asset was committed.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add frontend/src/components/landing/reducedMotion.test.ts \
