@@ -1256,7 +1256,7 @@ spinner-rotate precedent (ADR-0005)."
 **Why:** these are the "prelude of what's coming" — the numbers that tell the user how much is
 actually here before they walk in.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // StatsGrid.test.tsx
@@ -1331,7 +1331,7 @@ describe('ProgressStrip', () => {
 })
 ```
 
-- [ ] **Step 2: Run them to verify they fail**
+- [x] **Step 2: Run them to verify they fail**
 
 ```bash
 cd frontend && pnpm test StatsGrid ProgressStrip
@@ -1339,7 +1339,7 @@ cd frontend && pnpm test StatsGrid ProgressStrip
 
 Expected: FAIL — modules not found.
 
-- [ ] **Step 3: Implement both**
+- [x] **Step 3: Implement both**
 
 `StatsGrid` renders a responsive grid of stat tiles: value in `--text` at a large size in
 `JetBrains Mono`, label beneath in `--text-muted`. Tiles: XMLs, recipes, DDLs, layers (corpus);
@@ -1354,7 +1354,7 @@ completeness** — the third test pins that distinction.
 
 Existing tokens only.
 
-- [ ] **Step 4: Run the tests and the type check**
+- [x] **Step 4: Run the tests and the type check**
 
 ```bash
 cd frontend && pnpm test StatsGrid ProgressStrip && pnpm exec tsc --noEmit
@@ -1362,7 +1362,7 @@ cd frontend && pnpm test StatsGrid ProgressStrip && pnpm exec tsc --noEmit
 
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/landing/StatsGrid.tsx \
