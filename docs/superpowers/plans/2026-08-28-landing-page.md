@@ -87,7 +87,7 @@ Committed-mock values this plan asserts against: corpus **81** XMLs · **86** re
 
 **The nullable contract is the load-bearing part.** There are **two** ways this can fail, not one: `docs/` may be absent (a packaged deployment need not ship documentation), **and** `RepoRoot.resolve` throws when it cannot find a `pom.xml`+`parser/` ancestor. Both must yield `null`, not an exception. A landing page that 500s because documentation is missing would be absurd.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -181,7 +181,7 @@ class ProgressScannerTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ProgressScannerTest
@@ -189,7 +189,7 @@ mvn -q -pl backend test -Dtest=ProgressScannerTest
 
 Expected: FAIL — `cannot find symbol: class ProgressScanner`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```java
 package io.pure360.etl360.service;
@@ -319,7 +319,7 @@ public class ProgressScanner {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 mvn -q -pl backend test -Dtest=ProgressScannerTest
@@ -327,7 +327,7 @@ mvn -q -pl backend test -Dtest=ProgressScannerTest
 
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Sanity-check it against the real repo**
+- [x] **Step 5: Sanity-check it against the real repo**
 
 ```bash
 cd /Users/serna/IdeaProjects/pure-scala-ipc-360
@@ -336,7 +336,7 @@ echo "expect done=$(cat docs/superpowers/plans/*.md | grep -c '^- \[x\]') total=
 
 The scanner's numbers must match this shell count. If they differ, the regex is wrong — fix the regex, not the expectation. (At authorship: done=596, total=601, adrs=16.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/ProgressScanner.java \
