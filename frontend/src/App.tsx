@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { TabId } from './types'
 import { ETLViewer } from './components/tab1/ETLViewer'
 import { ETLModifier } from './components/tab2/ETLModifier'
@@ -6,6 +6,7 @@ import { ETLOperational } from './components/tab3/ETLOperational'
 import { ETLDag } from './components/tab4/ETLDag'
 import { InfoTooltip } from './components/shared/InfoTooltip'
 import { TopProgressBar } from './components/shared/Spinner'
+import { Landing } from './components/landing/Landing'
 import { TABS, FUTURE_TABS } from './tabs'
 
 // ─── Top Bar ─────────────────────────────────────────────────────────────────
@@ -143,14 +144,27 @@ function readFocusRecipe(): string | null {
   return new URLSearchParams(window.location.search).get('focus')
 }
 
+// Sub-project 11 Task 10: the landing page is the app's initial view (spec §8) — a `view`
+// state, not a route. `'leaving'` is the ~400ms window in which `.landing-exit` (index.css)
+// plays before the tab shell actually mounts; `?focus=` bypasses this entirely, exactly as it
+// already bypasses the tab shell below (never sees `'landing'`/`'leaving'` at all).
+type ViewState = 'landing' | 'leaving' | 'tabs'
+const LANDING_TRANSITION_MS = 400
+
 export default function App() {
   const [focusRecipe] = useState<string | null>(readFocusRecipe)
+  const [view, setView] = useState<ViewState>('landing')
   const [activeTab, setActiveTab] = useState<TabId>('viewer')
   const [searchQuery, setSearchQuery] = useState('')
   // Task 12: visited tabs stay mounted (display:none) once shown, so React Query's
   // cached data and operationalView's cached view state don't have to fight DOM
   // state (scroll offsets, canvas layout work) that neither of them restores.
   const [visited, setVisited] = useState<Set<TabId>>(() => new Set<TabId>(['viewer']))
+  const transitionTimer = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current)
+  }, [])
 
   const showTab = (tab: TabId) => {
     setActiveTab(tab)
@@ -158,8 +172,32 @@ export default function App() {
     setVisited(prev => prev.has(tab) ? prev : new Set(prev).add(tab))
   }
 
+  // Entry via the primary button, `Esc`, a tab-preview card or an architecture-diagram region
+  // (the last two call this with the tab they depict; the first two call it with none). Nothing
+  // here is persisted — no "skip intro" flag, so there is no stored value that can wedge the
+  // first screen (the hazard sub-project 10 met once already with a corrupt `density`).
+  const enterApp = (tab?: TabId) => {
+    if (tab) showTab(tab)
+    setView('leaving')
+    transitionTimer.current = window.setTimeout(() => setView('tabs'), LANDING_TRANSITION_MS)
+  }
+
+  if (!focusRecipe && view !== 'tabs') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+        <TopProgressBar />
+        <div className={view === 'leaving' ? 'landing-exit' : undefined} style={{ flex: 1, overflow: 'hidden' }}>
+          <Landing onEnter={enterApp} />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+    <div
+      className={!focusRecipe ? 'shell-enter' : undefined}
+      style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}
+    >
       {/* Task 17: fetch-driven progress bar — mounted once here, above the
           tab shell (and focus mode), so every corner of the app gets the
           same top-of-viewport signal without per-tab wiring. */}

@@ -28,9 +28,13 @@ const GRADE: Record<ReadinessStatus, string> = {
   degraded: 'saturate(0.7) brightness(0.9)',
 }
 
+// The vignette darkens toward --bg (#0b0d14) at the edges. `color-mix()` derives that colour
+// from the token itself — Tailwind v4 (already a dependency here) requires a browser baseline
+// that supports it, so this is not a stretch — rather than hand-decomposing the hex into a
+// second, driftable `rgba(11,13,20,…)` literal.
 const VIGNETTE: Record<ReadinessStatus, string> = {
-  ok: 'radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(11,13,20,0.25) 100%)',
-  degraded: 'radial-gradient(ellipse at 50% 45%, transparent 30%, rgba(11,13,20,0.6) 100%)',
+  ok: 'radial-gradient(ellipse at 50% 45%, transparent 45%, color-mix(in srgb, var(--bg) 25%, transparent) 100%)',
+  degraded: 'radial-gradient(ellipse at 50% 45%, transparent 30%, color-mix(in srgb, var(--bg) 60%, transparent) 100%)',
 }
 
 /** Bubble positions, staggered so they don't rise in lockstep — viewBox 0 0 600 600. */

@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 const css = readFileSync(resolve(__dirname, '../../index.css'), 'utf8')
 
 /** Every class this sub-project animates. Add to this list when adding a keyframe. */
-const ANIMATED = ['mascot-hero', 'bubble', 'twig']
+const ANIMATED = ['mascot-hero', 'bubble', 'twig', 'steam', 'shear-glint', 'landing-exit', 'shell-enter']
 
 describe('reduced motion', () => {
   it('has a prefers-reduced-motion block', () => {

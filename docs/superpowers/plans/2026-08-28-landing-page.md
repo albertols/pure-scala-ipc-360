@@ -1709,7 +1709,7 @@ precise reference; this is the illustrated overview."
 - **Always shown; nothing is persisted.** No "skip intro" flag — which also means there is no persisted value that can wedge the first screen, a hazard this codebase met once already (a corrupt `density` white-screened Tab 3 in sub-project 10).
 - The transition is ~400 ms of `opacity`/`transform` only, and is skipped under `prefers-reduced-motion`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // Landing.test.tsx
@@ -1826,7 +1826,7 @@ Append to `App.test.tsx`:
   })
 ```
 
-- [ ] **Step 2: Run them to verify they fail**
+- [x] **Step 2: Run them to verify they fail**
 
 ```bash
 cd frontend && pnpm test Landing App
@@ -1834,7 +1834,7 @@ cd frontend && pnpm test Landing App
 
 Expected: FAIL — `Landing` not found; App still opens on a tab.
 
-- [ ] **Step 3: Implement `Landing`**
+- [x] **Step 3: Implement `Landing`**
 
 Composes, top to bottom: `MascotScene` (full-width hero, `status` and the first non-`ok` root from
 `readiness.roots` passed in), a title block, the primary **Enter** button, `StatsGrid`,
@@ -1847,7 +1847,7 @@ Composes, top to bottom: `MascotScene` (full-width hero, `status` and the first 
 - A `useEffect` binds `keydown` for `Escape` → `onEnter()`, removed on unmount.
 - `failingRoot` = the first root whose `status !== 'ok'`, or `null`.
 
-- [ ] **Step 4: Wire `App.tsx`**
+- [x] **Step 4: Wire `App.tsx`**
 
 ```tsx
 const [view, setView] = useState<'landing' | 'tabs'>('landing')
@@ -1874,7 +1874,7 @@ Add the transition to `index.css` beside the other landing keyframes:
 }
 ```
 
-- [ ] **Step 5: Run the full frontend suite, the type check and the build**
+- [x] **Step 5: Run the full frontend suite, the type check and the build**
 
 ```bash
 cd frontend && pnpm test && pnpm exec tsc --noEmit && pnpm build
@@ -1882,7 +1882,7 @@ cd frontend && pnpm test && pnpm exec tsc --noEmit && pnpm build
 
 Expected: all PASS. Report the measured totals — baseline was 591 tests / 45 files.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/landing/Landing.tsx \

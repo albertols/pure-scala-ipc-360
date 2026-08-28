@@ -101,10 +101,33 @@ html, body, #root {
   20%  { opacity: 0.9; }
   100% { transform: translate(-30px, 120px) rotate(220deg); opacity: 0; }
 }
+/* "curling steam" (ok mood) — a slow vertical waft-and-fade, looping. */
+@keyframes steam-curl {
+  0%   { transform: translateY(0) scaleY(1); opacity: 0.15; }
+  50%  { transform: translateY(-18px) scaleY(1.25); opacity: 0.45; }
+  100% { transform: translateY(-36px) scaleY(1); opacity: 0; }
+}
+/* "a shear glint" (degraded mood) — a brief periodic flash along the blade line. */
+@keyframes shear-glint {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.6; }
+}
 .mascot-hero  { animation: mascot-drift 24s ease-in-out infinite; }
 .bubble       { animation: bubble-rise 4.5s ease-in infinite; }
 .twig         { animation: twig-fall 5s ease-in infinite; }
+.steam        { animation: steam-curl 3.6s ease-in-out infinite; }
+.shear-glint  { animation: shear-glint 2.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .mascot-hero, .bubble, .twig { animation: none; }
+  .mascot-hero, .bubble, .twig, .steam, .shear-glint { animation: none; }
+}
+
+/* Sub-project 11 Task 10: the landing→shell transition — ~400ms of opacity/transform
+   only (no layout-affecting properties), skipped entirely under reduced motion. */
+@keyframes landing-exit { to { opacity: 0; transform: scale(1.02); } }
+@keyframes shell-enter  { from { opacity: 0; transform: scale(0.99); } }
+.landing-exit { animation: landing-exit 400ms ease-in forwards; }
+.shell-enter  { animation: shell-enter 400ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-exit, .shell-enter { animation: none; }
 }
