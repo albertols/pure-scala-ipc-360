@@ -108,9 +108,18 @@ class B15ReaderTest {
                 }
             }
         });
+        // Bounded by WALL CLOCK, not by a fixed iteration count. A fixed 20 000 iterations cost
+        // ~3.5s on every green run with no early exit, while the RED case (a fingerprint() that
+        // throws on a raced-away file) reproduces in well under 100ms — so the extra iterations
+        // bought nothing but suite time. The deadline keeps the same assurance: the window stays
+        // open far longer than the failure takes to appear, and the iteration floor below proves
+        // the loop actually hammered rather than degenerating to a couple of passes.
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(400);
+        int iterations = 0;
         flapper.start();
         try {
-            for (int i = 0; i < 20_000 && failure.get() == null; i++) {
+            while (System.nanoTime() < deadline && failure.get() == null) {
+                iterations++;
                 try {
                     reader.fingerprint();
                 } catch (Throwable t) {
@@ -121,6 +130,7 @@ class B15ReaderTest {
             stop.set(true);
             flapper.join();
         }
+        assertThat(iterations).as("the race window must actually have been hammered").isGreaterThan(100);
 
         assertThat(failure.get()).as("fingerprint() must skip a raced-away file, not throw").isNull();
         Files.deleteIfExists(csv);

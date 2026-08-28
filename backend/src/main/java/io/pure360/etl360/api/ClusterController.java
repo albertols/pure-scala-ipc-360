@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,12 +65,18 @@ public class ClusterController {
         Map<String, String> layerByRecipe = layerByRecipe();
         List<String> dates = entry.dateIdx().stream().map(idx.dates()::get).toList();
 
+        // date -> index, built ONCE. `idx.dates().indexOf(...)` inside the per-run loop below made
+        // this endpoint O(recipes x runs x dates) in STRING comparisons — ~3.3M for a 50-recipe
+        // cluster over a 365-day history, per pane expansion.
+        Map<String, Integer> dateIndex = new HashMap<>();
+        for (int i = 0; i < idx.dates().size(); i++) dateIndex.put(idx.dates().get(i), i);
+
         List<ClusterDetailDto.RecipeInClusterDto> recipes = new ArrayList<>();
         for (String recipe : entry.recipes()) {
             List<ClusterIndexService.RunEntry> runs = idx.runsByRecipe().getOrDefault(recipe, List.of());
             List<Integer> dateIdx = runs.stream()
                 .filter(r -> name.equals(r.clusterName()))
-                .map(r -> idx.dates().indexOf(r.date()))
+                .map(r -> dateIndex.getOrDefault(r.date(), -1))
                 .distinct().sorted().toList();
             int ok = 0, ko = 0;
             String lastDate = null, lastStatus = null;
@@ -95,6 +102,12 @@ public class ClusterController {
      * Run history for up to {@link #MAX_RECIPES} recipes at once. The bound exists so a caller
      * cannot relocate the scale problem into this endpoint; the frontend's useRuns() chunks its
      * recipe list to respect it, so the limit never surfaces to a user.
+     *
+     * <p>It is not the only bound on a request here, and it is not the tighter one. The whole
+     * request line lives inside the container's 8 KB {@code server.max-http-header-size}, which
+     * 200 realistic recipe names (~40 chars each, 9 608 B of query string) exceed — so the
+     * frontend chunks against an encoded BYTE budget as well, and this count is the second of two
+     * simultaneous bounds. See {@code RunsRequestSizeContractTest}.
      */
     @GetMapping("/runs")
     public RunsDto runs(@RequestParam("recipe") List<String> recipes,
