@@ -17,3 +17,8 @@ parser/src/main/scala/io/pure360/ipc/xmltojson/doc
 
 /config.json
 /.env
+
+# User-local scratch that has carried REAL infrastructure identifiers (project ids,
+# job ids, cluster names) pasted in from live consoles. Untracked is not enough —
+# a single `git add -A` would commit them. Ignored so it cannot be staged by accident.
+/first_prompt.md
