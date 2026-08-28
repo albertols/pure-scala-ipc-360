@@ -19,6 +19,7 @@ import { SelectionStrip, type SelectionSummary } from './SelectionStrip'
 import { OperationalProgress, type ProgressStage } from './OperationalProgress'
 import { DataRootsPanel, DataRootsChip } from './DataRootsPanel'
 import { AvailabilityCalendar } from './AvailabilityCalendar'
+import { nearestAvailableDate } from './dateWindow'
 
 const nf = new Intl.NumberFormat('en-US')
 
@@ -45,32 +46,6 @@ function resolvePreview(
   const name = node?.name ?? null
   if (!mappingPath || !name) return { recipePath: null, mappingPath }
   return { recipePath: `${mappingPath}/${name}`, mappingPath }
-}
-
-function daysBetween(a: string, b: string): number {
-  return Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000
-}
-
-/**
- * Client-side mirror of the backend's nearest-available-date rule
- * (`OperationalService#nearestAvailable`): smallest day-distance to `target`.
- * Ties favor the earlier date — falls out naturally here because `avail` is
- * ascending (as served by `/api/operational/dates`) and we only replace
- * `best` on a STRICTLY smaller distance, so the first (earliest) date at the
- * minimum distance wins, same as the backend's `isBefore` tie-break.
- */
-export function nearestAvailableDate(target: string, avail: string[]): string {
-  if (avail.length === 0) return target
-  let best = avail[0]!
-  let bestDist = daysBetween(target, best)
-  for (const iso of avail) {
-    const dist = daysBetween(target, iso)
-    if (dist < bestDist) {
-      bestDist = dist
-      best = iso
-    }
-  }
-  return best
 }
 
 function StatusSummary({ cards }: { cards: CardData[] }) {

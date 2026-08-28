@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { nearestAvailableDate } from './ETLOperational'
+import { useEffect, useRef, useState } from 'react'
+import { nearestAvailableDate } from './dateWindow'
 
 /**
  * Task 16 — the availability calendar (spec §7.4). Today the `TimePicker`'s
@@ -100,6 +100,25 @@ export function AvailabilityCalendar({
 }: AvailabilityCalendarProps) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState(() => viewOf(selectedDate))
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // Task 9 review, Ruling 18b (mirrored here per Task 16's review): a popover that only closes by
+  // re-clicking its own toggle traps the user into hunting for it. Escape and an outside click
+  // both close it — listeners attached only while `open`, removed on close/unmount so nothing
+  // stays attached while the popover is hidden. Same shape as RunPicker.tsx.
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    const onMouseDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('mousedown', onMouseDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('mousedown', onMouseDown)
+    }
+  }, [open])
 
   const toggle = () => {
     if (!open) setView(viewOf(selectedDate))     // re-open always onto the selected date's month
@@ -120,7 +139,7 @@ export function AvailabilityCalendar({
   const grid = monthGrid(view.year, view.month)
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
+    <div ref={rootRef} style={{ position: 'relative', display: 'inline-block' }}>
       <button
         aria-label={open ? 'Hide calendar' : 'Show calendar'}
         onClick={toggle}

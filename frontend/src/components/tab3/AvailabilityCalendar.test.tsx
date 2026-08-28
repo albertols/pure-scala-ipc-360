@@ -99,4 +99,31 @@ describe('AvailabilityCalendar', () => {
     fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
     expect(screen.getByText(/July 2026/)).toBeInTheDocument()
   })
+
+  // Mirrors RunPicker.test.tsx's "closes the dropdown on Escape"/"on an outside click" pair
+  // (Task 9 review, Ruling 18b) — a popover that only closes via its own toggle traps the user.
+  it('closes on Escape', () => {
+    render(<AvailabilityCalendar {...props} />)
+    fireEvent.click(screen.getByRole('button', { name: /Show calendar/ }))
+    expect(screen.getByText(/July 2026/)).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByText(/July 2026/)).not.toBeInTheDocument()
+  })
+
+  it('closes on an outside click', () => {
+    render(
+      <div>
+        <div data-testid="outside">elsewhere</div>
+        <AvailabilityCalendar {...props} />
+      </div>
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Show calendar/ }))
+    expect(screen.getByText(/July 2026/)).toBeInTheDocument()
+
+    fireEvent.mouseDown(screen.getByTestId('outside'))
+
+    expect(screen.queryByText(/July 2026/)).not.toBeInTheDocument()
+  })
 })
