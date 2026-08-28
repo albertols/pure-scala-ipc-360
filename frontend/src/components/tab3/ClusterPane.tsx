@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { ApiError } from '../../api/client'
 import { useClusterDetail, useClusterIndex } from '../../api/clusterQueries'
 import { setOperationalView, useOperationalView } from '../../state/operationalView'
 
@@ -89,7 +90,9 @@ export function ClusterPane() {
     paneWidth, paneCollapsed, selectedClusters, expandedCluster, deselectedRecipes, selectedDates,
   } = useOperationalView()
   const { data: index } = useClusterIndex()
-  const { data: detail } = useClusterDetail(expandedCluster)
+  // `error`/`isLoading` are read, not discarded: rendering `(detail?.recipes ?? [])` alone made a
+  // 500 or a dropped connection look exactly like a cluster with no recipes.
+  const { data: detail, error: detailError, isLoading: detailLoading } = useClusterDetail(expandedCluster)
 
   const [search, setSearch] = useState('')
   const [scrollTop, setScrollTop] = useState(0)
@@ -292,6 +295,23 @@ export function ClusterPane() {
           <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {expandedCluster}
           </div>
+          {/* Three distinct outcomes, three distinct renderings. Only the third is "empty". */}
+          {detailError && (
+            <div data-testid="cluster-detail-error" style={{ fontSize: 10, color: 'var(--red)' }}>
+              {`Could not load this cluster: ${(detailError as ApiError).title}`}
+            </div>
+          )}
+          {!detailError && detailLoading && (
+            <div data-testid="cluster-detail-loading" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+              Loading recipes and dates…
+            </div>
+          )}
+          {!detailError && !detailLoading && (detail?.recipes ?? []).length === 0
+            && (detail?.dates ?? []).length === 0 && (
+            <div data-testid="cluster-detail-empty" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+              No recipes recorded for this cluster.
+            </div>
+          )}
           {(detail?.recipes ?? []).map(r => {
             const filename = r.recipeFilename ?? ''
             return (

@@ -1,4 +1,5 @@
 import { describe, expect, it, afterEach } from 'vitest'
+import { ApiError } from '../../api/client'
 import { render, screen, cleanup, within } from '@testing-library/react'
 import { DataRootsPanel, DataRootsChip } from './DataRootsPanel'
 import type { Diagnostics } from '../../api/queries'
@@ -53,6 +54,51 @@ const ANCHOR_MISMATCH: Diagnostics = {
 }
 
 const controlRow = () => within(screen.getByTestId('data-root-dwhControl'))
+
+// SF1: the report is the ONE thing standing between an operator and an unexplained empty Tab 3
+// (ADR-0013). Rendering `null` when it fails to load reduces the empty state to a bare "No b15
+// history" with no sign an explanation was even attempted — which is the exact failure the ADR
+// exists to abolish, now applied to the explainer itself.
+describe('DataRootsPanel — when the report itself does not resolve', () => {
+  it('says the report failed, and why, instead of rendering nothing', () => {
+    render(<DataRootsPanel diagnostics={undefined}
+      error={new ApiError(500, 'Internal Server Error', 'DiagnosticsService blew up')} />)
+
+    expect(screen.getByTestId('data-roots-unavailable')).toBeTruthy()
+    expect(screen.getByText(/Internal Server Error/)).toBeTruthy()
+    expect(screen.getByText(/DiagnosticsService blew up/)).toBeTruthy()
+  })
+
+  it('distinguishes "still loading" from "failed"', () => {
+    render(<DataRootsPanel diagnostics={undefined} isLoading />)
+
+    expect(screen.getByTestId('data-roots-loading')).toBeTruthy()
+    expect(screen.queryByTestId('data-roots-unavailable')).toBeNull()
+  })
+
+  it('renders the report as usual once it resolves', () => {
+    render(<DataRootsPanel diagnostics={HEALTHY} isLoading={false} error={null} />)
+
+    expect(screen.queryByTestId('data-roots-unavailable')).toBeNull()
+    expect(screen.queryByTestId('data-roots-loading')).toBeNull()
+    expect(screen.getByTestId('data-root-corpus')).toBeTruthy()
+  })
+})
+
+describe('DataRootsChip — when the report itself does not resolve', () => {
+  it('reports an unknown tier rather than vanishing', () => {
+    render(<DataRootsChip diagnostics={undefined} error={new ApiError(503, 'Service Unavailable')} />)
+
+    const chip = screen.getByTestId('data-roots-chip')
+    expect(chip.textContent).toContain('data: unknown')
+    expect(chip.title).toContain('Service Unavailable')
+  })
+
+  it('stays silent while the report is still in flight', () => {
+    render(<DataRootsChip diagnostics={undefined} isLoading />)
+    expect(screen.queryByTestId('data-roots-chip')).toBeNull()
+  })
+})
 
 describe('DataRootsPanel', () => {
   it('shows the resolved absolute path of every data root', () => {
@@ -117,9 +163,12 @@ describe('DataRootsPanel', () => {
     expect(controlRow().getByText(/unexpected dirs: ARCHIVE, RAW/)).toBeTruthy()
   })
 
-  it('renders nothing rather than a broken table when the report has not arrived', () => {
+  // Was "renders nothing rather than a broken table when the report has not arrived".
+  // Rendering nothing IS the silent failure: no report, no rows, and no statement that a report
+  // was even attempted — indistinguishable from a healthy backend that simply found no data.
+  it('states that the report did not resolve rather than rendering nothing', () => {
     const { container } = render(<DataRootsPanel diagnostics={undefined} />)
-    expect(container.textContent).toBe('')
+    expect(container.textContent).toContain('Data-root report unavailable')
   })
 })
 
@@ -135,8 +184,8 @@ describe('DataRootsChip', () => {
     expect(screen.getByTitle(/set layerToLayerTable in config\.json/)).toBeTruthy()
   })
 
-  it('renders nothing before the report arrives', () => {
+  it('reports an unknown tier when the report did not resolve, rather than rendering nothing', () => {
     const { container } = render(<DataRootsChip diagnostics={undefined} />)
-    expect(container.textContent).toBe('')
+    expect(container.textContent).toContain('data: unknown')
   })
 })

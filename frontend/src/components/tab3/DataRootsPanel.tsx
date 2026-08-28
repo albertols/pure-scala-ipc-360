@@ -1,4 +1,5 @@
 import type { Diagnostics } from '../../api/queries'
+import type { ApiError } from '../../api/client'
 
 /**
  * The data-root report Tab 3 shows instead of leaving an empty canvas unexplained.
@@ -128,9 +129,8 @@ function rootFacts(root: RootStatus): string[] {
   return facts
 }
 
-export function DataRootsPanel({ diagnostics }: { diagnostics: Diagnostics | undefined }) {
-  if (!diagnostics) return null
-  const { corpus, dwhControl, composer } = diagnostics
+/** Panel/chip chrome shared by the resolved report and its two unresolved states. */
+function Frame({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       marginTop: 12, maxWidth: 720, background: 'var(--surface)',
@@ -140,7 +140,52 @@ export function DataRootsPanel({ diagnostics }: { diagnostics: Diagnostics | und
         padding: '7px 11px', fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase',
         color: DIM, background: 'var(--surface-2)',
       }}>Data roots</div>
+      {children}
+    </div>
+  )
+}
 
+/**
+ * @param isLoading the report is still in flight. Distinct from a failure: "we do not know yet"
+ *        and "we asked and were refused" are different facts and must not share a rendering.
+ * @param error the report itself failed. Rendering `null` here — which is what this component
+ *        used to do for BOTH cases — reduces the empty state to a bare "No b15 history" with no
+ *        sign that an explanation was even attempted, i.e. exactly the unexplained empty Tab 3
+ *        ADR-0013 exists to abolish, reintroduced through the explainer.
+ */
+export function DataRootsPanel({ diagnostics, isLoading, error }: {
+  diagnostics: Diagnostics | undefined
+  isLoading?: boolean
+  error?: ApiError | null
+}) {
+  if (!diagnostics) {
+    if (isLoading) {
+      return (
+        <Frame>
+          <div data-testid="data-roots-loading" style={{ padding: '9px 11px', fontSize: 11, color: DIM }}>
+            Checking data roots…
+          </div>
+        </Frame>
+      )
+    }
+    return (
+      <Frame>
+        <div data-testid="data-roots-unavailable" style={{ padding: '9px 11px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: KO_RED }}>
+            {`Data-root report unavailable${error ? `: ${error.title}` : ''}`}
+          </div>
+          {error?.detail && (
+            <div style={{ fontSize: 11, color: TEXT, marginTop: 3 }}>{error.detail}</div>
+          )}
+          <Hint text={'GET /api/diagnostics did not answer, so the cause of an empty view cannot be '
+            + 'named here. Check that the backend is running and reachable, then reload.'} />
+        </div>
+      </Frame>
+    )
+  }
+  const { corpus, dwhControl, composer } = diagnostics
+  return (
+    <Frame>
       {corpus && (
         <Row id="corpus" label="corpus" status={corpus.status} path={corpus.resolved ?? ''}
           facts={rootFacts(corpus)} hint={corpus.hint ?? ''} />
@@ -153,7 +198,7 @@ export function DataRootsPanel({ diagnostics }: { diagnostics: Diagnostics | und
         <Row id="composer" label="composer" status={composer.status} path={composer.resolved ?? ''}
           facts={rootFacts(composer)} hint={composer.hint ?? ''} />
       )}
-    </div>
+    </Frame>
   )
 }
 
@@ -162,13 +207,23 @@ export function DataRootsPanel({ diagnostics }: { diagnostics: Diagnostics | und
  * exactly like a canvas full of real ones, so the tier belongs on screen even when nothing is
  * wrong; the ⚠ appears only when a section reports KO.
  */
-export function DataRootsChip({ diagnostics }: { diagnostics: Diagnostics | undefined }) {
-  if (!diagnostics) return null
-  const tier = diagnostics.dwhControl?.tier ?? 'absent'
-  const ko = isKo(diagnostics.status)
-  const problem = firstProblem(diagnostics)
+export function DataRootsChip({ diagnostics, isLoading, error }: {
+  diagnostics: Diagnostics | undefined
+  isLoading?: boolean
+  error?: ApiError | null
+}) {
+  // In flight is the one state worth staying quiet for: it resolves on its own in a moment, and
+  // a flash of "unknown" would be a wrong answer rather than a missing one.
+  if (!diagnostics && isLoading) return null
+
+  const failed = !diagnostics
+  const tier = failed ? 'unknown' : (diagnostics.dwhControl?.tier ?? 'absent')
+  const ko = failed || isKo(diagnostics.status)
+  const title = failed
+    ? `Data-root report unavailable${error ? `: ${error.title}` : ''} — the tier serving this view could not be determined.`
+    : (ko ? firstProblem(diagnostics) : 'All data roots resolved.')
   return (
-    <div title={ko ? problem : 'All data roots resolved.'}
+    <div data-testid="data-roots-chip" title={title}
       style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: ko ? 'help' : 'default' }}>
       <div style={{ width: 7, height: 7, borderRadius: '50%', background: ko ? KO_RED : OK_GREEN }} />
       <span style={{ fontSize: 11, color: TEXT, fontFamily: 'JetBrains Mono, monospace' }}>

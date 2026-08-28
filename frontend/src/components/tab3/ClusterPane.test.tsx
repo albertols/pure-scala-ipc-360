@@ -2,7 +2,7 @@ import { describe, expect, it, beforeAll, afterAll, afterEach, beforeEach, vi } 
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import type { ReactNode } from 'react'
 import { ClusterPane, visibleRange, ROW_H } from './ClusterPane'
 import { resetOperationalView, setOperationalView, useOperationalView } from '../../state/operationalView'
@@ -52,6 +52,47 @@ describe('visibleRange', () => {
     expect(visibleRange(-50, 300, 1000, ROW_H).start).toBe(0)
     expect(visibleRange(1e9, 300, 1000, ROW_H).end).toBe(1000)
     expect(visibleRange(0, 300, 3, ROW_H)).toEqual({ start: 0, end: 3 })
+  })
+})
+
+// SF2: `useClusterDetail`'s `error` and `isLoading` were discarded — the drawer rendered
+// `(detail?.recipes ?? [])`, so a 500 or a dropped connection showed a header and nothing,
+// reading as "this cluster is empty".
+describe('ClusterPane — expanding a cluster that does not resolve', () => {
+  it('says the detail failed instead of showing an empty drawer', async () => {
+    server.use(http.get('*/api/operational/clusters/:name', () =>
+      new HttpResponse(null, { status: 500 })))
+    render(<ClusterPane />, { wrapper })
+    await screen.findByLabelText('cl-0000')
+
+    fireEvent.click(screen.getByLabelText('Expand cl-0000'))
+
+    expect(await screen.findByTestId('cluster-detail-error')).toBeTruthy()
+  })
+
+  it('says it is still loading rather than showing an empty drawer', async () => {
+    server.use(http.get('*/api/operational/clusters/:name', async () => {
+      await delay(400)
+      return HttpResponse.json({ name: 'cl-0000', dates: [], recipes: [] })
+    }))
+    render(<ClusterPane />, { wrapper })
+    await screen.findByLabelText('cl-0000')
+
+    fireEvent.click(screen.getByLabelText('Expand cl-0000'))
+
+    expect(await screen.findByTestId('cluster-detail-loading')).toBeTruthy()
+  })
+
+  it('says a resolved-but-empty cluster is empty, distinctly from both', async () => {
+    server.use(http.get('*/api/operational/clusters/:name', () =>
+      HttpResponse.json({ name: 'cl-0000', dates: [], recipes: [] })))
+    render(<ClusterPane />, { wrapper })
+    await screen.findByLabelText('cl-0000')
+
+    fireEvent.click(screen.getByLabelText('Expand cl-0000'))
+
+    expect(await screen.findByTestId('cluster-detail-empty')).toBeTruthy()
+    expect(screen.queryByTestId('cluster-detail-error')).toBeNull()
   })
 })
 

@@ -111,7 +111,10 @@ function DagExplorer({
    * (spec §7.1's Tab 4 row). Not derived from `clusters` itself: a cluster's
    * own run history (`clusterRuns`) is per-DAG and only computed once a DAG
    * is selected, while the footer is always visible. */
-  runCount: number
+  /** SF4: `null` when `/api/operational/dates` did not resolve. "0 runs" is a resolved fact and
+   * an unresolved one is not the same thing — four surfaces used to agree on a number none of
+   * them had. */
+  runCount: number | null
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const toggle = (id: string) => setExpanded(e => ({ ...e, [id]: !e[id] }))
@@ -169,7 +172,7 @@ function DagExplorer({
         <CorpusSummary items={[
           { label: 'clusters', value: clusters.length },
           { label: 'tasks', value: clusters.reduce((n, c) => n + c.tasks.length, 0) },
-          { label: 'runs', value: runCount },
+          { label: 'runs', value: runCount === null ? '—' : runCount },
         ]} />
       </div>
     </div>
@@ -466,6 +469,10 @@ export function ETLDag() {
   const dag = clusters.find(d => d.dag_id === selectedDagId) ?? null
 
   const datesQ = useOperationalDates()
+  // SF4: read, not discarded. A failed date list cascades — latest='' disables the snapshot
+  // query, every task paints 'skipped', the run strip empties, and the explorer footer reports
+  // "0 runs" as fact. One unread error, four surfaces confidently agreeing on nothing.
+  const datesError = datesQ.error as ApiError | null
   const dates = useMemo(() => [...(datesQ.data?.dates ?? [])].sort(), [datesQ.data])
   // The run-history strip's window: useRuns below only ever fetches the RUNS_LIMIT
   // most recent runs per recipe, so the strip must render exactly that many cells —
@@ -476,6 +483,12 @@ export function ETLDag() {
   const selectedDate = timeVal.isNow ? latest : timeVal.date   // "Now" = latest available snapshot
 
   const snapshot = useOperational(selectedDate)                       // one date, every recipe
+  // SF3: `rowsForDate` falling to [] makes `overlayRun` map every task to 'skipped' (grey) with an
+  // empty `last_run` — a confident "this DAG did not run". A 404 (the backend has no b15 CSV for
+  // that date) genuinely IS "nothing ran"; any other status is "we do not know", and the two must
+  // not render identically.
+  const snapshotError = snapshot.error as ApiError | null
+  const snapshotMissing = snapshotError?.status === 404
   const rowsForDate = (snapshot.data?.rows ?? []) as B15RowT[]
   const taskIds = useMemo(() => dag?.tasks.map(t => t.task_id) ?? [], [dag])
   const { byRecipe, isLoading: runsLoading, isError: runsError } = useRuns(taskIds, RUNS_LIMIT)   // selected DAG only
@@ -516,6 +529,21 @@ export function ETLDag() {
         </div>
         <div style={{ height: 20, width: 1, background: 'var(--border)' }} />
         <TimePicker value={timeVal} onChange={setTimeVal} />
+        {datesError && (
+          <span data-testid="dates-error" style={{ fontSize: 11, color: 'var(--red)', fontFamily: 'JetBrains Mono, monospace' }}>
+            {`Available dates unavailable: ${datesError.title} — run counts and the history strip are unresolved`}
+          </span>
+        )}
+        {snapshotMissing && (
+          <span data-testid="snapshot-missing" style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
+            {`No b15 snapshot for ${selectedDate} — nothing ran that day`}
+          </span>
+        )}
+        {snapshotError && !snapshotMissing && (
+          <span data-testid="snapshot-error" style={{ fontSize: 11, color: 'var(--red)', fontFamily: 'JetBrains Mono, monospace' }}>
+            {`Run state for ${selectedDate} unavailable: ${snapshotError.title} — task colours below are unresolved, not "skipped"`}
+          </span>
+        )}
         <div style={{ flex: 1 }} />
 
         {replaySuccess && (
@@ -557,7 +585,7 @@ export function ETLDag() {
           selectedTask={selectedTaskId}
           onSelectDag={id => { setSelectedDagId(id); setSelectedTaskId(null); setSelectedRunDate(null) }}
           onSelectTask={(dagId, taskId) => { setSelectedDagId(dagId); setSelectedTaskId(taskId); setSelectedRunDate(null) }}
-          runCount={dates.length}
+          runCount={datesError ? null : dates.length}
         />
 
         <DagCanvas

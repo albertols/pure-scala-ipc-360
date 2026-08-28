@@ -73,6 +73,53 @@ function renderDag() {
   )
 }
 
+// SF3/SF4: two errors Tab 4 read nowhere. `snapshot.error` let `rowsForDate` fall to `[]`, and
+// `overlayRun` maps a missing row to 'skipped' (grey) — so a 500 painted every task grey with an
+// empty `last_run`, a confident "this DAG did not run", indistinguishable from the legitimate 404
+// for a date with no snapshot. `datesQ.error` cascades further: latest='' -> snapshot disabled ->
+// grey DAG -> empty run strip -> and the explorer footer stating "0 runs" as resolved fact.
+describe('ETLDag — errors that used to read as "nothing ran"', () => {
+  it('says the run state for the date could not be loaded, rather than painting a grey DAG', async () => {
+    // Scoped to the literal date: a `:date` override would also swallow `/dates` and `/runs`,
+    // and a failed date list disables the snapshot query entirely (that is SF4, below).
+    server.use(http.get('*/api/operational/2026-07-29', () =>
+      HttpResponse.json({ title: 'Internal Server Error', detail: 'boom' },
+        { status: 500, headers: { 'Content-Type': 'application/problem+json' } })))
+
+    renderDag()
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+
+    const banner = await screen.findByTestId('snapshot-error')
+    expect(banner.textContent).toContain('Internal Server Error')
+  })
+
+  it('distinguishes a date with no snapshot (404) from a snapshot that failed to load', async () => {
+    server.use(http.get('*/api/operational/2026-07-29', () =>
+      HttpResponse.json({ title: 'Not Found', detail: 'No operational snapshot for 2026-07-29' },
+        { status: 404, headers: { 'Content-Type': 'application/problem+json' } })))
+
+    renderDag()
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+
+    expect(await screen.findByTestId('snapshot-missing')).toBeTruthy()
+    expect(screen.queryByTestId('snapshot-error')).toBeNull()
+  })
+
+  it('never states a run count it did not resolve', async () => {
+    server.use(http.get('/api/operational/dates', () =>
+      HttpResponse.json({ title: 'Internal Server Error', detail: 'boom' },
+        { status: 500, headers: { 'Content-Type': 'application/problem+json' } })))
+
+    renderDag()
+    await screen.findByText('wf_FIX_ODS')
+
+    expect(await screen.findByTestId('dates-error')).toBeTruthy()
+    // "0 runs" is the number four surfaces agreed on and none of them resolved.
+    expect(screen.queryByText('0 runs')).toBeNull()
+    expect(screen.getByText('— runs')).toBeInTheDocument()
+  })
+})
+
 describe('ETLDag — real clusters/canvas', () => {
   it('explorer lists real workflows, UNGROUPED absent', async () => {
     renderDag()

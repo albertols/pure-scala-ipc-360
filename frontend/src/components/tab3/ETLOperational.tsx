@@ -583,7 +583,8 @@ export function ETLOperational() {
     return (
       <div style={{ padding: 16 }}>
         <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No b15 history</div>
-        <DataRootsPanel diagnostics={diagnostics.data} />
+        <DataRootsPanel diagnostics={diagnostics.data} isLoading={diagnostics.isLoading}
+            error={diagnostics.error as ApiError | null} />
       </div>
     )
   }
@@ -612,7 +613,8 @@ export function ETLOperational() {
           <div style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 380, lineHeight: 1.5 }}>
             Nothing is fetched until you choose one — the whole corpus is never loaded at once.
           </div>
-          <DataRootsChip diagnostics={diagnostics.data} />
+          <DataRootsChip diagnostics={diagnostics.data} isLoading={diagnostics.isLoading}
+            error={diagnostics.error as ApiError | null} />
         </div>
       </div>
     )
@@ -662,7 +664,8 @@ export function ETLOperational() {
         <ClusterPane />
         <div style={{ flex: 1, overflow: 'auto', padding: 16, background: 'var(--bg)' }}>
           <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No relationship entries</div>
-          <DataRootsPanel diagnostics={diagnostics.data} />
+          <DataRootsPanel diagnostics={diagnostics.data} isLoading={diagnostics.isLoading}
+            error={diagnostics.error as ApiError | null} />
         </div>
       </div>
     )
@@ -765,7 +768,8 @@ export function ETLOperational() {
             {paneFilterLabel}
           </button>
         )}
-        <DataRootsChip diagnostics={diagnostics.data} />
+        <DataRootsChip diagnostics={diagnostics.data} isLoading={diagnostics.isLoading}
+            error={diagnostics.error as ApiError | null} />
         <StatusSummary cards={shownCards} />
 
         {/* density — Task 15: an explicit control, not something zoom implies. Cycling re-lays
