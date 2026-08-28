@@ -1394,7 +1394,7 @@ percentage-complete for the product."
 
 **Why:** the user asked for "a brief introduction what's expected from each tab" and "a way to show the current config.json used".
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // TabPreview.test.tsx
@@ -1476,7 +1476,7 @@ describe('EnvironmentPanel', () => {
 })
 ```
 
-- [ ] **Step 2: Run them to verify they fail**
+- [x] **Step 2: Run them to verify they fail**
 
 ```bash
 cd frontend && pnpm test TabPreview EnvironmentPanel
@@ -1484,7 +1484,7 @@ cd frontend && pnpm test TabPreview EnvironmentPanel
 
 Expected: FAIL — modules not found.
 
-- [ ] **Step 3: Implement both**
+- [x] **Step 3: Implement both**
 
 `TabPreview` maps `TABS` to `<button>` cards (icon, label in the tab's own `accent`, description in
 `--text-muted`), each calling `onEnter(tab.id)`. `FUTURE_TABS` render as non-interactive `<div>`s —
@@ -1496,7 +1496,7 @@ resolved path in `JetBrains Mono` (wrapping, not truncated — the whole point i
 chip, and — when `status !== 'ok'` — the `hint`. Follow `DataRootsPanel`'s existing presentation
 rather than inventing a second style for the same information.
 
-- [ ] **Step 4: Run the tests and the type check**
+- [x] **Step 4: Run the tests and the type check**
 
 ```bash
 cd frontend && pnpm test TabPreview EnvironmentPanel && pnpm exec tsc --noEmit
@@ -1504,7 +1504,7 @@ cd frontend && pnpm test TabPreview EnvironmentPanel && pnpm exec tsc --noEmit
 
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/landing/TabPreview.tsx \
