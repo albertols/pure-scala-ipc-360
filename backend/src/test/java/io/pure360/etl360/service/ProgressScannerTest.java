@@ -50,6 +50,9 @@ class ProgressScannerTest {
         Path root = repoWithDocs(tmp, "- [x] one\n", 2);
         Files.writeString(root.resolve("docs/adr/README.md"), "# index\n");
         Files.writeString(root.resolve("docs/adr/template.md"), "# template\n");
+        // The repo's own convention: 0000- is always the template, real ADRs start at 0001.
+        // A numeric-prefix-only regex would wrongly count this one — see docs/adr/0000-template.md.
+        Files.writeString(root.resolve("docs/adr/0000-template.md"), "# template\n");
 
         assertThat(new ProgressScanner(root).scan().adrs()).isEqualTo(2);
     }

@@ -14,7 +14,9 @@ import java.util.regex.Pattern;
 
 /**
  * Counts this repository's own progress ledger: ticked and unticked checkboxes across
- * {@code docs/superpowers/plans/*.md}, and the numbered ADRs under {@code docs/adr/}.
+ * {@code docs/superpowers/plans/*.md}, and the numbered ADRs under {@code docs/adr/} —
+ * {@code 0000-template.md} excluded, since 0000 is this repo's reserved template prefix,
+ * not a real decision (real ADRs start at 0001).
  *
  * <p>This is the honest source for "feature progress" — {@code gh} is not installed on the target
  * machine and the GitHub API is unreachable from the app, and per {@code CLAUDE.md} the plan
@@ -31,7 +33,10 @@ public class ProgressScanner {
     /** Leading whitespace then "- [x]" / "- [ ]". Mid-sentence mentions are prose, not checkboxes. */
     private static final Pattern DONE = Pattern.compile("^\\s*- \\[x\\]", Pattern.MULTILINE);
     private static final Pattern ANY  = Pattern.compile("^\\s*- \\[[ x]\\]", Pattern.MULTILINE);
-    private static final Pattern ADR  = Pattern.compile("\\d{4}-.*\\.md");
+    /** Numbered ADRs, EXCLUDING 0000- — this repo's own convention is that 0000 is always
+     *  the template (see {@code docs/adr/0000-template.md}), never a real decision. Keyed on
+     *  the prefix, not the literal filename, so a future 0000-anything.md is excluded too. */
+    private static final Pattern ADR  = Pattern.compile("(?!0000-)\\d{4}-.*\\.md");
 
     public record Progress(int tasksDone, int tasksTotal, int adrs) {}
 
