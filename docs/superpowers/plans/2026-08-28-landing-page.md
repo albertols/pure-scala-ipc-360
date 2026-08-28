@@ -790,7 +790,7 @@ themselves undisturbed."
 
 **Why:** every landing component reads this one payload. One hook, one loading state, one error state.
 
-- [ ] **Step 1: Regenerate the API types against a running backend**
+- [x] **Step 1: Regenerate the API types against a running backend**
 
 ```bash
 mvn -q -am -pl backend install -DskipTests && (cd backend && mvn -q spring-boot:run &) && sleep 25
@@ -801,7 +801,7 @@ grep -c "ReadinessDto" frontend/src/api/types.gen.ts
 
 Expected: `ReadinessDto` present (non-zero). If it is absent the backend was not running or not rebuilt — fix that and regenerate. **Do not hand-edit `types.gen.ts`.**
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
@@ -863,7 +863,7 @@ describe('useReadiness', () => {
 })
 ```
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 ```bash
 cd frontend && pnpm test readinessQueries
@@ -871,7 +871,7 @@ cd frontend && pnpm test readinessQueries
 
 Expected: FAIL — `Failed to resolve import "./readinessQueries"`.
 
-- [ ] **Step 4: Write the hook**
+- [x] **Step 4: Write the hook**
 
 ```ts
 import { useQuery } from '@tanstack/react-query'
@@ -895,7 +895,7 @@ export const useReadiness = () =>
   })
 ```
 
-- [ ] **Step 5: Run the tests and the type check**
+- [x] **Step 5: Run the tests and the type check**
 
 ```bash
 cd frontend && pnpm test readinessQueries && pnpm exec tsc --noEmit
@@ -903,7 +903,7 @@ cd frontend && pnpm test readinessQueries && pnpm exec tsc --noEmit
 
 Expected: PASS, 3 tests; `tsc` clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/api/readinessQueries.ts frontend/src/api/readinessQueries.test.ts \
