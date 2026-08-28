@@ -1,0 +1,160 @@
+import { describe, expect, it, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { setupServer } from 'msw/node'
+import { http, HttpResponse } from 'msw'
+import type { ReactNode } from 'react'
+import { ClusterPane, visibleRange, ROW_H } from './ClusterPane'
+import { resetOperationalView, setOperationalView, useOperationalView } from '../../state/operationalView'
+import { renderHook } from '@testing-library/react'
+
+const MANY = Array.from({ length: 1000 }, (_, i) => ({
+  name: `cl-${String(i).padStart(4, '0')}`, recipeCount: 3, dateIdx: [0, 1],
+  rows: 6, ok: 5, ko: 1, lastDate: '2026-07-29', lastStatus: 'SUCCESS',
+}))
+
+const server = setupServer(
+  http.get('*/api/operational/clusters/:name', ({ params }) => HttpResponse.json({
+    name: params.name,
+    dates: ['2026-07-28', '2026-07-29'],
+    recipes: [
+      { recipeFilename: 'r1.json', layer: 'STG', dateIdx: [0, 1], rows: 2, ok: 2, ko: 0,
+        lastDate: '2026-07-29', lastStatus: 'SUCCESS' },
+      { recipeFilename: 'r2.json', layer: 'ODS', dateIdx: [1], rows: 1, ok: 0, ko: 1,
+        lastDate: '2026-07-29', lastStatus: 'FAILED' },
+    ],
+  })),
+  http.get('*/api/operational/clusters', () => HttpResponse.json({
+    mode: 'mock', dates: ['2026-07-28', '2026-07-29'],
+    totals: { clusters: MANY.length, recipes: 3000, dates: 2, rows: 6000 },
+    clusters: MANY,
+  })),
+)
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+afterEach(() => { server.resetHandlers(); cleanup() })
+afterAll(() => server.close())
+beforeEach(() => { localStorage.clear(); resetOperationalView() })
+
+function wrapper({ children }: { children: ReactNode }) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+}
+
+describe('visibleRange', () => {
+  it('windows around the scroll position with an overscan', () => {
+    // viewport 300 / rowH 30 = 10 visible rows, plus OVERSCAN 5 on each side.
+    expect(visibleRange(0, 300, 1000, ROW_H)).toEqual({ start: 0, end: 15 })
+    expect(visibleRange(3000, 300, 1000, ROW_H)).toEqual({ start: 95, end: 115 })
+  })
+
+  it('clamps at both ends', () => {
+    expect(visibleRange(-50, 300, 1000, ROW_H).start).toBe(0)
+    expect(visibleRange(1e9, 300, 1000, ROW_H).end).toBe(1000)
+    expect(visibleRange(0, 300, 3, ROW_H)).toEqual({ start: 0, end: 3 })
+  })
+})
+
+describe('ClusterPane', () => {
+  it('renders a bounded number of rows over a thousand clusters', async () => {
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    expect(screen.getAllByRole('checkbox', { name: /^cl-/ }).length).toBeLessThan(60)
+    expect(screen.queryByText('cl-0999')).not.toBeInTheDocument()
+  })
+
+  it('shows the totals so the scale is visible before anything is selected', async () => {
+    render(<ClusterPane />, { wrapper })
+    expect(await screen.findByText(/1,000 clusters/)).toBeInTheDocument()
+    expect(screen.getByText(/3,000 recipes/)).toBeInTheDocument()
+  })
+
+  it('filters by a case-insensitive substring of the cluster name', async () => {
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    fireEvent.change(screen.getByPlaceholderText(/Search clusters/), { target: { value: 'CL-0042' } })
+
+    expect(await screen.findByText('cl-0042')).toBeInTheDocument()
+    expect(screen.queryByText('cl-0000')).not.toBeInTheDocument()
+  })
+
+  it('checking a cluster writes it to the shared view state', async () => {
+    const view = renderHook(() => useOperationalView())
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'cl-0003' }))
+
+    await waitFor(() => expect(view.result.current.selectedClusters).toEqual(['cl-0003']))
+  })
+
+  it('supports several selected clusters and unchecking one', async () => {
+    const view = renderHook(() => useOperationalView())
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'cl-0001' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'cl-0002' }))
+    await waitFor(() => expect(view.result.current.selectedClusters).toHaveLength(2))
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'cl-0001' }))
+    await waitFor(() => expect(view.result.current.selectedClusters).toEqual(['cl-0002']))
+  })
+
+  it('expanding a cluster lazily loads its recipes and dates', async () => {
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand cl-0005' }))
+
+    expect(await screen.findByRole('checkbox', { name: 'r1.json' })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'r2.json' })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: '2026-07-28' })).toBeInTheDocument()
+  })
+
+  it('fetches no detail until a row is expanded', async () => {
+    const detailCalls: string[] = []
+    server.use(http.get('*/api/operational/clusters/:name', ({ params }) => {
+      detailCalls.push(String(params.name))
+      return HttpResponse.json({ name: params.name, dates: [], recipes: [] })
+    }))
+
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    expect(detailCalls).toEqual([])
+  })
+
+  it('unchecking a recipe records it as deselected', async () => {
+    const view = renderHook(() => useOperationalView())
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+    fireEvent.click(screen.getByRole('button', { name: 'Expand cl-0005' }))
+    await screen.findByRole('checkbox', { name: 'r2.json' })
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'r2.json' }))
+
+    await waitFor(() => expect(view.result.current.deselectedRecipes).toEqual(['r2.json']))
+  })
+
+  it('collapses to a strip and restores', async () => {
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    fireEvent.click(screen.getByRole('button', { name: /Collapse cluster pane/ }))
+    expect(screen.queryByPlaceholderText(/Search clusters/)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Expand cluster pane/ }))
+    expect(await screen.findByPlaceholderText(/Search clusters/)).toBeInTheDocument()
+  })
+
+  it('reads its width from the persisted view state', async () => {
+    setOperationalView({ paneWidth: 320 })
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    expect(screen.getByTestId('cluster-pane').style.width).toBe('320px')
+  })
+})

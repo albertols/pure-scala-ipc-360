@@ -3501,7 +3501,7 @@ rather than breaking the tab."
 
 **Why:** with nothing selected the app must fetch only the index; the pane is how a selection is made (spec §7.1). At ~1 300 clusters a naive `.map` over every row is the same class of mistake the expression dock made in sub-project 9 — so the list is windowed, by hand, with no dependency.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `frontend/src/components/tab3/ClusterPane.test.tsx`:
 
@@ -3727,7 +3727,7 @@ describe('SelectionStrip', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify both fail**
+- [x] **Step 2: Run to verify both fail**
 
 ```bash
 cd frontend && pnpm test ClusterPane SelectionStrip
@@ -3735,7 +3735,7 @@ cd frontend && pnpm test ClusterPane SelectionStrip
 
 Expected: FAIL — modules not found.
 
-- [ ] **Step 3: Write `ClusterPane.tsx`**
+- [x] **Step 3: Write `ClusterPane.tsx`**
 
 Key implementation points (compose from existing tokens only):
 
@@ -3767,7 +3767,7 @@ Structure:
 
 Every mutation goes through `setOperationalView`; the component holds only `scrollTop`, the search text and the drag state locally.
 
-- [ ] **Step 4: Write `SelectionStrip.tsx`**
+- [x] **Step 4: Write `SelectionStrip.tsx`**
 
 ```tsx
 export interface SelectionSummary {
@@ -3787,7 +3787,7 @@ Aggregate line, formatted with `Intl.NumberFormat('en-US')`:
 `3 clusters · 187 recipes · 14 dates · 1,842 OK · 6 KO · 312 nodes · 41 from neighbours`.
 "Clear selection" sets `selectedClusters: []`.
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 ```bash
 cd frontend && pnpm test ClusterPane SelectionStrip && pnpm exec tsc --noEmit
@@ -3795,7 +3795,7 @@ cd frontend && pnpm test ClusterPane SelectionStrip && pnpm exec tsc --noEmit
 
 Expected: PASS, 18 tests across the two files.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ClusterPane.tsx frontend/src/components/tab3/ClusterPane.test.tsx \
