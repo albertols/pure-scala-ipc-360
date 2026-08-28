@@ -50,7 +50,14 @@ platform-agnostic. A multi-module Maven repo:
   store (`operationalView.ts`) that survives a tab switch with no refetch — and Tab 4 (ETL DAG)'s
   clusters/run history, both now sharing one `RunPicker` (bars + selected-run field) and one Google
   Cloud console link builder (`docs/adr/0015-gcp-deep-links.md`, `src/api/gcpLinks.ts` — the only
-  file that builds a console URL) all consume the live corpus. Tab 2's seven sanctioned visual
+  file that builds a console URL) all consume the live corpus. Sub-project 11 adds a landing page —
+  the app's opening screen, ahead of Tab 1 — bound to one `GET /api/readiness` aggregate: a mascot
+  hero scene whose overlay/colour-grade flips between an "ok" and a "degraded" mood off
+  `readiness.status`, corpus/operational/DAG stat cards, a clickable architecture diagram reused in
+  the README, tab-preview cards sourced from `src/tabs.tsx` (so the strip and the landing page
+  cannot drift), and a repo-sourced shipped/planned progress strip (`- [x]`/`- [ ]` plan checkboxes
+  plus an ADR count, nullable when `docs/` is unreachable — `docs/adr/0016-landing-readiness-aggregate.md`).
+  Tab 2's seven sanctioned visual
   departures (`2026-08-01-etl-modifier-ux2-design.md` §10) and sub-project 10's Tab 3 rebuild +
   the app-wide `InfoTooltip` contrast fix (`2026-08-27-operational-scale-design.md` §12) are
   **pending human visual sign-off** — the mechanisms are unit-tested and gated in
@@ -183,6 +190,12 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   1-hop neighbours; the unscoped response stays byte-identical). `make validate-loop` curls all
   three new endpoints and asserts the committed-mock b15 floors **21 clusters · 30 recipes · 14
   dates · 417 rows**, with the largest cluster holding ≥4 recipes (`docs/adr/0014-b15-cluster-index.md`).
+  Sub-project 11 adds `GET /api/readiness` (the landing page's single payload — corpus, operational
+  and DAG counts, per-root diagnosis, repo-sourced progress). `make validate-loop` curls it and
+  asserts the committed-mock floors **81 XML · 86 recipes · 212 DDL** corpus, **21 clusters · 30
+  recipes · 14 dates · 417 rows** operational, and **22** distinct `workflow` values — the DAG count
+  is read from `LayerToLayerService.entries()`, never the relationships graph
+  (`docs/adr/0016-landing-readiness-aggregate.md`).
 
 ## Corpus caveats
 
@@ -262,14 +275,14 @@ checklist): `docs/visual-guide.md`.
   `LayerToLayerService`, `Etl360Properties`, `scripts/dev.sh`, `XMLParser.scala`,
   `frontend/vite.config.ts`) — change one of those and update the doc in the same commit.
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0015`
+- Design rationale: `docs/adr/0001`–`0016`
 - `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,
   alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
   expression grammar. Start at `docs/ipc/README.md`.
 - Current spec/plan:
-  `docs/superpowers/specs/2026-08-27-operational-scale-design.md` +
-  `docs/superpowers/plans/2026-08-27-operational-scale.md`
-  (previous sub-project: `…/2026-08-01-etl-modifier-ux2-design.md` + its plan)
+  `docs/superpowers/specs/2026-08-28-landing-page-design.md` +
+  `docs/superpowers/plans/2026-08-28-landing-page.md`
+  (previous sub-project: `…/2026-08-27-operational-scale-design.md` + its plan)
 - Parser deep-dive: `parser/src/main/scala/io/pure360/ipc/xmltojson/README.md`,
   `_DWH_Transformations_and_XML_Parsing.md`
 - Dev harness, prerequisites, `.env.example` reference: root `README.md`

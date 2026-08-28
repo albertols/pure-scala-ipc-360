@@ -68,6 +68,33 @@ assert t["rows"] == 417, f"expected 417 rows, got {t["rows"]}"
 assert by_count[0] >= 4, f"no cluster groups 4+ recipes (largest {by_count[0]})"
 ' || fail "cluster index floors"
 
+echo "[validate-loop] readiness…"
+READY=$(curl -sf localhost:8080/api/readiness) || fail "readiness"
+echo "$READY" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+c, o, g = d["corpus"], d["operational"], d["dags"]
+print(f"[validate-loop] readiness: {c["xml"]} xml, {c["recipes"]} recipes, {c["ddl"]} ddl; "
+      f"{o["clusters"]} clusters, {o["days"]} days, {o["rows"]} rows; {g["workflows"]} workflows; "
+      f"status {d["status"]}")
+# Floors from the committed mock. A drop here means a data root flipped or the aggregate regressed.
+assert c["xml"] == 81, f"expected 81 xml, got {c["xml"]}"
+assert c["recipes"] == 86, f"expected 86 recipes, got {c["recipes"]}"
+assert c["ddl"] == 212, f"expected 212 ddl, got {c["ddl"]}"
+assert o["clusters"] == 21 and o["days"] == 14 and o["rows"] == 417, "operational floors moved"
+# The DAG count is the one number only this endpoint serves — and it must NOT come from the graph.
+# 22, not 23: a naive grep over LAYER_TO_LAYER/*/statements.sql sweeps in ARCHIVE/, a decoy
+# directory outside the 8-name layer vocabulary that LayerToLayerService.entries() excludes
+# (docs/adr/0016-landing-readiness-aggregate.md).
+assert g["workflows"] == 22, f"expected 22 workflows, got {g["workflows"]}"
+assert d["status"] in ("ok", "degraded"), "status must mirror diagnostics"
+assert len(d["roots"]) == 3, "expected corpus, dwhControl and composer roots"
+# progress is nullable (docs/ may be absent in a packaged deployment) — only assert its shape
+# when present, on this repo checkout of the committed mock where docs/ always exists.
+if d["progress"] is not None:
+    assert d["progress"]["adrs"] >= 16, f"expected at least 16 ADRs, got {d["progress"]["adrs"]}"
+' || fail "readiness floors"
+
 FIRST_CLUSTER=$(echo "$CLUSTERS" | python3 -c 'import json,sys; print(json.load(sys.stdin)["clusters"][0]["name"])')
 curl -sf "localhost:8080/api/operational/clusters/$FIRST_CLUSTER" | grep -q '"recipes"' || fail "cluster detail"
 curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/operational/clusters/no-such-cluster | grep -q 404 \

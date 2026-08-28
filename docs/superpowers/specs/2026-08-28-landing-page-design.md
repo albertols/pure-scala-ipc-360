@@ -45,10 +45,10 @@ Measured in this repo on 2026-08-28, not assumed.
 | Data-root diagnosis available | per-root `resolved`, `tier`, `status`, `hint` + overall `status` | `DiagnosticsDto`, `GET /api/diagnostics` (ADR-0013) |
 | DAG/workflow count | **not** currently served anywhere | — |
 | `workflow` lives on | `LayerToLayerEntryDto.workflow` | control-schema column 4 |
-| Distinct workflows in the committed mock | **23** | `grep -ho "'wf_[A-Za-z_]*'" mock/DWH_CONTROL/LAYER_TO_LAYER/*/statements.sql \| sort -u \| wc -l` |
+| Distinct workflows in the committed mock | **22** (originally recorded as 23 — a raw grep over every `LAYER_TO_LAYER/*/statements.sql` sweeps in `ARCHIVE/`, a decoy directory outside the 8-name layer vocabulary that `LayerToLayerService.entries()` excludes and `LayerToLayerServiceTest` asserts is excluded; `ARCHIVE` contributes exactly one workflow, `wf_SYN_ARCHIVE_LOAD`) | `LayerToLayerService.entries()`, scoped to `layerDirs()` (not a raw grep) |
 | `LayerToLayerService.entries()` cost | mtime-cached; no graph build | `LayerToLayerService` |
 | Plan checkboxes in repo | **601** total, **596** done, **5** open | `cat docs/superpowers/plans/*.md \| grep -c '^- \['` |
-| ADRs in repo | **16** | `ls docs/adr/0*.md \| wc -l` |
+| ADRs in repo | **15** (originally recorded as 16 — `ls docs/adr/0*.md \| wc -l` counts `0000-template.md`, which is not a decision; `ProgressScanner` excludes it, and the shipped code reports 15. Task 11 of this plan adds ADR-0016, bringing the live count to **16** as of that task's commit — this row states the count at every other point in the plan) | `ls docs/adr/0*.md \| wc -l`, minus the template |
 | Future-tab stubs already declared | **2** (`ETL Tuner`, `ETL Agents`) | `FUTURE_TABS` in `App.tsx` |
 | Repo-root resolution helper | `RepoRoot.resolve(Path startDir)` (static) | `backend/.../config/RepoRoot.java` |
 | Mascot source image | 1024×1024 PNG, **1,769,197 B** | `sips -g pixelWidth -g pixelHeight` |
@@ -82,7 +82,7 @@ Measured in this repo on 2026-08-28, not assumed.
 ### 4.1 The DAG count is the only genuinely new number
 
 Every other statistic is already served. `dags.workflows` is the count of distinct non-blank
-`workflow` values across `LayerToLayerService.entries()` — **23** on the committed mock.
+`workflow` values across `LayerToLayerService.entries()` — **22** on the committed mock (see §3 — `ARCHIVE`'s single workflow is excluded).
 
 This matters: Tab 4 derives its DAG clusters from `workflow` on the *full* relationships graph
 (`toDagClusters`). Computing the count that way would pull the entire graph — the payload
@@ -198,7 +198,7 @@ surface, and its sanctioned departures are:
 { "status": "ok" | "degraded",
   "corpus":      { "xml": 81, "recipes": 86, "ddl": 212, "dirs": 119, "layers": ["CDM","DWH",…] },
   "operational": { "clusters": 21, "recipes": 30, "days": 14, "rows": 417, "mode": "mock" },
-  "dags":        { "workflows": 23 },
+  "dags":        { "workflows": 22 },
   "roots":       [ { "name": "corpus", "resolved": "…", "tier": "real", "status": "ok",
                      "hint": null } ],
   "progress":    { "tasksDone": 596, "tasksTotal": 601, "adrs": 16,
@@ -230,7 +230,7 @@ compute a second opinion about health. `progress` is **nullable**: see §11.
 
 **Backend (JUnit)**
 - `ReadinessServiceTest` — counts against the committed corpus and mock (81/86/212 corpus,
-  21/30/14/417 operational, **23** workflows); `status` mirrors `DiagnosticsService`; `index()` is
+  21/30/14/417 operational, **22** workflows); `status` mirrors `DiagnosticsService`; `index()` is
   called exactly once per request.
 - `ProgressScannerTest` — counts `- [x]`/`- [ ]` across a temp docs tree; **returns `null` for an
   absent `docs/`**; fingerprint invalidation when a plan file changes.
@@ -257,7 +257,7 @@ compute a second opinion about health. `progress` is **nullable**: see §11.
 
 **Sweeps**
 - `make validate-loop` gains a `/api/readiness` curl asserting the committed-mock floors (corpus
-  81/86/212, operational 21/30/14/417, **23** workflows) — a real floor beside the existing ones.
+  81/86/212, operational 21/30/14/417, **22** workflows) — a real floor beside the existing ones.
 
 **Browser acceptance**
 A Chrome pass over the rendered result: both mascot moods (forced by pointing a data root at a

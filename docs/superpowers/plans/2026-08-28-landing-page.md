@@ -54,7 +54,7 @@ Committed-mock values this plan asserts against: corpus **81** XMLs · **86** re
 
 | File | Responsibility |
 |---|---|
-| `src/tabs.ts` | `TABS` and `FUTURE_TABS`, lifted out of `App.tsx` so the tab strip and the landing page cannot drift. No JSX beyond the existing icon elements. |
+| `src/tabs.tsx` | `TABS` and `FUTURE_TABS`, lifted out of `App.tsx` so the tab strip and the landing page cannot drift. No JSX beyond the existing icon elements. |
 | `src/api/readinessQueries.ts` | `useReadiness()`. |
 | `src/assets/mascot-hero.jpg` | The user's image at 600px, JPEG q80 (~151 KB). |
 | `src/components/landing/Landing.tsx` | Composition + entry affordances. Owns no data fetching beyond `useReadiness()`. |
@@ -65,7 +65,7 @@ Committed-mock values this plan asserts against: corpus **81** XMLs · **86** re
 | `src/components/landing/EnvironmentPanel.tsx` | Resolved roots, tiers, GCP project/region. |
 | `src/components/landing/ArchitectureDiagram.tsx` | Inline SVG with clickable regions. |
 
-**Modified:** `frontend/src/App.tsx` (view switch, imports `TABS` from `src/tabs.ts`), `frontend/src/index.css` (new keyframes + reduced-motion rules), `scripts/validate_loop.sh`, `README.md`, `docs/architecture.md`, `CLAUDE.md`. **New docs:** `docs/adr/0016-landing-readiness-aggregate.md`, `docs/img/etl360-architecture.svg`.
+**Modified:** `frontend/src/App.tsx` (view switch, imports `TABS` from `src/tabs.tsx`), `frontend/src/index.css` (new keyframes + reduced-motion rules), `scripts/validate_loop.sh`, `README.md`, `docs/architecture.md`, `CLAUDE.md`. **New docs:** `docs/adr/0016-landing-readiness-aggregate.md`, `docs/img/etl360-architecture.svg`.
 
 ---
 
@@ -920,7 +920,7 @@ payload a deployment without docs/ produces."
 ### Task 5: Lift `TABS` and `FUTURE_TABS` out of `App.tsx`
 
 **Files:**
-- Create: `frontend/src/tabs.ts`
+- Create: `frontend/src/tabs.tsx`
 - Create: `frontend/src/tabs.test.ts`
 - Modify: `frontend/src/App.tsx`
 
@@ -968,7 +968,7 @@ Expected: FAIL — `Failed to resolve import "./tabs"`.
 
 - [x] **Step 3: Move the arrays verbatim**
 
-Create `frontend/src/tabs.ts` containing the `TABS` and `FUTURE_TABS` declarations **cut verbatim**
+Create `frontend/src/tabs.tsx` containing the `TABS` and `FUTURE_TABS` declarations **cut verbatim**
 from `App.tsx` (currently at `App.tsx:12-72` and `:74-77`), plus:
 
 ```ts
@@ -994,7 +994,7 @@ during a move is impossible to review as a move.
 
 ```bash
 cd frontend && pnpm test tabs App && pnpm exec tsc --noEmit
-git diff --stat -- src/App.tsx src/tabs.ts
+git diff --stat -- src/App.tsx src/tabs.tsx
 ```
 
 Expected: tests PASS, `tsc` clean. `App.tsx` should show only deletions plus one import line.
@@ -1002,9 +1002,9 @@ Expected: tests PASS, `tsc` clean. `App.tsx` should show only deletions plus one
 - [x] **Step 5: Commit**
 
 ```bash
-git add frontend/src/tabs.ts frontend/src/tabs.test.ts frontend/src/App.tsx \
+git add frontend/src/tabs.tsx frontend/src/tabs.test.ts frontend/src/App.tsx \
         docs/superpowers/plans/2026-08-28-landing-page.md
-git commit -m "refactor(frontend): lift TABS/FUTURE_TABS into src/tabs.ts
+git commit -m "refactor(frontend): lift TABS/FUTURE_TABS into src/tabs.tsx
 
 The landing page renders one card per tab using the same label, accent and
 description the tab strip uses. A second copy would drift the first time a
@@ -1389,7 +1389,7 @@ percentage-complete for the product."
 - Create: `frontend/src/components/landing/EnvironmentPanel.test.tsx`
 
 **Interfaces:**
-- Consumes: `TABS`, `FUTURE_TABS` from `src/tabs.ts` (Task 5); `ReadinessT['roots']`; `useAppConfig()` from `api/queries.ts`.
+- Consumes: `TABS`, `FUTURE_TABS` from `src/tabs.tsx` (Task 5); `ReadinessT['roots']`; `useAppConfig()` from `api/queries.ts`.
 - Produces, for Task 10: `<TabPreview onEnter={(tab: TabId) => void} />`, `<EnvironmentPanel roots={ReadinessT['roots']} />`.
 
 **Why:** the user asked for "a brief introduction what's expected from each tab" and "a way to show the current config.json used".
@@ -1514,7 +1514,7 @@ git add frontend/src/components/landing/TabPreview.tsx \
         docs/superpowers/plans/2026-08-28-landing-page.md
 git commit -m "feat(landing): tab previews and the environment panel
 
-Tab cards come from the shared tabs.ts so they cannot drift from the strip;
+Tab cards come from the shared tabs.tsx so they cannot drift from the strip;
 future tabs render as non-interactive, since offering entry to something that
 does not exist is worse than not listing it. The environment panel answers 'is
 this pointed at my data' and shows the ADR-0013 hint when a root is broken."
@@ -1914,7 +1914,7 @@ standing rather than blanking the hero."
 
 **Interfaces:** none — gates and prose only.
 
-- [ ] **Step 1: Add the readiness sweep to `validate_loop.sh`**
+- [x] **Step 1: Add the readiness sweep to `validate_loop.sh`**
 
 After the existing cluster-index block, insert:
 
@@ -1944,7 +1944,7 @@ nested same-quotes, which requires **Python ≥3.12**. `/usr/bin/python3` on thi
 Homebrew's 3.12 wins `PATH` in a login shell. This is pre-existing (inherited from an earlier
 sub-project) — match the existing style rather than diverging, but be aware the gate depends on it.
 
-- [ ] **Step 2: Run the gate**
+- [x] **Step 2: Run the gate**
 
 ```bash
 make validate-loop
@@ -1952,7 +1952,7 @@ make validate-loop
 
 Expected: `[validate-loop] PASS`, with the new line printing `81 xml, 86 recipes, 212 ddl; 21 clusters, 14 days, 417 rows; 23 workflows`.
 
-- [ ] **Step 3: Prove the gate actually gates**
+- [x] **Step 3: Prove the gate actually gates**
 
 ```bash
 cp scripts/validate_loop.sh /tmp/vl.bak
@@ -1966,7 +1966,7 @@ Expected: the tampered run **fails** with a non-zero exit; the restored run PASS
 prints numbers without asserting them is not a gate — the previous sub-project's reviewer verified
 its floors this way and found them sound; do the same here.
 
-- [ ] **Step 4: Write ADR-0016**
+- [x] **Step 4: Write ADR-0016**
 
 Create `docs/adr/0016-landing-readiness-aggregate.md` from `docs/adr/0000-template.md`, recording:
 
@@ -1991,7 +1991,7 @@ Create `docs/adr/0016-landing-readiness-aggregate.md` from `docs/adr/0000-templa
 - **Consequences:** `progress` is nullable and consumers must handle it; the landing page renders
   resolved paths and a GCP project id, so screenshots are mock-tier only (spec §14).
 
-- [ ] **Step 5: Update `docs/architecture.md` and `CLAUDE.md`**
+- [x] **Step 5: Update `docs/architecture.md` and `CLAUDE.md`**
 
 `docs/architecture.md` — add to the endpoint table:
 
@@ -2007,7 +2007,7 @@ illustrated overview, not a replacement.
 (81/86/212, 21/30/14/417, 23 workflows) to the testing section; extend the ADR range to `0001`–`0016`;
 point the current spec/plan at this sub-project.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/validate_loop.sh docs/adr/0016-landing-readiness-aggregate.md \

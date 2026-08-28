@@ -276,6 +276,14 @@ root that mirrors the server's own fallback logic:
   node         /path/to/node (auto (toolchain))
 ```
 
+**The fastest check needs no terminal at all.** Open `http://localhost:8443` — the landing page is
+the first thing you see, and it is bound to the same diagnosis: its mascot scene renders warm when
+every root reports `ok` and turns to a cooler, desaturated grade the moment any root does not; its
+stat cards show your corpus/operational counts; and its data-root panel names each root's resolved
+path, tier and hint — the same fields `/api/diagnostics` reports, read from one `GET /api/readiness`
+call. The curl commands below remain the way to script or CI this same check; the landing page is
+the one-glance version (`docs/adr/0016-landing-readiness-aggregate.md`).
+
 Then confirm against the running server — **this is the step that catches the silent
 fallback**:
 
@@ -421,7 +429,7 @@ re-check the section that depends on it:
 | §3.2 b15 filename, date pattern, CSV headers | `backend/.../service/OperationalService.java` |
 | §3.3 layer dirs, control table, row grammar | `backend/.../service/LayerToLayerService.java`, `backend/.../config/Etl360Properties.java` (`LayerToLayer`) |
 | §4 parser flags, traversal, path quirk | `parser/.../xmltojson/XMLParser.scala`, `parser/.../utils/dir/ScalaFileUtils.scala` |
-| §5 verification fields | `backend/.../api/HealthController.java`, `backend/.../api/ConfigController.java`, `backend/.../service/DiagnosticsService.java`, `backend/.../api/ClusterController.java`, `backend/.../service/ClusterIndexService.java`, `docs/adr/0013-data-root-diagnostics.md`, `docs/adr/0014-b15-cluster-index.md` |
+| §5 verification fields | `backend/.../api/HealthController.java`, `backend/.../api/ConfigController.java`, `backend/.../service/DiagnosticsService.java`, `backend/.../api/ClusterController.java`, `backend/.../service/ClusterIndexService.java`, `backend/.../api/ReadinessController.java`, `backend/.../service/ReadinessService.java`, `docs/adr/0013-data-root-diagnostics.md`, `docs/adr/0014-b15-cluster-index.md`, `docs/adr/0016-landing-readiness-aggregate.md` |
 | §5 frontend port/proxy | `frontend/vite.config.ts` |
 
 Related reading: root `README.md` (dev harness, make targets), `docs/architecture.md`
