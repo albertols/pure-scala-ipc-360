@@ -372,7 +372,7 @@ there is no pom.xml+parser/ ancestor."
 
 **Call `index()` exactly once.** It invokes `B15Reader.fingerprint()`, a stat sweep of every dated export directory. ADR-0014 records that a per-call invocation was already shipped and fixed once.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -437,7 +437,7 @@ class ReadinessServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ReadinessServiceTest
@@ -445,7 +445,7 @@ mvn -q -pl backend test -Dtest=ReadinessServiceTest
 
 Expected: FAIL — `cannot find symbol: class ReadinessService`.
 
-- [ ] **Step 3: Write the DTO**
+- [x] **Step 3: Write the DTO**
 
 ```java
 package io.pure360.etl360.api.dto;
@@ -483,7 +483,7 @@ public record ReadinessDto(String status, Corpus corpus, Operational operational
 }
 ```
 
-- [ ] **Step 4: Write the service**
+- [x] **Step 4: Write the service**
 
 ```java
 package io.pure360.etl360.service;
@@ -572,7 +572,7 @@ names. The three nested records are `RootStatus`, `ControlSchema` and (for compo
 that field uses; they do **not** share one shape. If an accessor named above does not exist, use the
 real one rather than inventing a getter.
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 ```bash
 mvn -q -pl backend test -Dtest=ReadinessServiceTest
@@ -580,7 +580,7 @@ mvn -q -pl backend test -Dtest=ReadinessServiceTest
 
 Expected: PASS, 5 tests.
 
-- [ ] **Step 6: Prove `index()` is called once, not per field**
+- [x] **Step 6: Prove `index()` is called once, not per field**
 
 Add to `ReadinessServiceTest`:
 
@@ -608,7 +608,7 @@ Wire the `*ForTest()` helpers from the autowired beans (add `@Autowired` fields 
 `ClusterIndexService.index()` is `final` or the class cannot be subclassed, make the minimal change
 that allows the override rather than dropping the test — this discipline was violated once already.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/dto/ReadinessDto.java \
