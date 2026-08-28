@@ -20,7 +20,7 @@ export type RecipeHistoryEntry = components['schemas']['RecipeHistoryEntryDto']
 export type ExpressionEntry = components['schemas']['ExpressionEntryDto']
 export type AppConfig = components['schemas']['AppConfigDto']
 
-const STALE_MS = 30_000
+export const STALE_MS = 30_000
 
 export const useTree = () =>
   useQuery({ queryKey: ['tree'], queryFn: () => apiGet<TreeNode>('/tree'), staleTime: STALE_MS })
