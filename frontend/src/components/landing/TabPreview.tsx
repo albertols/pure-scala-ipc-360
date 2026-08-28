@@ -16,6 +16,19 @@ export interface TabPreviewProps {
   onEnter: (tab: TabId) => void
 }
 
+/**
+ * `FUTURE_TABS[].desc` carries its own "coming soon" suffix (e.g. "Spark engine performance
+ * tuner — coming soon") because it also serves as the hover tooltip in `App.tsx`'s top bar.
+ * The card renders the suffix as a dedicated chip instead, so the raw suffix is stripped here
+ * — an em/en dash or hyphen followed by "coming soon" at the end of the string, case
+ * insensitive — leaving the descriptive remainder as always-visible body text. Not hard-coded
+ * to the two current strings: any future `FUTURE_TABS` entry following the same "<description>
+ * — coming soon" shape strips the same way.
+ */
+function stripComingSoon(desc: string): string {
+  return desc.replace(/\s*[-–—]\s*coming soon\s*$/i, '').trim()
+}
+
 export function TabPreview({ onEnter }: TabPreviewProps) {
   return (
     <div
@@ -59,7 +72,7 @@ export function TabPreview({ onEnter }: TabPreviewProps) {
           title={ft.desc}
           style={{
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: 'column',
             gap: 8,
             padding: '14px 16px',
             borderRadius: 10,
@@ -70,18 +83,23 @@ export function TabPreview({ onEnter }: TabPreviewProps) {
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>{ft.label}</span>
-          <span
-            style={{
-              fontSize: 9,
-              fontFamily: 'JetBrains Mono, monospace',
-              color: 'var(--text-dim)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 4,
-              padding: '1px 5px',
-            }}
-          >
-            coming soon
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>{ft.label}</span>
+            <span
+              style={{
+                fontSize: 9,
+                fontFamily: 'JetBrains Mono, monospace',
+                color: 'var(--text-dim)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 4,
+                padding: '1px 5px',
+              }}
+            >
+              coming soon
+            </span>
+          </div>
+          <span style={{ fontSize: 11.5, color: 'var(--text-dim)', lineHeight: 1.5 }}>
+            {stripComingSoon(ft.desc)}
           </span>
         </div>
       ))}

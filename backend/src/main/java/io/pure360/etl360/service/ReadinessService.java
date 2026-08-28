@@ -63,7 +63,7 @@ public class ReadinessService {
         List<ReadinessDto.Root> rootList = new ArrayList<>();
         rootList.add(new ReadinessDto.Root("corpus", d.corpus().resolved(), d.corpus().tier(),
             d.corpus().status(), d.corpus().hint()));
-        rootList.add(new ReadinessDto.Root("dwhControl", d.dwhControl().resolvedReal(),
+        rootList.add(new ReadinessDto.Root("dwhControl", servingPath(d.dwhControl()),
             d.dwhControl().tier(), d.dwhControl().status(), d.dwhControl().hint()));
         rootList.add(new ReadinessDto.Root("composer", d.composer().resolved(),
             d.composer().tier(), d.composer().status(), d.composer().hint()));
@@ -77,6 +77,16 @@ public class ReadinessService {
             new ReadinessDto.Dags(workflows.size()),
             List.copyOf(rootList),
             progress);
+    }
+
+    /**
+     * The path actually READ, never the configured string echoed back: for a mock-served control
+     * schema, {@code resolvedReal} is the tier that LOST and is not being scanned at all. Mirrors
+     * {@code DataRootsPanel.tsx}'s {@code servingPath()} on the frontend — one branch, not
+     * re-derived a second time on either side.
+     */
+    private static String servingPath(DiagnosticsDto.ControlSchema control) {
+        return "mock".equals(control.tier()) ? control.mockPath() : control.resolvedReal();
     }
 
     /**

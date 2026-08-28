@@ -45,7 +45,7 @@ function Row({ name, resolved, tier, status, hint }: RootT) {
       style={{ padding: '9px 11px', borderTop: '1px solid var(--border)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#e2e8f8', minWidth: 92 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', minWidth: 92 }}>
           {name ?? '—'}
         </span>
         <TierChip tier={tier} />
