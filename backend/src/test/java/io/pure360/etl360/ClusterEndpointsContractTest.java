@@ -147,12 +147,19 @@ class ClusterEndpointsContractTest {
 
     /**
      * The acceptance boundaries, not just the rejection ones — a reviewer verified these by
-     * live-probing rather than a test. `useRuns()` chunks the frontend's recipe list to EXACTLY
-     * 200 per request, so a regression that flipped 200 from accepted to rejected would break the
-     * UI silently: no backend test would fail, only a live symptom would surface.
+     * live-probing rather than a test. A regression that flipped 200 from accepted to rejected
+     * would break the UI silently: no backend test would fail, only a live symptom would surface.
+     *
+     * <p><b>This proves the COUNT bound only, and cannot prove more.</b> {@code MockMvc.param()}
+     * sets parameters on a mock request object; no URL, and no request line, is ever built. The
+     * eight-character names below therefore hide the bound that actually binds — the container's
+     * 8 KB {@code server.max-http-header-size}, which 200 REAL corpus recipe names (mean ~40
+     * chars, 9 608 B of query string) blow straight through. That one is pinned over a real
+     * socket by {@link RunsRequestSizeContractTest}, and respected client-side by
+     * {@code clusterQueries.ts}'s {@code QUERY_BUDGET_BYTES}.
      */
     @Test
-    void exactlyTwoHundredRecipesSucceeds() throws Exception {
+    void exactlyTwoHundredRecipesSucceedsOnTheCountBound() throws Exception {
         var request = get("/api/operational/runs");
         for (int i = 0; i < 200; i++) request = request.param("recipe", "r" + i + ".json");
         mvc.perform(request).andExpect(status().isOk());

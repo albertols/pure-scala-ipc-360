@@ -5,9 +5,13 @@ import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import type { ReactNode } from 'react'
 import { createElement } from 'react'
-import { chunk, useRuns, useClusterIndex, useScopedRelationships, MAX_RECIPES_PER_REQUEST } from './clusterQueries'
+import {
+  chunk, chunkRecipes, runsQuery, useRuns, useClusterIndex, useScopedRelationships,
+  MAX_RECIPES_PER_REQUEST, QUERY_BUDGET_BYTES,
+} from './clusterQueries'
 
 const seenRecipeCounts: number[] = []
+const seenRunUrls: string[] = []
 const seenRelationshipUrls: string[] = []
 
 const server = setupServer(
@@ -25,6 +29,7 @@ const server = setupServer(
   http.get('*/api/operational/runs', ({ request }) => {
     const recipes = new URL(request.url).searchParams.getAll('recipe')
     seenRecipeCounts.push(recipes.length)
+    seenRunUrls.push(request.url)
     return HttpResponse.json({
       limit: 10,
       byRecipe: Object.fromEntries(recipes.map(r => [r, [
@@ -40,7 +45,12 @@ const server = setupServer(
 )
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => { server.resetHandlers(); seenRecipeCounts.length = 0; seenRelationshipUrls.length = 0 })
+afterEach(() => {
+  server.resetHandlers()
+  seenRecipeCounts.length = 0
+  seenRunUrls.length = 0
+  seenRelationshipUrls.length = 0
+})
 afterAll(() => server.close())
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -53,6 +63,56 @@ describe('chunk', () => {
     expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]])
     expect(chunk([], 2)).toEqual([])
     expect(chunk([1], 5)).toEqual([[1]])
+  })
+})
+
+// ─── the query-byte budget ────────────────────────────────────────────────────
+//
+// A count-only chunker is the wrong bound. Spring Boot's default
+// `server.max-http-header-size` is 8 KB and the whole request line lives inside it, so
+// a 200-recipe chunk of REALISTIC names (the corpus's mean recipe filename is ~40
+// chars => `&recipe=` + 40 = 48 B each => 9 608 B) is rejected by the container with a
+// raw 400 before the app is ever entered — measured live: 165 names 8 003 B => 200,
+// 170 names 8 196 B => 400. That is every cluster above ~166 recipes, i.e. exactly the
+// large ones this sub-project exists to serve. So the bound is accumulated encoded
+// BYTES, with the count cap kept as a second, simultaneous bound.
+const PROBE_NAMES = Array.from({ length: 400 }, (_, i) =>
+  `_ETL_m_CAS_SCALE_PROBE_${String(i).padStart(4, '0')}_PADDING.json`)   // exactly 40 chars
+
+describe('chunkRecipes', () => {
+  it('names of exactly the corpus mean length, so the budget maths is the real one', () => {
+    expect(PROBE_NAMES[0]).toHaveLength(40)
+  })
+
+  it('never builds a query string over the budget, at 400 realistic names', () => {
+    const groups = chunkRecipes(PROBE_NAMES, 10)
+    for (const group of groups) {
+      expect(runsQuery(group, 10).length).toBeLessThanOrEqual(QUERY_BUDGET_BYTES)
+    }
+  })
+
+  it('splits on the byte bound BEFORE the count bound when the names are long', () => {
+    const groups = chunkRecipes(PROBE_NAMES, 10)
+    // 48 B per name against a 6 000 B budget => ~125 per chunk, well under the 200 cap.
+    expect(groups[0].length).toBeLessThan(MAX_RECIPES_PER_REQUEST)
+    expect(groups[0].length).toBe(124)
+  })
+
+  it('still honours the count cap when the names are short enough to fit more', () => {
+    const short = Array.from({ length: 500 }, (_, i) => `r${i}.json`)
+    const groups = chunkRecipes(short, 10)
+    expect(groups[0].length).toBe(MAX_RECIPES_PER_REQUEST)
+    expect(runsQuery(groups[0], 10).length).toBeLessThanOrEqual(QUERY_BUDGET_BYTES)
+  })
+
+  it('drops nothing and preserves order', () => {
+    expect(chunkRecipes(PROBE_NAMES, 10).flat()).toEqual(PROBE_NAMES)
+    expect(chunkRecipes([], 10)).toEqual([])
+  })
+
+  it('gives a single over-budget name its own chunk rather than dropping it', () => {
+    const monster = 'x'.repeat(QUERY_BUDGET_BYTES + 100)
+    expect(chunkRecipes([monster, 'r.json'], 10)).toEqual([[monster], ['r.json']])
   })
 })
 
@@ -89,6 +149,19 @@ describe('useRuns', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(seenRecipeCounts).toEqual([MAX_RECIPES_PER_REQUEST])
+  })
+
+  // The regression this pins: with a count-only chunker every one of these requests
+  // carried 200 x 48 B = 9 608 B of query string and 400ed at the container.
+  it('keeps every built request under the query budget with realistic recipe names', async () => {
+    const { result } = renderHook(() => useRuns(PROBE_NAMES, 10), { wrapper })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(seenRunUrls.length).toBeGreaterThan(1)
+    for (const url of seenRunUrls) {
+      expect(new URL(url).search.slice(1).length).toBeLessThanOrEqual(QUERY_BUDGET_BYTES)
+    }
+    expect(Object.keys(result.current.byRecipe)).toHaveLength(PROBE_NAMES.length)
   })
 
   it('fetches nothing for an empty recipe list', async () => {
