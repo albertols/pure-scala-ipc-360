@@ -1,5 +1,6 @@
 import type { components } from './types.gen'
 import type { DagCluster, DagRun, DagStatus, DagTask, OperationalCard, StatusType } from '../types'
+import type { RunT } from './clusterQueries'
 
 export type RelationshipsT = components['schemas']['RelationshipsDto']
 export type RelNodeT = components['schemas']['NodeDto']
@@ -110,37 +111,53 @@ export function overlayRun(cluster: DagCluster, rows: B15RowT[] | undefined): Da
   return { ...cluster, tasks, status, last_run }
 }
 
+const RUN_STATUS: Record<string, DagStatus> = { SUCCESS: 'success', FAILED: 'failed', RUNNING: 'running' }
+
+const statusFromRun = (status: string | undefined): DagStatus => RUN_STATUS[status ?? ''] ?? 'skipped'
+
+/** One DagRun per date: failed if any task failed that day, success if any ran, else skipped. */
 export function clusterRuns(cluster: DagCluster, dates: string[],
-    rowsByDate: Record<string, B15RowT[] | undefined>): DagRun[] {
+    byRecipe: Record<string, RunT[]>): DagRun[] {
   return [...dates].sort().map(date => {
-    const lit = overlayRun(cluster, rowsByDate[date])
-    return { run_id: date, dag_id: cluster.dag_id, status: lit.status,
-             started_at: lit.last_run, duration_s: lit.tasks.reduce((s, t) => s + t.duration_s, 0) }
+    const onDate = cluster.tasks
+      .map(t => (byRecipe[t.task_id] ?? []).find(r => r.date === date))
+      .filter((r): r is RunT => !!r)
+    const statuses = new Set(onDate.map(r => statusFromRun(r.status)))
+    const status: DagStatus = statuses.has('failed') ? 'failed'
+      : statuses.has('success') || statuses.has('running') ? 'success' : 'skipped'
+    return {
+      run_id: date, dag_id: cluster.dag_id, status,
+      started_at: onDate.map(r => r.appStartIso ?? '').sort().at(-1) ?? '',
+      duration_s: onDate.reduce((s, r) => s + Math.round((r.durationMin ?? 0) * 60), 0),
+    }
   })
 }
 
 const STATUS_UP: Record<DagStatus, StatusType> = { success: 'OK', failed: 'KO', running: 'RUNNING', skipped: 'PENDING' }
 
-export function toOperationalCard(task: DagTask, dates: string[],
-    rowsByDate: Record<string, B15RowT[] | undefined>, selectedDate: string): OperationalCard {
-  const sorted = [...dates].sort()
-  const rowFor = (d: string) => (rowsByDate[d] ?? []).find(r => r.recipeFilename === task.task_id)
-  const history: StatusType[] = sorted.map(d => { const r = rowFor(d); return r ? STATUS_UP[statusFromB15(r.status)] : 'PENDING' })
-  const durs = sorted.map(d => parseDurationSec(rowFor(d)?.avgJobDurationInMinsSec)).filter(n => n > 0).sort((a, b) => a - b)
-  const pct = (p: number) => durs.length ? durs[Math.min(durs.length - 1, Math.max(0, Math.ceil((p / 100) * durs.length) - 1))] : 0
-  const sel = rowFor(selectedDate)
-  const lastIso = sorted.flatMap(d => { const r = rowFor(d); return r?.appStartIso ? [r.appStartIso] : [] }).at(-1)
+/** An OperationalCard for one DAG task, from that recipe's run history (newest-first as served). */
+export function toOperationalCard(task: DagTask, runs: RunT[], selectedDate: string): OperationalCard {
+  const oldestFirst = [...runs].reverse()
+  const history: StatusType[] = oldestFirst.map(r => STATUS_UP[statusFromRun(r.status)])
+  const durations = oldestFirst
+    .map(r => Math.round((r.durationMin ?? 0) * 60)).filter(n => n > 0).sort((a, b) => a - b)
+  const pct = (p: number) => durations.length
+    ? durations[Math.min(durations.length - 1, Math.max(0, Math.ceil((p / 100) * durations.length) - 1))]
+    : 0
+  const selected = runs.find(r => r.date === selectedDate)
+
   return {
     id: task.task_id, kind: 'recipe', name: task.task_id,
     layer: task.recipe_id.includes('/') ? task.recipe_id.slice(0, task.recipe_id.indexOf('/')) : '—',
-    status: sel ? STATUS_UP[statusFromB15(sel.status)] : 'PENDING',
-    lastRun: lastIso ?? new Date(0).toISOString(),
+    status: selected ? STATUS_UP[statusFromRun(selected.status)] : 'PENDING',
+    lastRun: oldestFirst.at(-1)?.appStartIso || new Date(0).toISOString(),
     history,
-    stats: { avg_time_s: durs.length ? Math.round(durs.reduce((a, b) => a + b, 0) / durs.length) : 0,
-             p50: pct(50), p95: pct(95), p99: pct(99), avg_count: 0 },  // b15 has no row counts; avg_count stays 0 (OperationalCard shows "avg rows 0" when durations exist — cosmetic, see ledger)
-    jobId: sel?.jobId || undefined, appId: sel?.jobId || undefined,     // b15 job_id IS the YARN application id
+    stats: {
+      avg_time_s: durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0,
+      p50: pct(50), p95: pct(95), p99: pct(99),
+      avg_count: 0,   // b15 carries no row counts
+    },
+    jobId: selected?.jobId || undefined,
     relations: task.depends_on,
   }
 }
-
-export { fillGcpUrl, DEFAULT_DATAPROC_JOB_URL, DEFAULT_DATAPROC_CLUSTER_URL, DEFAULT_LOGGING_URL } from './gcpLinks'

@@ -220,7 +220,6 @@ export function toOperationalGraph(
       card.stats = toStats(entry)
       card.lastRun = toLastRun(entry, selectedDate)
       card.jobId = entry?.lastJobId
-      card.appId = entry?.lastJobId
     } else {
       const writerIds = writersByTable.get(card.id) ?? []
       const writerStatuses = writerIds.map(rid => recipeStatus(byFilename.get(cardsById.get(rid)?.name ?? ''), selectedDate))
@@ -231,7 +230,7 @@ export function toOperationalGraph(
       card.history = toHistory(firstWriterEntry)
       card.stats = toStats(firstWriterEntry)
       card.lastRun = toLastRun(firstWriterEntry, selectedDate)
-      // jobId/appId: recipes only (rule 5) — left undefined for tables.
+      // jobId: recipes only (rule 5) — left undefined for tables.
     }
   }
 

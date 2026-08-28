@@ -137,12 +137,10 @@ describe('toOperationalGraph — cards, status, edges, layout', () => {
     expect(byId.get('r3')!.relations).toEqual(['t_lkp', 't_ods', 't_stg1'])
   })
 
-  it('table history mirrors its first writer (edge order) and only recipes carry jobId/appId', () => {
+  it('table history mirrors its first writer (edge order) and only recipes carry jobId', () => {
     expect(byId.get('t_ods')!.history).toEqual(byId.get('r3')!.history)
     expect(byId.get('r3')!.jobId).toBe('application_r3_0029')
-    expect(byId.get('r3')!.appId).toBe('application_r3_0029')
     expect(byId.get('t_ods')!.jobId).toBeUndefined()
-    expect(byId.get('t_ods')!.appId).toBeUndefined()
   })
 
   it('layers pass through graph.meta.layers', () => {

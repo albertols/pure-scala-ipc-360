@@ -2359,7 +2359,7 @@ export function useRuns(recipes: string[], limit = 10): RunsResult {
 }
 ```
 
-- [ ] **Step 4: Drop `appId` from the card type and add `RunT` re-export**
+- [x] **Step 4: Drop `appId` from the card type and add `RunT` re-export**
 
 In `frontend/src/types.ts`, delete the `appId?: string` line from `OperationalCard` (`:131`). Leave `jobId?: string`. TypeScript will now flag every consumer — that is the point; Task 10 fixes them.
 
@@ -2955,7 +2955,7 @@ text from #4a5570 (2.2:1 on --surface-2, 2.4:1 on --surface) to --text-muted
 
 **Why:** `useOperationalSnapshots(dates)` issues one request per available date and keeps every row of every day in memory to draw a run-history strip (spec §1 cause 3). Tab 4 needs exactly two things: all recipes' status **on the selected date** (one snapshot), and run history **for the selected DAG's tasks** (one chunked `/runs` call).
 
-- [ ] **Step 1: Write the failing adapter tests**
+- [x] **Step 1: Write the failing adapter tests**
 
 Replace the `clusterRuns` and `toOperationalCard` cases in `frontend/src/api/dagAdapter.test.ts` with:
 
@@ -3036,7 +3036,7 @@ describe('toOperationalCard', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test dagAdapter
@@ -3044,7 +3044,7 @@ cd frontend && pnpm test dagAdapter
 
 Expected: FAIL — `clusterRuns` and `toOperationalCard` still take `rowsByDate`.
 
-- [ ] **Step 3: Rewrite the two adapter functions**
+- [x] **Step 3: Rewrite the two adapter functions**
 
 In `dagAdapter.ts`, replace `clusterRuns` and `toOperationalCard` (keep `overlayRun`, `parseDurationSec`, `statusFromB15`, `toDagClusters`, `layoutTasks` and `STATUS_UP` exactly as they are — `overlayRun` is still fed by the single selected-date snapshot):
 
@@ -3101,7 +3101,7 @@ export function toOperationalCard(task: DagTask, runs: RunT[], selectedDate: str
 }
 ```
 
-- [ ] **Step 4: Rewire `ETLDag.tsx`**
+- [x] **Step 4: Rewire `ETLDag.tsx`**
 
 - Delete the `useOperationalSnapshots` import and call; delete `frontend/src/api/dagQueries.ts`.
 - Replace with:
@@ -3142,7 +3142,7 @@ export function toOperationalCard(task: DagTask, runs: RunT[], selectedDate: str
 - Reset the run selection when the task changes: in the existing `onSelectTask` handler, also call `setSelectedRunDate(null)`.
 - Include `runsLoading` in whatever loading condition the panel already uses.
 
-- [ ] **Step 5: Update `ETLDag.test.tsx`**
+- [x] **Step 5: Update `ETLDag.test.tsx`**
 
 Its MSW handlers currently serve `/api/operational/{date}` for every date. Add a `/api/operational/runs` handler returning `{ limit: 10, byRecipe: { ... } }` for the fixture recipes, and keep exactly one `/api/operational/{date}` handler. Add one assertion that proves the fan-out is gone:
 
@@ -3161,7 +3161,7 @@ Its MSW handlers currently serve `/api/operational/{date}` for every date. Add a
   })
 ```
 
-- [ ] **Step 6: Run the frontend suite and the type check**
+- [x] **Step 6: Run the frontend suite and the type check**
 
 ```bash
 cd frontend && pnpm test && pnpm exec tsc --noEmit
@@ -3169,7 +3169,7 @@ cd frontend && pnpm test && pnpm exec tsc --noEmit
 
 Expected: all PASS, `tsc` clean — the `appId` removal from `types.ts` (Task 8) has no remaining consumers.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git rm frontend/src/api/dagQueries.ts

@@ -131,7 +131,6 @@ export interface OperationalCard {
     avg_count: number
   }
   jobId?: string
-  appId?: string
   relations: string[]
   x?: number
   y?: number

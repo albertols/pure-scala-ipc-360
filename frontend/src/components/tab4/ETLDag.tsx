@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import type { DagCluster, DagRun, DagTask } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useRelationships, useAppConfig, useOperationalDates } from '../../api/queries'
-import { useOperationalSnapshots } from '../../api/dagQueries'
-import { toDagClusters, clusterRuns, fillGcpUrl, overlayRun, toOperationalCard,
-  DEFAULT_DATAPROC_CLUSTER_URL, DEFAULT_LOGGING_URL } from '../../api/dagAdapter'
+import type { B15RowT } from '../../api/dagAdapter'
+import { useRelationships, useAppConfig, useOperationalDates, useOperational } from '../../api/queries'
+import { useRuns } from '../../api/clusterQueries'
+import { toDagClusters, clusterRuns, overlayRun, toOperationalCard } from '../../api/dagAdapter'
+import { buildLoggingUrl, buildDataprocClusterUrl } from '../../api/gcpLinks'
+import { pickDefaultRun } from '../shared/RunPicker'
 import { TimePicker, type TimeSelection } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
@@ -377,8 +379,8 @@ function ReplayModal({ dagId, taskId, onClose, onConfirm }: {
 
 // ─── Run History ──────────────────────────────────────────────────────────────
 
-function RunHistory({ runs, selectedDate, onSelectRun }: {
-  runs: DagRun[]; selectedDate: string; onSelectRun: (date: string) => void
+function RunHistory({ runs, selectedDate, onSelectRun, loading }: {
+  runs: DagRun[]; selectedDate: string; onSelectRun: (date: string) => void; loading?: boolean
 }) {
   const color: Record<string, string> = { success: '#34d399', failed: '#f87171', running: '#fbbf24', skipped: '#4a5570' }
 
@@ -386,6 +388,7 @@ function RunHistory({ runs, selectedDate, onSelectRun }: {
     <div>
       <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
         Run History <InfoTooltip text="Last executions of this DAG. Click any run to view details." placement="right" />
+        {loading && <span style={{ color: 'var(--text-muted)' }}>(loading…)</span>}
       </div>
       <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
         {runs.map(r => (
@@ -442,18 +445,24 @@ export function ETLDag() {
   const dates = useMemo(() => [...(datesQ.data?.dates ?? [])].sort(), [datesQ.data])
   const latest = dates.at(-1) ?? ''
   const selectedDate = timeVal.isNow ? latest : timeVal.date   // "Now" = latest available snapshot
-  const { rowsByDate } = useOperationalSnapshots(dates)
-  const litDag = useMemo(() => dag ? overlayRun(dag, rowsByDate[selectedDate]) : null,
-    [dag, rowsByDate, selectedDate])
-  const litClusters = useMemo(() => clusters.map(c => overlayRun(c, rowsByDate[selectedDate])),
-    [clusters, rowsByDate, selectedDate])
+
+  const snapshot = useOperational(selectedDate)                       // one date, every recipe
+  const rowsForDate = (snapshot.data?.rows ?? []) as B15RowT[]
+  const taskIds = useMemo(() => dag?.tasks.map(t => t.task_id) ?? [], [dag])
+  const { byRecipe, isLoading: runsLoading, isError: runsError } = useRuns(taskIds, 10)   // selected DAG only
+  const [selectedRunDate, setSelectedRunDate] = useState<string | null>(null)
+
+  const litDag = useMemo(() => dag ? overlayRun(dag, rowsForDate) : null,
+    [dag, rowsForDate])
+  const litClusters = useMemo(() => clusters.map(c => overlayRun(c, rowsForDate)),
+    [clusters, rowsForDate])
   const selectedTask = litDag?.tasks.find(t => t.task_id === selectedTaskId) ?? null
 
   const config = useAppConfig().data
-  const project = config?.gcpProjectId ?? 'mock-project'   // served field is gcpProjectId (types.gen.ts:585)
-  const region = config?.region ?? 'europe-southwest1'
-  const selRow = rowsByDate[selectedDate]?.find(r => r.recipeFilename === selectedTask?.task_id)
-  const card = selectedTask ? toOperationalCard(selectedTask, dates, rowsByDate, selectedDate) : null
+  const selRow = rowsForDate.find(r => r.recipeFilename === selectedTask?.task_id)
+  const selectedTaskRuns = byRecipe[selectedTask?.task_id ?? ''] ?? []
+  const selectedRun = pickDefaultRun(selectedTaskRuns, selectedRunDate ?? selectedDate)
+  const card = selectedTask ? toOperationalCard(selectedTask, selectedTaskRuns, selectedDate) : null
 
   // MOCK ONLY (by design — spec §2 non-goals): "Replay" publishes nothing. No Pub/Sub,
   // no backend call; the toast below is the entire effect. Kept so the prototype
@@ -517,15 +526,15 @@ export function ETLDag() {
           clusters={litClusters}
           selectedDag={selectedDagId}
           selectedTask={selectedTaskId}
-          onSelectDag={id => { setSelectedDagId(id); setSelectedTaskId(null) }}
-          onSelectTask={(dagId, taskId) => { setSelectedDagId(dagId); setSelectedTaskId(taskId) }}
+          onSelectDag={id => { setSelectedDagId(id); setSelectedTaskId(null); setSelectedRunDate(null) }}
+          onSelectTask={(dagId, taskId) => { setSelectedDagId(dagId); setSelectedTaskId(taskId); setSelectedRunDate(null) }}
           runCount={dates.length}
         />
 
         <DagCanvas
           dag={litDag}
           selectedTask={selectedTaskId}
-          onSelectTask={id => setSelectedTaskId(id === selectedTaskId ? null : id)}
+          onSelectTask={id => { setSelectedTaskId(id === selectedTaskId ? null : id); setSelectedRunDate(null) }}
         />
 
         {/* task detail panel */}
@@ -565,12 +574,13 @@ export function ETLDag() {
               ))}
             </div>
 
-            {/* GCP links */}
-            {selRow && (
+            {/* GCP links — cluster/job id anchored to the run selected in the picker
+                below, falling back to the raw selected-date row when no run is picked. */}
+            {(selectedRun || selRow) && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <a
-                  href={fillGcpUrl(config?.dataprocClusterUrl, DEFAULT_DATAPROC_CLUSTER_URL,
-                    { clusterName: selRow.clusterName ?? '', project, region })}
+                  href={buildDataprocClusterUrl(config,
+                    { clusterName: selectedRun?.clusterName ?? selRow?.clusterName ?? '' })}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -584,8 +594,10 @@ export function ETLDag() {
                   cluster ↗
                 </a>
                 <a
-                  href={fillGcpUrl(config?.loggingUrl, DEFAULT_LOGGING_URL,
-                    { jobId: selRow.jobId ?? '', project, region })}
+                  href={buildLoggingUrl(config, {
+                    jobId: selectedRun?.jobId ?? selRow?.jobId ?? '',
+                    cursorTimestamp: selectedRun?.appStartIso ?? '',
+                  })}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -639,7 +651,13 @@ export function ETLDag() {
             {card && (
               <div>
                 <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>Operational State</div>
-                <OperationalCard card={card} />
+                <OperationalCard
+                  card={card}
+                  config={config}
+                  runs={selectedTaskRuns}
+                  selectedRunDate={selectedRunDate ?? selectedDate}
+                  onSelectRun={r => setSelectedRunDate(r.date ?? null)}
+                />
               </div>
             )}
 
@@ -665,11 +683,18 @@ export function ETLDag() {
 
             {/* run history */}
             {selectedDagId && (
-              <RunHistory
-                runs={dag ? clusterRuns(dag, dates, rowsByDate) : []}
-                selectedDate={selectedDate}
-                onSelectRun={d => setTimeVal(v => ({ ...v, date: d, isNow: false }))}
-              />
+              runsError ? (
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                  Run history failed to load.
+                </div>
+              ) : (
+                <RunHistory
+                  runs={dag ? clusterRuns(dag, dates, byRecipe) : []}
+                  selectedDate={selectedDate}
+                  onSelectRun={d => setTimeVal(v => ({ ...v, date: d, isNow: false }))}
+                  loading={runsLoading}
+                />
+              )
             )}
           </div>
         )}

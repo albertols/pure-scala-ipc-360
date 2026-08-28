@@ -2,33 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { toDagClusters, UNGROUPED, type RelationshipsT } from './dagAdapter'
 import { clusterRuns, overlayRun, parseDurationSec, statusFromB15, toOperationalCard,
   type B15RowT } from './dagAdapter'
-
-// Mini RelationshipsDto: two workflows + cross-workflow table dependency
-// (STG writes FIX_STG_A, ODS reads it) + lookup-mediated dep + intra-cluster chain.
-export const REL: RelationshipsT = {
-  nodes: [
-    { id: 'recipe:_ETL_m_FIX_STG_A.json', kind: 'recipe', name: '_ETL_m_FIX_STG_A.json', layer: 'STG', mappingPath: 'STG/m_FIX_STG_A', hasRecipe: true, workflow: 'wf_FIX_STG', executionOrder: 1 },
-    { id: 'recipe:_ETL_m_FIX_STG_B.json', kind: 'recipe', name: '_ETL_m_FIX_STG_B.json', layer: 'STG', mappingPath: 'STG/m_FIX_STG_B', hasRecipe: true, workflow: 'wf_FIX_STG', executionOrder: 1 },
-    { id: 'table:FIX_STG_A', kind: 'table', name: 'FIX_STG_A', layer: 'STG', writeMode: 'TRUNCATE_INSERT', partitionType: 'DAILY' },
-    { id: 'table:FIX_STG_B', kind: 'table', name: 'FIX_STG_B', layer: 'STG' },
-    { id: 'table:FIX_LKP', kind: 'table', name: 'FIX_LKP', layer: 'STG' },
-    { id: 'recipe:_ETL_m_FIX_ODS_A.json', kind: 'recipe', name: '_ETL_m_FIX_ODS_A.json', layer: 'ODS', mappingPath: 'ODS/m_FIX_ODS_A', hasRecipe: true, workflow: 'wf_FIX_ODS', executionOrder: 2 },
-    { id: 'table:FIX_ODS_A', kind: 'table', name: 'FIX_ODS_A', layer: 'ODS', writeMode: 'APPEND', partitionType: 'DAILY' },
-    { id: 'recipe:_ETL_m_FIX_ODS_B.json', kind: 'recipe', name: '_ETL_m_FIX_ODS_B.json', layer: 'ODS', mappingPath: 'ODS/m_FIX_ODS_B', hasRecipe: true, workflow: 'wf_FIX_ODS', executionOrder: 3 },
-    { id: 'table:FIX_ODS_B', kind: 'table', name: 'FIX_ODS_B', layer: 'ODS' },
-  ],
-  edges: [
-    { from: 'recipe:_ETL_m_FIX_STG_A.json', to: 'table:FIX_STG_A', kind: 'writes' },
-    { from: 'recipe:_ETL_m_FIX_STG_A.json', to: 'table:FIX_LKP', kind: 'writes' },
-    { from: 'recipe:_ETL_m_FIX_STG_B.json', to: 'table:FIX_STG_B', kind: 'writes' },
-    { from: 'table:FIX_STG_A', to: 'recipe:_ETL_m_FIX_ODS_A.json', kind: 'source' },
-    { from: 'table:FIX_LKP', to: 'recipe:_ETL_m_FIX_ODS_A.json', kind: 'lookup' },
-    { from: 'recipe:_ETL_m_FIX_ODS_A.json', to: 'table:FIX_ODS_A', kind: 'writes' },
-    { from: 'table:FIX_ODS_A', to: 'recipe:_ETL_m_FIX_ODS_B.json', kind: 'source' },
-    { from: 'recipe:_ETL_m_FIX_ODS_B.json', to: 'table:FIX_ODS_B', kind: 'writes' },
-  ],
-  meta: { entryCount: 4, skippedRows: 0, layers: ['ODS', 'STG'] },
-}
+import type { RunT } from './clusterQueries'
+import { REL } from './__fixtures__/relationships'
 
 describe('toDagClusters — grouping, edges, layout', () => {
   it('groups recipe nodes by workflow, sorted; tables never become tasks', () => {
@@ -86,7 +61,6 @@ const row = (recipe: string, status: string, dur: string, extra: Partial<B15RowT
   clusterName: 'cluster-wf-fix-00-1234', recipeFilename: recipe, jobId: 'application_1774840360_11000',
   appStartIso: '2026-07-29T04:12:00.000Z', avgJobDurationInMinsSec: dur, status, message: '', ...extra,
 })
-const DATES = ['2026-07-28', '2026-07-29']
 const ROWS: Record<string, B15RowT[] | undefined> = {
   '2026-07-28': [row('_ETL_m_FIX_ODS_A.json', 'SUCCESS', '10m 00sec', { appStartIso: '2026-07-28T04:00:00.000Z' })],
   '2026-07-29': [row('_ETL_m_FIX_ODS_A.json', 'FAILED', '5m 30sec', { message: 'Stage failure (synthetic)' })],
@@ -120,27 +94,78 @@ describe('run-history aggregation', () => {
     expect(lit.last_run).toBe('2026-07-29T04:12:00.000Z')
     expect(overlayRun(ods, undefined).status).toBe('skipped')                 // date with no snapshot
   })
+})
 
-  it('clusterRuns: one DagRun per date ascending, run_id = date, duration = task sum', () => {
-    const ods = toDagClusters(REL).find(c => c.dag_id === 'wf_FIX_ODS')!
-    const runs = clusterRuns(ods, DATES, ROWS)
-    expect(runs.map(r => [r.run_id, r.status, r.duration_s])).toEqual([
-      ['2026-07-28', 'success', 600], ['2026-07-29', 'failed', 330],
-    ])
+const runsFor = (recipe: string, spec: [string, string][]): RunT[] =>
+  spec.map(([date, status]) => ({
+    date, clusterName: 'cl-a', jobId: `job-${recipe}-${date}`,
+    appStartIso: `${date}T04:00:00.000Z`, durationMin: 2, status, message: '',
+  })).reverse()   // newest-first, as served
+
+describe('clusterRuns', () => {
+  it('reports one run per date, failing when any task failed that day', () => {
+    const cluster = { dag_id: 'wf', schedule: '', last_run: '', status: 'skipped' as const,
+      tasks: [
+        { task_id: 'a.json', recipe_id: 'ODS/x', depends_on: [], last_status: 'skipped' as const, duration_s: 0, x: 0, y: 0 },
+        { task_id: 'b.json', recipe_id: 'ODS/y', depends_on: [], last_status: 'skipped' as const, duration_s: 0, x: 0, y: 0 },
+      ] }
+    const byRecipe = {
+      'a.json': runsFor('a', [['2026-07-28', 'SUCCESS'], ['2026-07-29', 'SUCCESS']]),
+      'b.json': runsFor('b', [['2026-07-28', 'FAILED'], ['2026-07-29', 'SUCCESS']]),
+    }
+
+    const runs = clusterRuns(cluster, ['2026-07-28', '2026-07-29'], byRecipe)
+
+    expect(runs.map(r => r.run_id)).toEqual(['2026-07-28', '2026-07-29'])
+    expect(runs[0].status).toBe('failed')
+    expect(runs[1].status).toBe('success')
   })
 
-  it('toOperationalCard: history per date (PENDING when absent), nearest-rank percentiles, selected-date status', () => {
-    const ods = toDagClusters(REL).find(c => c.dag_id === 'wf_FIX_ODS')!
-    const a = ods.tasks.find(t => t.task_id === '_ETL_m_FIX_ODS_A.json')!
-    const card = toOperationalCard(a, DATES, ROWS, '2026-07-29')
-    expect(card.kind).toBe('recipe')
-    expect(card.layer).toBe('ODS')                       // mappingPath dir prefix
-    expect(card.history).toEqual(['OK', 'KO'])
+  it('marks a date with no runs as skipped', () => {
+    const cluster = { dag_id: 'wf', schedule: '', last_run: '', status: 'skipped' as const,
+      tasks: [{ task_id: 'a.json', recipe_id: 'ODS/x', depends_on: [], last_status: 'skipped' as const, duration_s: 0, x: 0, y: 0 }] }
+
+    const runs = clusterRuns(cluster, ['2026-07-27', '2026-07-28'],
+      { 'a.json': runsFor('a', [['2026-07-28', 'SUCCESS']]) })
+
+    expect(runs[0].status).toBe('skipped')
+    expect(runs[1].status).toBe('success')
+  })
+})
+
+describe('toOperationalCard', () => {
+  const task = { task_id: 'a.json', recipe_id: 'ODS/m_x', depends_on: ['b.json'],
+    last_status: 'success' as const, duration_s: 0, x: 0, y: 0 }
+
+  it('builds history and stats from the served runs', () => {
+    const card = toOperationalCard(task,
+      runsFor('a', [['2026-07-28', 'FAILED'], ['2026-07-29', 'SUCCESS']]), '2026-07-29')
+
+    expect(card.history).toEqual(['KO', 'OK'])          // oldest-first, as the strip renders
+    expect(card.status).toBe('OK')
+    expect(card.layer).toBe('ODS')
+    expect(card.stats.avg_time_s).toBe(120)
+    expect(card.jobId).toBe('job-a-2026-07-29')
+    expect(card.relations).toEqual(['b.json'])
+  })
+
+  it('takes its status from the SELECTED date, not the newest run', () => {
+    const card = toOperationalCard(task,
+      runsFor('a', [['2026-07-28', 'FAILED'], ['2026-07-29', 'SUCCESS']]), '2026-07-28')
+
     expect(card.status).toBe('KO')
-    expect(card.stats).toEqual({ avg_time_s: 465, p50: 330, p95: 600, p99: 600, avg_count: 0 })
-    expect(card.jobId).toBe('application_1774840360_11000')
-    const b = ods.tasks.find(t => t.task_id === '_ETL_m_FIX_ODS_B.json')!
-    expect(toOperationalCard(b, DATES, ROWS, '2026-07-29').status).toBe('PENDING')  // never ran
+    expect(card.jobId).toBe('job-a-2026-07-28')
+  })
+
+  it('is PENDING with no runs at all', () => {
+    const card = toOperationalCard(task, [], '2026-07-29')
+    expect(card.status).toBe('PENDING')
+    expect(card.history).toEqual([])
+  })
+
+  // appId is gone from the type; it never held anything job_id did not.
+  it('exposes no appId', () => {
+    expect('appId' in toOperationalCard(task, [], '2026-07-29')).toBe(false)
   })
 })
 

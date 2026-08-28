@@ -3,8 +3,9 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
-import { REL } from '../../api/dagAdapter.test'
+import { REL } from '../../api/__fixtures__/relationships'
 import type { RelationshipsT } from '../../api/dagAdapter'
+import type { RunT } from '../../api/clusterQueries'
 import { ETLDag } from './ETLDag'
 
 // No RTL auto-cleanup in this project's setup — explicit cleanup between
@@ -22,15 +23,42 @@ const ROWS_29 = [{
   jobId: 'application_1774840360_11000', appStartIso: '2026-07-29T04:12:00.000Z',
   avgJobDurationInMinsSec: '5m 30sec', status: 'FAILED', message: 'Stage failure (synthetic)',
 }]
+const ROWS_BY_DATE: Record<string, typeof ROWS_28> = {
+  '2026-07-28': ROWS_28,
+  '2026-07-29': ROWS_29,
+}
+
+// /api/operational/runs shape for the ODS_A recipe — same two dates/values as
+// ROWS_28/ROWS_29 above, translated into the RunDto shape (durationMin, not the
+// "Xm Ysec" b15 text), served newest-first as the real endpoint does.
+const RUNS_ODS_A: RunT[] = [
+  { date: '2026-07-29', clusterName: 'cluster-wf-fix-00-1234', jobId: 'application_1774840360_11000',
+    appStartIso: '2026-07-29T04:12:00.000Z', durationMin: 5.5, status: 'FAILED', message: 'Stage failure (synthetic)' },
+  { date: '2026-07-28', clusterName: 'cluster-wf-fix-00-1234', jobId: 'application_1774840360_11000',
+    appStartIso: '2026-07-28T04:00:00.000Z', durationMin: 10, status: 'SUCCESS', message: '' },
+]
+const RUNS_BY_RECIPE: Record<string, RunT[]> = { '_ETL_m_FIX_ODS_A.json': RUNS_ODS_A }
 
 const server = setupServer(
   http.get('/api/relationships', () => HttpResponse.json(REL)),
-  // Forward-compat handlers (Task 4 adds the real reads) — present now so MSW
-  // doesn't warn about unhandled requests once the run selector lands.
   http.get('/api/operational/dates', () => HttpResponse.json({ dates: ['2026-07-28', '2026-07-29'], mode: 'mock' })),
-  http.get('/api/operational/2026-07-28', () => HttpResponse.json({ date: '2026-07-28', rows: ROWS_28 })),
-  http.get('/api/operational/2026-07-29', () => HttpResponse.json({ date: '2026-07-29', rows: ROWS_29 })),
-  http.get('/api/config', () => HttpResponse.json({})),
+  // Registered BEFORE the parameterized `:date` handler below — MSW matches in
+  // registration order, and `:date` would otherwise swallow "runs" as a date.
+  http.get('*/api/operational/runs', ({ request }) => {
+    const recipes = new URL(request.url).searchParams.getAll('recipe')
+    return HttpResponse.json({
+      limit: 10,
+      byRecipe: Object.fromEntries(recipes.map(r => [r, RUNS_BY_RECIPE[r] ?? []])),
+    })
+  }),
+  // ONE parameterized handler in place of the former per-date literals — Tab 4
+  // only ever asks for the currently selected date now, but this still answers
+  // whichever date the TimePicker/RunHistory strip resolves to.
+  http.get('*/api/operational/:date', ({ params }) => {
+    const date = String(params.date)
+    return HttpResponse.json({ date, rows: ROWS_BY_DATE[date] ?? [] })
+  }),
+  http.get('/api/config', () => HttpResponse.json({ gcpProjectId: 'mock-project' })),
 )
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())
@@ -104,6 +132,23 @@ describe('ETLDag — real clusters/canvas', () => {
 
     expect(await screen.findByText('No workflows in the relationships graph')).toBeInTheDocument()
   })
+
+  // Task 11: the whole point of the rewire — Tab 4 used to fetch one snapshot
+  // PER available date (useOperationalSnapshots) to draw the run-history strip.
+  // It now fetches exactly one (the selected date); run history comes from the
+  // separate, chunked /api/operational/runs call instead.
+  it('fetches one snapshot, not one per available date', async () => {
+    const dateRequests: string[] = []
+    server.use(http.get('*/api/operational/:date', ({ params }) => {
+      dateRequests.push(String(params.date))
+      return HttpResponse.json({ date: params.date, rows: [] })
+    }))
+
+    renderDag()
+    await screen.findByText('wf_FIX_ODS')
+
+    expect(new Set(dateRequests).size).toBeLessThanOrEqual(1)
+  })
 })
 
 describe('ETLDag — real run selector, per-date coloring, GCP links, replay-mock', () => {
@@ -137,7 +182,7 @@ describe('ETLDag — real run selector, per-date coloring, GCP links, replay-moc
     expect(container.querySelector('rect[fill="#34d399"]')).not.toBeNull()
   })
 
-  it('(c) task A panel: Message row + GCP template links with the mock-project fallback', async () => {
+  it('(c) task A panel: Message row + GCP links anchored at the newest run', async () => {
     renderDag()
 
     fireEvent.click(await screen.findByText('wf_FIX_ODS'))
@@ -153,15 +198,18 @@ describe('ETLDag — real run selector, per-date coloring, GCP links, replay-moc
     expect(logsLink.getAttribute('href')).toContain('application_1774840360_11000')
   })
 
-  it('(d) the synthesized Operational State card renders the KO badge and 2 history cells', async () => {
+  it('(d) the synthesized Operational State card renders the KO badge and the run picker', async () => {
     renderDag()
 
     fireEvent.click(await screen.findByText('wf_FIX_ODS'))
     fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
 
     expect(await screen.findByText('Operational State')).toBeInTheDocument()
+    // Task 11: with runs served, OperationalCard renders the shared RunPicker
+    // (one button per run) instead of the plain history dots — await it, since
+    // the card starts PENDING/empty until useRuns resolves.
+    expect(await screen.findAllByRole('button', { name: /^Run 2026-07-2[89]$/ })).toHaveLength(2)
     expect(screen.getByText('KO')).toBeInTheDocument()
-    expect(screen.getAllByTitle(/^Run \d+:/)).toHaveLength(2)
   })
 
   it('(e) replay stays mock: confirming shows the success toast', async () => {
@@ -174,6 +222,18 @@ describe('ETLDag — real run selector, per-date coloring, GCP links, replay-moc
     fireEvent.click(await screen.findByText('Publish Replay'))
 
     expect(await screen.findByText(/Replay published for/)).toBeInTheDocument()
+  })
+
+  // Task 11, item 3: a failed /api/operational/runs chunk must never look like
+  // "this recipe never ran" — useRuns' isError is surfaced in the run-history area.
+  it('(f) a failed run-history fetch says so, instead of rendering an empty/PENDING strip', async () => {
+    server.use(http.get('*/api/operational/runs', () => new HttpResponse(null, { status: 500 })))
+
+    renderDag()
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+    fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
+
+    expect(await screen.findByText('Run history failed to load.')).toBeInTheDocument()
   })
 })
 
@@ -221,7 +281,13 @@ describe('ETLDag — flow hardening (UNGROUPED, no-data recipes, cross-workflow 
     await screen.findByText('_ETL_m_FIX_ODS_A.js…', { selector: 'text' })
     expect(container.querySelectorAll('path[marker-end]')).toHaveLength(1)
 
-    fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
+    // Wait for the row to exist, THEN re-query and click in the same tick —
+    // the explorer's TaskRow is defined inside DagExplorer's render, so a
+    // captured `await findByText(...)` reference can go stale between the
+    // DAG-selection settling (useOperational/useRuns resolving, both of
+    // which now re-render this subtree) and firing the click.
+    await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' })
+    fireEvent.click(screen.getByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
 
     // Two DOM matches for the STG_A filename exist once selected (the detail
     // panel's own "Depends on" value AND the still-expanded wf_FIX_STG row in
@@ -230,7 +296,7 @@ describe('ETLDag — flow hardening (UNGROUPED, no-data recipes, cross-workflow 
     expect(label.nextElementSibling?.textContent).toBe('_ETL_m_FIX_STG_A.json')
   })
 
-  it('(6) date outside the served set: rowsByDate lookup is undefined -> all nodes render skipped, no crash', async () => {
+  it('(6) date outside the served set: the snapshot lookup is empty -> all nodes render skipped, no crash', async () => {
     const { container } = renderDag()
 
     fireEvent.click(await screen.findByText('wf_FIX_ODS'))
