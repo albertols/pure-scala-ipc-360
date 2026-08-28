@@ -930,7 +930,7 @@ payload a deployment without docs/ produces."
 
 **Why:** the landing page shows one card per tab, with the same label, accent and description the tab strip uses. Duplicating those arrays guarantees they drift the first time a description is edited. This is a pure move — **no content changes** — so the tab strip renders identically afterwards.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -958,7 +958,7 @@ describe('tabs metadata', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 cd frontend && pnpm test tabs
@@ -966,7 +966,7 @@ cd frontend && pnpm test tabs
 
 Expected: FAIL — `Failed to resolve import "./tabs"`.
 
-- [ ] **Step 3: Move the arrays verbatim**
+- [x] **Step 3: Move the arrays verbatim**
 
 Create `frontend/src/tabs.ts` containing the `TABS` and `FUTURE_TABS` declarations **cut verbatim**
 from `App.tsx` (currently at `App.tsx:12-72` and `:74-77`), plus:
@@ -990,7 +990,7 @@ Type `TABS` as `TabMeta[]` and export both arrays. Then in `App.tsx`, delete bot
 **Do not edit any label, accent, description or icon while moving them.** A diff that changes copy
 during a move is impossible to review as a move.
 
-- [ ] **Step 4: Verify the move changed nothing**
+- [x] **Step 4: Verify the move changed nothing**
 
 ```bash
 cd frontend && pnpm test tabs App && pnpm exec tsc --noEmit
@@ -999,7 +999,7 @@ git diff --stat -- src/App.tsx src/tabs.ts
 
 Expected: tests PASS, `tsc` clean. `App.tsx` should show only deletions plus one import line.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/tabs.ts frontend/src/tabs.test.ts frontend/src/App.tsx \
