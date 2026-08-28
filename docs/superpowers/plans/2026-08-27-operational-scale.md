@@ -4055,7 +4055,7 @@ never self-explanatory and still is not."
 
 **Why:** collapsing must genuinely fit more flow on screen, not just shrink boxes — so the layout pitch changes with the density and the view refits (spec §7.3). The implicit `compact = zoom < 0.65` at `ETLOperational.tsx:116` is **removed**: an implicit density fighting an explicit control is a bug waiting to happen. Tab 1's `EtlCanvas` zoom-collapse is untouched (Global Constraints).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `frontend/src/api/relationshipsAdapter.test.ts`:
 
@@ -4141,7 +4141,7 @@ And to `ETLOperational.test.tsx`:
   })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test relationshipsAdapter ETLOperational
@@ -4149,7 +4149,7 @@ cd frontend && pnpm test relationshipsAdapter ETLOperational
 
 Expected: FAIL — `toOperationalGraph` takes three arguments; `DENSITY_PITCH`/`fitToViewport` do not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `relationshipsAdapter.ts`:
 
@@ -4198,7 +4198,7 @@ In `ETLOperational.tsx`:
 
 where `viewportRef.current` is `{ width, height }` from a `ResizeObserver` on the graph container, defaulting to `{ width: 1200, height: 700 }` before first measure.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 ```bash
 cd frontend && pnpm test relationshipsAdapter ETLOperational && pnpm exec tsc --noEmit
@@ -4206,7 +4206,7 @@ cd frontend && pnpm test relationshipsAdapter ETLOperational && pnpm exec tsc --
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/api/relationshipsAdapter.ts frontend/src/api/relationshipsAdapter.test.ts \

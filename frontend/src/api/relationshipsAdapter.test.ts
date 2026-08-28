@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toOperationalGraph, summarizeSnapshot } from './relationshipsAdapter'
+import { DENSITY_PITCH, fitToViewport, toOperationalGraph, summarizeSnapshot } from './relationshipsAdapter'
 import type { RelationshipGraph, OperationalSummary, B15Row } from './queries'
 
 // Mini fixture: 2 STG head tables + a lookup table into r3; recipes r3/r4 both
@@ -238,5 +238,63 @@ describe('summarizeSnapshot', () => {
     expect(s.ok).toBe(0)
     expect(s.ko).toBe(0)
     expect(s.rows).toBe(1)
+  })
+})
+
+// Shared by both `describe` blocks below (`fitToViewport`'s fixtures reuse a
+// couple of its cards as x/y overrides rather than building a third graph).
+const detailedView = toOperationalGraph(graph, undefined, null, 'detailed')
+
+describe('density layout', () => {
+  it('packs tighter at each density', () => {
+    const detailed = toOperationalGraph(graph, undefined, null, 'detailed')
+    const compact = toOperationalGraph(graph, undefined, null, 'compact')
+    const minimal = toOperationalGraph(graph, undefined, null, 'minimal')
+
+    const span = (v: typeof detailed) => Math.max(...v.cards.map(c => (c.y ?? 0)))
+    expect(span(compact)).toBeLessThan(span(detailed))
+    expect(span(minimal)).toBeLessThan(span(compact))
+  })
+
+  it('keeps column order identical across densities', () => {
+    const names = (d: 'detailed' | 'minimal') =>
+      toOperationalGraph(graph, undefined, null, d).cards
+        .slice().sort((a, b) => (a.x ?? 0) - (b.x ?? 0) || (a.y ?? 0) - (b.y ?? 0)).map(c => c.name)
+    expect(names('minimal')).toEqual(names('detailed'))
+  })
+
+  it('pitches are strictly decreasing', () => {
+    expect(DENSITY_PITCH.compact.row).toBeLessThan(DENSITY_PITCH.detailed.row)
+    expect(DENSITY_PITCH.minimal.row).toBeLessThan(DENSITY_PITCH.compact.row)
+  })
+})
+
+describe('fitToViewport', () => {
+  it('scales the whole graph into the viewport and clamps at 1', () => {
+    // Deviation 1 (see task-15-report.md): the brief's literal x:4000/y:2000 offset is, by
+    // itself, already below the 0.3 floor against a 1000x600 viewport (1000/4040 ≈ 0.247 even
+    // at zero card size) — no choice of DENSITY_PITCH width/height can lift it above 0.3, so the
+    // fixture as written contradicts its own `toBeGreaterThan(0.3)` assertion. Narrowed the
+    // offset to a spread that genuinely needs shrinking but doesn't hit the floor, which is what
+    // this test (as titled) is for; the floor itself is covered by the "enormous graph" test below.
+    const wide = [{ ...detailedView.cards[0]!, x: 0, y: 0 }, { ...detailedView.cards[0]!, id: 'z', x: 1200, y: 700 }]
+    const fit = fitToViewport(wide, { width: 1000, height: 600 }, 'detailed')
+
+    expect(fit.zoom).toBeGreaterThan(0.3)
+    expect(fit.zoom).toBeLessThan(1)
+  })
+
+  it('never magnifies a small graph beyond 1', () => {
+    const fit = fitToViewport([{ ...detailedView.cards[0]!, x: 0, y: 0 }], { width: 1000, height: 600 }, 'detailed')
+    expect(fit.zoom).toBe(1)
+  })
+
+  it('clamps at the 0.3 floor for an enormous graph', () => {
+    const huge = [{ ...detailedView.cards[0]!, x: 0, y: 0 }, { ...detailedView.cards[0]!, id: 'z', x: 90_000, y: 60_000 }]
+    expect(fitToViewport(huge, { width: 800, height: 500 }, 'detailed').zoom).toBe(0.3)
+  })
+
+  it('returns a neutral view for an empty graph', () => {
+    expect(fitToViewport([], { width: 800, height: 500 }, 'detailed')).toEqual({ zoom: 1, pan: { x: 40, y: 40 } })
   })
 })

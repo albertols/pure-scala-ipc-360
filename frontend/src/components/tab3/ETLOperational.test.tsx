@@ -329,39 +329,30 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     expect(cardEl.querySelectorAll('div[title^="Run "]')).toHaveLength(14)
   })
 
-  it('zooms out past the compact threshold and collapses real cards into pills (and back)', async () => {
-    renderTab()
+  // Task 15: density is now an EXPLICIT control (`useOperationalView().density`), not something
+  // zoom implies — replaces the old "zoom past 0.65 collapses cards" test, whose premise (an
+  // implicit `compact = zoom < 0.65`) Task 15 deletes outright. See the two `density` tests in
+  // the "cluster-scoped loading" describe block below for the control's actual coverage.
+  it('cycles density and re-lays out', async () => {
+    render(<ETLOperational />, { wrapper })
+    await screen.findByText(/Select a cluster/)
+    act(() => setOperationalView({ selectedClusters: ['cl-a'] }))
+    await screen.findByText(/_ETL_m_CAS_T\.json/)
 
-    await screen.findByText('_ETL_m_CAS_T.json')
+    fireEvent.click(screen.getByRole('button', { name: /Density: detailed/ }))
+    expect(await screen.findByRole('button', { name: /Density: compact/ })).toBeInTheDocument()
 
-    // Full-detail rendering: all 4 real cards (2 tables + 2 recipes, one of them the flagged
-    // neighbour) render the "Last run:" line — `OperationalCard`'s compact branch omits it
-    // entirely, rendering only a status-dot pill with the card's name.
-    expect(screen.getAllByText(/Last run:/)).toHaveLength(4)
+    fireEvent.click(screen.getByRole('button', { name: /Density: compact/ }))
+    expect(await screen.findByRole('button', { name: /Density: minimal/ })).toBeInTheDocument()
+  })
 
-    // Tab-1 Task-6 idiom, mirrored for Tab 3's own zoom state: the "−" button
-    // steps 0.15 per click from the 0.85 default — 0.85 → 0.70 → 0.55,
-    // crossing the RelationshipGraph's 0.65 compact threshold on click two.
-    const zoomOut = screen.getByText('−')
-    fireEvent.click(zoomOut)
-    fireEvent.click(zoomOut)
+  it('has no implicit zoom-driven density any more', async () => {
+    render(<ETLOperational />, { wrapper })
+    await screen.findByText(/Select a cluster/)
+    act(() => setOperationalView({ selectedClusters: ['cl-a'], zoom: 0.4, density: 'detailed' }))
 
-    await waitFor(() => {
-      expect(screen.queryAllByText(/Last run:/)).toHaveLength(0)
-    })
-    // The pill still shows the real recipe's filename — proves compact mode
-    // collapses real fixture data, not a placeholder.
-    expect(screen.getByText('_ETL_m_CAS_T.json')).toBeInTheDocument()
-
-    // Zoom back in past the threshold: full-detail rendering (and its
-    // "Last run:" line, once per card) returns.
-    const zoomIn = screen.getByText('+')
-    fireEvent.click(zoomIn)
-    fireEvent.click(zoomIn)
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/Last run:/)).toHaveLength(4)
-    })
+    // At 0.4 the old code force-collapsed the cards; density is explicit now.
+    expect(await screen.findByText('p95')).toBeInTheDocument()
   })
 
   it('opens the full-window preview overlay from a recipe card and closes on Escape; a table card resolves its writer recipe', async () => {

@@ -1,4 +1,4 @@
-import type { OperationalCard, StatusType } from '../types'
+import type { CardDensity, OperationalCard, StatusType } from '../types'
 import type { RelationshipGraph, OperationalSummary, B15Row } from './queries'
 import type { components } from './types.gen'
 
@@ -25,7 +25,35 @@ export const LAYER_RANK: Record<string, number> = {
 
 // Layout constants (adapter-local; mirrors canvasLayout.ts's 40px margin idiom,
 // wider pitch to fit the operational card's larger footprint).
-const X0 = 40, Y0 = 40, COL_PITCH = 320, ROW_PITCH = 190
+//
+// Task 15: column/row pitch and card footprint per density — collapsing has to
+// genuinely re-pack the layout at a tighter pitch, not just shrink the boxes at
+// the SAME pitch (which is what a naive "smaller card" change would produce).
+export const DENSITY_PITCH: Record<CardDensity, { col: number; row: number; width: number; height: number }> = {
+  detailed: { col: 320, row: 190, width: 252, height: 150 },
+  compact:  { col: 230, row: 80,  width: 200, height: 56 },
+  minimal:  { col: 200, row: 36,  width: 180, height: 26 },
+}
+
+const X0 = 40, Y0 = 40
+
+/**
+ * Fits every card into `viewport`, never magnifying past 1 and never shrinking
+ * below 0.3. An empty graph has nothing to fit, so it returns the neutral
+ * default view rather than dividing by zero (which would yield `Infinity`/`NaN`).
+ */
+export function fitToViewport(
+  cards: OperationalCard[],
+  viewport: { width: number; height: number },
+  density: CardDensity,
+): { zoom: number; pan: { x: number; y: number } } {
+  if (cards.length === 0) return { zoom: 1, pan: { x: X0, y: Y0 } }
+  const { width, height } = DENSITY_PITCH[density]
+  const maxX = Math.max(...cards.map(c => (c.x ?? 0) + width))
+  const maxY = Math.max(...cards.map(c => (c.y ?? 0) + height))
+  const zoom = Math.max(0.3, Math.min(1, Math.min(viewport.width / (maxX + X0), viewport.height / (maxY + Y0))))
+  return { zoom, pan: { x: X0, y: Y0 } }
+}
 
 const EPOCH_ISO = '1970-01-01T00:00:00Z'
 
@@ -103,8 +131,9 @@ function rankOf(layer: string): number {
  * discipline is mirrored here: process columns left-to-right, order within a
  * column by (average predecessor y, then name), stack top-down.
  */
-function layoutCards(cards: OperationalCard[], edges: OperationalEdge[]): void {
+function layoutCards(cards: OperationalCard[], edges: OperationalEdge[], density: CardDensity): void {
   if (cards.length === 0) return
+  const { col: colPitch, row: rowPitch } = DENSITY_PITCH[density]
 
   const writesTargets = new Set(edges.filter(e => e.kind === 'writes').map(e => e.toId))
   const colOf = (card: OperationalCard): number => {
@@ -136,8 +165,8 @@ function layoutCards(cards: OperationalCard[], edges: OperationalEdge[]): void {
     const arr = columns.get(col)!
     arr.sort((a, b) => avgPredY(a) - avgPredY(b) || a.name.localeCompare(b.name))
     arr.forEach((c, i) => {
-      c.x = X0 + col * COL_PITCH
-      c.y = Y0 + i * ROW_PITCH
+      c.x = X0 + col * colPitch
+      c.y = Y0 + i * rowPitch
       yById.set(c.id, c.y)
     })
   }
@@ -147,6 +176,7 @@ export function toOperationalGraph(
   graph: RelationshipGraph,
   summary: OperationalSummary | undefined,
   selectedDate: string | null,
+  density: CardDensity = 'detailed',
 ): OperationalGraphView {
   const rawNodes: NodeDto[] = graph.nodes ?? []
   const rawEdges: EdgeDto[] = graph.edges ?? []
@@ -236,7 +266,7 @@ export function toOperationalGraph(
     }
   }
 
-  layoutCards(orderedCards, edges)
+  layoutCards(orderedCards, edges, density)
 
   // `meta.layers` is derived from the CORE entries of a scoped request
   // (RelationshipService.java:135), so a 1-hop neighbour whose layer sits outside the selection

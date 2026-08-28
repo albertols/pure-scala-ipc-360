@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
-import type { OperationalCard as CardData } from '../../types'
+import type { OperationalCard as CardData, CardDensity } from '../../types'
 import type { ApiError } from '../../api/client'
 import { useOperationalSummary, useOperationalDates, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
 import type { AppConfig, RelationshipGraph } from '../../api/queries'
 import { useClusterIndex, useScopedRelationships, useRuns, type RunT } from '../../api/clusterQueries'
 import { setOperationalView, useOperationalView } from '../../state/operationalView'
-import { toOperationalGraph, summarizeSnapshot, type OperationalEdge } from '../../api/relationshipsAdapter'
+import { toOperationalGraph, summarizeSnapshot, fitToViewport, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { buildLoggingUrl, buildDataprocClusterUrl } from '../../api/gcpLinks'
 import { OperationalCard } from '../shared/OperationalCard'
 import { pickDefaultRun } from '../shared/RunPicker'
@@ -102,6 +102,8 @@ function RelationshipGraph({
   selectedRunDate,
   onSelectRun,
   config,
+  density,
+  containerRef,
 }: {
   cards: CardData[]
   edges: OperationalEdge[]
@@ -122,6 +124,13 @@ function RelationshipGraph({
   selectedRunDate: string | null
   onSelectRun: (run: RunT) => void
   config: AppConfig | undefined
+  /** Task 15: explicit silhouette from `useOperationalView().density` — replaces the old
+   * `compact = zoom < 0.65` implicit rule (Global Constraints: Tab 1's `EtlCanvas` keeps its own
+   * zoom-collapse untouched; this is Tab 3 only). */
+  density: CardDensity
+  /** Task 15: the graph body's own DOM node, measured by a `ResizeObserver` in the parent so
+   * `fitToViewport` refits against the ACTUAL viewport rather than a guess. */
+  containerRef: React.RefObject<HTMLDivElement | null>
 }) {
   const dragging = useRef(false)
   const lastPan = useRef({ x: 0, y: 0 })
@@ -133,8 +142,6 @@ function RelationshipGraph({
   // real layouts can exceed that, and floor stays for small/empty graphs).
   const CANVAS_W = Math.max(1200, ...cards.map(c => (c.x ?? 0) + 280))
   const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + 220))
-
-  const compact = zoom < 0.65
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as Element).closest('[data-card]')) return
@@ -150,6 +157,7 @@ function RelationshipGraph({
 
   return (
     <div
+      ref={containerRef}
       style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--bg)', cursor: 'grab' }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
@@ -219,7 +227,7 @@ function RelationshipGraph({
               position: 'absolute',
               left: card.x ?? 0,
               top: card.y ?? 0,
-              width: compact ? 'auto' : 252,
+              width: density === 'detailed' ? 252 : 'auto',
               zIndex: selected === card.id ? 10 : 1,
               // A 1-hop neighbour is context, not scope: readable, visibly not what you asked for.
               opacity: card.neighbor ? 0.45 : 1,
@@ -228,7 +236,7 @@ function RelationshipGraph({
           >
             <OperationalCard
               card={card}
-              density={compact ? 'compact' : 'detailed'}
+              density={density}
               selected={selected === card.id}
               onClick={undefined}
               runs={runsByRecipe[card.name] ?? []}
@@ -323,6 +331,24 @@ export function ETLOperational() {
   // for it to describe, so it must not fire.
   const snapshot = useOperational(hasSelection ? (view.selectedDate ?? '') : '')
 
+  // Task 15: the graph body's measured size, refreshed by a ResizeObserver — jsdom never fires
+  // one (no layout engine), so the default below is also the effective viewport under test,
+  // mirroring ClusterPane.tsx's DEFAULT_VIEWPORT_H idiom. A ref (not state) because it only
+  // needs to be read at the moment a density change asks `fitToViewport` for it — it should not
+  // itself trigger a re-render.
+  const viewportRef = useRef<{ width: number; height: number }>({ width: 1200, height: 700 })
+  const graphContainerRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = graphContainerRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(entries => {
+      const rect = entries[0]?.contentRect
+      if (rect && rect.width > 0 && rect.height > 0) viewportRef.current = { width: rect.width, height: rect.height }
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   // Raw graph nodes carry `mappingPath` (the recipe directory) — the adapter's
   // OperationalCard doesn't, so the preview resolver reads it here.
   const nodeById = useMemo(() => {
@@ -355,9 +381,19 @@ export function ETLOperational() {
   }
 
   const graph = useMemo(
-    () => (rel.data ? toOperationalGraph(rel.data, summary.data, view.selectedDate) : null),
-    [rel.data, summary.data, view.selectedDate],
+    () => (rel.data ? toOperationalGraph(rel.data, summary.data, view.selectedDate, view.density) : null),
+    [rel.data, summary.data, view.selectedDate, view.density],
   )
+
+  // Task 15: cycling density re-lays out at the new pitch AND refits the viewport in one store
+  // update — otherwise a Compact re-layout could leave the view panned/zoomed for the OLD
+  // (wider) Detailed extent, defeating the point of "fitting more flow on screen".
+  const onCycleDensity = () => {
+    const next: CardDensity = view.density === 'detailed' ? 'compact'
+      : view.density === 'compact' ? 'minimal' : 'detailed'
+    const relaid = toOperationalGraph(rel.data!, summary.data, view.selectedDate, next)
+    setOperationalView({ density: next, ...fitToViewport(relaid.cards, viewportRef.current, next) })
+  }
 
   // Filtered BEFORE the early returns: `useRuns` below is a hook and its input is this list.
   const cards = useMemo(() => (graph?.cards ?? []).filter(c => {
@@ -631,6 +667,17 @@ export function ETLOperational() {
         <DataRootsChip diagnostics={diagnostics.data} />
         <StatusSummary cards={graph.cards} />
 
+        {/* density — Task 15: an explicit control, not something zoom implies. Cycling re-lays
+            out at the new pitch AND refits the viewport (onCycleDensity), so "fitting more flow
+            on screen" is a real re-pack rather than a re-scale of the same layout. */}
+        <button
+          aria-label={`Density: ${view.density}`}
+          onClick={onCycleDensity}
+          style={{ ...zoomBtn, width: 'auto', padding: '0 10px', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
+        >
+          {view.density}
+        </button>
+
         {/* zoom */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={() => setOperationalView({ zoom: Math.max(0.3, view.zoom - 0.15) })} style={zoomBtn}>−</button>
@@ -660,6 +707,8 @@ export function ETLOperational() {
           onPan={pan => setOperationalView({ pan })}
           summaryItems={summaryItems}
           runsByRecipe={runs.byRecipe}
+          density={view.density}
+          containerRef={graphContainerRef}
           selectedRunDate={view.selectedRunDate}
           onSelectRun={run => setOperationalView({ selectedRunDate: run.date ?? null })}
           config={cfg.data}
