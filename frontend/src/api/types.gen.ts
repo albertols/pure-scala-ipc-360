@@ -1310,7 +1310,9 @@ export interface operations {
     };
     summary_1: {
         parameters: {
-            query?: never;
+            query?: {
+                clusters?: string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
