@@ -298,3 +298,26 @@ describe('fitToViewport', () => {
     expect(fitToViewport([], { width: 800, height: 500 }, 'detailed')).toEqual({ zoom: 1, pan: { x: 40, y: 40 } })
   })
 })
+
+// Item 9: `summarizeSnapshot` compared `row.status` against raw 'SUCCESS'/'FAILED' literals 250
+// lines below the STATUS_MAP that owns the canonical mapping in this same file. Two spellings of
+// one rule drift; the map is the rule.
+describe('summarizeSnapshot uses the file\'s own status map', () => {
+  it('counts OK/KO through the same mapping every other reader uses', () => {
+    const rows = [
+      { recipeFilename: 'a.json', status: 'SUCCESS' },
+      { recipeFilename: 'b.json', status: 'FAILED' },
+      { recipeFilename: 'c.json', status: '' },
+      { recipeFilename: 'd.json', status: 'WHATEVER' },
+    ]
+    const out = summarizeSnapshot(rows, [], [])
+    expect(out.rows).toBe(4)
+    expect(out.ok).toBe(1)
+    expect(out.ko).toBe(1)
+  })
+
+  it('never counts a status the map does not classify', () => {
+    expect(summarizeSnapshot([{ recipeFilename: 'a.json', status: 'PENDING' }], [], []))
+      .toMatchObject({ ok: 0, ko: 0, rows: 1 })
+  })
+})

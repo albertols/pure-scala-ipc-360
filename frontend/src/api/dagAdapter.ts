@@ -89,10 +89,20 @@ export function parseDurationSec(v: string | undefined): number {
   return m ? Number(m[1]) * 60 + Number(m[2]) : 0
 }
 
+/**
+ * The one b15 status -> DAG status mapping. ONE, deliberately: the same status cell reaches the
+ * same Tab 4 panel by two routes — the canvas node through `overlayRun` (snapshot rows) and the
+ * run strip through `clusterRuns` (RunDto rows) — and while these were two functions, one of
+ * which trimmed and upper-cased and one of which did an exact-match lookup, a cell spelled
+ * " success" painted the node green and the strip grey for a single value.
+ */
 export function statusFromB15(status: string | undefined): DagStatus {
   const s = (status ?? '').trim().toUpperCase()
   return s === 'SUCCESS' ? 'success' : s === 'FAILED' ? 'failed' : s === 'RUNNING' ? 'running' : 'skipped'
 }
+
+/** Alias for the RunDto route. Same input vocabulary, so necessarily the same function. */
+export const statusFromRun = statusFromB15
 
 export function overlayRun(cluster: DagCluster, rows: B15RowT[] | undefined): DagCluster {
   const byRecipe = new Map((rows ?? []).map(r => [r.recipeFilename ?? '', r]))
@@ -110,10 +120,6 @@ export function overlayRun(cluster: DagCluster, rows: B15RowT[] | undefined): Da
     .map(r => r.appStartIso ?? '').sort().at(-1) ?? ''
   return { ...cluster, tasks, status, last_run }
 }
-
-const RUN_STATUS: Record<string, DagStatus> = { SUCCESS: 'success', FAILED: 'failed', RUNNING: 'running' }
-
-const statusFromRun = (status: string | undefined): DagStatus => RUN_STATUS[status ?? ''] ?? 'skipped'
 
 /** One DagRun per date: failed if any task failed that day, success if any ran, else skipped. */
 export function clusterRuns(cluster: DagCluster, dates: string[],

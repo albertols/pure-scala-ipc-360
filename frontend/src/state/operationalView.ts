@@ -30,14 +30,36 @@ const DEFAULTS: OperationalViewState = {
   paneWidth: 260, paneCollapsed: false,
 }
 
+const DENSITY_LEVELS: readonly CardDensity[] = ['detailed', 'compact', 'minimal']
+/** Same bounds ClusterPane's resize drag clamps to — the persisted value must not outrun them. */
+const MIN_PANE_W = 200
+const MAX_PANE_W = 420
+
+/**
+ * Per-key validation of the persisted blob, mirroring `useResizableLayout.ts`'s `readStoredSizes`
+ * and for the same reason: a stored key can carry a value of the wrong type or an out-of-range
+ * one (hand-edited devtools, a schema change, an older build). `density` is the sharp case — it
+ * indexes `DENSITY_PITCH` in `relationshipsAdapter.ts`, and BOTH readers destructure the result,
+ * so an unknown level is a TypeError on every render: Tab 3 white-screens on load, and because
+ * the bad value is in localStorage it does so again on every reload, with no in-app way out.
+ */
+const VALIDATORS: { [K in typeof PERSISTED_KEYS[number]]: (v: unknown) => OperationalViewState[K] | undefined } = {
+  density: v => (typeof v === 'string' && (DENSITY_LEVELS as readonly string[]).includes(v))
+    ? v as CardDensity : undefined,
+  paneWidth: v => (typeof v === 'number' && Number.isFinite(v))
+    ? Math.max(MIN_PANE_W, Math.min(MAX_PANE_W, v)) : undefined,
+  paneCollapsed: v => typeof v === 'boolean' ? v : undefined,
+}
+
 function hydrate(): OperationalViewState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return { ...DEFAULTS }
-    const stored = JSON.parse(raw) as Partial<OperationalViewState>
-    const picked: Partial<OperationalViewState> = {}
+    const stored = JSON.parse(raw) as Record<string, unknown>
+    const picked: Record<string, unknown> = {}
     for (const key of PERSISTED_KEYS) {
-      if (stored[key] !== undefined) (picked as Record<string, unknown>)[key] = stored[key]
+      const value = VALIDATORS[key](stored[key])
+      if (value !== undefined) picked[key] = value
     }
     return { ...DEFAULTS, ...picked }
   } catch {

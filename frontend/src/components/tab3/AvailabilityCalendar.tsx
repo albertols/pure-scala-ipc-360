@@ -62,9 +62,9 @@ const LEGEND: { state: DayState; label: string }[] = [
 function swatchStyle(state: DayState): { background: string; border: string } {
   switch (state) {
     case 'none': return { background: 'var(--surface)', border: '1px solid var(--border)' }
-    case 'data': return { background: 'rgba(79,156,249,0.12)', border: '1px solid transparent' }
-    case 'inSelection': return { background: 'rgba(79,156,249,0.28)', border: '1px solid transparent' }
-    case 'selected': return { background: 'rgba(79,156,249,0.28)', border: '1px solid #4f9cf9' }
+    case 'data': return { background: 'rgba(79,156,249,0.1)', border: '1px solid transparent' }
+    case 'inSelection': return { background: 'rgba(79,156,249,0.25)', border: '1px solid transparent' }
+    case 'selected': return { background: 'rgba(79,156,249,0.25)', border: '1px solid #4f9cf9' }
   }
 }
 

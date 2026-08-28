@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { AvailabilityCalendar, dayState, monthGrid } from './AvailabilityCalendar'
@@ -125,5 +126,21 @@ describe('AvailabilityCalendar', () => {
     fireEvent.mouseDown(screen.getByTestId('outside'))
 
     expect(screen.queryByText(/July 2026/)).not.toBeInTheDocument()
+  })
+})
+
+// Item 10: the calendar introduced rgba alpha steps 0.12 and 0.28. The hue is `--blue`, but
+// those two steps were new — the base palette only ever uses 0.1/0.15/0.25/0.3/0.5/0.6, and
+// spec §12 departure 5 sanctions the popover as "built from existing tokens".
+describe('AvailabilityCalendar — palette hygiene', () => {
+  const ALLOWED_ALPHAS = ['0.1', '0.15', '0.25', '0.3', '0.5', '0.6']
+
+  it('uses only alpha steps the base palette already uses', async () => {
+    // cwd is `frontend/` under vitest; `import.meta.url` is an http URL in the jsdom env.
+    const source = await readFile('src/components/tab3/AvailabilityCalendar.tsx', 'utf8')
+    const alphas = [...source.matchAll(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d.]+)\s*\)/g)]
+      .map(m => m[1]!)
+    expect(alphas.length).toBeGreaterThan(0)
+    expect([...new Set(alphas)].filter(a => !ALLOWED_ALPHAS.includes(a))).toEqual([])
   })
 })

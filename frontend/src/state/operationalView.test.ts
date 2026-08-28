@@ -68,4 +68,56 @@ describe('operationalView', () => {
 
     expect(renderHook(() => useOperationalView()).result.current.density).toBe('detailed')
   })
+
+  // Item 2: `hydrate()` copied `stored[key]` on an `!== undefined` check alone. `density` is
+  // persisted and reaches `DENSITY_PITCH[density]` at `relationshipsAdapter.ts:51,138`, both of
+  // which DESTRUCTURE the result — so a bogus persisted value is a TypeError on every render,
+  // i.e. Tab 3 white-screens on load with no in-app recovery. `useResizableLayout.ts:26-46`
+  // already validates its own persisted blob per key for exactly this reason.
+  it('rejects a persisted density outside the known levels', () => {
+    localStorage.setItem('etl360.tab3.view', JSON.stringify({ density: 'gigantic' }))
+    resetOperationalView()
+
+    expect(renderHook(() => useOperationalView()).result.current.density).toBe('detailed')
+  })
+
+  it('rejects a persisted density of the wrong type entirely', () => {
+    localStorage.setItem('etl360.tab3.view', JSON.stringify({ density: 42, paneCollapsed: 'yes' }))
+    resetOperationalView()
+
+    const { result } = renderHook(() => useOperationalView())
+    expect(result.current.density).toBe('detailed')
+    expect(result.current.paneCollapsed).toBe(false)
+  })
+
+  it('clamps a persisted paneWidth to the pane\'s own drag bounds', () => {
+    localStorage.setItem('etl360.tab3.view', JSON.stringify({ paneWidth: 9000 }))
+    resetOperationalView()
+    expect(renderHook(() => useOperationalView()).result.current.paneWidth).toBe(420)
+
+    localStorage.setItem('etl360.tab3.view', JSON.stringify({ paneWidth: 1 }))
+    resetOperationalView()
+    expect(renderHook(() => useOperationalView()).result.current.paneWidth).toBe(200)
+
+    localStorage.setItem('etl360.tab3.view', JSON.stringify({ paneWidth: Number.NaN }))
+    resetOperationalView()
+    expect(renderHook(() => useOperationalView()).result.current.paneWidth).toBe(260)
+  })
+
+  // Private-mode Safari throws from the localStorage ACCESSOR itself, not just from setItem —
+  // untested until now, and this store reads storage at module load.
+  it('survives a localStorage accessor that throws, in both directions', () => {
+    const getItem = Storage.prototype.getItem
+    const setItem = Storage.prototype.setItem
+    Storage.prototype.getItem = () => { throw new DOMException('denied', 'SecurityError') }
+    Storage.prototype.setItem = () => { throw new DOMException('denied', 'SecurityError') }
+    try {
+      expect(() => resetOperationalView()).not.toThrow()
+      expect(renderHook(() => useOperationalView()).result.current.density).toBe('detailed')
+      expect(() => setOperationalView({ density: 'compact' })).not.toThrow()
+    } finally {
+      Storage.prototype.getItem = getItem
+      Storage.prototype.setItem = setItem
+    }
+  })
 })

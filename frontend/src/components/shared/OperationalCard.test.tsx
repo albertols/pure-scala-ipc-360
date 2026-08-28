@@ -125,3 +125,26 @@ describe('OperationalCard — RunPicker click isolation (Task 9 review, Ruling 1
     expect(onSelectRun).toHaveBeenCalledTimes(2)
   })
 })
+
+// Item 6: the history tooltip said "Click a bar to point the links at that execution" in BOTH
+// paths, including the `card.history` fallback where the bars are inert divs — an instruction
+// that cannot be followed, on the card whose run detail is the thing that is missing.
+describe('OperationalCard — history tooltip tells the truth about the bars', () => {
+  const hover = (container: HTMLElement) => {
+    const tip = container.querySelector('svg circle[r="5"]')!.closest('span')!
+    fireEvent.mouseEnter(tip)
+  }
+
+  it('offers the click instruction only when the bars are the clickable RunPicker', () => {
+    const { container } = render(<OperationalCard card={CARD} config={CONFIG} runs={RUNS} />)
+    hover(container)
+    expect(screen.getByText(/Click a bar/)).toBeInTheDocument()
+  })
+
+  it('does not instruct a click on the inert summary-derived strip', () => {
+    const { container } = render(<OperationalCard card={CARD} config={CONFIG} />)
+    hover(container)
+    expect(screen.queryByText(/Click a bar/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Each bar is one run/)).toBeInTheDocument()
+  })
+})

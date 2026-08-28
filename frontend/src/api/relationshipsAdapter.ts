@@ -314,8 +314,12 @@ export function summarizeSnapshot(
   let ok = 0, ko = 0
   for (const row of rows) {
     if (row.recipeFilename) recipeNames.add(row.recipeFilename)
-    if (row.status === 'SUCCESS') ok++
-    else if (row.status === 'FAILED') ko++
+    // Through STATUS_MAP, never raw 'SUCCESS'/'FAILED' literals: the map at the top of this file
+    // IS the b15-status rule, and a second spelling of it 250 lines down is a rule that can drift
+    // from itself.
+    const status = mapStatus(row.status)
+    if (status === 'OK') ok++
+    else if (status === 'KO') ko++
   }
 
   const tableIds = new Set<string>()

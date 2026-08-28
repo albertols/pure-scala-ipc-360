@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toDagClusters, UNGROUPED, type RelationshipsT } from './dagAdapter'
+import { toDagClusters, UNGROUPED, type RelationshipsT, statusFromRun } from './dagAdapter'
 import { clusterRuns, overlayRun, parseDurationSec, statusFromB15, toOperationalCard,
   type B15RowT } from './dagAdapter'
 import type { RunT } from './clusterQueries'
@@ -199,5 +199,25 @@ describe('flow hardening — UNGROUPED, no-data recipes, degenerate inputs', () 
 
   it('toDagClusters({}) with nodes/edges/meta all undefined returns []', () => {
     expect(toDagClusters({})).toEqual([])
+  })
+})
+
+// Item 4: `statusFromB15` trims and upper-cases; `statusFromRun` did an exact-match lookup on
+// RUN_STATUS. The SAME b15 status cell reaches the SAME Tab 4 panel by both routes — the canvas
+// node via `overlayRun` (snapshot rows) and the run strip via `clusterRuns` (RunDto rows) — so a
+// cell spelled " success" coloured the node green and the strip grey, for one value.
+describe('statusFromB15 / statusFromRun are one function', () => {
+  const CASES = [' success', 'Success', 'SUCCESS ', 'failed', ' RUNNING', '', undefined, 'nonsense']
+
+  it('agrees on every spelling, whitespace and casing included', () => {
+    for (const raw of CASES) {
+      expect(statusFromRun(raw)).toBe(statusFromB15(raw))
+    }
+  })
+
+  it('normalises rather than falling through to skipped', () => {
+    expect(statusFromRun(' success')).toBe('success')
+    expect(statusFromRun('Failed ')).toBe('failed')
+    expect(statusFromRun('nonsense')).toBe('skipped')
   })
 })

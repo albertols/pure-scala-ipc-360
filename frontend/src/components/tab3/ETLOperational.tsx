@@ -25,6 +25,11 @@ import { withoutDeselectedRecipes, narrowSummaryToDates, narrowRunsToDates } fro
 
 const nf = new Intl.NumberFormat('en-US')
 
+/** Dot-grid pitch, in px. The imperative drag write and the JSX at rest both need it, and a
+ * second literal in one of them would desynchronise the grid from the canvas the moment either
+ * changed (item 7). */
+const DOT_PITCH = 24
+
 type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
 
 /**
@@ -121,6 +126,17 @@ const RelationshipGraph = memo(function RelationshipGraph({
   const dragStart = useRef({ x: 0, y: 0 })
   const lastDragPan = useRef({ x: 0, y: 0 })
   const contentRef = useRef<HTMLDivElement>(null)
+  // The listeners of an in-progress drag, if any. Window-scoped rather than React synthetic,
+  // because a gesture does not have to end inside the element it started in: releasing over the
+  // Inspector, over the cluster pane, or outside the window at all must still commit. The old
+  // handlers relied on `onMouseLeave` for that, which a tab SWITCH never fires — and since
+  // Task 12 keeps tabs mounted, a drag interrupted that way left the store holding the pre-drag
+  // pan while the DOM showed the dragged one. Mirrors ClusterPane.tsx's `activeDragListeners`.
+  const activeDragListeners = useRef<{ onMove: (e: MouseEvent) => void; onUp: () => void } | null>(null)
+  // Read by the window listener below, so a zoom change mid-gesture is seen rather than frozen
+  // at mousedown time (the synthetic handler got this for free by being re-created per render).
+  const zoomRef = useRef(zoom)
+  zoomRef.current = zoom
   // Fix-round 1 (review): the dot-grid pattern is deliberately OUTSIDE contentRef's transformed
   // subtree (it pans but must not scale with zoom, unlike the graph itself), so painting the live
   // drag position onto contentRef alone left it frozen mid-drag and snapping into place on release.
@@ -135,27 +151,48 @@ const RelationshipGraph = memo(function RelationshipGraph({
   const CANVAS_W = Math.max(1200, ...cards.map(c => (c.x ?? 0) + 280))
   const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + 220))
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if ((e.target as Element).closest('[data-card]')) return
-    dragging.current = true
-    dragMoved.current = false
-    dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
-  }, [pan])
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragging.current) return
-    dragMoved.current = true
-    const next = { x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y }
-    lastDragPan.current = next
-    if (contentRef.current) contentRef.current.style.transform = `translate(${next.x}px,${next.y}px) scale(${zoom})`
-    if (patternRef.current) {
-      patternRef.current.setAttribute('x', String(next.x % 24))
-      patternRef.current.setAttribute('y', String(next.y % 24))
-    }
-  }, [zoom])
+  const detachDrag = useCallback(() => {
+    const listeners = activeDragListeners.current
+    if (!listeners) return
+    window.removeEventListener('mousemove', listeners.onMove)
+    window.removeEventListener('mouseup', listeners.onUp)
+    activeDragListeners.current = null
+  }, [])
+  useEffect(() => detachDrag, [detachDrag])
+
   const commitDrag = useCallback(() => {
     if (dragging.current && dragMoved.current) onPan(lastDragPan.current)
     dragging.current = false
   }, [onPan])
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    if ((e.target as Element).closest('[data-card]')) return
+    detachDrag()
+    dragging.current = true
+    dragMoved.current = false
+    dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragging.current) return
+      dragMoved.current = true
+      const next = { x: ev.clientX - dragStart.current.x, y: ev.clientY - dragStart.current.y }
+      lastDragPan.current = next
+      if (contentRef.current) {
+        contentRef.current.style.transform = `translate(${next.x}px,${next.y}px) scale(${zoomRef.current})`
+      }
+      if (patternRef.current) {
+        patternRef.current.setAttribute('x', String(next.x % DOT_PITCH))
+        patternRef.current.setAttribute('y', String(next.y % DOT_PITCH))
+      }
+    }
+    const onUp = () => {
+      commitDrag()
+      detachDrag()
+    }
+    activeDragListeners.current = { onMove, onUp }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [pan, commitDrag, detachDrag])
 
   const onWheel = useCallback((e: React.WheelEvent) => {
     const rect = containerRef.current?.getBoundingClientRect()
@@ -177,16 +214,14 @@ const RelationshipGraph = memo(function RelationshipGraph({
       data-testid="operational-canvas"
       style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--bg)', cursor: 'grab' }}
       onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={commitDrag}
-      onMouseLeave={commitDrag}
       onWheel={onWheel}
     >
       {/* dot grid */}
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         <defs>
-          <pattern ref={patternRef} id="odot" x={pan.x % 24} y={pan.y % 24} width="24" height="24" patternUnits="userSpaceOnUse">
-            <circle cx="12" cy="12" r="0.7" fill="rgba(42,48,80,0.7)" />
+          <pattern ref={patternRef} id="odot" x={pan.x % DOT_PITCH} y={pan.y % DOT_PITCH}
+            width={DOT_PITCH} height={DOT_PITCH} patternUnits="userSpaceOnUse">
+            <circle cx={DOT_PITCH / 2} cy={DOT_PITCH / 2} r="0.7" fill="rgba(42,48,80,0.7)" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#odot)" />

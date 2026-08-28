@@ -381,6 +381,46 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     spy.mockRestore()
   })
 
+  // Item 3: the drag used React synthetic handlers with no unmount cleanup, relying on
+  // `onMouseLeave` to end a gesture. With Task 12 keeping tabs mounted, a drag interrupted by a
+  // tab switch never fires `mouseleave` — so `commitDrag` never ran, and the store kept the
+  // pre-drag pan while the DOM showed the dragged one. `ClusterPane.tsx` already defends against
+  // this with window listeners plus an unmount detach; this mirrors it.
+  it('commits a drag whose mouseup lands outside the canvas', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    const canvas = screen.getByTestId('operational-canvas')
+    const spy = vi.spyOn(operationalViewStore, 'setOperationalView')
+
+    fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 })
+    fireEvent.mouseMove(window, { clientX: 150, clientY: 150 })
+    fireEvent.mouseUp(window)
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith({ pan: { x: 90, y: 90 } })
+    spy.mockRestore()
+  })
+
+  it('detaches its drag listeners on unmount, so an interrupted gesture leaks nothing', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    const removed: string[] = []
+    const realRemove = window.removeEventListener.bind(window)
+    const spy = vi.spyOn(window, 'removeEventListener').mockImplementation((type, listener, opts) => {
+      removed.push(String(type))
+      return realRemove(type, listener as EventListener, opts)
+    })
+
+    fireEvent.mouseDown(screen.getByTestId('operational-canvas'), { clientX: 100, clientY: 100 })
+    cleanup()
+
+    expect(removed).toContain('mousemove')
+    expect(removed).toContain('mouseup')
+    spy.mockRestore()
+  })
+
   it('has no implicit zoom-driven density any more', async () => {
     render(<ETLOperational />, { wrapper })
     await screen.findByText(/Select a cluster/)

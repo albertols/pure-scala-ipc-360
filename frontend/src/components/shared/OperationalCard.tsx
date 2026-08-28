@@ -182,7 +182,14 @@ export function OperationalCard({
       <div style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
           History (last {Math.min(runs.length, 10) || card.history.length})
-          <InfoTooltip text="Each bar is one run. Click a bar to point the job_id and Logging links at that execution." placement="top" />
+          {/* The click instruction is true only on the RunPicker path below. In the
+              `card.history` fallback the bars are inert divs, so telling the operator to click
+              one is an instruction that cannot be followed. */}
+          <InfoTooltip
+            text={runs.length > 0
+              ? 'Each bar is one run. Click a bar to point the job_id and Logging links at that execution.'
+              : 'Each bar is one run, oldest first. Run-by-run detail needs the run history, which is not loaded for this card.'}
+            placement="top" />
         </div>
         {runs.length > 0
           ? <RunPicker runs={runs} selectedDate={selectedRunDate} onSelect={r => onSelectRun?.(r)} />
