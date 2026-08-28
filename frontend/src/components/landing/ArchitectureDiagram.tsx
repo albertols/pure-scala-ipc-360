@@ -52,23 +52,21 @@ interface LabelProps {
   size?: number
   weight?: number
   color?: string
-  mono?: boolean
 }
 
-function Label({ x, y, lines, size = 12, weight = 700, color = TEXT, mono = false }: LabelProps) {
-  const fontFamily = mono ? 'JetBrains Mono, monospace' : FONT
+function Label({ x, y, lines, size = 12, weight = 700, color = TEXT }: LabelProps) {
   // A single line renders as a plain text node — no nested <tspan> duplicating the exact same
   // string, which is what `screen.getByText(/.../)` (a substring match) would otherwise find
   // twice (once on the <text>, once on its lone <tspan> child) and reject as ambiguous.
   if (lines.length === 1) {
     return (
-      <text x={x} y={y} fontSize={size} fontWeight={weight} fill={color} fontFamily={fontFamily}>
+      <text x={x} y={y} fontSize={size} fontWeight={weight} fill={color} fontFamily={FONT}>
         {lines[0]}
       </text>
     )
   }
   return (
-    <text x={x} y={y} fontSize={size} fontWeight={weight} fill={color} fontFamily={fontFamily}>
+    <text x={x} y={y} fontSize={size} fontWeight={weight} fill={color} fontFamily={FONT}>
       {lines.map((line, i) => (
         <tspan key={i} x={x} dy={i === 0 ? 0 : size + 3}>
           {line}

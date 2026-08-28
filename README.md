@@ -15,8 +15,8 @@ standalone tool, unchanged in behavior.
 ![ETL 360 architecture](docs/img/etl360-architecture.svg)
 
 The same artwork is clickable inside the app's landing page (each region opens the tab it
-depicts); see `docs/visual-guide.md` for the full diagram set, including the precise mermaid
-system/sequence diagrams this illustration summarizes.
+depicts); see `docs/visual-guide.md` for the full flowchart set and `docs/architecture.md`
+for the precise system and sequence diagrams this illustration summarizes.
 
 ## Prerequisites
 
