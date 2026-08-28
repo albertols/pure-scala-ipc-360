@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect, memo } from 'react'
 import type { OperationalCard as CardData, CardDensity } from '../../types'
 import type { ApiError } from '../../api/client'
 import { useOperationalSummary, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
@@ -20,6 +20,7 @@ import { OperationalProgress, type ProgressStage } from './OperationalProgress'
 import { DataRootsPanel, DataRootsChip } from './DataRootsPanel'
 import { AvailabilityCalendar } from './AvailabilityCalendar'
 import { nearestAvailableDate } from './dateWindow'
+import { applyWheel, wheelActs } from './canvasGestures'
 
 const nf = new Intl.NumberFormat('en-US')
 
@@ -65,7 +66,7 @@ function StatusSummary({ cards }: { cards: CardData[] }) {
   )
 }
 
-function RelationshipGraph({
+const RelationshipGraph = memo(function RelationshipGraph({
   cards,
   edges,
   selected,
@@ -108,8 +109,17 @@ function RelationshipGraph({
    * `fitToViewport` refits against the ACTUAL viewport rather than a guess. */
   containerRef: React.RefObject<HTMLDivElement | null>
 }) {
+  // Task 17: dragging used to write to the store on every `mousemove` (~120 events/second),
+  // notifying `useSyncExternalStore` and re-rendering `ETLOperational` + `ClusterPane` +
+  // `SelectionStrip` — every card and every `RunPicker` cell — per event. Instead, the live pan is
+  // held in a ref and painted straight onto the transformed content div's `style.transform`,
+  // bypassing React entirely while the mouse is down; the store (`onPan`) is written exactly once,
+  // on release, which is also the one moment `pan` needs to survive a tab switch (spec §7.7).
   const dragging = useRef(false)
-  const lastPan = useRef({ x: 0, y: 0 })
+  const dragMoved = useRef(false)
+  const dragStart = useRef({ x: 0, y: 0 })
+  const lastDragPan = useRef({ x: 0, y: 0 })
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const byId = Object.fromEntries(cards.map(c => [c.id, c]))
   const visibleEdges = edges.filter(e => byId[e.fromId] && byId[e.toId])
@@ -122,14 +132,34 @@ function RelationshipGraph({
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as Element).closest('[data-card]')) return
     dragging.current = true
-    lastPan.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
+    dragMoved.current = false
+    dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
   }, [pan])
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     if (!dragging.current) return
-    onPan({ x: e.clientX - lastPan.current.x, y: e.clientY - lastPan.current.y })
+    dragMoved.current = true
+    const next = { x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y }
+    lastDragPan.current = next
+    if (contentRef.current) contentRef.current.style.transform = `translate(${next.x}px,${next.y}px) scale(${zoom})`
+  }, [zoom])
+  const commitDrag = useCallback(() => {
+    if (dragging.current && dragMoved.current) onPan(lastDragPan.current)
+    dragging.current = false
   }, [onPan])
-  const onMouseUp = useCallback(() => { dragging.current = false }, [])
-  const onWheel = useCallback((e: React.WheelEvent) => { e.stopPropagation() }, [])
+
+  const onWheel = useCallback((e: React.WheelEvent) => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    const input = {
+      deltaX: e.deltaX, deltaY: e.deltaY,
+      metaKey: e.metaKey, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey,
+      cursor: { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) },
+    }
+    if (!wheelActs(input)) return
+    e.preventDefault()
+    e.stopPropagation()
+    const next = applyWheel({ zoom, pan }, input)
+    setOperationalView({ zoom: next.zoom, pan: next.pan })
+  }, [zoom, pan])
 
   return (
     <div
@@ -137,8 +167,8 @@ function RelationshipGraph({
       style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--bg)', cursor: 'grab' }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
+      onMouseUp={commitDrag}
+      onMouseLeave={commitDrag}
       onWheel={onWheel}
     >
       {/* dot grid */}
@@ -151,7 +181,7 @@ function RelationshipGraph({
         <rect width="100%" height="100%" fill="url(#odot)" />
       </svg>
 
-      <div style={{
+      <div ref={contentRef} style={{
         transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})`,
         transformOrigin: '0 0',
         position: 'absolute',
@@ -251,7 +281,7 @@ function RelationshipGraph({
       )}
     </div>
   )
-}
+})
 
 /**
  * Tab 3 — cluster-scoped operational graph (Task 14).
@@ -271,6 +301,12 @@ function RelationshipGraph({
 export function ETLOperational() {
   const view = useOperationalView()
   const hasSelection = view.selectedClusters.length > 0
+
+  // Task 17: stable identity so `RelationshipGraph`'s `React.memo` (and its own memoised
+  // `onMouseMove`/`commitDrag`, which close over this) don't rebuild on every ETLOperational
+  // render — an inline arrow here defeated both, forcing the graph to re-render alongside every
+  // unrelated store update (a wheel zoom, a run selection, …) even when pan itself hadn't moved.
+  const onPan = useCallback((pan: { x: number; y: number }) => setOperationalView({ pan }), [])
 
   const index = useClusterIndex()
   // `enabled: key.length > 0` lives inside the hook: `GET /api/relationships?clusters=` with an
@@ -669,6 +705,9 @@ export function ETLOperational() {
             {Math.round(view.zoom * 100)}%
           </span>
           <button onClick={() => setOperationalView({ zoom: Math.min(2, view.zoom + 0.15) })} style={zoomBtn}>+</button>
+          {/* Task 17: the wheel itself now zooms/pans (cmd/ctrl+wheel, shift+wheel) — this is the
+              only place that says so. */}
+          <InfoTooltip text="⌘/Ctrl + wheel to zoom · Shift + wheel to pan" placement="bottom" />
         </div>
       </div>
 
@@ -698,7 +737,7 @@ export function ETLOperational() {
           onSelect={id => setOperationalView({ selectedNode: id })}
           zoom={view.zoom}
           pan={view.pan}
-          onPan={pan => setOperationalView({ pan })}
+          onPan={onPan}
           summaryItems={summaryItems}
           runsByRecipe={runs.byRecipe}
           density={view.density}

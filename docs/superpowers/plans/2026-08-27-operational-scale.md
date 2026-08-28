@@ -4434,7 +4434,7 @@ copy. TimePicker is untouched; the calendar is an additive sibling."
 
 **Why:** Tab 3's wheel handler is `e.stopPropagation()` and nothing else (`ETLOperational.tsx:128`) — the wheel does not zoom, pan, or anything. The math lives in a pure function so it is testable without synthesising DOM wheel events (spec §7.5).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `frontend/src/components/tab3/canvasGestures.test.ts`:
 
@@ -4511,7 +4511,7 @@ describe('wheelActs', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test canvasGestures
@@ -4519,7 +4519,7 @@ cd frontend && pnpm test canvasGestures
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 export interface CanvasView { zoom: number; pan: { x: number; y: number } }
@@ -4599,7 +4599,7 @@ local state and into the store (Task 12) so it survives a tab switch like everyt
 
 Add a one-line hint to the zoom controls' tooltip: `⌘/Ctrl + wheel to zoom · Shift + wheel to pan`.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 ```bash
 cd frontend && pnpm test canvasGestures ETLOperational && pnpm exec tsc --noEmit
@@ -4607,7 +4607,7 @@ cd frontend && pnpm test canvasGestures ETLOperational && pnpm exec tsc --noEmit
 
 Expected: PASS, 8 new tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/canvasGestures.ts \

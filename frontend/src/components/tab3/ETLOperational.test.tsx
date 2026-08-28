@@ -341,6 +341,9 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
 
     fireEvent.click(screen.getByRole('button', { name: /Density: detailed/ }))
     expect(await screen.findByRole('button', { name: /Density: compact/ })).toBeInTheDocument()
+    // Ruling 33: a compact card still renders the real recipe filename from the fetched MSW
+    // fixture, not a placeholder — the one assertion group Task 15's replacement tests dropped.
+    expect(screen.getByText('_ETL_m_CAS_T.json')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Density: compact/ }))
     expect(await screen.findByRole('button', { name: /Density: minimal/ })).toBeInTheDocument()
