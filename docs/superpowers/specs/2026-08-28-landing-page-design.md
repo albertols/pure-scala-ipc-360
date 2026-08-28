@@ -241,8 +241,16 @@ compute a second opinion about health. `progress` is **nullable**: see §11.
 - `Landing.test.tsx` — stats render from the payload; the mascot overlay flips with `status` **in
   both directions**; a degraded payload names the failing root and shows its hint; Enter, `Esc` and
   a diagram-region click each reach the tabs, the last on the region's own tab.
-- `reducedMotion.test.tsx` — under `prefers-reduced-motion: reduce` no animation classes are applied,
-  and the mood distinction still renders.
+- `reducedMotion.test.ts` — asserts every animated landing class has a rule inside a
+  `@media (prefers-reduced-motion: reduce)` block.
+
+  > **Corrected during planning.** This originally read "under `prefers-reduced-motion: reduce`
+  > no animation classes are applied". That test cannot exist: reduced motion is handled in CSS,
+  > not by a JS branch, so the classes are always applied and the media query disables them — the
+  > more robust design, since it responds to the OS setting changing at runtime with no re-render.
+  > jsdom computes no media queries, so a component test observes nothing. The regression that can
+  > actually happen is someone adding a keyframe without its counterpart, and that is what the test
+  > pins. The rendered result is confirmed in the browser pass.
 - `ArchitectureDiagram.test.tsx` — every clickable region maps to a real `TabId`.
 - `readinessQueries.test.ts` — hook shape and error state.
 - `App.test.tsx` — landing is the initial view; `?focus=` bypasses it entirely.
