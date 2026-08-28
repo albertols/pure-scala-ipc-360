@@ -87,7 +87,9 @@ assert o["clusters"] == 21 and o["days"] == 14 and o["rows"] == 417, "operationa
 # directory outside the 8-name layer vocabulary that LayerToLayerService.entries() excludes
 # (docs/adr/0016-landing-readiness-aggregate.md).
 assert g["workflows"] == 22, f"expected 22 workflows, got {g["workflows"]}"
-assert d["status"] in ("ok", "degraded"), "status must mirror diagnostics"
+# "ok"/"ko" is the real vocabulary (DiagnosticsService, ADR-0013) — the backend never emits
+# "degraded"; that word names only the frontend mascot mood (a presentational concept only).
+assert d["status"] in ("ok", "ko"), "status must mirror diagnostics"
 assert len(d["roots"]) == 3, "expected corpus, dwhControl and composer roots"
 # progress is nullable (docs/ may be absent in a packaged deployment) — only assert its shape
 # when present, on this repo checkout of the committed mock where docs/ always exists.

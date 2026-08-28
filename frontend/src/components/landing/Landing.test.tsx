@@ -19,6 +19,16 @@ const DEGRADED = {
   roots: [{ name: 'composer', tier: 'absent', status: 'ko',
             hint: 'set composerRoot in config.json' }],
 }
+// The real backend vocabulary (`DiagnosticsService`, ADR-0013) is `"ok"`/`"ko"` — it has never
+// emitted the literal string `"degraded"`. `DEGRADED` above exercises the mapping with a value it
+// does NOT actually produce; this fixture exercises the value it does.
+const KO = {
+  ...READY, status: 'ko',
+  roots: [
+    { name: 'dwhControl', tier: 'absent', status: 'ko', hint: 'set ETL360_DWH_CONTROL_ROOT' },
+    { name: 'composer', tier: 'absent', status: 'ko', hint: 'set ETL360_MOCK_ROOT' },
+  ],
+}
 
 const server = setupServer(
   http.get('*/api/readiness', () => HttpResponse.json(READY)),
@@ -55,6 +65,22 @@ describe('Landing', () => {
     // spec §6.4) surfaces the identical `hint` string for its own audience — by design, not a
     // collision to hide — so an unscoped `getByText` here would be ambiguous between the two.
     expect(within(screen.getByTestId('mascot-scene')).getByText(/set composerRoot in config.json/)).toBeInTheDocument()
+  })
+
+  // Regression for the acceptance-walk defect: the backend never actually sends "degraded" — it
+  // sends "ko" (see DiagnosticsService). A mapping that only recognised the literal string
+  // "degraded" let a real "ko" fall through to the relaxed mood. Asserting on the mascot's own
+  // degraded markers (twigs present, bubbles absent — MascotScene's overlay switch), not just the
+  // data-mood attribute, so a future refactor of that attribute alone can't paper over the same bug.
+  it('shows the pruning mascot when the backend reports "ko" (not just the string "degraded")', async () => {
+    server.use(http.get('*/api/readiness', () => HttpResponse.json(KO)))
+
+    render(<Landing onEnter={() => {}} />, { wrapper })
+
+    const mascot = await screen.findByTestId('mascot-scene')
+    await waitFor(() => expect(mascot).toHaveAttribute('data-mood', 'degraded'))
+    expect(within(mascot).getByTestId('overlay-twigs')).toBeInTheDocument()
+    expect(within(mascot).queryByTestId('overlay-bubbles')).not.toBeInTheDocument()
   })
 
   it('enters on the primary button', async () => {

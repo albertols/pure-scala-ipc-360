@@ -63,7 +63,9 @@ class ReadinessServiceTest {
     void mirrorsTheDiagnosticsStatusRatherThanComputingASecondOpinion() {
         ReadinessDto r = readiness.readiness();
 
-        assertThat(r.status()).isIn("ok", "degraded");
+        // "ok"/"ko" is the real vocabulary — DiagnosticsService (ADR-0013) never emits "degraded";
+        // that word names only the mascot's presentational mood on the frontend.
+        assertThat(r.status()).isIn("ok", "ko");
         assertThat(r.roots()).isNotEmpty();
         assertThat(r.roots().get(0).resolved()).isNotBlank();
     }

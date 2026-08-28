@@ -47,7 +47,9 @@ class ReadinessContractTest {
     void servesEveryFieldTheLandingPageNeedsInOneRequest() throws Exception {
         MvcResult result = mvc.perform(get("/api/readiness"))
            .andExpect(status().isOk())
-           .andExpect(jsonPath("$.status").value(oneOf("ok", "degraded")))
+           // "ok"/"ko" is the real vocabulary — DiagnosticsService (ADR-0013) never emits
+           // "degraded"; that word names only the mascot's presentational mood on the frontend.
+           .andExpect(jsonPath("$.status").value(oneOf("ok", "ko")))
            .andExpect(jsonPath("$.corpus.xml").value(81))
            .andExpect(jsonPath("$.corpus.recipes").value(86))
            .andExpect(jsonPath("$.corpus.ddl").value(212))
@@ -148,7 +150,7 @@ class ReadinessContractTest {
         void omitsTheProgressKeyEntirelyRatherThanSerializingNull() throws Exception {
             MvcResult result = mvc.perform(get("/api/readiness"))
                .andExpect(status().isOk())
-               .andExpect(jsonPath("$.status").value(oneOf("ok", "degraded")))
+               .andExpect(jsonPath("$.status").value(oneOf("ok", "ko")))
                .andExpect(jsonPath("$.corpus.xml").value(81))
                .andReturn();
 

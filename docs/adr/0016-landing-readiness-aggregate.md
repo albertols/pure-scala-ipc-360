@@ -42,9 +42,15 @@ cache their own work (`CorpusService`, `ClusterIndexService`, `DiagnosticsServic
 
 **The mascot is bound to `readiness.status`.** The hero image is a single flat photograph — a
 cypress-avenue scene the user supplied, not a posable illustration — so mood is carried by an
-animated SVG overlay and a CSS colour grade rendered over it, not by swapping the mascot's pose.
-`ok` renders warm and saturated with rising bubbles; `degraded` renders cooler and desaturated with
-a harder vignette.
+animated SVG overlay and a CSS colour grade rendered over it, not by swapping the mascot's pose. A
+`status` of `"ok"` renders warm and saturated with rising bubbles; anything else — the API's real
+`"ko"` (`DiagnosticsService`), or any future third value — renders the mascot's own `degraded`
+mood: cooler and desaturated with a harder vignette. (Corrected during the sub-project 11 acceptance
+walk: this line originally read `` `ok` renders …; `degraded` renders … ``, implying the API sends
+the literal string `"degraded"`. It never has — that word names only the mascot's presentational
+mood, `MascotScene`'s `ReadinessStatus`. The frontend's original mapping checked for that exact
+string and so silently rendered the relaxed mood for a real `"ko"`, a defect caught in the browser
+acceptance walk and fixed by mapping "any non-`ok` status" to `degraded` instead.)
 
 ## Consequences
 

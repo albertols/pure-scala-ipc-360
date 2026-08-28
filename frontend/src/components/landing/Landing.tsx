@@ -44,7 +44,14 @@ export function Landing({ onEnter }: LandingProps) {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onEnter])
 
-  const status: ReadinessStatus = data?.status === 'degraded' ? 'degraded' : 'ok'
+  // The backend's real vocabulary is "ok"/"ko" (DiagnosticsService, ADR-0013) — it has never
+  // emitted the literal string "degraded"; that word only names the mascot's own presentational
+  // mood (MascotScene's ReadinessStatus). Deliberately NOT `data?.status === 'ko' ? 'degraded' :
+  // 'ok'`: that would just swap one hardcoded string for another and still render the relaxed
+  // mood for any THIRD status value this endpoint might emit later. Instead, treat "ok" as the
+  // only value that earns the relaxed mood — every other resolved status (a future value included)
+  // fails safe toward "something is wrong".
+  const status: ReadinessStatus = data && data.status !== 'ok' ? 'degraded' : 'ok'
   const rootIssue = data?.roots?.find(r => r.status !== 'ok') ?? null
   const failingRoot: FailingRoot | null = rootIssue
     ? { name: rootIssue.name ?? 'root', hint: rootIssue.hint ?? null }

@@ -102,10 +102,20 @@ never committed.
 breathes rather than sitting static. Over it, an inline SVG overlay whose contents depend on
 readiness:
 
-| `readiness.status` | Overlay | Grade |
+| Mascot mood | Overlay | Grade |
 |---|---|---|
 | `ok` | rising bubbles, curling steam | warm, saturated |
 | `degraded` | falling twigs, a shear glint | cooler, desaturated, harder vignette |
+
+**Corrected during the acceptance walk (Task 12).** This table's left column originally read
+`readiness.status`, implying the backend's `/api/readiness` sends the literal string `"degraded"`.
+It does not: the real vocabulary is `"ok"`/`"ko"` (`DiagnosticsService`, ADR-0013) — "degraded" was
+a spec-authoring error that propagated into the frontend mapping and shipped a defect (the mascot
+rendered its relaxed mood for a real `"ko"` payload, caught in the browser acceptance walk). `ok`/
+`degraded` above names the mascot's own presentational MOOD (`MascotScene`'s `ReadinessStatus`),
+which is a legitimate frontend-only concept — the fix is that `Landing.tsx` now maps `status !==
+'ok'` (any value, not just a hardcoded `"ko"`) to the `degraded` mood, rather than checking for the
+API to send a word it never sends.
 
 Both overlays are SVG shapes animated with CSS keyframes, following the precedent ADR-0005 set for
 `spinner-rotate`. All colours come from existing tokens; the grade is a CSS `filter`
@@ -195,7 +205,7 @@ surface, and its sanctioned departures are:
 | GET | `/api/readiness` | **new** — one aggregate: `status`, `corpus`, `operational`, `dags`, `roots`, `progress` |
 
 ```
-{ "status": "ok" | "degraded",
+{ "status": "ok" | "ko",
   "corpus":      { "xml": 81, "recipes": 86, "ddl": 212, "dirs": 119, "layers": ["CDM","DWH",…] },
   "operational": { "clusters": 21, "recipes": 30, "days": 14, "rows": 417, "mode": "mock" },
   "dags":        { "workflows": 22 },
@@ -234,13 +244,18 @@ compute a second opinion about health. `progress` is **nullable**: see §11.
   called exactly once per request.
 - `ProgressScannerTest` — counts `- [x]`/`- [ ]` across a temp docs tree; **returns `null` for an
   absent `docs/`**; fingerprint invalidation when a plan file changes.
-- `ReadinessControllerTest` — shape, `200`, and that a degraded diagnostics state produces
-  `status: "degraded"` with the failing root's `hint` present.
+- `ReadinessContractTest` (named `ReadinessControllerTest` in the original brief; the class that
+  actually shipped is `ReadinessContractTest`) — shape, `200`, and that a `"ko"` diagnostics state
+  produces `status: "ko"` with the failing root's `hint` present. (Corrected during the acceptance
+  walk: this bullet originally read "a degraded diagnostics state produces `status: "degraded"`" —
+  the backend has never emitted that word; see §5's correction.)
 
 **Frontend (vitest)**
 - `Landing.test.tsx` — stats render from the payload; the mascot overlay flips with `status` **in
-  both directions**; a degraded payload names the failing root and shows its hint; Enter, `Esc` and
-  a diagram-region click each reach the tabs, the last on the region's own tab.
+  both directions**; a `"ko"` payload names the failing root and shows its hint, and is mapped to
+  the mascot's `degraded` mood (any non-`"ok"` status is, not only a hardcoded `"ko"` check — see
+  §5's correction); Enter, `Esc` and a diagram-region click each reach the tabs, the last on the
+  region's own tab.
 - `reducedMotion.test.ts` — asserts every animated landing class has a rule inside a
   `@media (prefers-reduced-motion: reduce)` block.
 
