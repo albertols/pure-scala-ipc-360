@@ -72,6 +72,16 @@ export function MascotScene({ status, failingRoot }: MascotSceneProps) {
         border: '1px solid var(--border)',
         overflow: 'hidden',
         background: 'var(--surface)',
+        // Capped on WIDTH, not height: the inner box is `aspectRatio: 1/1` over an
+        // `objectFit: cover` image, so capping height would letterbox the square and
+        // centre-crop the mascot's head off. Constraining width shrinks the whole square
+        // and keeps the full scene. `600px` is the asset's natural size — past that it
+        // upscales and goes soft (it rendered at 930px before this). `52vh` is what keeps
+        // the "Enter ETL 360" button above the fold: the browser acceptance walk measured
+        // the button at y=1120 in an 864px viewport, i.e. entirely unreachable without
+        // scrolling, on a page whose whole promise is click-and-go.
+        maxWidth: 'min(600px, 52vh)',
+        margin: '0 auto',
       }}
     >
       <div

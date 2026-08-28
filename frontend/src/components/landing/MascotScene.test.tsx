@@ -44,4 +44,21 @@ describe('MascotScene', () => {
     rerender(<MascotScene status="degraded" failingRoot={{ name: 'corpus', hint: null }} />)
     expect(screen.getByRole('img', { name: /mascot/i })).toBeInTheDocument()
   })
+
+  // Regression guard for a defect the browser acceptance walk caught and no unit test could:
+  // uncapped, the hero stretched to its flex parent's full 930px and pushed the "Enter ETL 360"
+  // button to y=1120 in an 864px viewport — off-screen, on the one page whose promise is
+  // click-and-go. jsdom computes no layout, so this pins the DECLARED cap rather than a measured
+  // height; that is the honest limit of what a unit test can assert here.
+  it('caps the hero so the call-to-action stays above the fold', () => {
+    render(<MascotScene status="ok" failingRoot={null} />)
+    const scene = screen.getByTestId('mascot-scene')
+
+    // Width-capped, never height-capped: the inner box is aspectRatio 1/1 over an
+    // objectFit:cover image, so a height cap would centre-crop the mascot's head off.
+    expect(scene.style.maxWidth).toBe('min(600px, 52vh)')
+    expect(scene.style.maxHeight).toBe('')
+    // 600px is the asset's natural size — a larger cap would upscale and soften it.
+    expect(scene.style.maxWidth).toContain('600px')
+  })
 })
