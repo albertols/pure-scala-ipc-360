@@ -234,6 +234,49 @@ describe('ETLDag — real run selector, per-date coloring, GCP links, replay-moc
     fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
 
     expect(await screen.findByText('Run history failed to load.')).toBeInTheDocument()
+    // The whole panel — Operational State included — must show the ONE honest
+    // failure state. Before the fix, the card rendered independently of the
+    // run-history strip and showed PENDING/an empty strip, indistinguishable
+    // from "this recipe never ran".
+    expect(screen.queryByText('Operational State')).not.toBeInTheDocument()
+    expect(screen.queryByText('PENDING')).not.toBeInTheDocument()
+  })
+
+  // Task 11 review fix: useRuns(taskIds, 10) only ever fetches the 10 most recent
+  // runs per recipe, so the strip must never draw a cell for an older date it
+  // could not have covered — that cell would silently read "skipped" for a date
+  // that may well have run.
+  it('(g) the run-history strip renders only the fetched window (10), oldest-fetched first — not every available date', async () => {
+    // 14 available dates, oldest first — more than the 10-run fetch window.
+    const allDates = Array.from({ length: 14 }, (_, i) => `2026-07-${String(16 + i).padStart(2, '0')}`)
+    const fetchedDates = allDates.slice(-10)   // what useRuns(taskIds, 10) actually gets back
+
+    server.use(
+      http.get('*/api/operational/dates', () => HttpResponse.json({ dates: allDates, mode: 'mock' })),
+      http.get('*/api/operational/runs', ({ request }) => {
+        const recipes = new URL(request.url).searchParams.getAll('recipe')
+        const runsForA: RunT[] = fetchedDates.map(date => ({
+          date, clusterName: 'cluster-wf-fix-00-1234', jobId: `job-${date}`,
+          appStartIso: `${date}T04:00:00.000Z`, durationMin: 1, status: 'SUCCESS', message: '',
+        })).reverse()   // newest-first, as served
+        return HttpResponse.json({
+          limit: 10,
+          byRecipe: Object.fromEntries(recipes.map(r => [r, r === '_ETL_m_FIX_ODS_A.json' ? runsForA : []])),
+        })
+      }),
+    )
+
+    renderDag()
+    fireEvent.click(await screen.findByText('wf_FIX_ODS'))
+    fireEvent.click(await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
+
+    // The run-history strip's bottom list renders one row per date, its own text
+    // node holding just the date (`{r.run_id}`, `r.run_id` being the date).
+    const rows = await screen.findAllByText(/^2026-07-\d\d$/)
+    expect(rows).toHaveLength(10)
+    const rendered = rows.map(r => r.textContent).sort()
+    expect(rendered[0]).toBe(fetchedDates[0])       // oldest FETCHED (2026-07-20)
+    expect(rendered[0]).not.toBe(allDates[0])       // never the oldest AVAILABLE (2026-07-16)
   })
 })
 

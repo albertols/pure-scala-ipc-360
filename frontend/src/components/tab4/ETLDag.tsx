@@ -24,7 +24,75 @@ const STATUS_COLOR: Record<string, string> = {
 const TASK_W = 180
 const TASK_H = 62
 
+// Must match the limit passed to useRuns below — the run-history strip renders one
+// cell per date in the window it queries, never a date the query couldn't have
+// covered (that would silently look like "skipped" for a date that actually ran).
+const RUNS_LIMIT = 10
+
 // ─── DAG Explorer sidebar ─────────────────────────────────────────────────────
+
+// Module-scope (not defined inside DagExplorer's render): a component defined inside
+// another component's function body gets a NEW function identity every parent
+// re-render, so React treats it as a different component type at the same JSX
+// position and unmounts+remounts the whole subtree — even though the `key` stays the
+// same — rather than reconciling in place. That silently detaches any DOM reference a
+// test (or a real click, mid-render) captured just before the parent re-rendered.
+function TaskRow({ task, dagId, depth = 0, selectedTask, selectedDag, onSelectTask, expanded, toggle }: {
+  task: DagTask
+  dagId: string
+  depth?: number
+  selectedTask: string | null
+  selectedDag: string | null
+  onSelectTask: (dagId: string, taskId: string) => void
+  expanded: Record<string, boolean>
+  toggle: (id: string) => void
+}) {
+  const color = STATUS_COLOR[task.last_status] ?? '#4a5570'
+  const isSel = selectedTask === task.task_id && selectedDag === dagId
+  const hasSubDag = Boolean(task.sub_dag)
+  const subKey = `${dagId}:${task.task_id}`
+  const subExpanded = expanded[subKey]
+
+  return (
+    <>
+      <div
+        onClick={() => onSelectTask(dagId, task.task_id)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: `5px 10px 5px ${10 + depth * 14}px`,
+          cursor: 'pointer', borderRadius: 3,
+          background: isSel ? 'var(--surface-3)' : 'transparent',
+          color: isSel ? '#e2e8f8' : '#7b88aa',
+        }}
+        className="tree-item"
+      >
+        {hasSubDag && (
+          <span onClick={e => { e.stopPropagation(); toggle(subKey) }} style={{ cursor: 'pointer', flexShrink: 0 }}>
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+              <path d={subExpanded ? 'M1 2.5l3.5 4 3.5-4' : 'M2.5 1l4 3.5-4 3.5'} stroke="#4a5570" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </span>
+        )}
+        {!hasSubDag && <span style={{ width: 9 }} />}
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0,
+          boxShadow: task.last_status === 'running' ? `0 0 5px ${color}` : 'none' }} />
+        <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+          {task.task_id}
+        </span>
+        {task.duration_s > 0 && (
+          <span style={{ fontSize: 9, color: '#3a4560', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>
+            {task.duration_s}s
+          </span>
+        )}
+      </div>
+      {hasSubDag && subExpanded && task.sub_dag?.tasks.map(st => (
+        <TaskRow key={st.task_id} task={st} dagId={dagId} depth={depth + 1}
+          selectedTask={selectedTask} selectedDag={selectedDag} onSelectTask={onSelectTask}
+          expanded={expanded} toggle={toggle} />
+      ))}
+    </>
+  )
+}
 
 function DagExplorer({
   clusters,
@@ -47,52 +115,6 @@ function DagExplorer({
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const toggle = (id: string) => setExpanded(e => ({ ...e, [id]: !e[id] }))
-
-  function TaskRow({ task, dagId, depth = 0 }: { task: DagTask; dagId: string; depth?: number }) {
-    const color = STATUS_COLOR[task.last_status] ?? '#4a5570'
-    const isSel = selectedTask === task.task_id && selectedDag === dagId
-    const hasSubDag = Boolean(task.sub_dag)
-    const subKey = `${dagId}:${task.task_id}`
-    const subExpanded = expanded[subKey]
-
-    return (
-      <>
-        <div
-          onClick={() => onSelectTask(dagId, task.task_id)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: `5px 10px 5px ${10 + depth * 14}px`,
-            cursor: 'pointer', borderRadius: 3,
-            background: isSel ? 'var(--surface-3)' : 'transparent',
-            color: isSel ? '#e2e8f8' : '#7b88aa',
-          }}
-          className="tree-item"
-        >
-          {hasSubDag && (
-            <span onClick={e => { e.stopPropagation(); toggle(subKey) }} style={{ cursor: 'pointer', flexShrink: 0 }}>
-              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                <path d={subExpanded ? 'M1 2.5l3.5 4 3.5-4' : 'M2.5 1l4 3.5-4 3.5'} stroke="#4a5570" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </span>
-          )}
-          {!hasSubDag && <span style={{ width: 9 }} />}
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0,
-            boxShadow: task.last_status === 'running' ? `0 0 5px ${color}` : 'none' }} />
-          <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-            {task.task_id}
-          </span>
-          {task.duration_s > 0 && (
-            <span style={{ fontSize: 9, color: '#3a4560', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>
-              {task.duration_s}s
-            </span>
-          )}
-        </div>
-        {hasSubDag && subExpanded && task.sub_dag?.tasks.map(st => (
-          <TaskRow key={st.task_id} task={st} dagId={dagId} depth={depth + 1} />
-        ))}
-      </>
-    )
-  }
 
   return (
     <div style={{
@@ -133,7 +155,9 @@ function DagExplorer({
                 </div>
               </div>
               {dagExpanded && dag.tasks.map(t => (
-                <TaskRow key={t.task_id} task={t} dagId={dag.dag_id} />
+                <TaskRow key={t.task_id} task={t} dagId={dag.dag_id}
+                  selectedTask={selectedTask} selectedDag={selectedDag} onSelectTask={onSelectTask}
+                  expanded={expanded} toggle={toggle} />
               ))}
             </div>
           )
@@ -443,13 +467,18 @@ export function ETLDag() {
 
   const datesQ = useOperationalDates()
   const dates = useMemo(() => [...(datesQ.data?.dates ?? [])].sort(), [datesQ.data])
+  // The run-history strip's window: useRuns below only ever fetches the RUNS_LIMIT
+  // most recent runs per recipe, so the strip must render exactly that many cells —
+  // rendering the full `dates` list would draw "skipped" for older dates the query
+  // never covered, indistinguishable from a date that genuinely had no run.
+  const recentDates = useMemo(() => dates.slice(-RUNS_LIMIT), [dates])
   const latest = dates.at(-1) ?? ''
   const selectedDate = timeVal.isNow ? latest : timeVal.date   // "Now" = latest available snapshot
 
   const snapshot = useOperational(selectedDate)                       // one date, every recipe
   const rowsForDate = (snapshot.data?.rows ?? []) as B15RowT[]
   const taskIds = useMemo(() => dag?.tasks.map(t => t.task_id) ?? [], [dag])
-  const { byRecipe, isLoading: runsLoading, isError: runsError } = useRuns(taskIds, 10)   // selected DAG only
+  const { byRecipe, isLoading: runsLoading, isError: runsError } = useRuns(taskIds, RUNS_LIMIT)   // selected DAG only
   const [selectedRunDate, setSelectedRunDate] = useState<string | null>(null)
 
   const litDag = useMemo(() => dag ? overlayRun(dag, rowsForDate) : null,
@@ -647,20 +676,6 @@ export function ETLDag() {
               </div>
             )}
 
-            {/* operational card */}
-            {card && (
-              <div>
-                <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>Operational State</div>
-                <OperationalCard
-                  card={card}
-                  config={config}
-                  runs={selectedTaskRuns}
-                  selectedRunDate={selectedRunDate ?? selectedDate}
-                  onSelectRun={r => setSelectedRunDate(r.date ?? null)}
-                />
-              </div>
-            )}
-
             {/* sub-dag */}
             {selectedTask.sub_dag && (
               <div>
@@ -681,20 +696,39 @@ export function ETLDag() {
               </div>
             )}
 
-            {/* run history */}
-            {selectedDagId && (
-              runsError ? (
-                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                  Run history failed to load.
-                </div>
-              ) : (
-                <RunHistory
-                  runs={dag ? clusterRuns(dag, dates, byRecipe) : []}
-                  selectedDate={selectedDate}
-                  onSelectRun={d => setTimeVal(v => ({ ...v, date: d, isNow: false }))}
-                  loading={runsLoading}
-                />
-              )
+            {/* operational state + run history: ONE honest state for both — a failed
+                runs fetch must never look like "PENDING, never ran" on the card while
+                the strip below correctly says it failed to load. */}
+            {runsError ? (
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                Run history failed to load.
+              </div>
+            ) : (
+              <>
+                {/* operational card */}
+                {card && (
+                  <div>
+                    <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>Operational State</div>
+                    <OperationalCard
+                      card={card}
+                      config={config}
+                      runs={selectedTaskRuns}
+                      selectedRunDate={selectedRunDate ?? selectedDate}
+                      onSelectRun={r => setSelectedRunDate(r.date ?? null)}
+                    />
+                  </div>
+                )}
+
+                {/* run history */}
+                {selectedDagId && (
+                  <RunHistory
+                    runs={dag ? clusterRuns(dag, recentDates, byRecipe) : []}
+                    selectedDate={selectedDate}
+                    onSelectRun={d => setTimeVal(v => ({ ...v, date: d, isNow: false }))}
+                    loading={runsLoading}
+                  />
+                )}
+              </>
             )}
           </div>
         )}
