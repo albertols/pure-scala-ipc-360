@@ -69,7 +69,7 @@ Backend **212** tests, 38 test classes = 38 surefire reports, 0 failures. Fronte
 | `src/components/tab3/OperationalProgress.tsx` | Staged loading panel (stage names + resolved totals, no percentage). |
 | `src/state/operationalView.ts` | Module-level view store read via `useSyncExternalStore`. No JSX. |
 
-**Frontend — modified:** `components/shared/OperationalCard.tsx` (density prop, `app_id` removed, contrast, `RunPicker`), `components/tab3/ETLOperational.tsx` (shell rebuild), `components/tab4/ETLDag.tsx` (RunPicker + gcpLinks), `api/dagAdapter.ts` (`fillGcpUrl` moves out, `appId` removed), `api/dagQueries.ts` (fan-out removed), `api/queries.ts`, `api/relationshipsAdapter.ts` (density-aware layout), `types.ts` (`appId` removed, `RunEntry` added), `App.tsx` (tab mounting).
+**Frontend — modified:** `components/shared/OperationalCard.tsx` (density prop, `app_id` removed, contrast, `RunPicker`), `components/tab3/ETLOperational.tsx` (shell rebuild), `components/tab4/ETLDag.tsx` (RunPicker + gcpLinks), `api/dagAdapter.ts` (`fillGcpUrl` moves out, `appId` removed), `api/dagQueries.ts` (fan-out removed), `api/queries.ts`, `api/relationshipsAdapter.ts` (density-aware layout), `types.ts` (`appId` removed, `RunEntry` added), `App.tsx` (tab mounting — **Task 12**, not Task 11).
 
 **Scripts/docs — modified:** `scripts/mock_etl_data.manifest.json`, `scripts/validate_loop.sh`, `scripts/dev.sh`, `config.example.json`, `HOW_TO_RUN_ON_YOUR_DATA.md`, `docs/architecture.md`, `docs/visual-guide.md`, `CLAUDE.md`. **New:** `docs/adr/0014-b15-cluster-index.md`, `docs/adr/0015-gcp-deep-links.md`.
 
