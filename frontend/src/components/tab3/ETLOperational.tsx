@@ -120,6 +120,11 @@ const RelationshipGraph = memo(function RelationshipGraph({
   const dragStart = useRef({ x: 0, y: 0 })
   const lastDragPan = useRef({ x: 0, y: 0 })
   const contentRef = useRef<HTMLDivElement>(null)
+  // Fix-round 1 (review): the dot-grid pattern is deliberately OUTSIDE contentRef's transformed
+  // subtree (it pans but must not scale with zoom, unlike the graph itself), so painting the live
+  // drag position onto contentRef alone left it frozen mid-drag and snapping into place on release.
+  // A second ref, mutated alongside contentRef's, keeps both in lockstep without a store write.
+  const patternRef = useRef<SVGPatternElement>(null)
 
   const byId = Object.fromEntries(cards.map(c => [c.id, c]))
   const visibleEdges = edges.filter(e => byId[e.fromId] && byId[e.toId])
@@ -141,6 +146,10 @@ const RelationshipGraph = memo(function RelationshipGraph({
     const next = { x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y }
     lastDragPan.current = next
     if (contentRef.current) contentRef.current.style.transform = `translate(${next.x}px,${next.y}px) scale(${zoom})`
+    if (patternRef.current) {
+      patternRef.current.setAttribute('x', String(next.x % 24))
+      patternRef.current.setAttribute('y', String(next.y % 24))
+    }
   }, [zoom])
   const commitDrag = useCallback(() => {
     if (dragging.current && dragMoved.current) onPan(lastDragPan.current)
@@ -164,6 +173,7 @@ const RelationshipGraph = memo(function RelationshipGraph({
   return (
     <div
       ref={containerRef}
+      data-testid="operational-canvas"
       style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--bg)', cursor: 'grab' }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
@@ -174,7 +184,7 @@ const RelationshipGraph = memo(function RelationshipGraph({
       {/* dot grid */}
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         <defs>
-          <pattern id="odot" x={pan.x % 24} y={pan.y % 24} width="24" height="24" patternUnits="userSpaceOnUse">
+          <pattern ref={patternRef} id="odot" x={pan.x % 24} y={pan.y % 24} width="24" height="24" patternUnits="userSpaceOnUse">
             <circle cx="12" cy="12" r="0.7" fill="rgba(42,48,80,0.7)" />
           </pattern>
         </defs>

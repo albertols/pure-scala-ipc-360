@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
+import { describe, expect, it, beforeAll, afterAll, afterEach, beforeEach, vi } from 'vitest'
 import { act, render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -6,6 +6,10 @@ import { setupServer } from 'msw/node'
 import { delay, http, HttpResponse } from 'msw'
 import { ETLOperational } from './ETLOperational'
 import { resetOperationalView, setOperationalView } from '../../state/operationalView'
+// Module namespace import (alongside the named one above) so `vi.spyOn` can watch
+// `setOperationalView` calls made from INSIDE ETLOperational.tsx itself — Vitest's ESM transform
+// routes every consumer's call through this same exports object, so the spy sees them too.
+import * as operationalViewStore from '../../state/operationalView'
 import type { RelationshipGraph } from '../../api/queries'
 import type { components } from '../../api/types.gen'
 
@@ -347,6 +351,34 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
 
     fireEvent.click(screen.getByRole('button', { name: /Density: compact/ }))
     expect(await screen.findByRole('button', { name: /Density: minimal/ })).toBeInTheDocument()
+  })
+
+  // Task 17 fix-round 1 (review): the drag-pan re-render fix moved the store write off the
+  // mousemove hot path entirely (a ref-painted `style.transform` in between). This is the guard
+  // against that regressing back to a per-mousemove write — the next "simplification" of the drag
+  // handler that reintroduces it would fail this test, not just "make the app slow" months later
+  // with nothing pointing at why.
+  it('coalesces a mouse drag into a single store write on release, not one per mousemove', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    const canvas = screen.getByTestId('operational-canvas')
+    const spy = vi.spyOn(operationalViewStore, 'setOperationalView')
+
+    fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 })
+    for (let i = 0; i < 10; i++) {
+      fireEvent.mouseMove(canvas, { clientX: 100 + i * 5, clientY: 100 + i * 5 })
+    }
+    expect(spy).not.toHaveBeenCalled()
+
+    fireEvent.mouseUp(canvas)
+    // Default pan is { x: 40, y: 40 } (operationalView.ts DEFAULTS); mousedown at (100,100)
+    // anchors dragStart at (60,60), and the last of the ten mousemoves lands at (145,145) —
+    // so the single committed pan is (145,145) - (60,60) = (85,85).
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith({ pan: { x: 85, y: 85 } })
+
+    spy.mockRestore()
   })
 
   it('has no implicit zoom-driven density any more', async () => {

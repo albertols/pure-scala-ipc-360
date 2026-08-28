@@ -10,7 +10,7 @@ export interface WheelInput {
   cursor: { x: number; y: number }
 }
 
-const MIN_ZOOM = 0.2
+const MIN_ZOOM = 0.3  // matches the +/- buttons and fitToViewport's clamp — one floor, everywhere.
 const MAX_ZOOM = 2
 const ZOOM_RATE = 0.002
 

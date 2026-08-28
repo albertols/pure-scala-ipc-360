@@ -31,14 +31,16 @@ describe('applyWheel', () => {
     expect(graphYAfter).toBeCloseTo(graphYBefore, 6)
   })
 
-  it('clamps zoom to [0.2, 2]', () => {
+  // 0.3 matches the toolbar's +/- buttons and fitToViewport's own clamp (Task 17 fix-round 1
+  // review): one zoom floor everywhere, not two that quietly disagree.
+  it('clamps zoom to [0.3, 2]', () => {
     let view = VIEW
     for (let i = 0; i < 200; i++) view = applyWheel(view, input({ metaKey: true, deltaY: -300 }))
     expect(view.zoom).toBe(2)
 
     view = VIEW
     for (let i = 0; i < 200; i++) view = applyWheel(view, input({ metaKey: true, deltaY: 300 }))
-    expect(view.zoom).toBe(0.2)
+    expect(view.zoom).toBe(0.3)
   })
 
   it('shift+wheel pans horizontally and leaves zoom and y alone', () => {
