@@ -4639,7 +4639,7 @@ Trackpad pinch arrives as ctrl+wheel, so it works with no extra handling."
 
 **Why:** `CLAUDE.md` requires `HOW_TO_RUN_ON_YOUR_DATA.md` to be updated in the *same commit* as any change to the files its derivation table names. This sub-project changed three of them — `OperationalService`, `Etl360Properties`, `scripts/dev.sh` — so these doc updates are part of the work, not follow-ups (spec §14).
 
-- [ ] **Step 1: Add the endpoint sweep to `validate_loop.sh`**
+- [x] **Step 1: Add the endpoint sweep to `validate_loop.sh`**
 
 After the existing `curl -sf localhost:8080/api/operational/2026-07-29` line, insert:
 
@@ -4695,7 +4695,7 @@ print(f\"[validate-loop] scoped graph: {len(nodes)} nodes ({g['meta']['neighborC
 curl -sf localhost:8080/api/relationships | grep -q 'neighbor' && fail "unscoped graph leaked scoping fields"
 ```
 
-- [ ] **Step 2: Run the gate**
+- [x] **Step 2: Run the gate**
 
 ```bash
 make validate-loop
@@ -4703,7 +4703,7 @@ make validate-loop
 
 Expected: `[validate-loop] PASS`, with the new lines printing `21 clusters, 30 recipes, 14 dates, 417 rows; largest cluster 5 recipes` and a scoped-graph node count strictly below the full one.
 
-- [ ] **Step 3: Write ADR-0014**
+- [x] **Step 3: Write ADR-0014**
 
 Create `docs/adr/0014-b15-cluster-index.md` from `docs/adr/0000-template.md`, deciding:
 
@@ -4717,7 +4717,7 @@ Create `docs/adr/0014-b15-cluster-index.md` from `docs/adr/0000-template.md`, de
   - *Per-cluster ISO date lists* — ~115k duplicated strings at real scale; indices into one global axis instead.
   - **Cost:** the first request after any b15 change pays an O(total rows) walk.
 
-- [ ] **Step 4: Write ADR-0015**
+- [x] **Step 4: Write ADR-0015**
 
 Create `docs/adr/0015-gcp-deep-links.md`, deciding:
 
@@ -4728,7 +4728,7 @@ Create `docs/adr/0015-gcp-deep-links.md`, deciding:
   2. **empty-segment collapse**: an unfilled `;cursorTimestamp=` must be removed, not emitted bare, so the link degrades to the job-id-only query that works.
   Both are unit-tested in `gcpLinks.test.ts`. Note explicitly that **no real project id, job id, cluster name or timestamp appears anywhere** — only placeholder templates.
 
-- [ ] **Step 5: Update `docs/architecture.md`**
+- [x] **Step 5: Update `docs/architecture.md`**
 
 Add to the endpoint table:
 
@@ -4742,14 +4742,14 @@ and document the new `clusters` query parameter on the existing `/api/relationsh
 short paragraph after the caching paragraph noting that `B15Reader` and `ClusterIndexService` extend
 the same mtime/fingerprint idiom to the b15 corpus.
 
-- [ ] **Step 6: Update `HOW_TO_RUN_ON_YOUR_DATA.md`**
+- [x] **Step 6: Update `HOW_TO_RUN_ON_YOUR_DATA.md`**
 
 - **§2** — add the `gcpLoggingDuration` field (default `P31D`, env `ETL360_GCP_LOGGING_DURATION`) to the config-field table.
 - **§3.2** — note that b15 files are now indexed by `cluster_name` as well as read per date, and that `cluster_name` is the key Tab 3 loads by, so an export whose cluster names are unstable across days will produce one pane row per run.
 - **§5** — add `curl localhost:8080/api/operational/clusters` to the verification steps, with the expected shape and the note that `totals.rows == 0` means the composer root resolved but held no b15 CSVs.
 - **Derivation table** — no new rows are needed; `§2` already cites `Etl360Properties`/`dev.sh` and `§3.2` cites `OperationalService`. Confirm those three citations still name the right files after this sub-project (they do: `OperationalService` still owns snapshot/summary semantics).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/validate_loop.sh docs/adr/0014-b15-cluster-index.md \

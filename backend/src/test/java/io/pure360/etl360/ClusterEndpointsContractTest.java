@@ -144,4 +144,36 @@ class ClusterEndpointsContractTest {
         mvc.perform(get("/api/operational/runs").param("recipe", "r.json").param("limit", "51"))
            .andExpect(status().isBadRequest());
     }
+
+    /**
+     * The acceptance boundaries, not just the rejection ones — a reviewer verified these by
+     * live-probing rather than a test. `useRuns()` chunks the frontend's recipe list to EXACTLY
+     * 200 per request, so a regression that flipped 200 from accepted to rejected would break the
+     * UI silently: no backend test would fail, only a live symptom would surface.
+     */
+    @Test
+    void exactlyTwoHundredRecipesSucceeds() throws Exception {
+        var request = get("/api/operational/runs");
+        for (int i = 0; i < 200; i++) request = request.param("recipe", "r" + i + ".json");
+        mvc.perform(request).andExpect(status().isOk());
+    }
+
+    @Test
+    void limitOfFiftySucceeds() throws Exception {
+        mvc.perform(get("/api/operational/runs").param("recipe", "r.json").param("limit", "50"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.limit").value(50));
+    }
+
+    @Test
+    void limitOfZeroIsRejected() throws Exception {
+        mvc.perform(get("/api/operational/runs").param("recipe", "r.json").param("limit", "0"))
+           .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void negativeLimitIsRejected() throws Exception {
+        mvc.perform(get("/api/operational/runs").param("recipe", "r.json").param("limit", "-1"))
+           .andExpect(status().isBadRequest());
+    }
 }

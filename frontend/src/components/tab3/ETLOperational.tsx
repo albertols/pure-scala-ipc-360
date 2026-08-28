@@ -6,7 +6,7 @@ import type { AppConfig, RelationshipGraph } from '../../api/queries'
 import { useClusterIndex, useScopedRelationships, useRuns, type RunT } from '../../api/clusterQueries'
 import { setOperationalView, useOperationalView } from '../../state/operationalView'
 import { toOperationalGraph, summarizeSnapshot, fitToViewport, type OperationalEdge } from '../../api/relationshipsAdapter'
-import { buildLoggingUrl, buildDataprocClusterUrl } from '../../api/gcpLinks'
+import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../../api/gcpLinks'
 import { OperationalCard } from '../shared/OperationalCard'
 import { pickDefaultRun } from '../shared/RunPicker'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
@@ -629,7 +629,6 @@ export function ETLOperational() {
   // GCP quick links: every URL comes from `gcpLinks.ts`'s builders over the served templates —
   // anchored on the SELECTED run (its job id and its `app_start_iso` cursor) when one exists,
   // degrading to the card's own last job id when the run history is unavailable.
-  const projectId = cfg.data?.gcpProjectId ?? 'mock-project'
   const selectedRuns = selectedCard ? (runs.byRecipe[selectedCard.name] ?? []) : []
   const selectedRun = pickDefaultRun(selectedRuns, view.selectedRunDate)
   const linkJobId = selectedRun?.jobId || selectedCard?.jobId || ''
@@ -642,7 +641,7 @@ export function ETLOperational() {
     cursorTimestamp: selectedRun?.appStartIso ?? '',
   })
   const monitoringHref = buildDataprocClusterUrl(cfg.data, { clusterName })
-  const bigQueryHref = `https://console.cloud.google.com/bigquery?project=${projectId}`
+  const bigQueryHref = buildBigQueryUrl(cfg.data)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>

@@ -59,6 +59,11 @@ Every mtime-cached service (`DomService`, and the DDL/recipe read paths) follows
 same shape: check the file's mtime against the cache entry, re-read and re-parse only
 on a change. No TTL logic, no restart needed to pick up an edited file.
 
+`B15Reader` and `ClusterIndexService` extend the same idiom to the b15 corpus: a
+fingerprint (a stat sweep of every dated export directory) stands in for a single
+file's mtime, and the whole cluster index — dates, per-cluster membership, recipe→runs —
+is rebuilt only when that fingerprint changes (`docs/adr/0014-b15-cluster-index.md`).
+
 ## Endpoints (v1)
 
 All under `/api`, JSON, UTF-8. `{*path}` segments are corpus-relative paths without a
@@ -84,11 +89,14 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 | `PUT /api/layouts/{*path}` | Writes the layout sidecar atomically (temp file + `ATOMIC_MOVE`, mirroring the recipe write path); sandboxed via `PathResolver.insideCorpus` |
 | `GET /api/summary` | Static corpus counts for the view-aware summary chip in every tab's Explorer/footer: `{xmlCount, recipeCount, ddlCount, dirCount, layers}` — same `_history`/`_layout_` exclusions as every other corpus walk |
 | `GET /api/expressions` | Cross-corpus expression archive merged from two origins: `origin: "xml"` (every `TRANSFORMFIELD` EXPRESSION attribute in the mapping DOM) and `origin: "recipe"` (every recipe target field whose transformation is a call tree, walked across `CorpusService.allRecipePaths()`, `_history/` excluded) — same `ExpressionEntryDto` shape for both |
-| `GET /api/relationships` | Tables+recipes graph (`RelationshipsDto { nodes, edges, meta }`) built from the mock/real `LayerToLayerConfig` joined with the corpus recipe inventory — node ids `table:<NAME>`/`recipe:<FILE>`, edge kinds `source`\|`lookup`\|`writes` |
+| `GET /api/relationships` | Tables+recipes graph (`RelationshipsDto { nodes, edges, meta }`) built from the mock/real `LayerToLayerConfig` joined with the corpus recipe inventory — node ids `table:<NAME>`/`recipe:<FILE>`, edge kinds `source`\|`lookup`\|`writes`. Optional repeatable `?clusters=` scopes the response to recipes that ran in the named b15 clusters plus their 1-hop neighbour recipes (flagged `neighbor: true`, never a table); omitted or empty, the response is byte-identical to the unscoped graph (`docs/adr/0014-b15-cluster-index.md`) |
 | `GET /api/operational/dates` | Sorted list of available `YYYY-MM-DD` b15 snapshot dates + `mode` (`real`\|`mock`\|`absent`) |
 | `GET /api/operational/{date}` | One dated b15 "application end" snapshot (`OperationalSnapshotDto { date, rows: [B15RowDto] }`); unknown date → 404 with nearest-available hint |
 | `GET /api/operational/summary` | Cross-date rollup (`OperationalSummaryDto { dates, recipes[] }`): per-recipe `layer` (`UNKNOWN` if absent from L2L), 14-entry `history`, `okCount`/`koCount`, nearest-rank `avg`/`p50`/`p95DurationMin`, `lastJobId`/`lastClusterName` — computed in `OperationalService`, joined to `LayerToLayerService` by `recipe_filename` |
-| `GET /api/config` | Sanitized runtime config: GCP project/region, Dataproc/Logging URL templates, `dwhControlMode`/`composerMode` |
+| `GET /api/operational/clusters` | b15 cluster index (`ClusterIndexService`, `docs/adr/0014-b15-cluster-index.md`): global date axis, totals, and per-cluster `{name, recipeCount, dateIdx, rows, ok, ko, lastDate, lastStatus}`, name-ascending |
+| `GET /api/operational/clusters/{name}` | One cluster's recipes, each with its own `layer` (resolved from `LayerToLayerService`, `UNKNOWN` fallback), `dateIdx`, and OK/KO counts; unknown name → 404 |
+| `GET /api/operational/runs` | Run history by recipe, newest-first (`RunsDto { limit, byRecipe }`): repeatable `?recipe=` (≤200 per request — the frontend's `useRuns` chunks to respect it) and `?limit=` (1–50, default 10) |
+| `GET /api/config` | Sanitized runtime config: GCP project/region, Dataproc/Logging/BigQuery URL templates, `dwhControlMode`/`composerMode` |
 | `GET /api/health` | Liveness + corpus stats: XML/recipe counts, corpus root, `dwhControlMode`, `composerMode` |
 | `GET /api/diagnostics` | Data-root self-diagnosis (`docs/adr/0013-data-root-diagnostics.md`): per root the configured value, the resolved absolute path, which tier won and why the other lost. For the control schema it re-walks `LAYER_TO_LAYER/` recording **staged** counts — `presentDirs` → `filesRead` → `anchorHits` → `rowsParsed` — so the first zero identifies the failing step, plus `insertTargetsFound[]` (the `INSERT INTO <table>` identifiers actually in the files) and a one-sentence `hint`. Tab 3 renders it as an always-on tier chip and expands it under an empty graph |
 
@@ -104,15 +112,17 @@ palette's pre-add dialog reads `connections` from `GET /api/ipc/rules` and its t
 pickers read `GET /api/registry`, and a recipe built on a blank canvas is written with
 `POST /api/recipes/{*path}` (subsequent saves are ordinary `PUT`s).
 
-Tab 3 (ETL Operational Table Relationships): `relationshipsAdapter.ts`'s
-`toOperationalGraph` combines `/api/relationships` + `/api/operational/summary` at a
-selected TimePicker date into cards/edges/layer columns for the existing
-`OperationalCard` graph.
+Tab 3 (ETL Operational Table Relationships): the cluster pane loads
+`/api/operational/clusters`, selecting one or more clusters scopes
+`/api/relationships?clusters=` (both via `RelationshipService`, ADR-0014), and
+`relationshipsAdapter.ts`'s `toOperationalGraph` combines that scoped graph with
+`/api/operational/summary` and `/api/operational/runs` at a selected TimePicker date
+into cards/edges/layer columns for the existing `OperationalCard` graph.
 
-Tab 4 (ETL DAG) consumes `/api/relationships` (workflow clusters + table-mediated
-recipe edges via `dagAdapter.ts`) and `/api/operational/dates` +
+Tab 4 (ETL DAG) consumes the unscoped `/api/relationships` (workflow clusters +
+table-mediated recipe edges via `dagAdapter.ts`), `/api/operational/dates` +
 `/api/operational/{date}` (per-run node coloring, client-side join on
-`recipe_filename`).
+`recipe_filename`), and `/api/operational/runs` for the run-history strip.
 
 **`_history/` sidecar.** Every `PUT` and rollback archives the recipe's prior content
 to `<recipeDir>/_history/_ETL_<name>.<yyyyMMdd-HHmmss-SSS>.json` before writing —

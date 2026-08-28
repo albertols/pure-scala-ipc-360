@@ -24,20 +24,26 @@ public record Etl360Properties(String corpusRoot, String dwhControlRoot, String 
     }
 
     public record Gcp(String projectId, String region, String dataprocJobUrl,
-                      String dataprocClusterUrl, String loggingUrl, String loggingDuration) {
+                      String dataprocClusterUrl, String loggingUrl, String loggingDuration,
+                      String bigQueryUrl) {
         public static final String DEFAULT_LOGGING_DURATION = "P31D";
+        public static final String DEFAULT_BIGQUERY_URL =
+            "https://console.cloud.google.com/bigquery?project={project}";
 
-        /** Binding constructor: substitutes the default for an unset/blank logging-duration. */
+        /** Binding constructor: substitutes defaults for an unset/blank logging-duration or bigquery-url. */
         @ConstructorBinding
         public Gcp {
             loggingDuration = loggingDuration == null || loggingDuration.isBlank()
                 ? DEFAULT_LOGGING_DURATION : loggingDuration.trim();
+            bigQueryUrl = bigQueryUrl == null || bigQueryUrl.isBlank()
+                ? DEFAULT_BIGQUERY_URL : bigQueryUrl.trim();
         }
 
         /** Pre-loggingDuration arity, kept so existing test call sites stay readable. */
         public Gcp(String projectId, String region, String dataprocJobUrl,
                    String dataprocClusterUrl, String loggingUrl) {
-            this(projectId, region, dataprocJobUrl, dataprocClusterUrl, loggingUrl, DEFAULT_LOGGING_DURATION);
+            this(projectId, region, dataprocJobUrl, dataprocClusterUrl, loggingUrl,
+                DEFAULT_LOGGING_DURATION, DEFAULT_BIGQUERY_URL);
         }
     }
 

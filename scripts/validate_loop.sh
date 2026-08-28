@@ -48,6 +48,57 @@ DATES=$(curl -sf localhost:8080/api/operational/dates) || fail "dates"
 echo "$DATES" | grep -q '2026-07-29' || fail "anchor date missing"
 curl -sf localhost:8080/api/operational/2026-07-29 | grep -q '"rows"' || fail "snapshot"
 curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/operational/2001-01-01 | grep -q 404 || fail "missing-date 404"
+
+echo "[validate-loop] cluster index…"
+CLUSTERS=$(curl -sf localhost:8080/api/operational/clusters) || fail "clusters"
+echo "$CLUSTERS" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+t = d["totals"]
+by_count = sorted((c["recipeCount"] for c in d["clusters"]), reverse=True)
+print(f"[validate-loop] b15 index: {t["clusters"]} clusters, {t["recipes"]} recipes, "
+      f"{t["dates"]} dates, {t["rows"]} rows; largest cluster {by_count[0]} recipes")
+# Floors from the committed mock (spec section 8). A drop here means the CAS b15 block was
+# regenerated from a changed manifest, or a data root flipped away from the committed mock.
+assert t["clusters"] == 21, f"expected 21 clusters, got {t["clusters"]}"
+assert t["recipes"] == 30, f"expected 30 recipes, got {t["recipes"]}"
+assert t["dates"] == 14, f"expected 14 dates, got {t["dates"]}"
+assert t["rows"] == 417, f"expected 417 rows, got {t["rows"]}"
+# The whole point of the multi-recipe regrouping: without this the pane is untested.
+assert by_count[0] >= 4, f"no cluster groups 4+ recipes (largest {by_count[0]})"
+' || fail "cluster index floors"
+
+FIRST_CLUSTER=$(echo "$CLUSTERS" | python3 -c 'import json,sys; print(json.load(sys.stdin)["clusters"][0]["name"])')
+curl -sf "localhost:8080/api/operational/clusters/$FIRST_CLUSTER" | grep -q '"recipes"' || fail "cluster detail"
+curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/operational/clusters/no-such-cluster | grep -q 404 \
+  || fail "unknown-cluster 404"
+
+echo "[validate-loop] runs…"
+RECIPE=$(curl -sf "localhost:8080/api/operational/clusters/$FIRST_CLUSTER" \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["recipes"][0]["recipeFilename"])')
+curl -sf "localhost:8080/api/operational/runs?recipe=$RECIPE&limit=10" | python3 -c '
+import json, sys
+runs = next(iter(json.load(sys.stdin)["byRecipe"].values()))
+assert runs, "no runs for the first recipe of the first cluster"
+assert runs[0]["date"] >= runs[-1]["date"], "runs are not newest-first"
+# app_start_iso is what the Cloud Logging cursorTimestamp is derived from — no cursor without it.
+assert runs[0]["appStartIso"], "run carries no appStartIso"
+assert runs[0]["jobId"], "run carries no jobId"
+' || fail "runs shape"
+
+echo "[validate-loop] scoped relationships…"
+FULL_NODES=$(curl -sf localhost:8080/api/relationships | python3 -c 'import json,sys; print(len(json.load(sys.stdin)["nodes"]))')
+curl -sf "localhost:8080/api/relationships?clusters=$FIRST_CLUSTER" | python3 -c "
+import json, sys
+g = json.load(sys.stdin)
+nodes = g['nodes']
+assert 0 < len(nodes) < $FULL_NODES, f'scoped graph is not a strict subset: {len(nodes)} vs $FULL_NODES'
+assert g['meta']['neighborCount'] == sum(1 for n in nodes if n.get('neighbor')), 'neighborCount mismatch'
+print(f\"[validate-loop] scoped graph: {len(nodes)} nodes ({g['meta']['neighborCount']} neighbours) of $FULL_NODES\")
+" || fail "scoped relationships"
+# The unscoped response must stay byte-identical for every existing caller.
+curl -sf localhost:8080/api/relationships | grep -q 'neighbor' && fail "unscoped graph leaked scoping fields"
+
 echo "[validate-loop] viewer sweep…"
 # node >= 22.6 is required for --experimental-strip-types to run the .mts sweep directly.
 node --experimental-strip-types scripts/viewer_sweep.mts || fail "viewer sweep"

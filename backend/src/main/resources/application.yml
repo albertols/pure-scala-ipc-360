@@ -20,3 +20,4 @@ etl360:
     dataproc-cluster-url: "https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}"
     logging-url: "https://console.cloud.google.com/logs/query;query=resource.labels.job_id%3D%22{jobId}%22;cursorTimestamp={cursorTimestamp};duration={duration}?project={project}"
     logging-duration: ${ETL360_GCP_LOGGING_DURATION:P31D}
+    bigquery-url: "https://console.cloud.google.com/bigquery?project={project}"

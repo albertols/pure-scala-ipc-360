@@ -47,12 +47,15 @@ explicit ask. New UI states (loading, error, empty) reuse existing tokens
   of sub-project 8 (`docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md`)
   — see "Tab 2 components" below.
 - Tab 3 (ETL Operational): `src/api/relationshipsAdapter.ts`'s `toOperationalGraph` over
-  `useRelationships` + `useOperationalSummary` + `useOperationalDates`. Its empty state is not a
-  dead end: `tab3/DataRootsPanel.tsx` renders `useDiagnostics()` (`GET /api/diagnostics`) as a
-  toolbar `DataRootsChip` at all times and, under *No relationship entries*, the full per-root
-  report — resolved path of the tier that actually SERVED, the staged scan counts, and the hint
-  naming the `config.json` key to change (`docs/adr/0013-data-root-diagnostics.md`).
-- Tab 4 (ETL DAG): `src/api/dagAdapter.ts` + `useRelationships`/`useOperationalSnapshots`.
+  `useScopedRelationships` + `useClusterIndex` (`src/api/clusterQueries.ts`, the b15 cluster
+  index, `docs/adr/0014-b15-cluster-index.md`) + `useOperationalSummary` + `useRuns`. Its empty
+  state is not a dead end: `tab3/DataRootsPanel.tsx` renders `useDiagnostics()`
+  (`GET /api/diagnostics`) as a toolbar `DataRootsChip` at all times and, under *No relationship
+  entries*, the full per-root report — resolved path of the tier that actually SERVED, the staged
+  scan counts, and the hint naming the `config.json` key to change
+  (`docs/adr/0013-data-root-diagnostics.md`).
+- Tab 4 (ETL DAG): `src/api/dagAdapter.ts` + `useRelationships`/`useOperationalDates`/
+  `useOperational`/`useRuns` (the last from `src/api/clusterQueries.ts`).
 
 ### Tab 2 components (`src/components/tab2/`)
 

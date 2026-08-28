@@ -72,6 +72,7 @@ $EDITOR config.json
   "composerRoot":   "/abs/path/to/your/composer",
   "dwhControlRoot": "/abs/path/to/your/DWH_CONTROL",
   "gcpProjectId":   "your-gcp-project-id",
+  "gcpLoggingDuration": "P31D",
   "layerToLayerTable": "CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG",
   "layerDirs":      ["STG", "ODS", "DWH", "CDM", "RDM", "QDM", "ETL", "OUTPUT"],
   "javaHome":       "",
@@ -84,7 +85,8 @@ $EDITOR config.json
 | `xmltobqPath` | `ETL360_CORPUS_ROOT` | Root of the XML corpus + parser output (§3.1) |
 | `composerRoot` | `ETL360_COMPOSER_ROOT` | Root of the composer export holding b15 CSVs (§3.2) |
 | `dwhControlRoot` | `ETL360_DWH_CONTROL_ROOT` | Root of the control-schema export (§3.3) |
-| `gcpProjectId` | `ETL360_GCP_PROJECT` | Project id for Dataproc/Logging deep links |
+| `gcpProjectId` | `ETL360_GCP_PROJECT` | Project id for Dataproc/Logging/BigQuery deep links |
+| `gcpLoggingDuration` | `ETL360_GCP_LOGGING_DURATION` | Cloud Logging's `duration` window, ISO-8601 (default `P31D`) — how far back the log-scope link looks from a run's cursor timestamp |
 | `layerToLayerTable` | `ETL360_L2L_TABLE` | The control table your `INSERT INTO … VALUES` statements target (§3.3). The default is an **anonymized** sample value — yours will differ |
 | `layerDirs` | `ETL360_L2L_LAYER_DIRS` | Layer directory names under `LAYER_TO_LAYER/` (§3.3). Array or comma-separated string |
 | `javaHome` | `JAVA_HOME` | JDK 17+ home; empty = auto-detect |
@@ -154,6 +156,12 @@ wrong and you land in the silent mock fallback from §0.
 - `recipe_filename` is the join key back to your corpus (`_ETL_m_NAME.json`) and to the
   control-schema rows. A b15 row whose recipe has no `LAYER_TO_LAYER` entry still shows
   up — its layer reads `UNKNOWN`.
+- `cluster_name` is now indexed across the whole history, not just read one date at a
+  time — `ClusterIndexService` groups every row by it, and that grouping is the key Tab 3's
+  cluster pane loads by (`docs/adr/0014-b15-cluster-index.md`). If your export's cluster
+  names are not stable across days (e.g. a fresh Dataproc cluster id per run), each day's
+  rows land in their own cluster instead of accumulating into one — you will see one pane
+  row per run rather than one row per recurring job.
 
 ### 3.3 Control schema / relationships — `dwhControlRoot`
 
@@ -315,6 +323,11 @@ curl -s localhost:8080/api/relationships | python3 -m json.tool | tail -8
 
 curl -s localhost:8080/api/operational/dates
 #   {"dates":["2026-08-20", ...],"mode":"real"}  ← every b15 date dir it accepted
+
+curl -s localhost:8080/api/operational/clusters | python3 -m json.tool | head -8
+#   {"mode":"real","dates":[...],"totals":{"clusters":N,"recipes":N,"dates":N,"rows":N},"clusters":[...]}
+#   totals.rows == 0 means the composer root RESOLVED but held no b15 CSVs to index — a
+#   different failure than composerMode == "absent"/"mock" above.
 ```
 
 A `recipe` node with `"hasRecipe": false` in the relationships graph means the control
@@ -381,6 +394,7 @@ settings `config.json` does not expose:
 | `ETL360_DWH_CONTROL_ROOT` | Same as `dwhControlRoot` |
 | `ETL360_COMPOSER_ROOT` | Same as `composerRoot` |
 | `ETL360_GCP_PROJECT` | Same as `gcpProjectId` |
+| `ETL360_GCP_LOGGING_DURATION` | Same as `gcpLoggingDuration` |
 | `ETL360_L2L_TABLE` | Same as `layerToLayerTable` |
 | `ETL360_L2L_LAYER_DIRS` | Same as `layerDirs` (comma-separated) |
 | **`ETL360_GCP_REGION`** | GCP region for deep links — **no `config.json` field** |

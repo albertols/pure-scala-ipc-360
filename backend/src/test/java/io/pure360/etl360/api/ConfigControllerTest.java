@@ -25,13 +25,13 @@ class ConfigControllerTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper objectMapper;
 
-    // The exact AppConfigDto field set — nothing secret-ish beyond these 9 belongs here.
+    // The exact AppConfigDto field set — nothing secret-ish beyond these 10 belongs here.
     private static final Set<String> EXPECTED_FIELDS = Set.of(
         "gcpProjectId", "region", "dataprocJobUrl", "dataprocClusterUrl",
-        "loggingUrl", "loggingDuration", "dwhControlMode", "composerMode", "corpusRoot");
+        "loggingUrl", "loggingDuration", "bigQueryUrl", "dwhControlMode", "composerMode", "corpusRoot");
 
     @Test
-    void servesSanitizedConfigWithExactlyTheNineExpectedFields() throws Exception {
+    void servesSanitizedConfigWithExactlyTheTenExpectedFields() throws Exception {
         String body = mvc.perform(get("/api/config"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.dwhControlMode").value(in(List.of("real", "mock", "absent"))))
@@ -53,5 +53,13 @@ class ConfigControllerTest {
            .andExpect(jsonPath("$.loggingDuration").value("P31D"))
            .andExpect(jsonPath("$.loggingUrl").value(org.hamcrest.Matchers.containsString("{cursorTimestamp}")))
            .andExpect(jsonPath("$.loggingUrl").value(org.hamcrest.Matchers.containsString("{duration}")));
+    }
+
+    @Test
+    void servesAProjectAwareBigQueryTemplate() throws Exception {
+        mvc.perform(get("/api/config"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.bigQueryUrl").value(org.hamcrest.Matchers.containsString("bigquery")))
+           .andExpect(jsonPath("$.bigQueryUrl").value(org.hamcrest.Matchers.containsString("{project}")));
     }
 }

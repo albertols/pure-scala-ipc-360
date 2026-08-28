@@ -972,6 +972,7 @@ export interface components {
             dataprocClusterUrl?: string;
             loggingUrl?: string;
             loggingDuration?: string;
+            bigQueryUrl?: string;
             dwhControlMode?: string;
             composerMode?: string;
             corpusRoot?: string;

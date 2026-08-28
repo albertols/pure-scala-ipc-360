@@ -269,7 +269,7 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     expect(screen.getAllByText('OK').length).toBeGreaterThan(0)
 
     // TimePicker date input is real state, initialized from
-    // useOperationalDates() to the latest snapshot ("Now").
+    // useClusterIndex()'s date axis to the latest snapshot ("Now").
     const dateInput = container.querySelector('input[type="date"]') as HTMLInputElement
     expect(dateInput.value).toBe('2026-07-29')
 

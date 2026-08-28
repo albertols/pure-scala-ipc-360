@@ -26,6 +26,7 @@ public class ConfigController {
             gcp.dataprocClusterUrl(),
             gcp.loggingUrl(),
             gcp.loggingDuration(),
+            gcp.bigQueryUrl(),
             dataRoots.dwhControlMode(),
             dataRoots.composerMode(),
             dataRoots.corpus().toString());

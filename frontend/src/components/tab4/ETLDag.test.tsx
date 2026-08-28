@@ -325,10 +325,11 @@ describe('ETLDag — flow hardening (UNGROUPED, no-data recipes, cross-workflow 
     expect(container.querySelectorAll('path[marker-end]')).toHaveLength(1)
 
     // Wait for the row to exist, THEN re-query and click in the same tick —
-    // the explorer's TaskRow is defined inside DagExplorer's render, so a
-    // captured `await findByText(...)` reference can go stale between the
-    // DAG-selection settling (useOperational/useRuns resolving, both of
-    // which now re-render this subtree) and firing the click.
+    // TaskRow re-renders on every DagExplorer render regardless of being a
+    // hoisted top-level function, so a captured `await findByText(...)`
+    // reference can go stale between the DAG-selection settling
+    // (useOperational/useRuns resolving, both of which now re-render this
+    // subtree) and firing the click.
     await screen.findByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' })
     fireEvent.click(screen.getByText('_ETL_m_FIX_ODS_A.json', { selector: 'span' }))
 

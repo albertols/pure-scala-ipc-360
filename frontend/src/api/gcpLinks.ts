@@ -11,6 +11,8 @@ export const DEFAULT_LOGGING_URL =
 
 export const DEFAULT_LOGGING_DURATION = 'P31D'
 
+export const DEFAULT_BIGQUERY_URL = 'https://console.cloud.google.com/bigquery?project={project}'
+
 /**
  * Placeholders that land inside a `;key=value` PATH MATRIX segment rather than a query string.
  * The Cloud Logging console reads those segments literally and does not accept a percent-encoded
@@ -64,4 +66,8 @@ export function buildDataprocClusterUrl(cfg: AppConfig | undefined, v: { cluster
   return fillGcpUrl(cfg?.dataprocClusterUrl, DEFAULT_DATAPROC_CLUSTER_URL, {
     clusterName: v.clusterName, project: cfg?.gcpProjectId ?? '', region: cfg?.region ?? '',
   })
+}
+
+export function buildBigQueryUrl(cfg: AppConfig | undefined): string {
+  return fillGcpUrl(cfg?.bigQueryUrl, DEFAULT_BIGQUERY_URL, { project: cfg?.gcpProjectId ?? '' })
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  fillGcpUrl, buildLoggingUrl, buildDataprocJobUrl, buildDataprocClusterUrl,
-  DEFAULT_LOGGING_URL,
+  fillGcpUrl, buildLoggingUrl, buildDataprocJobUrl, buildDataprocClusterUrl, buildBigQueryUrl,
+  DEFAULT_LOGGING_URL, DEFAULT_BIGQUERY_URL,
 } from './gcpLinks'
 import type { AppConfig } from './queries'
 
@@ -12,6 +12,7 @@ const CFG: AppConfig = {
   dataprocClusterUrl: 'https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}',
   loggingUrl: DEFAULT_LOGGING_URL,
   loggingDuration: 'P31D',
+  bigQueryUrl: DEFAULT_BIGQUERY_URL,
   dwhControlMode: 'mock',
   composerMode: 'mock',
   corpusRoot: '/mock',
@@ -97,5 +98,15 @@ describe('buildDataprocJobUrl / buildDataprocClusterUrl', () => {
       .toBe('https://console.cloud.google.com/dataproc/jobs/j1?project=example-project&region=europe-southwest1')
     expect(buildDataprocClusterUrl(CFG, { clusterName: 'c1' }))
       .toBe('https://console.cloud.google.com/dataproc/clusters/c1?project=example-project&region=europe-southwest1')
+  })
+})
+
+describe('buildBigQueryUrl', () => {
+  it('fills the project from the served config', () => {
+    expect(buildBigQueryUrl(CFG)).toBe('https://console.cloud.google.com/bigquery?project=example-project')
+  })
+
+  it('produces a usable url with no config at all', () => {
+    expect(buildBigQueryUrl(undefined)).toBe(DEFAULT_BIGQUERY_URL.replace('{project}', ''))
   })
 })
