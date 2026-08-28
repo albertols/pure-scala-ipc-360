@@ -1,9 +1,12 @@
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import App from './App'
+// Task 12: shared relationships fixture (Tab 3 and Tab 4 both consume
+// `/api/relationships` — one handler covers both once a tab is visited).
+import { REL } from './api/__fixtures__/relationships'
 
 // Task 15: focus mode — a deep link (`?focus=<recipePath>`) that renders one
 // recipe's editor full-viewport with no TopBar/tab strip and no Explorer, so
@@ -32,6 +35,14 @@ const RECIPE = {
   },
 }
 
+// Task 12: Tab 3/Tab 4 fixtures — only reached once a test actually clicks into
+// those tabs (mounting is now lazy-on-first-visit), sized minimally against the
+// shared REL fixture (mirrors the ETLOperational.test.tsx / ETLDag.test.tsx idiom
+// rather than inventing a new shape).
+const OPERATIONAL_DATES = { dates: ['2026-07-28', '2026-07-29'], mode: 'mock' }
+const OPERATIONAL_SUMMARY = { dates: OPERATIONAL_DATES.dates, recipes: [] }
+const APP_CONFIG = { gcpProjectId: 'mock-project' }
+
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
   http.get('/api/summary', () => HttpResponse.json({ xmlCount: 1, recipeCount: 1, ddlCount: 0, dirCount: 1, layers: ['CDM'] })),
@@ -41,6 +52,16 @@ const server = setupServer(
   http.get('/api/ipc/rules', () => HttpResponse.json({ rules: [], typeAliases: {}, keyAliases: {}, keySchema: {} })),
   http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({ version: 1, nodes: {} })),
   http.post('/api/recipes/validate', () => HttpResponse.json({ valid: true, errors: [] })),
+  http.get('/api/relationships', () => HttpResponse.json(REL)),
+  http.get('/api/operational/dates', () => HttpResponse.json(OPERATIONAL_DATES)),
+  http.get('/api/operational/summary', () => HttpResponse.json(OPERATIONAL_SUMMARY)),
+  http.get('/api/config', () => HttpResponse.json(APP_CONFIG)),
+  http.get('/api/diagnostics', () => HttpResponse.json({ status: 'ok' })),
+  // Registered BEFORE the parameterized `:date` handler below — MSW matches in
+  // registration order, and `:date` would otherwise swallow "runs" as a date
+  // (same hazard ETLDag.test.tsx documents).
+  http.get('*/api/operational/runs', () => HttpResponse.json({ limit: 10, byRecipe: {} })),
+  http.get('*/api/operational/:date', ({ params }) => HttpResponse.json({ date: String(params.date), rows: [] })),
 )
 beforeAll(() => server.listen())
 afterEach(() => {
@@ -104,5 +125,27 @@ describe('App — focus mode (Task 15)', () => {
     expect(screen.getByText('ETL Modifier')).toBeInTheDocument()
     expect(screen.getByText('ETL Operational')).toBeInTheDocument()
     expect(screen.getByText('ETL DAG')).toBeInTheDocument()
+  })
+})
+
+// Task 12: keeping a visited tab mounted (display:none) instead of unmounting it —
+// this is the half of the "recompute on every return" fix that no view-state store
+// can cover (scroll offsets, canvas layout work).
+describe('App — visited tabs stay mounted (Task 12)', () => {
+  it('keeps a visited tab mounted after switching away', async () => {
+    renderApp()
+
+    fireEvent.click(screen.getByRole('button', { name: /ETL Operational/ }))
+    await screen.findByPlaceholderText(/Search tables/)
+
+    fireEvent.click(screen.getByRole('button', { name: /ETL DAG/ }))
+
+    // Still in the DOM, just not displayed — this is what makes the return instant.
+    expect(screen.getByPlaceholderText(/Search tables/)).toBeInTheDocument()
+  })
+
+  it('does not mount a tab that was never visited', () => {
+    renderApp()
+    expect(screen.queryByPlaceholderText(/Search tables/)).not.toBeInTheDocument()
   })
 })

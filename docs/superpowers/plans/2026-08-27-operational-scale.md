@@ -3214,7 +3214,7 @@ cards, one implementation."
 
 **Why `useSyncExternalStore` and not context:** a context provider re-renders every consumer on any change; this store lets a component subscribe without the provider tree, and it is a React 19 built-in, so it costs no dependency (Global Constraints).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `frontend/src/state/operationalView.test.ts`:
 
@@ -3292,7 +3292,7 @@ describe('operationalView', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test operationalView
@@ -3300,7 +3300,7 @@ cd frontend && pnpm test operationalView
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the store**
+- [x] **Step 3: Write the store**
 
 Create `frontend/src/state/operationalView.ts`:
 
@@ -3385,7 +3385,7 @@ export function useOperationalView(): OperationalViewState {
 }
 ```
 
-- [ ] **Step 4: Keep visited tabs mounted in `App.tsx`**
+- [x] **Step 4: Keep visited tabs mounted in `App.tsx`**
 
 Replace the four conditional renders with a visited-set + `display:none` scheme:
 
@@ -3433,7 +3433,7 @@ Wire the tab buttons to `showTab` instead of the inline `onTabChange` body.
 
 `display: 'contents'` keeps the flex layout each tab already expects — a wrapper with `display:block` would break `flex: 1` children. Each hidden tab is `display:none`, which removes it from layout entirely, so a hidden canvas costs no paint.
 
-- [ ] **Step 5: Assert the mounting behaviour**
+- [x] **Step 5: Assert the mounting behaviour**
 
 Create (or extend) `frontend/src/App.test.tsx`:
 
@@ -3458,7 +3458,7 @@ Create (or extend) `frontend/src/App.test.tsx`:
 
 Use whatever MSW handler set `ETLOperational.test.tsx` already defines; import it or copy the minimal handlers.
 
-- [ ] **Step 6: Run the suite**
+- [x] **Step 6: Run the suite**
 
 ```bash
 cd frontend && pnpm test operationalView App && pnpm exec tsc --noEmit
@@ -3466,7 +3466,7 @@ cd frontend && pnpm test operationalView App && pnpm exec tsc --noEmit
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/state/operationalView.ts frontend/src/state/operationalView.test.ts \

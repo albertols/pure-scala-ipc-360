@@ -215,6 +215,16 @@ export default function App() {
   const [focusRecipe] = useState<string | null>(readFocusRecipe)
   const [activeTab, setActiveTab] = useState<TabId>('viewer')
   const [searchQuery, setSearchQuery] = useState('')
+  // Task 12: visited tabs stay mounted (display:none) once shown, so React Query's
+  // cached data and operationalView's cached view state don't have to fight DOM
+  // state (scroll offsets, canvas layout work) that neither of them restores.
+  const [visited, setVisited] = useState<Set<TabId>>(() => new Set<TabId>(['viewer']))
+
+  const showTab = (tab: TabId) => {
+    setActiveTab(tab)
+    setSearchQuery('')
+    setVisited(prev => prev.has(tab) ? prev : new Set(prev).add(tab))
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
@@ -225,7 +235,7 @@ export default function App() {
       {!focusRecipe && (
         <TopBar
           activeTab={activeTab}
-          onTabChange={tab => { setActiveTab(tab); setSearchQuery('') }}
+          onTabChange={showTab}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
@@ -236,10 +246,29 @@ export default function App() {
           <ETLModifier searchQuery="" focusRecipe={focusRecipe} />
         ) : (
           <>
-            {activeTab === 'viewer' && <ETLViewer searchQuery={searchQuery} />}
-            {activeTab === 'modifier' && <ETLModifier searchQuery={searchQuery} />}
-            {activeTab === 'operational' && <ETLOperational />}
-            {activeTab === 'dag' && <ETLDag />}
+            {/* Tabs mount on first visit and then STAY mounted, hidden. React Query caches the
+                data and operationalView caches the logical view; this is what preserves the DOM
+                state neither can — scroll offsets, and the canvas's own layout work. */}
+            {visited.has('viewer') && (
+              <div style={{ display: activeTab === 'viewer' ? 'contents' : 'none' }}>
+                <ETLViewer searchQuery={activeTab === 'viewer' ? searchQuery : ''} />
+              </div>
+            )}
+            {visited.has('modifier') && (
+              <div style={{ display: activeTab === 'modifier' ? 'contents' : 'none' }}>
+                <ETLModifier searchQuery={activeTab === 'modifier' ? searchQuery : ''} />
+              </div>
+            )}
+            {visited.has('operational') && (
+              <div style={{ display: activeTab === 'operational' ? 'contents' : 'none' }}>
+                <ETLOperational />
+              </div>
+            )}
+            {visited.has('dag') && (
+              <div style={{ display: activeTab === 'dag' ? 'contents' : 'none' }}>
+                <ETLDag />
+              </div>
+            )}
           </>
         )}
       </div>
