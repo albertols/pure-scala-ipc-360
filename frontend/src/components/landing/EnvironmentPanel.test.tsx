@@ -32,4 +32,20 @@ describe('EnvironmentPanel', () => {
     const { container } = render(<EnvironmentPanel roots={undefined} />)
     expect(container).toBeEmptyDOMElement()
   })
+
+  // Fix round 1, Finding 2 (spec §6.4): the panel also carries "the GCP project and region
+  // from `/api/config`" — Task 10 wires `Landing`'s own `useAppConfig()` into these two props.
+  it('shows the GCP project and region when present', () => {
+    render(<EnvironmentPanel roots={ROOTS} gcpProjectId="example-project" region="eu" />)
+
+    expect(screen.getByText(/example-project/)).toBeInTheDocument()
+    expect(screen.getByText(/eu/)).toBeInTheDocument()
+  })
+
+  // No fabricated placeholder that could be mistaken for a real project id.
+  it('names the GCP project as not configured rather than fabricating one', () => {
+    render(<EnvironmentPanel roots={ROOTS} />)
+
+    expect(screen.getByText(/not configured/)).toBeInTheDocument()
+  })
 })

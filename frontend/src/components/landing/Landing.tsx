@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import type { TabId } from '../../types'
 import { useReadiness } from '../../api/readinessQueries'
+import { useAppConfig } from '../../api/queries'
 import { LoadingState } from '../shared/Spinner'
 import { MascotScene } from './MascotScene'
 import type { ReadinessStatus, FailingRoot } from './MascotScene'
@@ -30,6 +31,10 @@ export interface LandingProps {
 
 export function Landing({ onEnter }: LandingProps) {
   const { data, isLoading, isError } = useReadiness()
+  // Spec §6.4: EnvironmentPanel also carries "the GCP project and region from `/api/config`" —
+  // a second, tiny query (`staleTime: Infinity`, same as every other static-per-build catalogue
+  // this hook already serves elsewhere in the app), not a second copy of `useReadiness()`.
+  const { data: config } = useAppConfig()
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -59,7 +64,7 @@ export function Landing({ onEnter }: LandingProps) {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em', margin: 0 }}>
-            ETL <span style={{ color: '#34d399' }}>360</span>
+            ETL <span style={{ color: 'var(--green)' }}>360</span>
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 560, lineHeight: 1.6, margin: 0 }}>
             Informatica PowerCenter (IPC) Powermart XML exports, made browsable and
@@ -107,7 +112,7 @@ export function Landing({ onEnter }: LandingProps) {
         </section>
 
         <ProgressStrip progress={data?.progress} />
-        <EnvironmentPanel roots={data?.roots} />
+        <EnvironmentPanel roots={data?.roots} gcpProjectId={config?.gcpProjectId} region={config?.region} />
       </div>
     </div>
   )

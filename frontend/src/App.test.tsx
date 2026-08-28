@@ -182,7 +182,42 @@ describe('App — landing page (Task 10)', () => {
     renderApp()
 
     await waitFor(() => expect(screen.queryByRole('button', { name: /^enter/i })).not.toBeInTheDocument())
+    // Positive half: the absent Enter button only proves the landing didn't render, not that
+    // the recipe editor did — assert the editor itself is up, standalone (same marker the
+    // "App — focus mode" describe block's own first test uses).
+    expect(await screen.findByRole('heading', { name: '_ETL_m_FIX.json' })).toBeInTheDocument()
     window.history.replaceState({}, '', '/')
+  })
+
+  // Fix round 1, Finding 1 (spec §8: the transition "is skipped entirely under
+  // prefers-reduced-motion" — skipped means the delay too, not just the CSS keyframes).
+  it('skips the transition delay under prefers-reduced-motion — no timer wait needed', async () => {
+    const originalMatchMedia = window.matchMedia
+    // jsdom does not implement `matchMedia` in this project's test environment at all
+    // (`typeof window.matchMedia` is `'undefined'` under the default setup) — this stubs it in
+    // rather than assuming it, since production code must also tolerate its absence.
+    window.matchMedia = ((query: string) => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia
+
+    try {
+      renderApp()
+      fireEvent.click(await screen.findByRole('button', { name: /^enter/i }))
+
+      // Synchronous, no `await`/polling `findBy*`: the shell must already be in the DOM the
+      // instant `fireEvent.click` returns, proving the 400ms `setTimeout` was skipped entirely
+      // rather than merely being fast.
+      expect(screen.getByRole('button', { name: 'IPC ETL Viewer' })).toBeInTheDocument()
+    } finally {
+      window.matchMedia = originalMatchMedia
+    }
   })
 })
 

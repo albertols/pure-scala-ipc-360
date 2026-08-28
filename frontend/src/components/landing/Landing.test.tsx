@@ -87,4 +87,15 @@ describe('Landing', () => {
     // query has settled to its error state, so this note appears a tick later.
     expect(await screen.findByText(/could not read|unavailable/i)).toBeInTheDocument()
   })
+
+  // Fix round 1, Finding 2 (spec §6.4): the `/api/config` handler above was carried from the
+  // brief's template but never actually exercised by production code until now — `Landing`
+  // fetches it (via the existing `useAppConfig()`, not a second hook) and threads it into
+  // `EnvironmentPanel`.
+  it('shows the GCP project and region from /api/config in the environment panel', async () => {
+    render(<Landing onEnter={() => {}} />, { wrapper })
+
+    expect(await screen.findByText(/example-project/)).toBeInTheDocument()
+    expect(screen.getByText(/eu/)).toBeInTheDocument()
+  })
 })

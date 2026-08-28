@@ -151,6 +151,26 @@ function readFocusRecipe(): string | null {
 type ViewState = 'landing' | 'leaving' | 'tabs'
 const LANDING_TRANSITION_MS = 400
 
+// Spec §8: the transition "is skipped entirely under prefers-reduced-motion" — the CSS
+// keyframes already no-op under that media query (index.css), but the JS delay that used to
+// gate the actual view swap did NOT: a reduced-motion user would click Enter, see nothing
+// animate (correctly), then sit on an apparently-frozen screen for 400ms before it snapped to
+// the shell. This reads as an unresponsive app, which is worse than no transition at all — so
+// the swap itself must be synchronous whenever the OS setting is on.
+//
+// jsdom does not implement `window.matchMedia` at all in this project's test environment
+// (confirmed: `typeof window.matchMedia` is `'undefined'` under the default test setup), so
+// this guards defensively rather than assuming a browser-shaped `window` — a crash here on
+// entry would take down the whole app, which is worse than just not skipping the delay.
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
+}
+
 export default function App() {
   const [focusRecipe] = useState<string | null>(readFocusRecipe)
   const [view, setView] = useState<ViewState>('landing')
@@ -178,6 +198,21 @@ export default function App() {
   // first screen (the hazard sub-project 10 met once already with a corrupt `density`).
   const enterApp = (tab?: TabId) => {
     if (tab) showTab(tab)
+
+    // Clear any previously scheduled swap before doing anything else: the landing page (and
+    // its Enter button) stays mounted through the whole 400ms `'leaving'` window, so a second
+    // activation within that window — Enter clicked twice, or Enter then a tab card — must not
+    // leave the first timer running underneath the second.
+    if (transitionTimer.current !== null) {
+      window.clearTimeout(transitionTimer.current)
+      transitionTimer.current = null
+    }
+
+    if (prefersReducedMotion()) {
+      setView('tabs')
+      return
+    }
+
     setView('leaving')
     transitionTimer.current = window.setTimeout(() => setView('tabs'), LANDING_TRANSITION_MS)
   }

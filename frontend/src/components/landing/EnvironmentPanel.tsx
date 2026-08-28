@@ -12,6 +12,11 @@ import type { ReadinessT } from '../../api/readinessQueries'
  * Presentational only — no query of its own. `roots` is `ReadinessT['roots']`, a plain
  * `Root[] | undefined`; every field on `Root` is optional (generated DTO), so every value
  * is formatted defensively rather than asserted with `!`.
+ *
+ * `gcpProjectId`/`region` (spec §6.4: "the GCP project and region from `/api/config`") are
+ * plain optional strings, fetched by the caller (`Landing.tsx`'s own `useAppConfig()`, not a
+ * second copy of that hook here) and rendered honestly when absent — "not configured", never a
+ * fabricated placeholder that could be mistaken for a real project id.
  */
 
 const TEXT = '#c8d3e8'
@@ -70,9 +75,11 @@ function Row({ name, resolved, tier, status, hint }: RootT) {
 
 export interface EnvironmentPanelProps {
   roots: ReadinessT['roots']
+  gcpProjectId?: string
+  region?: string
 }
 
-export function EnvironmentPanel({ roots }: EnvironmentPanelProps) {
+export function EnvironmentPanel({ roots, gcpProjectId, region }: EnvironmentPanelProps) {
   if (!roots || roots.length === 0) return null
 
   return (
@@ -96,6 +103,16 @@ export function EnvironmentPanel({ roots }: EnvironmentPanelProps) {
         }}
       >
         Data roots
+      </div>
+      <div
+        data-testid="environment-gcp"
+        style={{ padding: '9px 11px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}
+      >
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', minWidth: 92 }}>GCP</span>
+        <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: TEXT, wordBreak: 'break-word' }}>
+          {gcpProjectId ?? 'not configured'}
+          {region ? ` · ${region}` : ''}
+        </span>
       </div>
       {roots.map((root, i) => (
         <Row key={root.name ?? `root-${i}`} {...root} />
