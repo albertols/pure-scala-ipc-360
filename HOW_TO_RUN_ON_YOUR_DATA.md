@@ -421,7 +421,7 @@ re-check the section that depends on it:
 | §3.2 b15 filename, date pattern, CSV headers | `backend/.../service/OperationalService.java` |
 | §3.3 layer dirs, control table, row grammar | `backend/.../service/LayerToLayerService.java`, `backend/.../config/Etl360Properties.java` (`LayerToLayer`) |
 | §4 parser flags, traversal, path quirk | `parser/.../xmltojson/XMLParser.scala`, `parser/.../utils/dir/ScalaFileUtils.scala` |
-| §5 verification fields | `backend/.../api/HealthController.java`, `backend/.../api/ConfigController.java`, `backend/.../service/DiagnosticsService.java`, `docs/adr/0013-data-root-diagnostics.md` |
+| §5 verification fields | `backend/.../api/HealthController.java`, `backend/.../api/ConfigController.java`, `backend/.../service/DiagnosticsService.java`, `backend/.../api/ClusterController.java`, `backend/.../service/ClusterIndexService.java`, `docs/adr/0013-data-root-diagnostics.md`, `docs/adr/0014-b15-cluster-index.md` |
 | §5 frontend port/proxy | `frontend/vite.config.ts` |
 
 Related reading: root `README.md` (dev harness, make targets), `docs/architecture.md`
