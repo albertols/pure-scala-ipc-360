@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
+import { describe, expect, it, beforeAll, afterAll, afterEach, beforeEach, vi } from 'vitest'
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
@@ -156,5 +156,49 @@ describe('ClusterPane', () => {
     await screen.findByText('cl-0000')
 
     expect(screen.getByTestId('cluster-pane').style.width).toBe('320px')
+  })
+
+  it('does not go blank when the search narrows the list after a deep scroll', async () => {
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    // Deep scroll into the full 1000-cluster list — near row 990.
+    fireEvent.scroll(screen.getByTestId('cluster-scroll'), { target: { scrollTop: 29700 } })
+
+    // Narrow to a term with plenty of matches (cl-0000..cl-0099, 100 of them).
+    // The stale scrollTop now points past the FILTERED list's own height —
+    // `visibleRange` must not be left computing a window against the old count.
+    fireEvent.change(screen.getByPlaceholderText(/Search clusters/), { target: { value: 'cl-00' } })
+
+    expect(await screen.findByText('cl-0005')).toBeInTheDocument()
+    expect(screen.getAllByRole('checkbox', { name: /^cl-/ }).length).toBeGreaterThan(0)
+  })
+
+  it('detaches its window mousemove/mouseup listeners on unmount mid-drag', async () => {
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+    const { unmount } = render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+
+    fireEvent.mouseDown(screen.getByTestId('cluster-pane-resize-handle'))
+    unmount()
+
+    expect(removeSpy).toHaveBeenCalledWith('mousemove', expect.any(Function))
+    expect(removeSpy).toHaveBeenCalledWith('mouseup', expect.any(Function))
+
+    removeSpy.mockRestore()
+  })
+
+  it('toggling a date checkbox updates selectedDates, and toggling it again clears the filter', async () => {
+    const view = renderHook(() => useOperationalView())
+    render(<ClusterPane />, { wrapper })
+    await screen.findByText('cl-0000')
+    fireEvent.click(screen.getByRole('button', { name: 'Expand cl-0005' }))
+    await screen.findByRole('checkbox', { name: '2026-07-28' })
+
+    fireEvent.click(screen.getByRole('checkbox', { name: '2026-07-28' }))
+    await waitFor(() => expect(view.result.current.selectedDates).toEqual(['2026-07-29']))
+
+    fireEvent.click(screen.getByRole('checkbox', { name: '2026-07-28' }))
+    await waitFor(() => expect(view.result.current.selectedDates).toEqual([]))
   })
 })

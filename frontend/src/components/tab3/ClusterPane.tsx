@@ -96,6 +96,11 @@ export function ClusterPane() {
   const [viewportH, setViewportH] = useState(DEFAULT_VIEWPORT_H)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const draggingRef = useRef(false)
+  // The currently-attached window listeners for an in-progress drag, if any —
+  // lets the unmount effect below detach them even when the gesture never
+  // reaches its own mouseup (e.g. a tab switch unmounts ClusterPane while the
+  // resize handle is still held). Mirrors EditorLayout.tsx's `activeDragListeners`.
+  const activeDragListeners = useRef<{ onMove: (e: MouseEvent) => void; onUp: () => void } | null>(null)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -106,6 +111,16 @@ export function ClusterPane() {
     })
     ro.observe(el)
     return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      const listeners = activeDragListeners.current
+      if (!listeners) return
+      window.removeEventListener('mousemove', listeners.onMove)
+      window.removeEventListener('mouseup', listeners.onUp)
+      activeDragListeners.current = null
+    }
   }, [])
 
   const clusters = index?.clusters ?? []
@@ -137,7 +152,25 @@ export function ClusterPane() {
     const currentlySelected = selectedDates.length === 0 || selectedDates.includes(date)
     const base = selectedDates.length === 0 ? allDates : selectedDates
     const next = currentlySelected ? base.filter(d => d !== date) : [...base, date]
-    setOperationalView({ selectedDates: next })
+    // "No filter" has exactly one representation. Re-checking a date back to the
+    // full known set must collapse to the empty sentinel rather than sit as a
+    // second, functionally-identical-but-different-looking spelling of "all
+    // selected" — otherwise a round-trip toggle (uncheck, recheck) would leave
+    // `selectedDates` non-empty forever.
+    const isFullSet = allDates.length > 0 && next.length === allDates.length && allDates.every(d => next.includes(d))
+    setOperationalView({ selectedDates: isFullSet ? [] : next })
+  }
+
+  /** Search box changes must invalidate any scroll position computed against the
+   * PREVIOUS (unfiltered or differently-filtered) list — otherwise a stale
+   * `scrollTop` can point past the narrower list's own height, `visibleRange`
+   * clamps both ends to the new (smaller) count, and the pane renders zero rows,
+   * indistinguishable from "no results". Reset state AND the DOM node together so
+   * they can never disagree about where the list is scrolled. */
+  const onSearchChange = (value: string) => {
+    setSearch(value)
+    setScrollTop(0)
+    if (scrollRef.current) scrollRef.current.scrollTop = 0
   }
 
   const startDrag = () => {
@@ -148,9 +181,11 @@ export function ClusterPane() {
     }
     const onUp = () => {
       draggingRef.current = false
+      activeDragListeners.current = null
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
+    activeDragListeners.current = { onMove, onUp }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
@@ -209,7 +244,7 @@ export function ClusterPane() {
         )}
         <input
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => onSearchChange(e.target.value)}
           placeholder="Search clusters…"
           style={{
             background: 'var(--surface-2)', border: '1px solid var(--border)',
@@ -221,6 +256,7 @@ export function ClusterPane() {
 
       <div
         ref={scrollRef}
+        data-testid="cluster-scroll"
         onScroll={e => setScrollTop(e.currentTarget.scrollTop)}
         style={{ flex: 1, overflowY: 'auto', position: 'relative', minHeight: 0 }}
       >
@@ -285,6 +321,7 @@ export function ClusterPane() {
       )}
 
       <div
+        data-testid="cluster-pane-resize-handle"
         onMouseDown={startDrag}
         style={{
           position: 'absolute', top: 0, right: -2, bottom: 0, width: 4,
