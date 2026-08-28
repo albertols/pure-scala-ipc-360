@@ -15,11 +15,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,10 +40,13 @@ public class OperationalService {
 
     private final LayerToLayerService layerToLayer;
     private final B15Reader b15;
+    private final ClusterIndexService clusterIndex;
 
-    public OperationalService(LayerToLayerService layerToLayer, B15Reader b15) {
+    public OperationalService(LayerToLayerService layerToLayer, B15Reader b15,
+                              ClusterIndexService clusterIndex) {
         this.layerToLayer = layerToLayer;
         this.b15 = b15;
+        this.clusterIndex = clusterIndex;
     }
 
     public List<String> dates() {
@@ -75,6 +80,31 @@ public class OperationalService {
      * an all-null duration set yields null stats rather than a divide-by-zero or a fabricated 0.
      */
     public OperationalSummaryDto summary() {
+        return summary(List.of());
+    }
+
+    /**
+     * As {@link #summary()}, restricted to the recipes that ran in {@code clusterNames} — the same
+     * scoping semantics {@link RelationshipService#graph(Collection)} already implements, and for
+     * the same reason: this response is O(recipes x dates), so at the ~7 000 recipes and 90-365
+     * dated exports this suite targets the unscoped aggregate is tens to hundreds of megabytes,
+     * parsed on the browser's main thread the moment a user picks their first cluster.
+     *
+     * @param clusterNames empty (or null) -> the whole history, <b>byte-identical</b> to the
+     *        pre-scoping response, which {@code CorpusContractTest}, Tab 4 and
+     *        {@code relationships_sweep.mts} all depend on. Non-empty -> only the recipes those
+     *        clusters ran; unknown names contribute nothing rather than raising a 404.
+     *        The DATE axis is never narrowed: {@code dates} is the b15 history's own extent, not a
+     *        property of the selection.
+     */
+    public OperationalSummaryDto summary(Collection<String> clusterNames) {
+        // EXACTLY ONE index() call per request. index() re-checks B15Reader.fingerprint(), which
+        // stats every dated export directory; the recipesIn(Index, ...) overload exists precisely
+        // so a caller cannot pay that sweep twice (RelationshipService's own comment says the same).
+        Set<String> inScope = clusterNames == null || clusterNames.isEmpty()
+            ? null
+            : clusterIndex.recipesIn(clusterNames);
+
         List<String> ds = dates();
         Map<String, List<HistoryEntryDto>> historyByRecipe = new LinkedHashMap<>();
         Map<String, B15RowDto> latestRowByRecipe = new LinkedHashMap<>();
@@ -82,6 +112,7 @@ public class OperationalService {
         for (String date : ds) {
             for (B15RowDto row : snapshot(date).rows()) {
                 String recipe = row.recipeFilename();
+                if (inScope != null && !inScope.contains(recipe)) continue;
                 historyByRecipe.computeIfAbsent(recipe, k -> new ArrayList<>())
                     .add(new HistoryEntryDto(date, row.status(), parseDurationMin(row.avgJobDurationInMinsSec())));
                 latestRowByRecipe.put(recipe, row);       // dates() is ascending -> last write wins == max date

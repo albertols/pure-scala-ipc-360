@@ -585,6 +585,26 @@ describe('ETLOperational — cluster-scoped loading', () => {
     expect(queries[0]).toContain('clusters=cl-a')
   })
 
+  // Blocker 3: `/api/operational/summary` was the LAST unbounded payload on the selected path.
+  // `useOperationalSummary(hasSelection)` gated on whether a selection existed, never on which,
+  // so the first cluster click aggregated every recipe x every date — measured at 38 904 B on the
+  // 30-recipe mock against the entire unscoped graph's 20 984 B.
+  it('scopes the summary to the selected clusters, not just to "a selection exists"', async () => {
+    const queries: string[] = []
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url)
+      if (url.pathname === '/api/operational/summary') queries.push(url.search)
+    })
+
+    renderTab([])
+    await screen.findByText(/Select a cluster/)
+
+    act(() => setOperationalView({ selectedClusters: ['cl-b', 'cl-a'] }))
+
+    await waitFor(() => expect(queries).toHaveLength(1))
+    expect(queries[0]).toBe('?clusters=cl-a&clusters=cl-b')
+  })
+
   it('returns to the prompt when the last cluster is deselected, without refetching the index', async () => {
     let indexCalls = 0
     server.use(http.get('*/api/operational/clusters', () => {

@@ -43,6 +43,75 @@ class OperationalSummaryContractTest {
             .andExpect(jsonPath(recipe + ".lastClusterName").value(not(emptyOrNullString())));
     }
 
+    // ─── ?clusters= scoping ──────────────────────────────────────────────────────
+    //
+    // `/api/operational/summary` was the last unbounded payload on Tab 3's selected path:
+    // `useOperationalSummary(hasSelection)` gates on WHETHER a selection exists, never on WHICH,
+    // so the first cluster click aggregated every recipe x every date. Measured on the 30-recipe
+    // mock the summary is 38 904 B against the entire unscoped graph's 20 984 B; at the ~7 000
+    // recipes this sub-project targets and ~90 B per history entry that is tens of megabytes
+    // parsed on the main thread. The parameter mirrors /api/relationships's scoping semantics
+    // exactly — ABSENT means today's full response, byte-identical.
+
+    private JsonNode summary(String query) throws Exception {
+        return new ObjectMapper().readTree(mvc.perform(get("/api/operational/summary" + query))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+    }
+
+    /** The single most important assertion here: today's callers must see today's bytes. */
+    @Test
+    void anUnscopedRequestIsByteIdenticalWithAndWithoutAnEmptyClustersParameter() throws Exception {
+        String plain = mvc.perform(get("/api/operational/summary"))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        // A bare `clusters=` is not "scope to nothing", it is no scope at all — same as absent.
+        String bare = mvc.perform(get("/api/operational/summary?clusters="))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        assertThat(bare).isEqualTo(plain);
+        assertThat(new ObjectMapper().readTree(plain).get("recipes").size()).isEqualTo(30);
+    }
+
+    @Test
+    void aScopedSummaryIsAStrictSubsetOfTheUnscopedOne() throws Exception {
+        JsonNode full = summary("");
+        JsonNode scoped = summary("?clusters=cluster-wf-cas-load-4001");
+
+        assertThat(scoped.get("recipes").size())
+            .isEqualTo(5)                                   // Task 1's 5-recipe cluster
+            .isLessThan(full.get("recipes").size());
+
+        java.util.Set<String> fullNames = new java.util.HashSet<>();
+        for (JsonNode r : full.get("recipes")) fullNames.add(r.get("recipeFilename").asText());
+        for (JsonNode r : scoped.get("recipes")) {
+            assertThat(fullNames).contains(r.get("recipeFilename").asText());
+        }
+    }
+
+    /**
+     * The recipe set narrows; the date axis does not. `dates` is the b15 history's own extent,
+     * not a property of the selection — narrowing it would silently shrink the calendar and the
+     * history strips to whatever the current selection happened to touch.
+     */
+    @Test
+    void scopingNarrowsTheRecipesButNotTheDateAxis() throws Exception {
+        assertThat(summary("?clusters=cluster-wf-cas-load-4001").get("dates").size()).isEqualTo(14);
+    }
+
+    @Test
+    void severalClustersUnionTheirRecipes() throws Exception {
+        int one = summary("?clusters=cluster-wf-cas-load-4001").get("recipes").size();
+        int two = summary("?clusters=cluster-wf-cas-load-4001&clusters=cluster-wf-cas-core-4002")
+            .get("recipes").size();
+
+        assertThat(two).isGreaterThan(one).isLessThan(30);
+    }
+
+    /** Unknown names contribute nothing rather than 404ing — same rule as /api/relationships. */
+    @Test
+    void anUnknownClusterScopesToNoRecipesRatherThanFailing() throws Exception {
+        assertThat(summary("?clusters=no-such-cluster").get("recipes")).isEmpty();
+    }
+
     @Test
     void casEventsFactP95IsAtLeastP50() throws Exception {
         String body = mvc.perform(get("/api/operational/summary")).andExpect(status().isOk())

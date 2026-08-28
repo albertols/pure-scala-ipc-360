@@ -74,8 +74,31 @@ export const useOperationalDates = (enabled = true) =>
 export const useOperational = (date: string) =>
   useQuery({ queryKey: ['operational', date], queryFn: () => apiGet<OperationalSnapshot>(`/operational/${date}`), staleTime: STALE_MS, enabled: !!date })
 
-export const useOperationalSummary = (enabled = true) =>
-  useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS, enabled })
+/**
+ * `enabled` defaults to true and `clusters` to none, so the pre-existing call sites are untouched
+ * and their response stays byte-identical.
+ *
+ * Both arguments matter, and they are not the same gate. `enabled` says WHETHER to fetch;
+ * `clusters` says WHICH recipes to aggregate. Gating on `enabled` alone still bought the entire
+ * history the instant a user picked one cluster — O(recipes x dates), ~90 B per history entry,
+ * i.e. tens of megabytes at the ~7 000-recipe target — so Tab 3 passes its selection through and
+ * the backend narrows the recipe set (never the date axis) exactly the way
+ * `/api/relationships?clusters=` already does. An EMPTY list sends no parameter at all: a bare
+ * `clusters=` would be indistinguishable from "unscoped" server-side, so it must not be sent
+ * as a way of saying "scope to nothing".
+ */
+export const useOperationalSummary = (enabled = true, clusters: string[] = []) => {
+  const key = [...clusters].sort()
+  const query = key.length > 0
+    ? `?${key.map(c => `clusters=${encodeURIComponent(c)}`).join('&')}`
+    : ''
+  return useQuery({
+    queryKey: ['operationalSummary', key.join(',')],
+    queryFn: () => apiGet<OperationalSummary>(`/operational/summary${query}`),
+    staleTime: STALE_MS,
+    enabled,
+  })
+}
 
 // Data-root self-diagnosis (GET /api/diagnostics): where each root resolved, which
 // tier served it, and — for the control schema — the staged scan counts that say WHICH

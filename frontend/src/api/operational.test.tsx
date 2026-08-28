@@ -22,7 +22,9 @@ const server = setupServer(
       message: '',
     }],
   })),
-  http.get('/api/operational/summary', () => HttpResponse.json({
+  http.get('/api/operational/summary', ({ request }) => {
+    seenSummaryUrls.push(request.url)
+    return HttpResponse.json({
     dates: ['2026-07-29'],
     recipes: [{
       recipeFilename: '_ETL_m_SYN_ODS_ORDERS.json',
@@ -38,10 +40,12 @@ const server = setupServer(
       lastJobId: 'application_1774840000001_0001',
       lastClusterName: 'cluster-wf-syn-orders-01',
     }],
-  })),
+    })
+  }),
 )
+const seenSummaryUrls: string[] = []
 beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
+afterEach(() => { server.resetHandlers(); seenSummaryUrls.length = 0 })
 afterAll(() => server.close())
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -72,5 +76,34 @@ describe('operational hooks', () => {
     expect(recipe?.okCount).toBe(1)
     expect(recipe?.koCount).toBe(0)
     expect(recipe?.history).toHaveLength(1)
+  })
+
+  // Blocker 3: `/api/operational/summary` was the last unbounded payload on Tab 3's
+  // selected path — gated on WHETHER a selection exists, never on WHICH, so the first
+  // cluster click aggregated every recipe x every date (38 904 B on the 30-recipe mock,
+  // against the entire unscoped graph's 20 984 B; tens of MB at the ~7 000-recipe target).
+  it('sends no clusters= at all when unscoped, so the response stays byte-identical', async () => {
+    const summary = renderHook(() => useOperationalSummary(), { wrapper })
+    await waitFor(() => expect(summary.result.current.isSuccess).toBe(true))
+
+    expect(seenSummaryUrls).toHaveLength(1)
+    expect(new URL(seenSummaryUrls[0]!).search).toBe('')
+  })
+
+  it('scopes the summary to the selected clusters, one clusters= entry each', async () => {
+    const summary = renderHook(() => useOperationalSummary(true, ['cl-b', 'cl-a']), { wrapper })
+    await waitFor(() => expect(summary.result.current.isSuccess).toBe(true))
+
+    expect(seenSummaryUrls).toHaveLength(1)
+    // Sorted, like useScopedRelationships: two renders of the same selection in a
+    // different order must share one cache entry rather than refetching.
+    expect(new URL(seenSummaryUrls[0]!).search).toBe('?clusters=cl-a&clusters=cl-b')
+  })
+
+  it('fetches nothing while disabled, however many clusters are named', async () => {
+    const summary = renderHook(() => useOperationalSummary(false, ['cl-a']), { wrapper })
+    await waitFor(() => expect(summary.result.current.isLoading).toBe(false))
+
+    expect(seenSummaryUrls).toEqual([])
   })
 })

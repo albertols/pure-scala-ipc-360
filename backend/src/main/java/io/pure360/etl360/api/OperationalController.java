@@ -24,9 +24,15 @@ public class OperationalController {
         return new OperationalDatesDto(operational.dates(), roots.composerMode());
     }
 
+    /**
+     * @param clusters absent (or a bare {@code clusters=}) -> the whole history, byte-identical to
+     *        the pre-scoping response. Non-empty -> only the recipes those b15 clusters ran, the
+     *        same scoping semantics {@code GET /api/relationships?clusters=} already carries.
+     */
     @GetMapping("/summary")
-    public OperationalSummaryDto summary() {
-        return operational.summary();
+    public OperationalSummaryDto summary(
+            @RequestParam(name = "clusters", required = false) List<String> clusters) {
+        return operational.summary(clusters == null ? List.of() : clusters);
     }
 
     @GetMapping("/{date}")

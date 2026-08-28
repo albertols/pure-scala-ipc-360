@@ -306,7 +306,13 @@ const RelationshipGraph = memo(function RelationshipGraph({
  * which is a few hundred rows regardless of corpus size, and shows a prompt naming the scale it
  * found. Selecting clusters fetches exactly their subgraph plus the flagged 1-hop neighbours.
  * Everything else — the summary, the date list, the selected date's snapshot, the per-recipe run
- * history — hangs off that selection and costs nothing until one exists.
+ * history — hangs off that selection.
+ *
+ * "Hangs off that selection" has to mean scoped BY it, not merely gated ON it. The summary used
+ * to be requested unscoped as soon as any cluster was picked, which made the selected state
+ * costlier than the whole rest of the tab: on the 30-recipe mock the summary is 38 904 B against
+ * the entire unscoped graph's 20 984 B, and it grows as recipes x dates — tens of megabytes at
+ * ~7 000 recipes and 90 dated exports. It now carries the same `clusters=` scope the graph does.
  */
 export function ETLOperational() {
   const view = useOperationalView()
@@ -322,7 +328,10 @@ export function ETLOperational() {
   // `enabled: key.length > 0` lives inside the hook: `GET /api/relationships?clusters=` with an
   // EMPTY value is not "scope to nothing", it is the entire graph, byte-identical to unscoped.
   const rel = useScopedRelationships(view.selectedClusters)
-  const summary = useOperationalSummary(hasSelection)
+  // Scoped on BOTH axes. `hasSelection` says whether to fetch; `view.selectedClusters` says which
+  // recipes to aggregate — gating on the first alone bought the entire history the instant a user
+  // picked one cluster (see the block comment above).
+  const summary = useOperationalSummary(hasSelection, view.selectedClusters)
   const cfg = useAppConfig()
   // Data-root self-diagnosis: rendered as a toolbar chip always, and expanded into the
   // full report in the empty state — where it is the only thing standing between the
