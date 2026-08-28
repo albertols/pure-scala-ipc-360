@@ -311,8 +311,8 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     expect(loggingLink.href).toContain('application_cas_t_0029')
     expect(loggingLink.href).toContain('db-dev-example-project')
 
-    // Clear selection closes the detail panel. Scoped by label: SelectionStrip (Task 13) renders
-    // its own "Clear selection" for the CLUSTER selection, so the plain text is now ambiguous.
+    // Clear selection closes the detail panel. Scoped by label because SelectionStrip renders a
+    // neighbouring "Clear clusters" control for the other scope.
     fireEvent.click(screen.getByLabelText('Clear node selection'))
     expect(screen.queryByText('Related (2)')).not.toBeInTheDocument()
   }, HEAVY_WALK_TIMEOUT)
@@ -622,9 +622,40 @@ describe('ETLOperational — cluster-scoped loading', () => {
 
     expect(await screen.findByText(/Indexing b15 history/)).toBeInTheDocument()
     expect(screen.queryByText(/%/)).not.toBeInTheDocument()
+  })
 
-    // Once it resolves the stage carries RESOLVED totals — real numbers, not a fabricated fraction.
-    expect(await screen.findByText('2 days · 2 clusters · 4 rows')).toBeInTheDocument()
+  // Asserted INSIDE the panel, and while it is actually on screen. Once the index resolves with
+  // nothing selected the panel unmounts and the prompt renders the same totals string — so an
+  // unscoped assertion proves nothing about this component at all.
+  it('states resolved totals and per-stage markers inside the progress panel while the graph builds', async () => {
+    server.use(http.get('*/api/relationships', async () => {
+      await delay(120)
+      return HttpResponse.json(GRAPH_SCOPED)
+    }))
+
+    renderTab()   // cl-a selected: the index lands, the graph does not, so the panel stays mounted
+
+    // The panel is mounted from the very first frame (index still loading), so wait for stage 1
+    // to actually RESOLVE before grabbing it — otherwise this captures the wrong pass.
+    await screen.findByTestId('stage-marker-done')
+    const panel = screen.getByTestId('operational-progress')
+
+    // Stage 1 has resolved: a ✓ and REAL numbers read off the index that landed.
+    expect(within(panel).getByTestId('stage-marker-done')).toBeInTheDocument()
+    expect(within(panel).getByText('2 days · 2 clusters · 4 rows')).toBeInTheDocument()
+
+    // Stage 2 is the one in flight: a spinner, and no total yet because none is resolved.
+    expect(within(panel).getByText(/Building graph for 1 cluster/)).toBeInTheDocument()
+    expect(within(panel).getByTestId('stage-marker-active')).toBeInTheDocument()
+
+    // Stage 3 has not started: a dim dot, and it states no number rather than a placeholder zero.
+    expect(within(panel).getByTestId('stage-marker-idle')).toBeInTheDocument()
+    expect(within(panel).queryByText(/runs each/)).not.toBeInTheDocument()
+    expect(within(panel).queryByText(/%/)).not.toBeInTheDocument()
+
+    // ...and the panel gives way to the graph once it lands.
+    expect(await screen.findByText('_ETL_m_CAS_T.json')).toBeInTheDocument()
+    expect(screen.queryByTestId('operational-progress')).not.toBeInTheDocument()
   })
 
   it('still explains an empty graph with the data-root report', async () => {
@@ -636,6 +667,53 @@ describe('ETLOperational — cluster-scoped loading', () => {
 
     expect(await screen.findByText(/No relationship entries|No b15 history/)).toBeInTheDocument()
     expect(screen.getByText(/Data roots/i)).toBeInTheDocument()
+  })
+
+  // ADR-0013, the case the index-rows guard alone does NOT cover. `/api/operational/clusters`
+  // reads the b15 export under the composer root; `/api/relationships` is built from the control
+  // schema under the dwhControl root. A healthy b15 history whose control-schema anchor table does
+  // not match gives rows > 0 AND zero cards — a normal-looking toolbar over a blank canvas, with
+  // nothing saying which of three causes it is.
+  it('explains a scoped graph that resolves to nothing with the data-root report', async () => {
+    server.use(
+      http.get('*/api/relationships', () => HttpResponse.json({
+        nodes: [], edges: [],
+        meta: { entryCount: 0, skippedRows: 0, layers: [], scopedClusters: ['cl-a'], neighborCount: 0 },
+      })),
+      http.get('/api/diagnostics', () => HttpResponse.json({
+        ...DIAGNOSTICS,
+        status: 'ko',
+        dwhControl: {
+          ...DIAGNOSTICS.dwhControl,
+          resolvedReal: '/corp/exports/DWH_CONTROL', realExists: true, realUsable: true,
+          tier: 'real', status: 'ko',
+          hint: 'The files INSERT INTO: CTL.CORP_L2L_CONFIG (×412) — set layerToLayerTable in config.json.',
+          scan: { ...DIAGNOSTICS.dwhControl.scan, filesRead: 8, anchorHits: 0, rowsParsed: 0 },
+        },
+      })),
+    )
+
+    renderTab()   // healthy index (4 rows), cl-a selected — so this is NOT the zero-rows path
+
+    expect(await screen.findByText('No relationship entries')).toBeInTheDocument()
+    expect(screen.getByText(/Data roots/i)).toBeInTheDocument()
+    expect(screen.getByText('/corp/exports/DWH_CONTROL')).toBeInTheDocument()
+    expect(screen.getByText(/set layerToLayerTable in config\.json/)).toBeInTheDocument()
+    // The pane stays: the way out is changing the selection, not reloading the page.
+    expect(screen.getByTestId('cluster-pane')).toBeInTheDocument()
+  })
+
+  // The failure is caused by a user action (selecting a cluster), and `selectedClusters` is
+  // session-lived — without the pane there is no in-session way to undo it.
+  it('keeps the cluster pane mounted when the scoped graph fetch fails', async () => {
+    server.use(http.get('*/api/relationships', () => HttpResponse.json(
+      { title: 'Scope too large', detail: 'Try fewer clusters.' }, { status: 500 })))
+
+    renderTab()
+
+    expect(await screen.findByText('Scope too large')).toBeInTheDocument()
+    expect(screen.getByText('Try fewer clusters.')).toBeInTheDocument()
+    expect(screen.getByTestId('cluster-pane')).toBeInTheDocument()
   })
 
   it('feeds each card the run history and points the detail-panel links at the selected run', async () => {

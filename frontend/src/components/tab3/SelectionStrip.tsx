@@ -60,14 +60,17 @@ export function SelectionStrip({ summary }: { summary: SelectionSummary | null }
         {`${nf.format(selectedClusters.length)} clusters · ${nf.format(s.recipes)} recipes · ${nf.format(s.dates)} dates · ${nf.format(s.ok)} OK · ${nf.format(s.ko)} KO · ${nf.format(s.nodes)} nodes · ${nf.format(s.neighbors)} from neighbours`}
       </div>
       <button
-        aria-label="Clear selection"
+        aria-label="Clear clusters"
         onClick={clearSelection}
         style={{
           marginLeft: 'auto', background: 'transparent', border: '1px solid var(--border)',
           borderRadius: 5, color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', padding: '2px 8px',
         }}
       >
-        Clear selection
+        {/* NOT "Clear selection": the graph's own floating button (pre-existing Figma copy)
+            already owns that phrase for the selected NODE. This one drops the cluster scope, and
+            sits directly beside the cluster chips it clears. */}
+        Clear clusters
       </button>
     </div>
   )

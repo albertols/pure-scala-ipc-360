@@ -456,16 +456,10 @@ export function ETLOperational() {
     return <OperationalProgress stages={stages} />
   }
 
-  // 2. Errors keep their existing shape.
-  const apiError = (index.error ?? rel.error ?? summary.error) as ApiError | null
-  if (apiError) {
-    return (
-      <div style={{ color: 'var(--red)', fontSize: 12, padding: 16 }}>
-        <div>{apiError.title}</div>
-        {apiError.detail && <div>{apiError.detail}</div>}
-      </div>
-    )
-  }
+  // 2. An INDEX failure is full-bleed: there is nothing for the pane to list, so nothing it
+  // could let the operator do. A SCOPED failure is handled after the selection gate below,
+  // where the pane still has data and is the only way out.
+  if (index.error) return <ApiErrorBlock error={index.error as ApiError} />
 
   // 3. Nothing indexed at all. An empty Tab 3 is never self-explanatory: a mis-pointed data root,
   // an unreadable control schema and a genuinely empty history all land here. The report says
@@ -510,7 +504,22 @@ export function ETLOperational() {
     )
   }
 
-  // 5a. Selected, but the scoped graph is still resolving. `summary.isLoading` is part of the
+  // 5a. The scoped fetch failed. Unlike an index failure this was caused by a USER ACTION —
+  // selecting a cluster — so the control that undoes it has to stay on screen. `selectedClusters`
+  // is session-lived and unpersisted, so without the pane the only recovery is a page reload.
+  const scopeError = (rel.error ?? summary.error) as ApiError | null
+  if (scopeError) {
+    return (
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <ClusterPane />
+        <div style={{ flex: 1, background: 'var(--bg)' }}>
+          <ApiErrorBlock error={scopeError} />
+        </div>
+      </div>
+    )
+  }
+
+  // 5b. Selected, but the scoped graph is still resolving. `summary.isLoading` is part of the
   // gate because a graph built without it renders every card PENDING — a wrong status is worse
   // than a named stage.
   if (!graph || summary.isLoading) {
@@ -519,6 +528,27 @@ export function ETLOperational() {
         <ClusterPane />
         <div style={{ flex: 1, background: 'var(--bg)' }}>
           <OperationalProgress stages={stages} />
+        </div>
+      </div>
+    )
+  }
+
+  // 5c. The scoped graph resolved to NOTHING. This is a different data root from the zero-rows
+  // guard above and must not be folded into it: `/api/operational/clusters` reads the b15 export
+  // under the composer root, while `/api/relationships` is built from the control schema under
+  // the dwhControl root (LayerToLayerService). A healthy b15 history with a control schema whose
+  // anchor table does not match — the exact ADR-0013 case whose hint reads "set layerToLayerTable
+  // in config.json" — yields rows > 0, a selectable cluster, and zero cards. Gating only on the
+  // index rows would drop the operator on a normal-looking toolbar over a blank canvas with no
+  // stated cause, which is precisely the silent failure ADR-0013 exists to eliminate.
+  // The pane stays mounted: changing the selection must not require a reload.
+  if (graph.cards.length === 0) {
+    return (
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <ClusterPane />
+        <div style={{ flex: 1, overflow: 'auto', padding: 16, background: 'var(--bg)' }}>
+          <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No relationship entries</div>
+          <DataRootsPanel diagnostics={diagnostics.data} />
         </div>
       </div>
     )
@@ -710,6 +740,17 @@ export function ETLOperational() {
           onClose={() => setPreview(null)}
         />
       )}
+    </div>
+  )
+}
+
+/** The unchanged error shape both failure states render — hoisted only so the scoped-failure
+ * state can wrap it in the cluster pane without duplicating it. */
+function ApiErrorBlock({ error }: { error: ApiError }) {
+  return (
+    <div style={{ color: 'var(--red)', fontSize: 12, padding: 16 }}>
+      <div>{error.title}</div>
+      {error.detail && <div>{error.detail}</div>}
     </div>
   )
 }

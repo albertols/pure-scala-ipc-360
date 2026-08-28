@@ -24,16 +24,26 @@ export interface ProgressStage {
 const DIM = 'var(--text-muted)'
 
 function Marker({ done, active }: { done: boolean; active: boolean }) {
-  if (active) return <Spinner size={12} />
+  if (active) {
+    return (
+      <span data-testid="stage-marker-active" style={{ display: 'flex' }}>
+        <Spinner size={12} />
+      </span>
+    )
+  }
   if (done) {
     return (
-      <span aria-hidden="true" style={{ fontSize: 11, color: 'var(--green)', lineHeight: '12px', width: 12, textAlign: 'center' }}>
+      <span
+        data-testid="stage-marker-done"
+        aria-hidden="true"
+        style={{ fontSize: 11, color: 'var(--green)', lineHeight: '12px', width: 12, textAlign: 'center' }}
+      >
         {'✓'}
       </span>
     )
   }
   return (
-    <span aria-hidden="true" style={{ width: 12, display: 'flex', justifyContent: 'center' }}>
+    <span data-testid="stage-marker-idle" aria-hidden="true" style={{ width: 12, display: 'flex', justifyContent: 'center' }}>
       <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--border)' }} />
     </span>
   )

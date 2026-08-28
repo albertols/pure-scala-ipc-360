@@ -47,7 +47,7 @@ describe('SelectionStrip', () => {
     setOperationalView({ selectedClusters: ['cl-a', 'cl-b'] })
     const { container } = render(<SelectionStrip summary={SUMMARY} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /Clear selection/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Clear clusters/ }))
 
     expect(container).toBeEmptyDOMElement()
   })
