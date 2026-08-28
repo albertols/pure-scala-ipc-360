@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import type { OperationalCard as CardData, CardDensity } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useOperationalSummary, useOperationalDates, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
+import { useOperationalSummary, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
 import type { AppConfig, RelationshipGraph } from '../../api/queries'
 import { useClusterIndex, useScopedRelationships, useRuns, type RunT } from '../../api/clusterQueries'
 import { setOperationalView, useOperationalView } from '../../state/operationalView'
@@ -18,6 +18,7 @@ import { ClusterPane } from './ClusterPane'
 import { SelectionStrip, type SelectionSummary } from './SelectionStrip'
 import { OperationalProgress, type ProgressStage } from './OperationalProgress'
 import { DataRootsPanel, DataRootsChip } from './DataRootsPanel'
+import { AvailabilityCalendar } from './AvailabilityCalendar'
 
 const nf = new Intl.NumberFormat('en-US')
 
@@ -58,7 +59,7 @@ function daysBetween(a: string, b: string): number {
  * `best` on a STRICTLY smaller distance, so the first (earliest) date at the
  * minimum distance wins, same as the backend's `isBefore` tie-break.
  */
-function nearestAvailableDate(target: string, avail: string[]): string {
+export function nearestAvailableDate(target: string, avail: string[]): string {
   if (avail.length === 0) return target
   let best = avail[0]!
   let bestDist = daysBetween(target, best)
@@ -301,7 +302,6 @@ export function ETLOperational() {
   // EMPTY value is not "scope to nothing", it is the entire graph, byte-identical to unscoped.
   const rel = useScopedRelationships(view.selectedClusters)
   const summary = useOperationalSummary(hasSelection)
-  const dates = useOperationalDates(hasSelection)
   const cfg = useAppConfig()
   // Data-root self-diagnosis: rendered as a toolbar chip always, and expanded into the
   // full report in the empty state — where it is the only thing standing between the
@@ -357,15 +357,20 @@ export function ETLOperational() {
     return m
   }, [rel.data])
 
+  // Task 16: `index.data.dates` is now the single source of the date list.
+  // `OperationalService#dates()` returns `b15.dates()`, and `ClusterIndexService.build()` opens
+  // with the identical `b15.dates()` call — a dedicated `useOperationalDates()` round-trip for a
+  // list already in hand (the index the tab loads first, and unconditionally) was redundant
+  // (Task 14 review). This also drops one request that used to fire alongside the graph/summary.
+  const availableDates = useMemo(() => index.data?.dates ?? [], [index.data])
+
   // On first data, default selectedDate to the latest snapshot ("Now").
   // Guarded on selectedDate === null so a later user pick is never clobbered.
   useEffect(() => {
-    if (view.selectedDate === null && dates.data?.dates && dates.data.dates.length > 0) {
-      setOperationalView({ selectedDate: dates.data.dates.at(-1)! })
+    if (view.selectedDate === null && availableDates.length > 0) {
+      setOperationalView({ selectedDate: availableDates.at(-1)! })
     }
-  }, [dates.data, view.selectedDate])
-
-  const availableDates = dates.data?.dates ?? []
+  }, [availableDates, view.selectedDate])
 
   const timeVal: TimeSelection = {
     date: view.selectedDate ?? new Date().toISOString().slice(0, 10),
@@ -472,11 +477,15 @@ export function ETLOperational() {
     () => (index.data?.clusters ?? []).filter(c => view.selectedClusters.includes(c.name ?? '')),
     [index.data, view.selectedClusters],
   )
-  const selectionDateCount = useMemo(() => {
-    const days = new Set<number>()
-    for (const c of selectedClusterRows) for (const i of c.dateIdx ?? []) days.add(i)
-    return days.size
-  }, [selectedClusterRows])
+  // Task 16: the calendar needs the actual ISO dates, not just their count — `dateIdx` entries
+  // are indices into `index.data.dates` (never ISO strings themselves), so they're mapped
+  // through `availableDates` once here rather than the calendar re-deriving it.
+  const selectionDates = useMemo(() => {
+    const idx = new Set<number>()
+    for (const c of selectedClusterRows) for (const i of c.dateIdx ?? []) idx.add(i)
+    return [...idx].map(i => availableDates[i]).filter((d): d is string => !!d)
+  }, [selectedClusterRows, availableDates])
+  const selectionDateCount = selectionDates.length
 
   const selectionSummary: SelectionSummary | null = graph ? {
     recipes: graph.cards.filter(c => c.kind === 'recipe' && !c.neighbor).length,
@@ -688,9 +697,19 @@ export function ETLOperational() {
         </div>
       </div>
 
-      {/* time picker */}
-      <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
+      {/* time picker + availability calendar (Task 16): additive sibling — TimePicker itself is
+          untouched, so only this wrapper gains the flex row it takes to sit them side by side. */}
+      <div style={{
+        padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)',
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
         <TimePicker value={timeVal} onChange={handleTimeChange} />
+        <AvailabilityCalendar
+          availableDates={availableDates}
+          selectionDates={selectionDates}
+          selectedDate={view.selectedDate}
+          onSelect={d => setOperationalView({ selectedDate: d })}
+        />
       </div>
 
       {/* main area */}

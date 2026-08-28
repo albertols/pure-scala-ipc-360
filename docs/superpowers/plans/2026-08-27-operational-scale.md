@@ -4239,7 +4239,7 @@ an explicit control is a bug waiting to happen. Tab 1's canvas is unchanged."
 
 **Why:** the user asked to see which days b15 actually has data for. Today the `TimePicker`'s `<input type="date">` shows every day as equally valid and silently snaps to the nearest available one (spec §7.4). `TimePicker` itself is not restyled — the calendar is an additive sibling affordance.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `frontend/src/components/tab3/AvailabilityCalendar.test.tsx`:
 
@@ -4348,7 +4348,7 @@ describe('AvailabilityCalendar', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test AvailabilityCalendar
@@ -4356,7 +4356,7 @@ cd frontend && pnpm test AvailabilityCalendar
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```tsx
 export type DayState = 'none' | 'data' | 'inSelection' | 'selected'
@@ -4396,7 +4396,7 @@ Mount `<AvailabilityCalendar>` next to `<TimePicker>` in the Tab 3 toolbar row, 
 `dateIdx` mapped through `index.data.dates`, `selectedDate` from `view.selectedDate`, and
 `onSelect={d => setOperationalView({ selectedDate: d })}`.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 ```bash
 cd frontend && pnpm test AvailabilityCalendar ETLOperational && pnpm exec tsc --noEmit
@@ -4404,7 +4404,7 @@ cd frontend && pnpm test AvailabilityCalendar ETLOperational && pnpm exec tsc --
 
 Expected: PASS, 11 new tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/AvailabilityCalendar.tsx \
