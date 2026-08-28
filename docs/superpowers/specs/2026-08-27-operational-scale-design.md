@@ -549,6 +549,13 @@ Sanctioned departures, all recorded here for the visual sign-off pass:
 4. **`app_id` button removed** from the card's link row; `job_id` keeps its position and a
    `Logging` button takes the vacated slot.
 5. **Calendar popover** — a new overlay shape, built from existing tokens.
+6. **`InfoTooltip`'s ⓘ icon contrast — app-wide, added during Task 10.** Its circle stroke and "i"
+   glyph were hardcoded `#4a5570`: **2.4:1** on `--surface`, failing both the 4.5:1 text threshold
+   and the 3:1 graphical-object threshold. Moved to `var(--text-muted)` (**5.1:1**). This component
+   renders in **all four tabs**, so unlike departures 1-5 this one is visible outside Tab 3. It is a
+   token swap for legibility, not a restyle, and it is the same class of fix as departure 2 — but it
+   widens this sub-project's visual footprint and must be observed in the Task 19 browser pass across
+   every tab, not only Tab 3.
 
 The floating bottom-left `CorpusSummary` chip, the toolbar filter chips, the `DataRootsChip` and
 the detail panel keep their current geometry.
