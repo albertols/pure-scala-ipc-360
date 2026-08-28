@@ -4778,7 +4778,7 @@ derivation table names — OperationalService, Etl360Properties, scripts/dev.sh.
 
 **Why:** the deterministic gates prove the mechanisms; they do not prove the rendered result. This pass observes it (spec §10, user decision), and fills the seven screenshots `docs/visual-guide.md`'s capture checklist has been waiting on — which also closes the Tab 2 visual sign-off recorded in `CLAUDE.md`.
 
-- [ ] **Step 1: Run every deterministic gate from clean**
+- [x] **Step 1: Run every deterministic gate from clean**
 
 ```bash
 mvn -q -am -pl backend clean test
@@ -4831,14 +4831,14 @@ file docs/img/*.png && du -sh docs/img
 
 Expected: every file reports "PNG image data"; the directory stays under ~3 MB.
 
-- [ ] **Step 5: Record the results in the spec**
+- [x] **Step 5: Record the results in the spec**
 
 Append an `## Acceptance walk — results (Task 19, 2026-08-27)` section to
 `docs/superpowers/specs/2026-08-27-operational-scale-design.md`: one line per criterion with
 PASS/FAIL and, for anything that failed, what was observed. Follow the format of sub-project 9's
 "Acceptance walk — results" section. Any FAIL becomes a fix commit in this branch, not a follow-up.
 
-- [ ] **Step 6: Update `CLAUDE.md`**
+- [x] **Step 6: Update `CLAUDE.md`**
 
 - Tab 3's description: cluster-scoped loading, three densities, calendar, wheel gestures, cached view state.
 - Testing section: the new floors (21 clusters / 30 recipes / 14 dates / 417 rows) and the three new endpoints in the `validate-loop` list.

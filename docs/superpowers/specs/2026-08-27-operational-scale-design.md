@@ -535,6 +535,49 @@ gate of record.
 15. `mvn -q -am -pl backend test`, `pnpm test`, `make check` and `make validate-loop` all pass, with
     the new cluster floors asserted.
 
+## Acceptance walk — results (Task 19, 2026-08-28)
+
+Two verdicts, used strictly: **PASS (automated)** (proven by a named test or gate; run and quoted
+below — not a prediction), **PENDING (browser)** (the criterion's substance is only observable by
+driving the running app, which is explicitly out of this task's scope — the orchestrator runs that
+pass separately with the user). Nothing here is marked PASS on the strength of a unit test if the
+criterion is actually a claim about what a human sees; those cases are marked PASS (automated) for
+the mechanism only, with the unobserved visual remainder named explicitly.
+
+| # | Verdict | Evidence — and what was *not* proven |
+|---|---|---|
+| 1 | **PASS (automated)** | `ETLOperational.test.tsx` "fetches only the cluster index when nothing is selected" instruments every request path over the whole render: `/api/operational/clusters` present, `/api/relationships` **and** `/api/operational/summary` absent, and `/api/operational/clusters` is the *only* `/api/operational/*` call — the test's own comment names this as criterion 1's proof. |
+| 2 | **PASS (automated)** | `ETLOperational.test.tsx` "loads the scoped graph once a cluster is selected", "dims nodes that came from a neighbouring cluster", "offers a Layer chip for a neighbour whose layer meta.layers omits"; `SelectionStrip.test.tsx` "states how many nodes came from neighbouring clusters". Backend: `ScopedRelationshipsContractTest.aScopedRequestIsAStrictSubsetOfTheFullGraph`, `.neighboursAreIncludedAndFlaggedAndCountedInMeta`, `.neighboursAreNotExpandedASecondTime`. |
+| 3 | **PASS (automated)** | `ETLOperational.test.tsx` "returns to the prompt when the last cluster is deselected, without refetching the index" (asserts no repeat call to `/api/operational/clusters`). |
+| 4 | **PASS (automated)** | `ClusterPane.test.tsx`: "shows the totals so the scale is visible before anything is selected", "expanding a cluster lazily loads its recipes and dates", "fetches no detail until a row is expanded", "toggling a date checkbox updates selectedDates, and toggling it again clears the filter", "unchecking a recipe records it as deselected". Per-cluster ok/ko counts render at `ClusterPane.tsx:77-78`. Backend shape: `ClusterEndpointsContractTest.theDetailEndpointListsTheClustersRecipesWithTheirLayer`, `.recipesInOneClusterCanCarryDifferentLayers`. |
+| 5 | **PASS (automated)** | `SelectionStrip.test.tsx` "names every selected cluster and the aggregate counts", "a chip removes its cluster from the selection", "clears the whole selection". |
+| 6 | **PASS (automated)**, mechanism only | `ETLOperational.test.tsx` "cycles density and re-lays out", "has no implicit zoom-driven density any more"; `OperationalCard.test.tsx`'s `detailed`/`compact`/`minimal` renders plus "defaults to detailed"; `operationalView.test.ts` persists the `density` key. **Not observed:** the actual re-layout/refit geometry on screen — jsdom computes no layout, so this proves the state transition and the relayout call fire, not that the canvas visibly refits. |
+| 7 | **PASS (automated)**, mechanism only | `AvailabilityCalendar.test.tsx`'s `dayState` unit tests ("distinguishes all four states", "selected wins over in-selection") and `monthGrid` tests, plus component tests "labels each day with its availability state", "shows a legend for all four states", "snaps an empty day to the nearest available date". **Not observed:** the popover's rendered appearance — colour/position of the four day states in a browser. |
+| 8 | **PASS (automated)**, geometry math only | `canvasGestures.test.ts`'s `applyWheel` suite: cmd+wheel and ctrl+wheel both zoom, "keeps the point under the cursor fixed while zooming", clamps to `[0.3, 2]`, shift+wheel pans horizontally leaving zoom/y alone, a plain wheel pans vertically, and `wheelActs` gates when `preventDefault` fires. `ETLOperational.tsx:159-182` wires this pure function to the canvas's real `onWheel` prop. **Not test-covered, surprising enough to flag:** no test dispatches an actual DOM `wheel` event at the mounted canvas and asserts the resulting pan/zoom state — the wiring is confirmed by reading the source, not by a test, and the rendered effect is unobserved. |
+| 9 | **PASS (automated)** | `App.test.tsx` "App — visited tabs stay mounted (Task 12)": "keeps a visited tab mounted after switching away" (Tab 3's DOM survives a switch to Tab 4 under `display:none` rather than unmounting — which makes a refetch structurally impossible, not merely unobserved) and "does not mount a tab that was never visited"; `operationalView.test.ts` "survives an unmount and remount" covers the belt-and-suspenders case of an actual unmount. **Not observed:** "no visible recomputation" as a rendered claim — no test measures a render count, though the no-unmount mechanism makes the concern moot. |
+| 10 | **PASS (automated)** | `RunPicker.test.tsx` "renders one bar per run, up to ten", "dims the unselected runs rather than hiding them" (dimmed, not hidden — satisfies "every run is visible"), "marks the selected bar with aria-pressed". |
+| 11 | **PENDING (browser)** | Inherently unobservable outside a live Google Cloud console session. `gcpLinks.test.ts`'s `buildLoggingUrl` suite proves the URL is *built* correctly — job-id query, colon-preserving `cursorTimestamp`, `duration`, served-template-over-fallback — but confirming the console actually opens scoped to the selected run and does **not** show "Failed to load default log scope" requires driving Chrome. Explicitly out of this task's scope (see brief); the orchestrator runs that pass with the user. |
+| 12 | **PASS (automated)** | `grep -rn "app_id\|appId" frontend/src --include=*.tsx --include=*.ts` (excluding tests) and the same over `backend/src/main/java/.../api/dto/` both return nothing; `OperationalCard.test.tsx` "has no app_id affordance at all". Every non-`gcpLinks.ts` file referencing a Google URL fragment (`OperationalCard.tsx`, `ETLDag.tsx`, `ETLOperational.tsx`) does so only by importing `buildLoggingUrl`/`buildDataprocJobUrl`/`buildDataprocClusterUrl`/`buildBigQueryUrl` — none contains a literal `console.cloud.google.com` or `logs/query` string of its own (grep-verified). |
+| 13 | **PASS (automated)** | `frontend/src/components/tab4/ETLDag.tsx` imports `useRuns` from `../../api/clusterQueries` (the same hook Tab 3 uses) bounded by `RUNS_LIMIT`, renders the shared `OperationalCard` (which renders `RunPicker`) for its Operational State card, and imports `buildLoggingUrl`/`buildDataprocClusterUrl` from `gcpLinks.ts`. `ETLDag.test.tsx` "(g) the run-history strip renders only the fetched window (10), oldest-fetched first — not every available date" and "(d) the synthesized Operational State card renders the KO badge and the run picker" prove both halves directly. |
+| 14 | **PASS (automated)**, computed not measured | Computed directly from `frontend/src/index.css`'s committed token values via the WCAG relative-luminance formula: `--text-muted` (`#7b88aa`) against `--surface` (`#131621`) is **5.1:1**, against `--surface-2` (`#1a1f30`) is **4.63:1** — both clear 4.5:1, versus the old hardcoded `#4a5570`'s 2.2–2.43:1 (independently recomputed for this walk, matching §12 item 6's figure). `OperationalCard.tsx:108,162,177,183,213,220` is the exhaustive set of stat-label `color` sites and every one now reads `var(--text-muted)`; `OperationalCard.test.tsx` "uses no hardcoded #4a5570 for label text" guards the regression. **Not observed:** actual on-screen legibility — the ratio is computed from token values, not measured off a rendered pixel. |
+| 15 | **PASS (automated)** | `mvn -q -am -pl backend clean test`: **256 tests, 0 failures, 0 errors**; 42 surefire reports == 42 `*Test.java` files. `cd frontend && pnpm test`: **541 tests passed, 43 files**. `pnpm exec tsc --noEmit`: clean. `pnpm build`: succeeded. `make check`: exit 0 ("check done"; its `pnpm format --check` sub-step reports the pre-existing, non-fatal-by-design backlog per `README.md`). `make validate-loop`: **PASS**, reporting `b15 index: 21 clusters, 30 recipes, 14 dates, 417 rows; largest cluster 5 recipes` and `scoped graph: 18 nodes (5 neighbours) of 81`, plus the unchanged `viewer_sweep: 81/81`, `recipe_sweep: 86/86`, `mock_etl_data --check: clean`, `relationships_sweep: PASS`. |
+
+**Tally: 14 PASS (automated) (1–10, 12–15) · 1 PENDING (browser) (11) · 0 FAIL.** Five of the
+fourteen automated passes (6, 7, 8, 9, 14) carry a named unobserved remainder — four visual
+(6, 7, 9, 14) and one a wiring path confirmed by source reading rather than a DOM-level test (8).
+This is a larger set than the brief's own estimate ("the visual aspects of 6, 7 and 14"), because
+inspection during this walk also surfaced 8's untested `onWheel` wiring and 9's "no visible
+recomputation" phrasing as claims a unit test cannot settle either — recorded here rather than
+rounded into a clean PASS. Criterion 11 is the sole PENDING; it requires a live Chrome session
+against the committed mock tier and is explicitly reserved for the orchestrator's browser pass
+(Steps 2–4 of the Task 19 plan entry, not run here).
+
+**Baselines vs. this walk:** the plan's baselines at authorship were backend 212 tests / frontend
+428 tests. This walk's clean run measured backend **256** tests (42 test classes) and frontend
+**541** tests (43 files) — both grew across Tasks 1–18 as the cluster index, scoped relationships,
+`gcpLinks`, `RunPicker` and the Tab 3 rebuild landed their own test suites; neither number was
+rounded to the baseline or to a prediction.
+
 ## 12. Visual contract impact
 
 Additive, under ADR-0005. New surfaces use existing tokens (`--surface`, `--surface-2`, `--border`,

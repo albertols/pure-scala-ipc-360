@@ -39,10 +39,24 @@ platform-agnostic. A multi-module Maven repo:
   focus mode (`?focus=<recipePath>`), and save/history/rollback (the backend's write
   API, `PUT`/`POST`/`validate`/`history`/`rollback` on `/api/recipes`), Tab 3 (ETL
   Operational)'s relationships graph + operational summary (with a `data: real|mock|absent` chip,
-  and the `/api/diagnostics` data-root report under an empty graph — ADR-0013), and Tab 4 (ETL DAG)'s
-  clusters/run history all consume the live corpus. Tab 2's seven sanctioned visual
-  departures (`2026-08-01-etl-modifier-ux2-design.md` §10) are **pending human visual
-  sign-off** — the mechanisms are unit-tested, the rendered result is not observed.
+  and the `/api/diagnostics` data-root report under an empty graph — ADR-0013) — rebuilt around a
+  b15 cluster index (`docs/adr/0014-b15-cluster-index.md`) so a real export loads only the
+  selected clusters' scoped subgraph instead of the whole corpus: a `ClusterPane` left rail
+  (search, multi-select, lazy expansion), a `SelectionStrip` naming the current selection and its
+  aggregate counts, three card densities (Detailed/Compact/Minimal, each re-laying out and
+  refitting the canvas), an `AvailabilityCalendar` popover (has-data/no-data/in-selection/selected
+  day states, empty-day clicks snap to the nearest available date), `⌘`/`Ctrl`+wheel
+  cursor-anchored zoom and `Shift`+wheel horizontal pan on the canvas, and a module-level view-state
+  store (`operationalView.ts`) that survives a tab switch with no refetch — and Tab 4 (ETL DAG)'s
+  clusters/run history, both now sharing one `RunPicker` (bars + selected-run field) and one Google
+  Cloud console link builder (`docs/adr/0015-gcp-deep-links.md`, `src/api/gcpLinks.ts` — the only
+  file that builds a console URL) all consume the live corpus. Tab 2's seven sanctioned visual
+  departures (`2026-08-01-etl-modifier-ux2-design.md` §10) and sub-project 10's Tab 3 rebuild +
+  the app-wide `InfoTooltip` contrast fix (`2026-08-27-operational-scale-design.md` §12) are
+  **pending human visual sign-off** — the mechanisms are unit-tested and gated in
+  `make validate-loop`; Task 19 ran every deterministic gate from a clean build (see its
+  acceptance-walk results) but did not drive a browser, so the rendered result of either
+  sub-project remains unobserved.
   See `frontend/AGENTS.md`.
 - `docs/` — ADRs, `architecture.md`, and `superpowers/{specs,plans}/` design artifacts.
 
@@ -162,6 +176,13 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   that won, and — for the control schema — staged scan counts (`presentDirs` → `filesRead` →
   `anchorHits` → `rowsParsed`) plus the `INSERT INTO <table>` identifiers actually found, so an
   empty Tab 3 names its own cause. Both contract-tested and gated in `validate-loop`.
+  Sub-project 10 adds three read-only endpoints — `GET /api/operational/clusters` (the whole-history
+  b15 cluster index), `GET /api/operational/clusters/{name}` (one cluster's recipes with per-recipe
+  dates/OK/KO), `GET /api/operational/runs?recipe=…&limit=` (run history by recipe, newest-first,
+  ≤200 recipes) — plus an optional `?clusters=` scope on `GET /api/relationships` (strict subset +
+  1-hop neighbours; the unscoped response stays byte-identical). `make validate-loop` curls all
+  three new endpoints and asserts the committed-mock b15 floors **21 clusters · 30 recipes · 14
+  dates · 417 rows**, with the largest cluster holding ≥4 recipes (`docs/adr/0014-b15-cluster-index.md`).
 
 ## Corpus caveats
 
@@ -213,6 +234,14 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   so treat a new unrecognized `type` token the same way — as anonymizer damage to alias,
   not a bug to patch into the corpus. See `docs/ipc/README.md` for the full table and
   witnesses.
+- `cluster_name` (a b15 CSV column) and `workflow` (L2L control-table column 4, e.g.
+  `wf_Carga_DWH`) are **different facts from different sources** — deliberately unrelated. The
+  code never derives one from the other (`RelationshipService.graph()` reads only L2L entries;
+  `cluster_name` is absent from the graph). The CAS mock manifest groups clusters *across*
+  workflows on purpose — e.g. `cluster-wf-cas-load-4001` recurs against mappings from more than
+  one workflow — specifically so the two groupings can never be conflated by a reader of the
+  data. See `docs/adr/0014-b15-cluster-index.md` and spec `2026-08-27-operational-scale-design.md`
+  §2.
 
 ## Working practices
 
@@ -233,14 +262,14 @@ checklist): `docs/visual-guide.md`.
   `LayerToLayerService`, `Etl360Properties`, `scripts/dev.sh`, `XMLParser.scala`,
   `frontend/vite.config.ts`) — change one of those and update the doc in the same commit.
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0013`
+- Design rationale: `docs/adr/0001`–`0015`
 - `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,
   alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
   expression grammar. Start at `docs/ipc/README.md`.
 - Current spec/plan:
-  `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` +
-  `docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md`
-  (previous sub-project: `…/2026-08-01-etl-modifier-redesign-design.md` + its plan)
+  `docs/superpowers/specs/2026-08-27-operational-scale-design.md` +
+  `docs/superpowers/plans/2026-08-27-operational-scale.md`
+  (previous sub-project: `…/2026-08-01-etl-modifier-ux2-design.md` + its plan)
 - Parser deep-dive: `parser/src/main/scala/io/pure360/ipc/xmltojson/README.md`,
   `_DWH_Transformations_and_XML_Parsing.md`
 - Dev harness, prerequisites, `.env.example` reference: root `README.md`
