@@ -1555,7 +1555,7 @@ illustrated overview, not a replacement):
                                     GCP: BigQuery · Dataproc · Cloud Logging
 ```
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { describe, expect, it, vi, afterEach } from 'vitest'
@@ -1613,7 +1613,7 @@ describe('ArchitectureDiagram', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 cd frontend && pnpm test ArchitectureDiagram
@@ -1621,7 +1621,7 @@ cd frontend && pnpm test ArchitectureDiagram
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement the component**
+- [x] **Step 3: Implement the component**
 
 One inline `<svg viewBox>` with `role="img"` and a `<title>`. Nodes are drawn as rounded rects with
 icon glyphs (Java, Spring, XML, JSON, Airflow, Spark, GCP) as SVG paths, labels in `--text`,
@@ -1640,7 +1640,7 @@ Non-interactive nodes (parser, backend, GCP surfaces) are plain `<g>` — the se
 
 Existing tokens only. Scale with `viewBox` + `width: 100%` so it is responsive.
 
-- [ ] **Step 4: Export the same artwork for the README**
+- [x] **Step 4: Export the same artwork for the README**
 
 Save the identical `<svg>` markup as `docs/img/etl360-architecture.svg`, with two changes for
 standalone rendering: replace `var(--token)` colours with their literal hex values from
@@ -1660,7 +1660,7 @@ grep -c "var(--" docs/img/etl360-architecture.svg
 
 Expected: `valid XML`, and **0** `var(--` occurrences — a CSS variable has no value outside the app.
 
-- [ ] **Step 5: Run the tests, the type check and the build**
+- [x] **Step 5: Run the tests, the type check and the build**
 
 ```bash
 cd frontend && pnpm test ArchitectureDiagram && pnpm exec tsc --noEmit && pnpm build
@@ -1668,7 +1668,7 @@ cd frontend && pnpm test ArchitectureDiagram && pnpm exec tsc --noEmit && pnpm b
 
 Expected: PASS, 4 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/landing/ArchitectureDiagram.tsx \
