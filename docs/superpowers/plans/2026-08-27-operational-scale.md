@@ -22,7 +22,18 @@
 - **`/api/relationships` with no `clusters` parameter must stay byte-identical.** New DTO fields are `@JsonInclude(NON_NULL)`. `CorpusContractTest`, `LayerToLayerContractTest` and `scripts/relationships_sweep.mts` must pass untouched.
 - **Corpus floors unchanged:** 81 XMLs, 86 recipes, 33 L2L entries. **New b15 floors from Task 1:** 21 clusters, 30 recipes, 14 dates, 417 rows.
 - **`types.gen.ts` is generated**, never hand-edited. Refresh with `make generate-api` against a running backend.
-- **Report backend test counts from `mvn clean test`, never a warm build** — `backend/target/surefire-reports/` accumulates reports from deleted classes. Cross-check `ls backend/target/surefire-reports/*.txt | wc -l` against `find backend/src/test/java -name '*Test.java' | wc -l`; they must match.
+- **Report backend test counts by counting `<testcase>` elements, not by summing the `.txt` files.**
+  ```bash
+  grep -ho "<testcase " backend/target/surefire-reports/*.xml | wc -l
+  ```
+  **Corrected 2026-08-28.** The original instruction here — sum `Tests run:` across the `.txt`
+  reports and check `reports == testfiles` — is wrong, and it misled three separate agents and the
+  orchestrator into quoting four different totals during this sub-project. Surefire does **not** roll
+  `@Nested` results into the parent class's summary: `LayerToLayerBindingTest` writes
+  `Tests run: 0` / `tests="0"` while its XML contains 3 real `<testcase>` entries, so the `.txt` sum
+  undercounts by exactly the number of nested tests. The `reports == testfiles` equality is likewise
+  unsatisfiable whenever nested classes emit their own report files. Still run from `mvn clean test`
+  — stale reports from deleted classes remain a real hazard.
 - **Staging discipline:** stage explicit paths. **NEVER `git add -A`** — `.claude/settings.json`, `first_prompt.md` and untracked `_layout_*.json` files are user-local.
 - **Ledger:** tick this plan's checkboxes and stage the plan file in the same commit as the task's changes.
 
