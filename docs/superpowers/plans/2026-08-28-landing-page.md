@@ -645,7 +645,7 @@ template collides with it (unlike `/api/operational/{date}`, which forced explic
 checks in the previous sub-project). Copy `SummaryController`'s shape: constructor injection, one
 `@GetMapping`, no logic.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360;
@@ -712,7 +712,7 @@ class ReadinessContractTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ReadinessContractTest
@@ -720,7 +720,7 @@ mvn -q -pl backend test -Dtest=ReadinessContractTest
 
 Expected: FAIL — 404 on `/api/readiness`.
 
-- [ ] **Step 3: Write the controller**
+- [x] **Step 3: Write the controller**
 
 ```java
 package io.pure360.etl360.api;
@@ -748,7 +748,7 @@ public class ReadinessController {
 }
 ```
 
-- [ ] **Step 4: Run the test, then the full backend suite**
+- [x] **Step 4: Run the test, then the full backend suite**
 
 ```bash
 mvn -q -pl backend test -Dtest=ReadinessContractTest
@@ -759,7 +759,7 @@ grep -l "<failure\|<error" backend/target/surefire-reports/*.xml || echo "no fai
 
 Expected: contract test PASS (3 tests); full suite **281** (267 baseline + 6 `ProgressScannerTest` + 5 `ReadinessServiceTest` + 3 here), 0 failures. **Count `<testcase>` elements, not the `.txt` sum** — see Global Constraints. Report the real number.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/ReadinessController.java \
