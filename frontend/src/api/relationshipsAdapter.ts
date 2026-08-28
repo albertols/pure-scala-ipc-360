@@ -173,6 +173,8 @@ export function toOperationalGraph(
       history: [],
       stats: { avg_time_s: 0, p50: 0, p95: 0, p99: 0, avg_count: 0 },
       relations: [],
+      // Scoped requests only; absent (=> false) on the unscoped path.
+      neighbor: node.neighbor === true,
     }
     cardsById.set(node.id, card)
     orderedCards.push(card)
@@ -236,9 +238,19 @@ export function toOperationalGraph(
 
   layoutCards(orderedCards, edges)
 
+  // `meta.layers` is derived from the CORE entries of a scoped request
+  // (RelationshipService.java:135), so a 1-hop neighbour whose layer sits outside the selection
+  // is simply missing from it — verified live: scoping cluster-wf-cas-load-4001 returns
+  // ["ODS","STG"] while its two neighbour recipes are DWH and RDM. Feeding the chips straight
+  // from `meta.layers` would leave those cards with no chip that can reach them (and, once Tab 3
+  // gets bands, bandless). So: meta order first, untouched, then every OTHER layer actually
+  // present on the returned cards appended in band order. Subsumes the old UNKNOWN special case,
+  // which was the same bug seen from one angle only.
   const metaLayers = graph.meta?.layers ?? []
   const layers = [...metaLayers]
-  if (orderedCards.some(c => c.layer === 'UNKNOWN') && !layers.includes('UNKNOWN')) layers.push('UNKNOWN')
+  const extras = [...new Set(orderedCards.map(c => c.layer))].filter(l => !layers.includes(l))
+  extras.sort((a, b) => rankOf(a) - rankOf(b) || a.localeCompare(b))
+  layers.push(...extras)
 
   return { cards: orderedCards, edges, layers }
 }

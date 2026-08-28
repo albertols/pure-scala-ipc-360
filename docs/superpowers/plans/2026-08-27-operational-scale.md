@@ -3829,7 +3829,7 @@ how many of the rendered nodes came from neighbouring clusters."
 
 **Correction carried from the spec:** the loading panel reports **stage names and resolved totals**, never a percentage or an "N of M days" counter. The backend cannot report per-day progress without a streaming endpoint, and SSE is a non-goal (spec §2, §7.6). Do not invent a progress bar here.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `ETLOperational.test.tsx`. Extend the imports first —
 `import { act } from '@testing-library/react'`, `import { delay } from 'msw'` (already imported in
@@ -3943,7 +3943,7 @@ has something to find. Then append the cases:
   })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test ETLOperational
@@ -3951,7 +3951,7 @@ cd frontend && pnpm test ETLOperational
 
 Expected: FAIL — the tab still calls `useRelationships()` unconditionally.
 
-- [ ] **Step 3: Write `OperationalProgress.tsx`**
+- [x] **Step 3: Write `OperationalProgress.tsx`**
 
 ```tsx
 export interface ProgressStage { label: string; detail: string | null; done: boolean; active: boolean }
@@ -3968,7 +3968,7 @@ Each row: a `Spinner` when `active`, a `✓` when `done`, a dim dot otherwise; t
 `detail` (e.g. `14 days · 21 clusters · 417 rows`, `312 nodes · 41 from neighbours`) in
 `--text-muted` monospace when known, omitted when not.
 
-- [ ] **Step 4: Rebuild the `ETLOperational` shell**
+- [x] **Step 4: Rebuild the `ETLOperational` shell**
 
 ```tsx
 export function ETLOperational() {
@@ -4008,7 +4008,7 @@ each `OperationalCard`. The chunking in `useRuns` is what makes this safe for a 
 Replace the hand-built `loggingHref`/`monitoringHref` in the detail panel (`:368-374`) with
 `buildLoggingUrl` / `buildDataprocClusterUrl` from `gcpLinks`, anchored on the selected run.
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 ```bash
 cd frontend && pnpm test ETLOperational && pnpm exec tsc --noEmit
@@ -4016,7 +4016,7 @@ cd frontend && pnpm test ETLOperational && pnpm exec tsc --noEmit
 
 Expected: PASS — the pre-existing cases plus the 7 new ones.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ETLOperational.tsx \

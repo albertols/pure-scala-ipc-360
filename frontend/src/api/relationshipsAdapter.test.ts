@@ -169,6 +169,30 @@ describe('toOperationalGraph — casuistics', () => {
     expect(v.layers).toEqual(['STG', 'ODS', 'DWH', 'UNKNOWN'])
   })
 
+  // `meta.layers` is derived from the CORE entries of a scoped request
+  // (RelationshipService.java:135), so a 1-hop neighbour whose layer sits outside the
+  // selection is missing from it. Verified live: scoping cluster-wf-cas-load-4001 returns
+  // layers ["ODS","STG"] while its two neighbour recipes are DWH and RDM. Without this union
+  // those cards render with no Layer chip that can reach them.
+  it('unions layers present on neighbour cards that meta.layers omits, in band order', () => {
+    const scoped: RelationshipGraph = {
+      nodes: [
+        ...graph.nodes!,
+        { id: 'n_rdm', kind: 'recipe', name: '_ETL_neighbour_rdm.json', layer: 'RDM', neighbor: true },
+        { id: 'n_qdm', kind: 'recipe', name: '_ETL_neighbour_qdm.json', layer: 'QDM', neighbor: true },
+      ],
+      edges: [...graph.edges!, { from: 't_fact', to: 'n_rdm', kind: 'source' }],
+      // CORE-only, exactly as the backend serves it for a scoped request.
+      meta: { entryCount: 9, skippedRows: 0, layers: ['STG', 'ODS', 'DWH'], scopedClusters: ['cl-x'], neighborCount: 2 },
+    }
+    const v = toOperationalGraph(scoped, summary, '2026-07-29')
+
+    // meta order first (untouched), then the extras appended in LAYER_RANK order.
+    expect(v.layers).toEqual(['STG', 'ODS', 'DWH', 'RDM', 'QDM'])
+    expect(v.cards.find(c => c.id === 'n_rdm')!.neighbor).toBe(true)
+    expect(v.cards.find(c => c.id === 'r3')!.neighbor).toBe(false)
+  })
+
   it('selectedDate === null uses latestStatus', () => {
     const v = toOperationalGraph(graph, summary, null)
     expect(v.cards.find(c => c.id === 'r3')!.status).toBe('OK')

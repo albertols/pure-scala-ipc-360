@@ -1,17 +1,25 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import type { OperationalCard as CardData } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useRelationships, useOperationalSummary, useOperationalDates, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
-import type { RelationshipGraph } from '../../api/queries'
+import { useOperationalSummary, useOperationalDates, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
+import type { AppConfig, RelationshipGraph } from '../../api/queries'
+import { useClusterIndex, useScopedRelationships, useRuns, type RunT } from '../../api/clusterQueries'
+import { setOperationalView, useOperationalView } from '../../state/operationalView'
 import { toOperationalGraph, summarizeSnapshot, type OperationalEdge } from '../../api/relationshipsAdapter'
+import { buildLoggingUrl, buildDataprocClusterUrl } from '../../api/gcpLinks'
 import { OperationalCard } from '../shared/OperationalCard'
+import { pickDefaultRun } from '../shared/RunPicker'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
-import { LoadingState } from '../shared/Spinner'
 import { PreviewOverlay } from './PreviewOverlay'
+import { ClusterPane } from './ClusterPane'
+import { SelectionStrip, type SelectionSummary } from './SelectionStrip'
+import { OperationalProgress, type ProgressStage } from './OperationalProgress'
 import { DataRootsPanel, DataRootsChip } from './DataRootsPanel'
+
+const nf = new Intl.NumberFormat('en-US')
 
 type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
 
@@ -87,21 +95,34 @@ function RelationshipGraph({
   selected,
   onSelect,
   zoom,
+  pan,
+  onPan,
   summaryItems,
+  runsByRecipe,
+  selectedRunDate,
+  onSelectRun,
+  config,
 }: {
   cards: CardData[]
   edges: OperationalEdge[]
   selected: string | null
   onSelect: (id: string | null) => void
   zoom: number
+  /** Task 14: pan lives in the operational view store so it survives a tab switch (spec §7.7). */
+  pan: { x: number; y: number }
+  onPan: (pan: { x: number; y: number }) => void
   /** Task 16: view-aware corpus summary — Tab 3 has no left rail (its 300px
    * side panel is the RIGHT-hand detail panel), so it gets a floating
    * bottom-left chip over the graph body instead of a Sidebar/DagExplorer
    * footer (spec §7.1's Tab 3 row). Empty when there's no selected-date
    * snapshot loaded yet. */
   summaryItems: SummaryItem[]
+  /** Task 14: chunked `/api/operational/runs` result, keyed by recipe filename. */
+  runsByRecipe: Record<string, RunT[]>
+  selectedRunDate: string | null
+  onSelectRun: (run: RunT) => void
+  config: AppConfig | undefined
 }) {
-  const [pan, setPan] = useState({ x: 40, y: 40 })
   const dragging = useRef(false)
   const lastPan = useRef({ x: 0, y: 0 })
 
@@ -122,8 +143,8 @@ function RelationshipGraph({
   }, [pan])
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     if (!dragging.current) return
-    setPan({ x: e.clientX - lastPan.current.x, y: e.clientY - lastPan.current.y })
-  }, [])
+    onPan({ x: e.clientX - lastPan.current.x, y: e.clientY - lastPan.current.y })
+  }, [onPan])
   const onMouseUp = useCallback(() => { dragging.current = false }, [])
   const onWheel = useCallback((e: React.WheelEvent) => { e.stopPropagation() }, [])
 
@@ -193,16 +214,28 @@ function RelationshipGraph({
           <div
             key={card.id}
             data-card="1"
+            data-testid={`node-${card.id}`}
             style={{
               position: 'absolute',
               left: card.x ?? 0,
               top: card.y ?? 0,
               width: compact ? 'auto' : 252,
               zIndex: selected === card.id ? 10 : 1,
+              // A 1-hop neighbour is context, not scope: readable, visibly not what you asked for.
+              opacity: card.neighbor ? 0.45 : 1,
             }}
             onClick={e => { e.stopPropagation(); onSelect(selected === card.id ? null : card.id) }}
           >
-            <OperationalCard card={card} density={compact ? 'compact' : 'detailed'} selected={selected === card.id} onClick={undefined} />
+            <OperationalCard
+              card={card}
+              density={compact ? 'compact' : 'detailed'}
+              selected={selected === card.id}
+              onClick={undefined}
+              runs={runsByRecipe[card.name] ?? []}
+              selectedRunDate={selectedRunDate}
+              onSelectRun={onSelectRun}
+              config={config}
+            />
           </div>
         ))}
       </div>
@@ -210,6 +243,7 @@ function RelationshipGraph({
       {/* click to deselect */}
       {selected && (
         <button
+          aria-label="Clear node selection"
           onClick={() => onSelect(null)}
           style={{
             position: 'absolute', top: 12, right: 12,
@@ -235,13 +269,39 @@ function RelationshipGraph({
   )
 }
 
+/**
+ * Tab 3 — cluster-scoped operational graph (Task 14).
+ *
+ * The tab used to open by fetching the ENTIRE corpus: `/api/relationships` (every recipe and
+ * table the control schema knows about) plus `/api/operational/summary` (the all-time aggregate
+ * for every recipe). On the sample corpus that is ~90 recipes and nobody notices. On a real
+ * export it is ~7 000 recipes and ~5 000 tables, and the tab is unusable before it renders a
+ * single card — which is the problem this whole sub-project exists to solve.
+ *
+ * So: with nothing selected the tab fetches ONLY the b15 cluster index (spec §11 criterion 1),
+ * which is a few hundred rows regardless of corpus size, and shows a prompt naming the scale it
+ * found. Selecting clusters fetches exactly their subgraph plus the flagged 1-hop neighbours.
+ * Everything else — the summary, the date list, the selected date's snapshot, the per-recipe run
+ * history — hangs off that selection and costs nothing until one exists.
+ */
 export function ETLOperational() {
-  const [selected, setSelected] = useState<string | null>(null)
-  const [zoom, setZoom] = useState(0.85)
-  // Date is real state (this task); "Now"/hour/precision stay locally tracked
-  // and are re-merged with `selectedDate` into the TimeSelection the
-  // (unmodified) TimePicker expects.
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const view = useOperationalView()
+  const hasSelection = view.selectedClusters.length > 0
+
+  const index = useClusterIndex()
+  // `enabled: key.length > 0` lives inside the hook: `GET /api/relationships?clusters=` with an
+  // EMPTY value is not "scope to nothing", it is the entire graph, byte-identical to unscoped.
+  const rel = useScopedRelationships(view.selectedClusters)
+  const summary = useOperationalSummary(hasSelection)
+  const dates = useOperationalDates(hasSelection)
+  const cfg = useAppConfig()
+  // Data-root self-diagnosis: rendered as a toolbar chip always, and expanded into the
+  // full report in the empty state — where it is the only thing standing between the
+  // operator and a blank canvas with no stated cause.
+  const diagnostics = useDiagnostics()
+
+  // "Now"/hour/precision stay locally tracked and are re-merged with the store's `selectedDate`
+  // into the TimeSelection the (unmodified) TimePicker expects.
   const [timeMeta, setTimeMeta] = useState<{ hour: number; precision: Precision; isNow: boolean }>({
     hour: new Date().getUTCHours(),
     precision: 'hour',
@@ -257,19 +317,11 @@ export function ETLOperational() {
   // clears underneath it while it's open.
   const [preview, setPreview] = useState<{ recipePath: string | null; mappingPath: string | null } | null>(null)
 
-  const rel = useRelationships()
-  const summary = useOperationalSummary()
-  const dates = useOperationalDates()
-  const cfg = useAppConfig()
-  // Data-root self-diagnosis: rendered as a toolbar chip always, and expanded into the
-  // full report in the empty state — where it is the only thing standing between the
-  // operator and a blank canvas with no stated cause.
-  const diagnostics = useDiagnostics()
-  // Task 16: the raw b15 rows for `selectedDate` — distinct from `summary`
-  // above (the all-time per-recipe aggregate `useOperationalSummary()`
-  // already loads), needed for the floating chip's exact row count/OK-KO
-  // split (spec §7.1's Tab 3 row: "for the selected date or range").
-  const snapshot = useOperational(selectedDate ?? '')
+  // Task 16: the raw b15 rows for the selected date — distinct from `summary` above (the all-time
+  // per-recipe aggregate), needed for the floating chip's exact row count/OK-KO split. Gated on
+  // the selection for the same reason as the summary: with no clusters chosen there is no canvas
+  // for it to describe, so it must not fire.
+  const snapshot = useOperational(hasSelection ? (view.selectedDate ?? '') : '')
 
   // Raw graph nodes carry `mappingPath` (the recipe directory) — the adapter's
   // OperationalCard doesn't, so the preview resolver reads it here.
@@ -282,34 +334,53 @@ export function ETLOperational() {
   // On first data, default selectedDate to the latest snapshot ("Now").
   // Guarded on selectedDate === null so a later user pick is never clobbered.
   useEffect(() => {
-    if (selectedDate === null && dates.data?.dates && dates.data.dates.length > 0) {
-      setSelectedDate(dates.data.dates.at(-1)!)
+    if (view.selectedDate === null && dates.data?.dates && dates.data.dates.length > 0) {
+      setOperationalView({ selectedDate: dates.data.dates.at(-1)! })
     }
-  }, [dates.data, selectedDate])
+  }, [dates.data, view.selectedDate])
 
   const availableDates = dates.data?.dates ?? []
 
   const timeVal: TimeSelection = {
-    date: selectedDate ?? new Date().toISOString().slice(0, 10),
+    date: view.selectedDate ?? new Date().toISOString().slice(0, 10),
     hour: timeMeta.hour,
     precision: timeMeta.precision,
     isNow: timeMeta.isNow,
   }
   const handleTimeChange = (v: TimeSelection) => {
-    setSelectedDate(availableDates.length > 0 ? nearestAvailableDate(v.date, availableDates) : v.date)
+    setOperationalView({
+      selectedDate: availableDates.length > 0 ? nearestAvailableDate(v.date, availableDates) : v.date,
+    })
     setTimeMeta({ hour: v.hour, precision: v.precision, isNow: v.isNow })
   }
 
-  const view = useMemo(
-    () => (rel.data ? toOperationalGraph(rel.data, summary.data, selectedDate) : null),
-    [rel.data, summary.data, selectedDate],
+  const graph = useMemo(
+    () => (rel.data ? toOperationalGraph(rel.data, summary.data, view.selectedDate) : null),
+    [rel.data, summary.data, view.selectedDate],
   )
 
-  // Task 16: date-scoped chip counts, derived client-side from `view` (graph)
-  // + `snapshot` (the selected date's raw b15 rows) — no new endpoint.
+  // Filtered BEFORE the early returns: `useRuns` below is a hook and its input is this list.
+  const cards = useMemo(() => (graph?.cards ?? []).filter(c => {
+    if (layerFilter !== 'ALL' && c.layer !== layerFilter) return false
+    if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
+    if (statusFilter !== 'ALL' && c.status !== statusFilter) return false
+    if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
+    return true
+  }), [graph, layerFilter, kindFilter, statusFilter, searchQuery])
+
+  const recipeNames = useMemo(
+    () => cards.filter(c => c.kind === 'recipe').map(c => c.name),
+    [cards],
+  )
+  // `/api/operational/runs` is bounded at 200 recipes per request; `useRuns` chunks and merges,
+  // so a 400-recipe cluster costs two requests rather than a 400.
+  const runs = useRuns(recipeNames, 10)
+
+  // Task 16: date-scoped chip counts, derived client-side from `graph` + `snapshot` (the selected
+  // date's raw b15 rows) — no new endpoint.
   const snapshotSummary = useMemo(
-    () => (view && snapshot.data ? summarizeSnapshot(snapshot.data.rows ?? [], view.cards, view.edges) : null),
-    [view, snapshot.data],
+    () => (graph && snapshot.data ? summarizeSnapshot(snapshot.data.rows ?? [], graph.cards, graph.edges) : null),
+    [graph, snapshot.data],
   )
   const summaryItems: SummaryItem[] = snapshotSummary ? [
     { label: 'b15 rows', value: snapshotSummary.rows },
@@ -319,11 +390,74 @@ export function ETLOperational() {
     { label: 'KO', value: snapshotSummary.ko },
   ] : []
 
-  if (rel.isLoading || summary.isLoading) {
-    return <div style={{ padding: 16 }}><LoadingState label="Loading relationships…" /></div>
+  const totals = index.data?.totals
+  const totalsLine = totals
+    ? `${nf.format(totals.dates ?? 0)} days · ${nf.format(totals.clusters ?? 0)} clusters · ${nf.format(totals.rows ?? 0)} rows`
+    : null
+  const neighborCount = rel.data?.meta?.neighborCount ?? 0
+  const nodeCount = graph?.cards.length ?? 0
+
+  // Named stages with RESOLVED totals — never a percentage and never "day N of M". The backend
+  // indexes the whole history inside one request; without a streaming endpoint (SSE is a
+  // non-goal, spec §2/§7.6) any bar here would be animating a guess.
+  const stages: ProgressStage[] = [
+    {
+      label: 'Indexing b15 history…',
+      detail: totalsLine,
+      done: !!index.data,
+      active: index.isLoading,
+    },
+    {
+      label: hasSelection
+        ? `Building graph for ${nf.format(view.selectedClusters.length)} ${view.selectedClusters.length === 1 ? 'cluster' : 'clusters'}…`
+        : 'Waiting for a cluster selection',
+      detail: graph ? `${nf.format(nodeCount)} nodes · ${nf.format(neighborCount)} from neighbours` : null,
+      done: !!graph,
+      active: hasSelection && rel.isLoading,
+    },
+    {
+      label: 'Loading run history…',
+      // Only once there IS a graph — before that "0 recipes" is not a resolved total, it is the
+      // absence of one, and the whole point of this panel is that it never states a number it
+      // has not actually resolved.
+      detail: graph && !runs.isLoading ? `${nf.format(recipeNames.length)} recipes · up to 10 runs each` : null,
+      done: !!graph && !runs.isLoading,
+      active: runs.isLoading,
+    },
+  ]
+
+  // Each number comes from the source that actually knows it: OK/KO and the date span are b15
+  // aggregates the index already resolved (summing per-cluster totals cannot double-count, since
+  // a b15 row belongs to exactly one cluster), while the recipe/node/neighbour counts come from
+  // the fetch that actually happened. `recipes` counts CORE recipe cards, deduped by the graph
+  // itself — a recipe shared by two selected clusters is one recipe, which summing the index's
+  // per-cluster `recipeCount` would get wrong.
+  const selectedClusterRows = useMemo(
+    () => (index.data?.clusters ?? []).filter(c => view.selectedClusters.includes(c.name ?? '')),
+    [index.data, view.selectedClusters],
+  )
+  const selectionDateCount = useMemo(() => {
+    const days = new Set<number>()
+    for (const c of selectedClusterRows) for (const i of c.dateIdx ?? []) days.add(i)
+    return days.size
+  }, [selectedClusterRows])
+
+  const selectionSummary: SelectionSummary | null = graph ? {
+    recipes: graph.cards.filter(c => c.kind === 'recipe' && !c.neighbor).length,
+    dates: selectionDateCount,
+    ok: selectedClusterRows.reduce((n, c) => n + (c.ok ?? 0), 0),
+    ko: selectedClusterRows.reduce((n, c) => n + (c.ko ?? 0), 0),
+    nodes: graph.cards.length,
+    neighbors: neighborCount,
+  } : null
+
+  // 1. The index itself is the only thing every path needs.
+  if (index.isLoading) {
+    return <OperationalProgress stages={stages} />
   }
 
-  const apiError = (rel.error ?? summary.error) as ApiError | null
+  // 2. Errors keep their existing shape.
+  const apiError = (index.error ?? rel.error ?? summary.error) as ApiError | null
   if (apiError) {
     return (
       <div style={{ color: 'var(--red)', fontSize: 12, padding: 16 }}>
@@ -333,49 +467,91 @@ export function ETLOperational() {
     )
   }
 
-  // An empty graph is never self-explanatory: a mis-pointed data root, an unreadable control
-  // schema and a genuinely empty corpus all land here. The report says which one it is.
-  if (!view || view.cards.length === 0) {
+  // 3. Nothing indexed at all. An empty Tab 3 is never self-explanatory: a mis-pointed data root,
+  // an unreadable control schema and a genuinely empty history all land here. The report says
+  // which one it is (ADR-0013) — and it is the reason this branch is reached from the INDEX
+  // rather than from an empty graph, which is no longer even requested in this state.
+  if ((totals?.rows ?? 0) === 0) {
     return (
       <div style={{ padding: 16 }}>
-        <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No relationship entries</div>
+        <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No b15 history</div>
         <DataRootsPanel diagnostics={diagnostics.data} />
       </div>
     )
   }
 
-  const cards = view.cards.filter(c => {
-    if (layerFilter !== 'ALL' && c.layer !== layerFilter) return false
-    if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
-    if (statusFilter !== 'ALL' && c.status !== statusFilter) return false
-    if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
-    return true
-  })
+  // 4. Indexed, nothing selected: the pane plus a prompt naming what was found. No graph request
+  // has been made and none will be until a cluster is checked.
+  if (!hasSelection) {
+    return (
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <ClusterPane />
+        <div
+          data-testid="cluster-prompt"
+          style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 10,
+            background: 'var(--bg)', padding: 24, textAlign: 'center',
+          }}
+        >
+          <div aria-hidden="true" style={{ fontSize: 26, color: 'var(--text-dim)', lineHeight: 1 }}>{'◇'}</div>
+          <div style={{ fontSize: 13, color: 'var(--text)' }}>Select a cluster to load its graph</div>
+          {totalsLine && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
+              {totalsLine}
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 380, lineHeight: 1.5 }}>
+            Nothing is fetched until you choose one — the whole corpus is never loaded at once.
+          </div>
+          <DataRootsChip diagnostics={diagnostics.data} />
+        </div>
+      </div>
+    )
+  }
 
-  const selectedCard = selected ? view.cards.find(c => c.id === selected) : null
+  // 5a. Selected, but the scoped graph is still resolving. `summary.isLoading` is part of the
+  // gate because a graph built without it renders every card PENDING — a wrong status is worse
+  // than a named stage.
+  if (!graph || summary.isLoading) {
+    return (
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <ClusterPane />
+        <div style={{ flex: 1, background: 'var(--bg)' }}>
+          <OperationalProgress stages={stages} />
+        </div>
+      </div>
+    )
+  }
+
+  const selectedCard = view.selectedNode ? graph.cards.find(c => c.id === view.selectedNode) : null
 
   const previewTarget = selectedCard
-    ? resolvePreview(selectedCard, view.edges, nodeById)
+    ? resolvePreview(selectedCard, graph.edges, nodeById)
     : { recipePath: null, mappingPath: null }
 
-  // GCP quick links: templated from the served config + (for the cluster
-  // name) the raw summary entry looked up by name — `lastClusterName` isn't
-  // on OperationalCard (keeps that type stable), so it's read here.
+  // GCP quick links: every URL comes from `gcpLinks.ts`'s builders over the served templates —
+  // anchored on the SELECTED run (its job id and its `app_start_iso` cursor) when one exists,
+  // degrading to the card's own last job id when the run history is unavailable.
   const projectId = cfg.data?.gcpProjectId ?? 'mock-project'
-  const clusterName = selectedCard
-    ? (summary.data?.recipes?.find(r => r.recipeFilename === selectedCard.name)?.lastClusterName ?? '')
-    : ''
-  const loggingHref = (cfg.data?.loggingUrl ?? '')
-    .replace('{jobId}', selectedCard?.jobId ?? '')
-    .replace('{project}', projectId)
-  const monitoringHref = (cfg.data?.dataprocClusterUrl ?? '')
-    .replace('{clusterName}', clusterName)
-    .replace('{project}', projectId)
-    .replace('{region}', cfg.data?.region ?? '')
+  const selectedRuns = selectedCard ? (runs.byRecipe[selectedCard.name] ?? []) : []
+  const selectedRun = pickDefaultRun(selectedRuns, view.selectedRunDate)
+  const linkJobId = selectedRun?.jobId || selectedCard?.jobId || ''
+  const clusterName = selectedRun?.clusterName
+    || (selectedCard
+      ? (summary.data?.recipes?.find(r => r.recipeFilename === selectedCard.name)?.lastClusterName ?? '')
+      : '')
+  const loggingHref = buildLoggingUrl(cfg.data, {
+    jobId: linkJobId,
+    cursorTimestamp: selectedRun?.appStartIso ?? '',
+  })
+  const monitoringHref = buildDataprocClusterUrl(cfg.data, { clusterName })
   const bigQueryHref = `https://console.cloud.google.com/bigquery?project=${projectId}`
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+
+      <SelectionStrip summary={selectionSummary} />
 
       {/* toolbar */}
       <div style={{
@@ -407,7 +583,7 @@ export function ETLOperational() {
         </div>
 
         {/* filters — options are data-driven from the real graph */}
-        <FilterChips label="Layer" options={['ALL', ...view.layers]} value={layerFilter} onChange={setLayerFilter} />
+        <FilterChips label="Layer" options={['ALL', ...graph.layers]} value={layerFilter} onChange={setLayerFilter} />
         <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter} />
         {/* RUNNING isn't a real operational state (mock/real history only ever
             resolves OK/KO/PENDING) — swapped for PENDING per the plan's ledger note. */}
@@ -415,16 +591,23 @@ export function ETLOperational() {
           colors={{ OK: '#34d399', KO: '#f87171', PENDING: '#4a5570' }} />
 
         <div style={{ flex: 1 }} />
+        {/* A failed runs chunk leaves its recipes ABSENT from `byRecipe`, which renders exactly
+            like "never ran". Say so instead. */}
+        {runs.isError && (
+          <span style={{ fontSize: 11, color: 'var(--red)', fontFamily: 'JetBrains Mono, monospace' }}>
+            Run history unavailable
+          </span>
+        )}
         <DataRootsChip diagnostics={diagnostics.data} />
-        <StatusSummary cards={view.cards} />
+        <StatusSummary cards={graph.cards} />
 
         {/* zoom */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button onClick={() => setZoom(z => Math.max(0.3, z - 0.15))} style={zoomBtn}>−</button>
+          <button onClick={() => setOperationalView({ zoom: Math.max(0.3, view.zoom - 0.15) })} style={zoomBtn}>−</button>
           <span style={{ fontSize: 10, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace', width: 34, textAlign: 'center' }}>
-            {Math.round(zoom * 100)}%
+            {Math.round(view.zoom * 100)}%
           </span>
-          <button onClick={() => setZoom(z => Math.min(2, z + 0.15))} style={zoomBtn}>+</button>
+          <button onClick={() => setOperationalView({ zoom: Math.min(2, view.zoom + 0.15) })} style={zoomBtn}>+</button>
         </div>
       </div>
 
@@ -435,13 +618,21 @@ export function ETLOperational() {
 
       {/* main area */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <ClusterPane />
+
         <RelationshipGraph
           cards={cards}
-          edges={view.edges}
-          selected={selected}
-          onSelect={setSelected}
-          zoom={zoom}
+          edges={graph.edges}
+          selected={view.selectedNode}
+          onSelect={id => setOperationalView({ selectedNode: id })}
+          zoom={view.zoom}
+          pan={view.pan}
+          onPan={pan => setOperationalView({ pan })}
           summaryItems={summaryItems}
+          runsByRecipe={runs.byRecipe}
+          selectedRunDate={view.selectedRunDate}
+          onSelectRun={run => setOperationalView({ selectedRunDate: run.date ?? null })}
+          config={cfg.data}
         />
 
         {/* detail side panel */}
@@ -454,7 +645,7 @@ export function ETLOperational() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8', flex: 1 }}>Details</span>
-              <button onClick={() => setSelected(null)}
+              <button aria-label="Close details" onClick={() => setOperationalView({ selectedNode: null })}
                 style={{ background: 'none', border: 'none', color: '#4a5570', cursor: 'pointer' }}>
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                   <path d="M2 2l9 9M11 2L2 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -462,7 +653,14 @@ export function ETLOperational() {
               </button>
             </div>
 
-            <OperationalCard card={selectedCard} selected />
+            <OperationalCard
+              card={selectedCard}
+              selected
+              runs={selectedRuns}
+              selectedRunDate={view.selectedRunDate}
+              onSelectRun={run => setOperationalView({ selectedRunDate: run.date ?? null })}
+              config={cfg.data}
+            />
 
             {/* related cards */}
             <div>
@@ -472,10 +670,10 @@ export function ETLOperational() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {selectedCard.relations.map(rid => {
-                  const relCard = view.cards.find(c => c.id === rid)
+                  const relCard = graph.cards.find(c => c.id === rid)
                   if (!relCard) return null
                   return (
-                    <div key={rid} onClick={() => setSelected(rid)} style={{ cursor: 'pointer' }}>
+                    <div key={rid} onClick={() => setOperationalView({ selectedNode: rid })} style={{ cursor: 'pointer' }}>
                       <OperationalCard card={relCard} density="compact" />
                     </div>
                   )

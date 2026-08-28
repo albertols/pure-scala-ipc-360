@@ -65,14 +65,17 @@ export type OperationalSummary = components['schemas']['OperationalSummaryDto']
 export const useRelationships = () =>
   useQuery({ queryKey: ['relationships'], queryFn: () => apiGet<RelationshipGraph>('/relationships'), staleTime: STALE_MS })
 
-export const useOperationalDates = () =>
-  useQuery({ queryKey: ['operationalDates'], queryFn: () => apiGet<OperationalDates>('/operational/dates'), staleTime: STALE_MS })
+// `enabled` defaults to true so the pre-existing call sites are untouched. Tab 3 passes `false`
+// while nothing is selected: with ~7000 recipes indexed, "open the tab" must cost exactly the
+// cluster index and nothing else (spec §11 criterion 1).
+export const useOperationalDates = (enabled = true) =>
+  useQuery({ queryKey: ['operationalDates'], queryFn: () => apiGet<OperationalDates>('/operational/dates'), staleTime: STALE_MS, enabled })
 
 export const useOperational = (date: string) =>
   useQuery({ queryKey: ['operational', date], queryFn: () => apiGet<OperationalSnapshot>(`/operational/${date}`), staleTime: STALE_MS, enabled: !!date })
 
-export const useOperationalSummary = () =>
-  useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS })
+export const useOperationalSummary = (enabled = true) =>
+  useQuery({ queryKey: ['operationalSummary'], queryFn: () => apiGet<OperationalSummary>('/operational/summary'), staleTime: STALE_MS, enabled })
 
 // Data-root self-diagnosis (GET /api/diagnostics): where each root resolved, which
 // tier served it, and — for the control schema — the staged scan counts that say WHICH

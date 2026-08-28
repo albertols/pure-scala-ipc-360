@@ -1,9 +1,11 @@
-import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
+import { describe, expect, it, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
+import { act, render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { delay, http, HttpResponse } from 'msw'
 import { ETLOperational } from './ETLOperational'
+import { resetOperationalView, setOperationalView } from '../../state/operationalView'
 import type { RelationshipGraph } from '../../api/queries'
 import type { components } from '../../api/types.gen'
 
@@ -27,6 +29,38 @@ const GRAPH: RelationshipGraph = {
     { from: 'r', to: 't_tgt', kind: 'writes' },
   ],
   meta: { entryCount: 2, skippedRows: 0, layers: ['STG'] },
+}
+
+// Task 14: the whole-history index the tab loads FIRST and, with nothing selected, ONLY.
+const CLUSTER_INDEX = {
+  mode: 'mock',
+  dates: ['2026-07-28', '2026-07-29'],
+  totals: { clusters: 2, recipes: 2, dates: 2, rows: 4 },
+  clusters: [
+    { name: 'cl-a', recipeCount: 1, dateIdx: [0, 1], rows: 2, ok: 2, ko: 0,
+      lastDate: '2026-07-29', lastStatus: 'SUCCESS' },
+    { name: 'cl-b', recipeCount: 1, dateIdx: [1], rows: 2, ok: 1, ko: 1,
+      lastDate: '2026-07-29', lastStatus: 'FAILED' },
+  ],
+}
+
+// The SCOPED graph: GRAPH's core plus one 1-hop neighbour recipe dragged in from a cluster the
+// user did not select. Two things here are the backend's real behaviour, not fixture convenience:
+//   - the neighbour is a RECIPE (RelationshipService flags no table as a neighbour), and
+//   - `meta.layers` is derived from CORE entries only, so the neighbour's DWH layer is ABSENT
+//     from it — the case the adapter has to union client-side or the card renders bandless with
+//     no reachable Layer chip.
+const NEIGHBOUR_ID = 'recipe:_ETL_neighbour.json'
+const GRAPH_SCOPED: RelationshipGraph = {
+  nodes: [
+    ...(GRAPH.nodes ?? []),
+    { id: NEIGHBOUR_ID, kind: 'recipe', name: '_ETL_neighbour.json', layer: 'DWH', neighbor: true },
+  ],
+  edges: [
+    ...(GRAPH.edges ?? []),
+    { from: 't_tgt', to: NEIGHBOUR_ID, kind: 'source' },
+  ],
+  meta: { entryCount: 2, skippedRows: 0, layers: ['STG'], scopedClusters: ['cl-a'], neighborCount: 1 },
 }
 
 // Recipe OK on the LATEST date (2026-07-29, the default selectedDate =
@@ -163,7 +197,11 @@ const DIAGNOSTICS = {
 }
 
 const server = setupServer(
-  http.get('/api/relationships', () => HttpResponse.json(GRAPH)),
+  http.get('/api/relationships', () => HttpResponse.json(GRAPH_SCOPED)),
+  http.get('/api/operational/clusters', () => HttpResponse.json(CLUSTER_INDEX)),
+  // Default: no runs. Cards then fall back to the summary-derived history strip, which is what
+  // every pre-Task-14 assertion in this file counts.
+  http.get('/api/operational/runs', () => HttpResponse.json({ limit: 10, byRecipe: {} })),
   http.get('/api/diagnostics', () => HttpResponse.json(DIAGNOSTICS)),
   http.get('/api/operational/summary', () => HttpResponse.json(SUMMARY)),
   http.get('/api/operational/dates', () => HttpResponse.json(DATES)),
@@ -182,17 +220,30 @@ const server = setupServer(
 beforeAll(() => server.listen())
 afterEach(() => {
   server.resetHandlers()
+  server.events.removeAllListeners()
   cleanup()
 })
 afterAll(() => server.close())
 
-function renderTab() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
-    <QueryClientProvider client={client}>
-      <ETLOperational />
-    </QueryClientProvider>,
-  )
+// The operational view is a module-level store (Task 12), so it outlives a test unless reset.
+let queryClient: QueryClient
+beforeEach(() => {
+  localStorage.clear()
+  resetOperationalView()
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+})
+
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+)
+
+/**
+ * Task 14: the tab no longer renders a graph until a cluster is selected, so every case that
+ * asserts on the canvas selects one first. `renderTab([])` is the empty-selection entry point.
+ */
+function renderTab(clusters: string[] = ['cl-a']) {
+  setOperationalView({ selectedClusters: clusters })
+  return render(<ETLOperational />, { wrapper })
 }
 
 // This end-to-end walk (full graph + search + filter + selection + detail
@@ -260,8 +311,9 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     expect(loggingLink.href).toContain('application_cas_t_0029')
     expect(loggingLink.href).toContain('db-dev-example-project')
 
-    // Clear selection closes the detail panel.
-    fireEvent.click(screen.getByText('Clear selection'))
+    // Clear selection closes the detail panel. Scoped by label: SelectionStrip (Task 13) renders
+    // its own "Clear selection" for the CLUSTER selection, so the plain text is now ambiguous.
+    fireEvent.click(screen.getByLabelText('Clear node selection'))
     expect(screen.queryByText('Related (2)')).not.toBeInTheDocument()
   }, HEAVY_WALK_TIMEOUT)
 
@@ -282,10 +334,10 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
 
     await screen.findByText('_ETL_m_CAS_T.json')
 
-    // Full-detail rendering: all 3 real cards (2 tables + 1 recipe) render the
-    // "Last run:" line — `OperationalCard`'s compact branch omits it entirely,
-    // rendering only a status-dot pill with the card's name.
-    expect(screen.getAllByText(/Last run:/)).toHaveLength(3)
+    // Full-detail rendering: all 4 real cards (2 tables + 2 recipes, one of them the flagged
+    // neighbour) render the "Last run:" line — `OperationalCard`'s compact branch omits it
+    // entirely, rendering only a status-dot pill with the card's name.
+    expect(screen.getAllByText(/Last run:/)).toHaveLength(4)
 
     // Tab-1 Task-6 idiom, mirrored for Tab 3's own zoom state: the "−" button
     // steps 0.15 per click from the 0.85 default — 0.85 → 0.70 → 0.55,
@@ -308,7 +360,7 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
     fireEvent.click(zoomIn)
 
     await waitFor(() => {
-      expect(screen.getAllByText(/Last run:/)).toHaveLength(3)
+      expect(screen.getAllByText(/Last run:/)).toHaveLength(4)
     })
   })
 
@@ -422,8 +474,10 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
 describe('ETLOperational — data-root diagnostics', () => {
   it('explains an empty graph with the resolved paths and the actionable hint', async () => {
     server.use(
-      http.get('/api/relationships', () => HttpResponse.json({
-        nodes: [], edges: [], meta: { entryCount: 0, skippedRows: 0, layers: [] },
+      // Task 14: the empty state is reached from the INDEX (zero b15 rows), not from an empty
+      // graph payload — the graph is never requested when there is nothing to scope.
+      http.get('/api/operational/clusters', () => HttpResponse.json({
+        mode: 'absent', dates: [], totals: { clusters: 0, recipes: 0, dates: 0, rows: 0 }, clusters: [],
       })),
       http.get('/api/diagnostics', () => HttpResponse.json({
         ...DIAGNOSTICS,
@@ -437,9 +491,9 @@ describe('ETLOperational — data-root diagnostics', () => {
         },
       })),
     )
-    renderTab()
+    renderTab([])
 
-    expect(await screen.findByText('No relationship entries')).toBeTruthy()
+    expect(await screen.findByText('No b15 history')).toBeTruthy()
     // The path actually read, so a wrong dwhControlRoot is visible without leaving the GUI.
     expect(await screen.findByText('/corp/exports/DWH_CONTROL')).toBeTruthy()
     expect(screen.getByText(/set layerToLayerTable in config\.json/)).toBeTruthy()
@@ -452,5 +506,171 @@ describe('ETLOperational — data-root diagnostics', () => {
     renderTab()
     await screen.findByText('_ETL_m_CAS_T.json')
     expect(screen.getByText('data: mock')).toBeTruthy()
+  })
+})
+
+/**
+ * Task 14 — the point of the sub-project: at real scale (~7 000 recipes, ~5 000 tables) an
+ * unconditional `/api/relationships` + `/api/operational/summary` is the payload that makes this
+ * tab unusable. Nothing selected must cost exactly one lightweight index request.
+ */
+describe('ETLOperational — cluster-scoped loading', () => {
+  it('fetches only the cluster index when nothing is selected', async () => {
+    const paths: string[] = []
+    server.events.on('request:start', ({ request }) => paths.push(new URL(request.url).pathname))
+
+    renderTab([])
+    await screen.findByText(/Select a cluster/)
+    // Settle: diagnostics is the last unconditional query, so its arrival means the render pass
+    // that would have fired a graph/summary request has already happened.
+    await waitFor(() => expect(paths).toContain('/api/diagnostics'))
+
+    expect(paths).toContain('/api/operational/clusters')
+    expect(paths).not.toContain('/api/relationships')
+    // `/api/operational/summary` is the ~7 000-recipe aggregate — precisely the payload this
+    // sub-project exists to avoid — so criterion 1's "only the cluster index" is asserted over
+    // the WHOLE operational family, not just the graph.
+    expect(paths).not.toContain('/api/operational/summary')
+    expect(paths.filter(p => p.startsWith('/api/operational/'))).toEqual(['/api/operational/clusters'])
+  })
+
+  it('prompts for a cluster and states the corpus scale', async () => {
+    renderTab([])
+
+    expect(await screen.findByText(/Select a cluster/)).toBeInTheDocument()
+    // Scoped to the prompt: ClusterPane's own header line states the scale too, so an unscoped
+    // /clusters/ query legitimately matches two elements.
+    expect(within(screen.getByTestId('cluster-prompt')).getByText(/clusters/)).toBeInTheDocument()
+  })
+
+  it('loads the scoped graph once a cluster is selected', async () => {
+    const queries: string[] = []
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url)
+      if (url.pathname === '/api/relationships') queries.push(url.search)
+    })
+
+    renderTab([])
+    await screen.findByText(/Select a cluster/)
+
+    act(() => setOperationalView({ selectedClusters: ['cl-a'] }))
+
+    await waitFor(() => expect(queries).toHaveLength(1))
+    expect(queries[0]).toContain('clusters=cl-a')
+  })
+
+  it('returns to the prompt when the last cluster is deselected, without refetching the index', async () => {
+    let indexCalls = 0
+    server.use(http.get('*/api/operational/clusters', () => {
+      indexCalls++
+      return HttpResponse.json(CLUSTER_INDEX)
+    }))
+
+    renderTab([])
+    await screen.findByText(/Select a cluster/)
+    act(() => setOperationalView({ selectedClusters: ['cl-a'] }))
+    await screen.findByText(/_ETL_m_CAS_T\.json/)
+
+    act(() => setOperationalView({ selectedClusters: [] }))
+
+    expect(await screen.findByText(/Select a cluster/)).toBeInTheDocument()
+    expect(indexCalls).toBe(1)
+  })
+
+  it('dims nodes that came from a neighbouring cluster', async () => {
+    renderTab([])
+    await screen.findByText(/Select a cluster/)
+    act(() => setOperationalView({ selectedClusters: ['cl-a'] }))
+
+    const neighbour = await screen.findByTestId('node-recipe:_ETL_neighbour.json')
+    expect(Number(neighbour.style.opacity)).toBeLessThan(1)
+    // ...and a core node is not dimmed, so the assertion above is about the flag, not a blanket
+    // opacity on every card.
+    expect(Number(screen.getByTestId('node-r').style.opacity)).toBe(1)
+
+    // Criterion 2: the node count and the neighbour count are STATED, not merely rendered.
+    // Recipes counts core cards only (the neighbour is context, not scope); OK/KO and the date
+    // span come from the index's b15 aggregate for cl-a.
+    expect(screen.getByText('1 clusters · 1 recipes · 2 dates · 2 OK · 0 KO · 4 nodes · 1 from neighbours'))
+      .toBeInTheDocument()
+  })
+
+  // `meta.layers` is CORE-only (RelationshipService.java:135). Without a client-side union a
+  // neighbour outside the selected layers renders with no chip that can reach it — verified live
+  // on cluster-wf-cas-load-4001, whose layers are ["ODS","STG"] while its neighbours are DWH/RDM.
+  it('offers a Layer chip for a neighbour whose layer meta.layers omits', async () => {
+    renderTab()
+
+    await screen.findByText('_ETL_neighbour.json')
+    expect(screen.getByRole('button', { name: 'STG' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'DWH' })).toBeInTheDocument()
+
+    // The chip actually filters to the neighbour, i.e. it is wired, not decorative.
+    fireEvent.click(screen.getByRole('button', { name: 'DWH' }))
+    expect(screen.getByText('_ETL_neighbour.json')).toBeInTheDocument()
+    expect(screen.queryByText('_ETL_m_CAS_T.json')).not.toBeInTheDocument()
+  })
+
+  // The spec's explicit non-goal: no percentage, no "N of M days".
+  it('reports loading as named stages with resolved totals, not a percentage', async () => {
+    server.use(http.get('*/api/operational/clusters', async () => {
+      await delay(60)
+      return HttpResponse.json(CLUSTER_INDEX)
+    }))
+
+    renderTab([])
+
+    expect(await screen.findByText(/Indexing b15 history/)).toBeInTheDocument()
+    expect(screen.queryByText(/%/)).not.toBeInTheDocument()
+
+    // Once it resolves the stage carries RESOLVED totals — real numbers, not a fabricated fraction.
+    expect(await screen.findByText('2 days · 2 clusters · 4 rows')).toBeInTheDocument()
+  })
+
+  it('still explains an empty graph with the data-root report', async () => {
+    server.use(http.get('*/api/operational/clusters', () => HttpResponse.json({
+      mode: 'absent', dates: [], totals: { clusters: 0, recipes: 0, dates: 0, rows: 0 }, clusters: [],
+    })))
+
+    renderTab([])
+
+    expect(await screen.findByText(/No relationship entries|No b15 history/)).toBeInTheDocument()
+    expect(screen.getByText(/Data roots/i)).toBeInTheDocument()
+  })
+
+  it('feeds each card the run history and points the detail-panel links at the selected run', async () => {
+    server.use(http.get('*/api/operational/runs', () => HttpResponse.json({
+      limit: 10,
+      byRecipe: {
+        '_ETL_m_CAS_T.json': [
+          { date: '2026-07-29', clusterName: 'cluster-cas-t', jobId: 'app-run-29',
+            appStartIso: '2026-07-29T04:12:00Z', durationMin: 1.2, status: 'SUCCESS' },
+          { date: '2026-07-28', clusterName: 'cluster-cas-t', jobId: 'app-run-28',
+            appStartIso: '2026-07-28T04:09:00Z', durationMin: 1.5, status: 'FAILED' },
+        ],
+      },
+    })))
+
+    renderTab()
+
+    // The picker replaces the read-only strip once real runs arrive.
+    const older = await screen.findByLabelText('Run 2026-07-28')
+    fireEvent.click(older)
+
+    fireEvent.click(screen.getByText('_ETL_m_CAS_T.json'))
+    const logging = (await screen.findByText(/Cloud Logging/)).closest('a') as HTMLAnchorElement
+    expect(logging.href).toContain('app-run-28')
+    expect(logging.href).not.toContain('application_cas_t_0029')
+  })
+
+  // A failed chunk's recipes vanish from `byRecipe` and are indistinguishable from "never ran",
+  // so the failure has to be said out loud rather than rendered as an empty history.
+  it('says the run history is unavailable rather than showing it as empty', async () => {
+    server.use(http.get('*/api/operational/runs', () =>
+      HttpResponse.json({ title: 'Boom' }, { status: 500 })))
+
+    renderTab()
+
+    expect(await screen.findByText(/Run history unavailable/)).toBeInTheDocument()
   })
 })

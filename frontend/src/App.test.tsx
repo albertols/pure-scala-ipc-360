@@ -40,6 +40,15 @@ const RECIPE = {
 // shared REL fixture (mirrors the ETLOperational.test.tsx / ETLDag.test.tsx idiom
 // rather than inventing a new shape).
 const OPERATIONAL_DATES = { dates: ['2026-07-28', '2026-07-29'], mode: 'mock' }
+// Task 14: Tab 3 now opens on the cluster index alone — the graph, summary and dates are not
+// requested until a cluster is selected, so this is what decides whether the tab renders at all.
+const CLUSTER_INDEX = {
+  mode: 'mock',
+  dates: OPERATIONAL_DATES.dates,
+  totals: { clusters: 1, recipes: 1, dates: 2, rows: 2 },
+  clusters: [{ name: 'cl-a', recipeCount: 1, dateIdx: [0, 1], rows: 2, ok: 2, ko: 0,
+    lastDate: '2026-07-29', lastStatus: 'SUCCESS' }],
+}
 const OPERATIONAL_SUMMARY = { dates: OPERATIONAL_DATES.dates, recipes: [] }
 const APP_CONFIG = { gcpProjectId: 'mock-project' }
 
@@ -61,6 +70,8 @@ const server = setupServer(
   // registration order, and `:date` would otherwise swallow "runs" as a date
   // (same hazard ETLDag.test.tsx documents).
   http.get('*/api/operational/runs', () => HttpResponse.json({ limit: 10, byRecipe: {} })),
+  // Same registration-order hazard: `:date` would otherwise swallow "clusters".
+  http.get('*/api/operational/clusters', () => HttpResponse.json(CLUSTER_INDEX)),
   http.get('*/api/operational/:date', ({ params }) => HttpResponse.json({ date: String(params.date), rows: [] })),
 )
 beforeAll(() => server.listen())
@@ -136,16 +147,18 @@ describe('App — visited tabs stay mounted (Task 12)', () => {
     renderApp()
 
     fireEvent.click(screen.getByRole('button', { name: /ETL Operational/ }))
-    await screen.findByPlaceholderText(/Search tables/)
+    // Task 14: with nothing selected Tab 3 renders the cluster pane + prompt, not the toolbar —
+    // so the prompt, not the toolbar's search box, is the marker for "Tab 3 is mounted".
+    await screen.findByText(/Select a cluster/)
 
     fireEvent.click(screen.getByRole('button', { name: /ETL DAG/ }))
 
     // Still in the DOM, just not displayed — this is what makes the return instant.
-    expect(screen.getByPlaceholderText(/Search tables/)).toBeInTheDocument()
+    expect(screen.getByText(/Select a cluster/)).toBeInTheDocument()
   })
 
   it('does not mount a tab that was never visited', () => {
     renderApp()
-    expect(screen.queryByPlaceholderText(/Search tables/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Select a cluster/)).not.toBeInTheDocument()
   })
 })

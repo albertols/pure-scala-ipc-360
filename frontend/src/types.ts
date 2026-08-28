@@ -132,6 +132,9 @@ export interface OperationalCard {
   }
   jobId?: string
   relations: string[]
+  /** Scoped graph only: this node was dragged in as a 1-hop neighbour of the selected clusters,
+   * not by the selection itself. Recipes only — the backend flags no table as a neighbour. */
+  neighbor?: boolean
   x?: number
   y?: number
 }
