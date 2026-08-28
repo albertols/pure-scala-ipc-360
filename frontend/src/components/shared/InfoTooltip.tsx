@@ -29,8 +29,8 @@ export function InfoTooltip({ text, placement = 'top' }: { text: string; placeme
       onMouseLeave={() => setVisible(false)}
     >
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <circle cx="6" cy="6" r="5" stroke="#4a5570" strokeWidth="1.2" />
-        <text x="6" y="9" textAnchor="middle" fill="#4a5570" style={{ fontSize: 7, fontFamily: 'serif', fontWeight: 'bold' }}>i</text>
+        <circle cx="6" cy="6" r="5" stroke="var(--text-muted)" strokeWidth="1.2" />
+        <text x="6" y="9" textAnchor="middle" fill="var(--text-muted)" style={{ fontSize: 7, fontFamily: 'serif', fontWeight: 'bold' }}>i</text>
       </svg>
       {visible && <div style={tipStyle}>{text}</div>}
     </span>

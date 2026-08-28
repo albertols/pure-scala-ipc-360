@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { RunT } from '../../api/clusterQueries'
 
 const OK = '#34d399'
@@ -57,6 +57,24 @@ export function RunPicker({ runs, selectedDate, onSelect, accent = '#4f9cf9', li
   limit?: number
 }) {
   const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // Task 9 review, Ruling 18b: once this dropdown lives inside a clickable card, re-clicking
+  // its own toggle can't be the only way to dismiss it. Escape and an outside click both close it.
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    const onMouseDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('mousedown', onMouseDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('mousedown', onMouseDown)
+    }
+  }, [open])
+
   if (runs.length === 0) return null
 
   const shown = runs.slice(0, limit)
@@ -64,7 +82,7 @@ export function RunPicker({ runs, selectedDate, onSelect, accent = '#4f9cf9', li
   const selected = shown.find(r => r.date === selectedDate) ?? shown[0]!
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+    <div ref={rootRef} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       <div style={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
         {oldestFirst.map(run => {
           const isSelected = run.date === selected.date

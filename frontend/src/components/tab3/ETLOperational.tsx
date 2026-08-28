@@ -202,7 +202,7 @@ function RelationshipGraph({
             }}
             onClick={e => { e.stopPropagation(); onSelect(selected === card.id ? null : card.id) }}
           >
-            <OperationalCard card={card} compact={compact} selected={selected === card.id} onClick={undefined} />
+            <OperationalCard card={card} density={compact ? 'compact' : 'detailed'} selected={selected === card.id} onClick={undefined} />
           </div>
         ))}
       </div>
@@ -476,7 +476,7 @@ export function ETLOperational() {
                   if (!relCard) return null
                   return (
                     <div key={rid} onClick={() => setSelected(rid)} style={{ cursor: 'pointer' }}>
-                      <OperationalCard card={relCard} compact />
+                      <OperationalCard card={relCard} density="compact" />
                     </div>
                   )
                 })}

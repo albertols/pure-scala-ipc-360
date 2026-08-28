@@ -10,6 +10,9 @@ export type StatusType = 'OK' | 'KO' | 'RUNNING' | 'PENDING'
 
 export type DagStatus = 'success' | 'failed' | 'running' | 'skipped'
 
+/** Card silhouette: full stats+history, header-only, or a single status line. */
+export type CardDensity = 'detailed' | 'compact' | 'minimal'
+
 export interface Port {
   name: string
   dataType: string

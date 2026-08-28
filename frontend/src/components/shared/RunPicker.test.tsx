@@ -99,4 +99,31 @@ describe('RunPicker', () => {
     const { container } = render(<RunPicker runs={[]} selectedDate={null} onSelect={() => {}} />)
     expect(container).toBeEmptyDOMElement()
   })
+
+  // Task 9 review, Ruling 18b: the dropdown must be dismissible more than one way once it
+  // lives inside a clickable card — re-clicking the toggle was the only close gesture.
+  it('closes the dropdown on Escape', () => {
+    render(<RunPicker runs={TEN} selectedDate="2026-07-29" onSelect={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /Choose run/ }))
+    expect(screen.getAllByRole('menuitem')).toHaveLength(10)
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('closes the dropdown on an outside click', () => {
+    render(
+      <div>
+        <div data-testid="outside">elsewhere</div>
+        <RunPicker runs={TEN} selectedDate="2026-07-29" onSelect={() => {}} />
+      </div>
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Choose run/ }))
+    expect(screen.getAllByRole('menuitem')).toHaveLength(10)
+
+    fireEvent.mouseDown(screen.getByTestId('outside'))
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
 })

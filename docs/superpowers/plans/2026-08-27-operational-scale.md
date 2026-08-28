@@ -2708,7 +2708,7 @@ job_id and app_start_iso the Logging deep link needs."
 
 **Contrast, measured:** `#4a5570` is **2.2:1** on `--surface-2` and **2.4:1** on `--surface`. `var(--text-muted)` (`#7b88aa`) is **4.6:1** and **5.1:1** on those same backgrounds. Every `#4a5570` *text* colour inside this file moves to `var(--text-muted)`; the `PENDING` status swatch at `:9` is a fill, not text, and stays.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `frontend/src/components/shared/OperationalCard.test.tsx`:
 
@@ -2818,7 +2818,7 @@ describe('OperationalCard — contrast', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd frontend && pnpm test OperationalCard
@@ -2826,7 +2826,7 @@ cd frontend && pnpm test OperationalCard
 
 Expected: FAIL — `app_id` is present, `density` is not a prop, `#4a5570` is in the markup.
 
-- [ ] **Step 3: Rewrite `OperationalCard.tsx`**
+- [x] **Step 3: Rewrite `OperationalCard.tsx`**
 
 Apply these changes:
 
@@ -2910,7 +2910,7 @@ The `card.history` fallback keeps every existing caller rendering while Tasks 11
 
 6. **Contrast** — replace every `color: '#4a5570'` **text** declaration with `color: 'var(--text-muted)'` (`:121`, `:136`, `:142`, `:163`, `:170`). Leave `STATUS_COLOR.PENDING` at `:9` alone: it is a swatch fill, not text.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 ```bash
 cd frontend && pnpm test OperationalCard RunPicker
@@ -2918,7 +2918,7 @@ cd frontend && pnpm test OperationalCard RunPicker
 
 Expected: PASS, 22 tests across the two files.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/shared/OperationalCard.tsx \
