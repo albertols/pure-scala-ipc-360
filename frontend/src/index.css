@@ -29,6 +29,18 @@
   --pink: #f472b6;
   --red: #f87171;
   --cyan: #67e8f9;
+
+  /* Tab 3 semantic palette — ADR-0017. Three orthogonal facts, three disjoint palettes:
+     kind = GCP product, layer = medallion tier, status = the edge bar.
+     Mirrored as literals in src/theme/semanticColors.ts, which is what inline styles and unit
+     tests read (neither can resolve a var()). Change both together. */
+  --bq-blue: #4f9cf9;
+  --spark-orange: #fb923c;
+  --layer-bronze: #b0764a;
+  --layer-silver: #9aa6b8;
+  --layer-gold: #d4a537;
+  --layer-platinum: #cfd8e6;
+  --layer-unknown: #4a5570;
 }
 
 html, body, #root {

@@ -894,7 +894,7 @@ git commit -m "fix(tab3): render cards at their declared width instead of auto"
 **Interfaces:**
 - Produces: `layerColor(layer: string): string`, `kindPalette(kind: 'table' | 'recipe'): { accent, tint, border, statusEdge: 'top' | 'left' }`, `statusColor(status: string): string`, `statusBg(status: string): string`, and the constants `LAYER_COLOR`, `KIND_PALETTE`, `STATUS_COLOR`. Consumed by Tasks 8 and 9.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, it, expect } from 'vitest'
@@ -957,12 +957,12 @@ describe('status palette', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test semanticColors`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the module**
+- [x] **Step 3: Write the module**
 
 ```ts
 // ─── semanticColors ─────────────────────────────────────────────────────────
@@ -1028,7 +1028,7 @@ export function statusBg(status: string): string { return STATUS_BG[status] ?? S
 export const CARD_SHADOW = '0 2px 10px rgba(0,0,0,0.35)'
 ```
 
-- [ ] **Step 4: Add the custom properties**
+- [x] **Step 4: Add the custom properties**
 
 Append to the `:root` block in `frontend/src/index.css`, after `--cyan`:
 
@@ -1043,12 +1043,12 @@ Append to the `:root` block in `frontend/src/index.css`, after `--cyan`:
   --layer-unknown: #4a5570;
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test semanticColors && npx tsc --noEmit`
 Expected: PASS, 8 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/theme/semanticColors.ts frontend/src/theme/semanticColors.test.ts \
