@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { TabId } from './types'
 import { ETLViewer } from './components/tab1/ETLViewer'
 import { ETLModifier } from './components/tab2/ETLModifier'
@@ -6,75 +6,8 @@ import { ETLOperational } from './components/tab3/ETLOperational'
 import { ETLDag } from './components/tab4/ETLDag'
 import { InfoTooltip } from './components/shared/InfoTooltip'
 import { TopProgressBar } from './components/shared/Spinner'
-
-// ─── Tab Config ───────────────────────────────────────────────────────────────
-
-const TABS: {
-  id: TabId
-  label: string
-  icon: React.ReactElement
-  accent: string
-  description: string
-}[] = [
-  {
-    id: 'viewer',
-    label: 'IPC ETL Viewer',
-    accent: '#34d399',
-    description: 'Visualize Informatica PowerCenter XML mappings with an interactive node canvas. Click nodes to inspect ports, expressions, and properties.',
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <rect x="1" y="1" width="5" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-        <rect x="8" y="1" width="5" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-        <rect x="1" y="8" width="5" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-        <rect x="8" y="8" width="5" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-      </svg>
-    ),
-  },
-  {
-    id: 'modifier',
-    label: 'ETL Modifier',
-    accent: '#818cf8',
-    description: 'Edit _ETL_*.json recipe files — sources, transformations, expressions, and BigQuery DDL. All changes tracked with a save bar.',
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M2 10.5V12h1.5l6-6L8 4.5l-6 6zM11.7 3.3a1 1 0 000-1.4l-.6-.6a1 1 0 00-1.4 0l-1 1L10.7 4.3l1-1z" stroke="currentColor" strokeWidth="1.1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: 'operational',
-    label: 'ETL Operational',
-    accent: '#fb923c',
-    description: 'Live relationship graph of tables and ETL recipes with BigQuery operational state — OK/KO, run history, p95 stats, and GCP deep links.',
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="3" cy="7" r="1.8" stroke="currentColor" strokeWidth="1.3" />
-        <circle cx="11" cy="3" r="1.8" stroke="currentColor" strokeWidth="1.3" />
-        <circle cx="11" cy="11" r="1.8" stroke="currentColor" strokeWidth="1.3" />
-        <line x1="4.8" y1="6.3" x2="9.2" y2="3.7" stroke="currentColor" strokeWidth="1.2" />
-        <line x1="4.8" y1="7.7" x2="9.2" y2="10.3" stroke="currentColor" strokeWidth="1.2" />
-      </svg>
-    ),
-  },
-  {
-    id: 'dag',
-    label: 'ETL DAG',
-    accent: '#4f9cf9',
-    description: 'Airflow DAG explorer with task dependency canvas, execution history, and one-click replay via GCP Pub/Sub.',
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M1 7h3M10 7h3M4 7l2-3 2 3-2 3L4 7z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="12" cy="7" r="1.3" fill="currentColor" />
-        <circle cx="2" cy="7" r="1.3" fill="currentColor" />
-      </svg>
-    ),
-  },
-]
-
-const FUTURE_TABS = [
-  { label: 'ETL Tuner', desc: 'Spark engine performance tuner — coming soon' },
-  { label: 'ETL Agents', desc: 'L2/L3 agent interaction history — coming soon' },
-]
+import { Landing } from './components/landing/Landing'
+import { TABS, FUTURE_TABS } from './tabs'
 
 // ─── Top Bar ─────────────────────────────────────────────────────────────────
 
@@ -211,14 +144,47 @@ function readFocusRecipe(): string | null {
   return new URLSearchParams(window.location.search).get('focus')
 }
 
+// Sub-project 11 Task 10: the landing page is the app's initial view (spec §8) — a `view`
+// state, not a route. `'leaving'` is the ~400ms window in which `.landing-exit` (index.css)
+// plays before the tab shell actually mounts; `?focus=` bypasses this entirely, exactly as it
+// already bypasses the tab shell below (never sees `'landing'`/`'leaving'` at all).
+type ViewState = 'landing' | 'leaving' | 'tabs'
+const LANDING_TRANSITION_MS = 400
+
+// Spec §8: the transition "is skipped entirely under prefers-reduced-motion" — the CSS
+// keyframes already no-op under that media query (index.css), but the JS delay that used to
+// gate the actual view swap did NOT: a reduced-motion user would click Enter, see nothing
+// animate (correctly), then sit on an apparently-frozen screen for 400ms before it snapped to
+// the shell. This reads as an unresponsive app, which is worse than no transition at all — so
+// the swap itself must be synchronous whenever the OS setting is on.
+//
+// jsdom does not implement `window.matchMedia` at all in this project's test environment
+// (confirmed: `typeof window.matchMedia` is `'undefined'` under the default test setup), so
+// this guards defensively rather than assuming a browser-shaped `window` — a crash here on
+// entry would take down the whole app, which is worse than just not skipping the delay.
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
+}
+
 export default function App() {
   const [focusRecipe] = useState<string | null>(readFocusRecipe)
+  const [view, setView] = useState<ViewState>('landing')
   const [activeTab, setActiveTab] = useState<TabId>('viewer')
   const [searchQuery, setSearchQuery] = useState('')
   // Task 12: visited tabs stay mounted (display:none) once shown, so React Query's
   // cached data and operationalView's cached view state don't have to fight DOM
   // state (scroll offsets, canvas layout work) that neither of them restores.
   const [visited, setVisited] = useState<Set<TabId>>(() => new Set<TabId>(['viewer']))
+  const transitionTimer = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current)
+  }, [])
 
   const showTab = (tab: TabId) => {
     setActiveTab(tab)
@@ -226,8 +192,47 @@ export default function App() {
     setVisited(prev => prev.has(tab) ? prev : new Set(prev).add(tab))
   }
 
+  // Entry via the primary button, `Esc`, a tab-preview card or an architecture-diagram region
+  // (the last two call this with the tab they depict; the first two call it with none). Nothing
+  // here is persisted — no "skip intro" flag, so there is no stored value that can wedge the
+  // first screen (the hazard sub-project 10 met once already with a corrupt `density`).
+  const enterApp = (tab?: TabId) => {
+    if (tab) showTab(tab)
+
+    // Clear any previously scheduled swap before doing anything else: the landing page (and
+    // its Enter button) stays mounted through the whole 400ms `'leaving'` window, so a second
+    // activation within that window — Enter clicked twice, or Enter then a tab card — must not
+    // leave the first timer running underneath the second.
+    if (transitionTimer.current !== null) {
+      window.clearTimeout(transitionTimer.current)
+      transitionTimer.current = null
+    }
+
+    if (prefersReducedMotion()) {
+      setView('tabs')
+      return
+    }
+
+    setView('leaving')
+    transitionTimer.current = window.setTimeout(() => setView('tabs'), LANDING_TRANSITION_MS)
+  }
+
+  if (!focusRecipe && view !== 'tabs') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+        <TopProgressBar />
+        <div className={view === 'leaving' ? 'landing-exit' : undefined} style={{ flex: 1, overflow: 'hidden' }}>
+          <Landing onEnter={enterApp} />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+    <div
+      className={!focusRecipe ? 'shell-enter' : undefined}
+      style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}
+    >
       {/* Task 17: fetch-driven progress bar — mounted once here, above the
           tab shell (and focus mode), so every corner of the app gets the
           same top-of-viewport signal without per-tab wiring. */}

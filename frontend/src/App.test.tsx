@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
@@ -66,6 +66,15 @@ const server = setupServer(
   http.get('/api/operational/summary', () => HttpResponse.json(OPERATIONAL_SUMMARY)),
   http.get('/api/config', () => HttpResponse.json(APP_CONFIG)),
   http.get('/api/diagnostics', () => HttpResponse.json({ status: 'ok' })),
+  // Sub-project 11 Task 10: the landing page (the app's initial view) fetches this once.
+  http.get('/api/readiness', () => HttpResponse.json({
+    status: 'ok',
+    corpus: { xml: 1, recipes: 1, ddl: 0, dirs: 1, layers: ['CDM'] },
+    operational: { clusters: 1, recipes: 1, days: 2, rows: 2, mode: 'mock' },
+    dags: { workflows: 1 },
+    roots: [{ name: 'corpus', resolved: '/mock/xmltobq', tier: 'real', status: 'ok' }],
+    progress: { tasksDone: 1, tasksTotal: 1, adrs: 1 },
+  })),
   // Registered BEFORE the parameterized `:date` handler below — MSW matches in
   // registration order, and `:date` would otherwise swallow "runs" as a date
   // (same hazard ETLDag.test.tsx documents).
@@ -92,6 +101,15 @@ function renderApp() {
       <App />
     </QueryClientProvider>,
   )
+}
+
+// Sub-project 11 Task 10: the app now opens on the landing page (no `?focus=`), so any test that
+// wants the four-tab shell has to enter it first — this is the one shared step for all of them.
+async function renderShell() {
+  const utils = renderApp()
+  fireEvent.click(await screen.findByRole('button', { name: /^enter/i }))
+  await screen.findByRole('button', { name: /IPC ETL Viewer/ })
+  return utils
 }
 
 describe('App — focus mode (Task 15)', () => {
@@ -129,13 +147,77 @@ describe('App — focus mode (Task 15)', () => {
     expect(screen.queryByText('Explorer')).not.toBeInTheDocument()
   })
 
-  it('no query param renders the normal four-tab shell', async () => {
-    renderApp()
+  it('no query param renders the normal four-tab shell, once entered', async () => {
+    await renderShell()
 
-    expect(await screen.findByText('IPC ETL Viewer')).toBeInTheDocument()
+    expect(screen.getByText('IPC ETL Viewer')).toBeInTheDocument()
     expect(screen.getByText('ETL Modifier')).toBeInTheDocument()
     expect(screen.getByText('ETL Operational')).toBeInTheDocument()
     expect(screen.getByText('ETL DAG')).toBeInTheDocument()
+  })
+})
+
+// Sub-project 11 Task 10: the app opens on the landing page, not on a tab.
+describe('App — landing page (Task 10)', () => {
+  it('opens on the landing page, not on a tab', async () => {
+    renderApp()
+    expect(await screen.findByRole('button', { name: /^enter/i })).toBeInTheDocument()
+    // Exact name, not a substring regex: the landing page's own `TabPreview` card and
+    // `ArchitectureDiagram` region both also mention "IPC ETL Viewer" in their longer
+    // descriptions/aria-labels — only the (absent, pre-entry) TopBar tab button's accessible
+    // name is the bare label.
+    expect(screen.queryByRole('button', { name: 'IPC ETL Viewer' })).not.toBeInTheDocument()
+  })
+
+  it('reaches the tab shell after entering', async () => {
+    renderApp()
+    fireEvent.click(await screen.findByRole('button', { name: /^enter/i }))
+
+    expect(await screen.findByRole('button', { name: /IPC ETL Viewer/ })).toBeInTheDocument()
+  })
+
+  // focus mode is a deep link into one recipe — it must not be interrupted by an intro screen.
+  it('bypasses the landing page entirely in focus mode', async () => {
+    window.history.replaceState({}, '', '/?focus=' + encodeURIComponent('CDM/m_FIX/_ETL_m_FIX.json'))
+    renderApp()
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: /^enter/i })).not.toBeInTheDocument())
+    // Positive half: the absent Enter button only proves the landing didn't render, not that
+    // the recipe editor did — assert the editor itself is up, standalone (same marker the
+    // "App — focus mode" describe block's own first test uses).
+    expect(await screen.findByRole('heading', { name: '_ETL_m_FIX.json' })).toBeInTheDocument()
+    window.history.replaceState({}, '', '/')
+  })
+
+  // Fix round 1, Finding 1 (spec §8: the transition "is skipped entirely under
+  // prefers-reduced-motion" — skipped means the delay too, not just the CSS keyframes).
+  it('skips the transition delay under prefers-reduced-motion — no timer wait needed', async () => {
+    const originalMatchMedia = window.matchMedia
+    // jsdom does not implement `matchMedia` in this project's test environment at all
+    // (`typeof window.matchMedia` is `'undefined'` under the default setup) — this stubs it in
+    // rather than assuming it, since production code must also tolerate its absence.
+    window.matchMedia = ((query: string) => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia
+
+    try {
+      renderApp()
+      fireEvent.click(await screen.findByRole('button', { name: /^enter/i }))
+
+      // Synchronous, no `await`/polling `findBy*`: the shell must already be in the DOM the
+      // instant `fireEvent.click` returns, proving the 400ms `setTimeout` was skipped entirely
+      // rather than merely being fast.
+      expect(screen.getByRole('button', { name: 'IPC ETL Viewer' })).toBeInTheDocument()
+    } finally {
+      window.matchMedia = originalMatchMedia
+    }
   })
 })
 
@@ -144,7 +226,7 @@ describe('App — focus mode (Task 15)', () => {
 // can cover (scroll offsets, canvas layout work).
 describe('App — visited tabs stay mounted (Task 12)', () => {
   it('keeps a visited tab mounted after switching away', async () => {
-    renderApp()
+    await renderShell()
 
     fireEvent.click(screen.getByRole('button', { name: /ETL Operational/ }))
     // Task 14: with nothing selected Tab 3 renders the cluster pane + prompt, not the toolbar —
@@ -157,8 +239,8 @@ describe('App — visited tabs stay mounted (Task 12)', () => {
     expect(screen.getByText(/Select a cluster/)).toBeInTheDocument()
   })
 
-  it('does not mount a tab that was never visited', () => {
-    renderApp()
+  it('does not mount a tab that was never visited', async () => {
+    await renderShell()
     expect(screen.queryByText(/Select a cluster/)).not.toBeInTheDocument()
   })
 })

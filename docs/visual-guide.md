@@ -88,18 +88,23 @@ subagent contract and gate actually check.
 
 ## Screenshots
 
-**Not yet captured.** Task 6 checked this environment for browser automation
-(Claude-in-Chrome, Playwright, Puppeteer) and found none wired up — reaching each named
-UI state well enough to screenshot it needs GUI interaction no tool here can perform, so
-rather than fake it, this section is an honest checklist for a human with a working
-Chrome to run. The seven `docs/img/*.png` files below don't exist yet; each `![...]`
-link is left in place so dropping a same-named PNG into `docs/img/` later makes it
-render with no further doc edits.
+**Landing page: captured.** The suite's sub-project 11 acceptance walk (`docs/superpowers/plans/
+2026-08-28-landing-page.md`, Task 12) captured both mascot moods in Chrome against the committed
+mock tiers — see items 0a/0b below.
+
+**Tabs 1-4 and the Explorer states: not yet captured.** Task 6 checked this environment for
+browser automation (Claude-in-Chrome, Playwright, Puppeteer) and found none wired up — reaching
+each named UI state well enough to screenshot it needs GUI interaction no tool here can perform,
+so rather than fake it, this section is an honest checklist for a human with a working Chrome to
+run. The seven `docs/img/*.png` files below don't exist yet; each `![...]` link is left in place
+so dropping a same-named PNG into `docs/img/` later makes it render with no further doc edits.
 
 ### Capture checklist (~5 minutes)
 
-1. `make dev`, open Chrome at `http://localhost:8443`, size the window to roughly
-   1440×900.
+1. `make dev`, open Chrome at `http://localhost:8443`. **The landing page is what loads now**
+   (sub-project 11) — click "Enter ETL 360" (or press Enter/click an architecture region) to reach
+   the tab shell before working the list below, which starts from Tab 1. Size the window to
+   roughly 1440×900.
 2. For each numbered screenshot below: put the UI in the described state, then run
    `screencapture -x -o docs/img/<file>.png` and click the target Chrome window when
    the crosshair cursor appears (`-x` suppresses the shutter sound, `-o` omits the
@@ -107,6 +112,29 @@ render with no further doc edits.
 3. Verify: `file docs/img/*.png` reports "PNG image data" for all 7; combined size
    under ~3 MB (`du -sh docs/img`). Then `git add docs/img docs/visual-guide.md` and
    commit.
+
+### 0a. Landing page — ready
+
+State: default load against the committed mock tiers (`ETL360_DWH_CONTROL_ROOT`/
+`ETL360_COMPOSER_ROOT` pinned to `backend/src/main/resources/mock/{DWH_CONTROL,composer}`),
+`/api/readiness` reporting `status: "ok"`. Captured as `docs/img/landing-ok.jpg`.
+
+![Landing page, ready](img/landing-ok.jpg)
+
+Relaxed mascot mood, bubbles and steam animating; stats at the mock floors (81/86/212 corpus,
+21/30/14/417 operational, 22 DAGs); progress and ADR counts; the environment panel naming all
+three resolved roots and their tiers; the architecture diagram and the four tab cards.
+
+### 0b. Landing page — degraded
+
+State: the composer root pointed at a nonexistent path and the backend restarted, so
+`/api/readiness` reports `status: "ko"`. Captured as `docs/img/landing-degraded.jpg`.
+
+![Landing page, degraded](img/landing-degraded.jpg)
+
+Pruning mascot mood, twigs falling, the grade cooled, and the failing root and its hint named on
+screen — see the spec's `2026-08-28-landing-page-design.md` acceptance-walk results for the full
+defect-and-fix narrative this pair of screenshots documents.
 
 ### 1. Tab 1 — IPC ETL Viewer
 

@@ -45,10 +45,10 @@ Measured in this repo on 2026-08-28, not assumed.
 | Data-root diagnosis available | per-root `resolved`, `tier`, `status`, `hint` + overall `status` | `DiagnosticsDto`, `GET /api/diagnostics` (ADR-0013) |
 | DAG/workflow count | **not** currently served anywhere | — |
 | `workflow` lives on | `LayerToLayerEntryDto.workflow` | control-schema column 4 |
-| Distinct workflows in the committed mock | **23** | `grep -ho "'wf_[A-Za-z_]*'" mock/DWH_CONTROL/LAYER_TO_LAYER/*/statements.sql \| sort -u \| wc -l` |
+| Distinct workflows in the committed mock | **22** (originally recorded as 23 — a raw grep over every `LAYER_TO_LAYER/*/statements.sql` sweeps in `ARCHIVE/`, a decoy directory outside the 8-name layer vocabulary that `LayerToLayerService.entries()` excludes and `LayerToLayerServiceTest` asserts is excluded; `ARCHIVE` contributes exactly one workflow, `wf_SYN_ARCHIVE_LOAD`) | `LayerToLayerService.entries()`, scoped to `layerDirs()` (not a raw grep) |
 | `LayerToLayerService.entries()` cost | mtime-cached; no graph build | `LayerToLayerService` |
 | Plan checkboxes in repo | **601** total, **596** done, **5** open | `cat docs/superpowers/plans/*.md \| grep -c '^- \['` |
-| ADRs in repo | **16** | `ls docs/adr/0*.md \| wc -l` |
+| ADRs in repo | **15** (originally recorded as 16 — `ls docs/adr/0*.md \| wc -l` counts `0000-template.md`, which is not a decision; `ProgressScanner` excludes it, and the shipped code reports 15. Task 11 of this plan adds ADR-0016, bringing the live count to **16** as of that task's commit — this row states the count at every other point in the plan) | `ls docs/adr/0*.md \| wc -l`, minus the template |
 | Future-tab stubs already declared | **2** (`ETL Tuner`, `ETL Agents`) | `FUTURE_TABS` in `App.tsx` |
 | Repo-root resolution helper | `RepoRoot.resolve(Path startDir)` (static) | `backend/.../config/RepoRoot.java` |
 | Mascot source image | 1024×1024 PNG, **1,769,197 B** | `sips -g pixelWidth -g pixelHeight` |
@@ -82,7 +82,7 @@ Measured in this repo on 2026-08-28, not assumed.
 ### 4.1 The DAG count is the only genuinely new number
 
 Every other statistic is already served. `dags.workflows` is the count of distinct non-blank
-`workflow` values across `LayerToLayerService.entries()` — **23** on the committed mock.
+`workflow` values across `LayerToLayerService.entries()` — **22** on the committed mock (see §3 — `ARCHIVE`'s single workflow is excluded).
 
 This matters: Tab 4 derives its DAG clusters from `workflow` on the *full* relationships graph
 (`toDagClusters`). Computing the count that way would pull the entire graph — the payload
@@ -102,10 +102,20 @@ never committed.
 breathes rather than sitting static. Over it, an inline SVG overlay whose contents depend on
 readiness:
 
-| `readiness.status` | Overlay | Grade |
+| Mascot mood | Overlay | Grade |
 |---|---|---|
 | `ok` | rising bubbles, curling steam | warm, saturated |
 | `degraded` | falling twigs, a shear glint | cooler, desaturated, harder vignette |
+
+**Corrected during the acceptance walk (Task 12).** This table's left column originally read
+`readiness.status`, implying the backend's `/api/readiness` sends the literal string `"degraded"`.
+It does not: the real vocabulary is `"ok"`/`"ko"` (`DiagnosticsService`, ADR-0013) — "degraded" was
+a spec-authoring error that propagated into the frontend mapping and shipped a defect (the mascot
+rendered its relaxed mood for a real `"ko"` payload, caught in the browser acceptance walk). `ok`/
+`degraded` above names the mascot's own presentational MOOD (`MascotScene`'s `ReadinessStatus`),
+which is a legitimate frontend-only concept — the fix is that `Landing.tsx` now maps `status !==
+'ok'` (any value, not just a hardcoded `"ko"`) to the `degraded` mood, rather than checking for the
+API to send a word it never sends.
 
 Both overlays are SVG shapes animated with CSS keyframes, following the precedent ADR-0005 set for
 `spinner-rotate`. All colours come from existing tokens; the grade is a CSS `filter`
@@ -138,6 +148,15 @@ from the tab strip.
 ### 6.3 `ProgressStrip`
 `tasksDone / tasksTotal`, ADR count, and a shipped-vs-planned split. Presented as progress, not as
 a percentage-complete claim about the product.
+
+**Corrected during the final whole-branch review.** No layer implements the shipped-vs-planned
+split named above: `ReadinessDto.Progress` is `(tasksDone, tasksTotal, adrs)` and `ProgressStrip`
+renders only the ratio and the ADR count. The backlog is conveyed implicitly, as
+`tasksTotal - tasksDone`, never as an enumerated `shipped[]`/`planned[]` list. This is the one part
+of the user's original request ("feature progress and backlog") that shipped under-delivered — see
+§10's matching correction for the wire shape, and ADR-0016's Context section for the same note.
+Whether to build the itemized split is left to the user to decide separately; this branch does not
+add it.
 
 ### 6.4 `EnvironmentPanel`
 The resolved absolute path and tier for each data root, plus the GCP project and region from
@@ -195,18 +214,23 @@ surface, and its sanctioned departures are:
 | GET | `/api/readiness` | **new** — one aggregate: `status`, `corpus`, `operational`, `dags`, `roots`, `progress` |
 
 ```
-{ "status": "ok" | "degraded",
+{ "status": "ok" | "ko",
   "corpus":      { "xml": 81, "recipes": 86, "ddl": 212, "dirs": 119, "layers": ["CDM","DWH",…] },
   "operational": { "clusters": 21, "recipes": 30, "days": 14, "rows": 417, "mode": "mock" },
-  "dags":        { "workflows": 23 },
+  "dags":        { "workflows": 22 },
   "roots":       [ { "name": "corpus", "resolved": "…", "tier": "real", "status": "ok",
                      "hint": null } ],
-  "progress":    { "tasksDone": 596, "tasksTotal": 601, "adrs": 16,
-                   "shipped": [ … ], "planned": [ … ] } }
+  "progress":    { "tasksDone": 596, "tasksTotal": 601, "adrs": 16 } }
 ```
 
 `status` is derived from `DiagnosticsService`'s existing overall status — the landing page does not
 compute a second opinion about health. `progress` is **nullable**: see §11.
+
+**Corrected during the final whole-branch review:** the `"shipped": […], "planned": […]` pair shown
+above in an earlier draft was never implemented — `ReadinessDto.Progress` carries only
+`tasksDone`/`tasksTotal`/`adrs`, as the JSON above (now) shows. This table is the authoritative wire
+shape; treat the three-field `progress` object as the real contract, not the removed pair. See
+§6.3's matching correction.
 
 `frontend/src/api/types.gen.ts` is regenerated via `make generate-api`, never hand-edited.
 
@@ -230,17 +254,22 @@ compute a second opinion about health. `progress` is **nullable**: see §11.
 
 **Backend (JUnit)**
 - `ReadinessServiceTest` — counts against the committed corpus and mock (81/86/212 corpus,
-  21/30/14/417 operational, **23** workflows); `status` mirrors `DiagnosticsService`; `index()` is
+  21/30/14/417 operational, **22** workflows); `status` mirrors `DiagnosticsService`; `index()` is
   called exactly once per request.
 - `ProgressScannerTest` — counts `- [x]`/`- [ ]` across a temp docs tree; **returns `null` for an
   absent `docs/`**; fingerprint invalidation when a plan file changes.
-- `ReadinessControllerTest` — shape, `200`, and that a degraded diagnostics state produces
-  `status: "degraded"` with the failing root's `hint` present.
+- `ReadinessContractTest` (named `ReadinessControllerTest` in the original brief; the class that
+  actually shipped is `ReadinessContractTest`) — shape, `200`, and that a `"ko"` diagnostics state
+  produces `status: "ko"` with the failing root's `hint` present. (Corrected during the acceptance
+  walk: this bullet originally read "a degraded diagnostics state produces `status: "degraded"`" —
+  the backend has never emitted that word; see §5's correction.)
 
 **Frontend (vitest)**
 - `Landing.test.tsx` — stats render from the payload; the mascot overlay flips with `status` **in
-  both directions**; a degraded payload names the failing root and shows its hint; Enter, `Esc` and
-  a diagram-region click each reach the tabs, the last on the region's own tab.
+  both directions**; a `"ko"` payload names the failing root and shows its hint, and is mapped to
+  the mascot's `degraded` mood (any non-`"ok"` status is, not only a hardcoded `"ko"` check — see
+  §5's correction); Enter, `Esc` and a diagram-region click each reach the tabs, the last on the
+  region's own tab.
 - `reducedMotion.test.ts` — asserts every animated landing class has a rule inside a
   `@media (prefers-reduced-motion: reduce)` block.
 
@@ -257,7 +286,7 @@ compute a second opinion about health. `progress` is **nullable**: see §11.
 
 **Sweeps**
 - `make validate-loop` gains a `/api/readiness` curl asserting the committed-mock floors (corpus
-  81/86/212, operational 21/30/14/417, **23** workflows) — a real floor beside the existing ones.
+  81/86/212, operational 21/30/14/417, **22** workflows) — a real floor beside the existing ones.
 
 **Browser acceptance**
 A Chrome pass over the rendered result: both mascot moods (forced by pointing a data root at a
@@ -279,3 +308,46 @@ must never be committed: no path, project id, or hostname from any real environm
 test, fixture, doc, ADR, screenshot, or commit message. Screenshots for `docs/img/` are captured
 against the committed mock tiers only, and reviewed for identifiers before committing — the same
 rule sub-project 10 followed.
+
+---
+
+## Acceptance walk results (2026-08-29)
+
+Run in Chrome at `http://localhost:8443` against the committed mock tiers, plus a deliberately broken
+control-schema root. Screenshots: `docs/img/landing-ok.jpg`, `docs/img/landing-degraded.jpg`.
+
+**Confirmed.** The landing page is what loads, not Tab 1. Stats match the mock floors exactly — 81/86/212
+corpus with 8 layers, 21/30/14/417 operational behind a `data: mock` chip, and **22** DAGs (the corrected
+figure, live). Progress renders (661/673 plan tasks, 16 ADRs). The environment panel names all three roots
+with their tiers, and `dwhControl` shows the path that actually SERVED — the mock mirror — not the
+configured real path. GCP project and region render (spec §6.4). Future-tab cards show their descriptions
+as visible text. All four tab cards and every architecture region enter the right tab, verified by the
+active tab's accent (Modifier → `#818cf8`, Operational → `#fb923c`). Esc reaches the shell on the default
+Viewer tab. The existing tab shell renders unchanged. No horizontal overflow. Console clean — zero errors,
+zero warnings.
+
+**Two defects found, both fixed and re-verified in the browser.**
+
+1. *The mascot reported "all is well" while the app was broken* (commit `2e618d2`). With both control-schema
+   tiers pointed at nonexistent paths, `/api/readiness` correctly returned `status: "ko"` — and the mascot
+   stayed in its OK mood. Cause: `DiagnosticsService` emits only `"ok"`/`"ko"` (`"degraded"` appears ZERO
+   times in the backend), but this spec invented the word `"degraded"` and four downstream sites believed
+   it, including `Landing.tsx`'s status mapping, two contract-test assertions and the `validate-loop` gate.
+   Every one of them passed on a healthy machine, which is every machine the tests run on. Fixed at all four
+   sites with a regression test pinning the real `"ko"` value, and the mapping now fails safe: any non-`"ok"`
+   status renders the degraded mood. **This spec's own vocabulary was the root cause** — see §3's corrected
+   row. Re-verified: `"ko"` now renders `data-mood="degraded"`, twigs present and bubbles absent, naming the
+   failing root and its hint.
+
+2. *The call-to-action sat below the fold* (commit `3ee9452`). The hero stretched to its flex parent's full
+   930px and, being `aspectRatio: 1/1`, 930px tall — putting "Enter ETL 360" at y=1120 in an 864px viewport,
+   on a page whose whole promise is click-and-go. Capped on WIDTH (`min(600px, 52vh)`), not height: the inner
+   box is `aspectRatio: 1/1` over an `objectFit: cover` image, so a height cap would letterbox the square and
+   centre-crop the mascot's head off. The hero now renders at 456px — below its 600px natural size, so it is
+   also no longer upscaled and soft — with the button 194px clear of the fold.
+
+Neither was reachable by unit test: jsdom computes no layout, and the status bug is invisible on a healthy
+host. That is the case for keeping a browser walk in this harness.
+
+**Still outstanding: human visual sign-off.** The mechanisms are gated; the aesthetic judgement is the
+user's.

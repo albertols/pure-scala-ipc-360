@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["readiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/operational/{date}": {
         parameters: {
             query?: never;
@@ -532,6 +548,55 @@ export interface components {
             timestamp?: string;
             /** Format: int64 */
             sizeBytes?: number;
+        };
+        Corpus: {
+            /** Format: int32 */
+            xml?: number;
+            /** Format: int32 */
+            recipes?: number;
+            /** Format: int32 */
+            ddl?: number;
+            /** Format: int32 */
+            dirs?: number;
+            layers?: string[];
+        };
+        Dags: {
+            /** Format: int32 */
+            workflows?: number;
+        };
+        Operational: {
+            /** Format: int32 */
+            clusters?: number;
+            /** Format: int32 */
+            recipes?: number;
+            /** Format: int32 */
+            days?: number;
+            /** Format: int32 */
+            rows?: number;
+            mode?: string;
+        };
+        Progress: {
+            /** Format: int32 */
+            tasksDone?: number;
+            /** Format: int32 */
+            tasksTotal?: number;
+            /** Format: int32 */
+            adrs?: number;
+        };
+        ReadinessDto: {
+            status?: string;
+            corpus?: components["schemas"]["Corpus"];
+            operational?: components["schemas"]["Operational"];
+            dags?: components["schemas"]["Dags"];
+            roots?: components["schemas"]["Root"][];
+            progress?: components["schemas"]["Progress"];
+        };
+        Root: {
+            name?: string;
+            resolved?: string;
+            tier?: string;
+            status?: string;
+            hint?: string;
         };
         B15RowDto: {
             clusterName?: string;
@@ -1282,6 +1347,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RecipeHistoryEntryDto"][] | components["schemas"]["RecipeDto"];
+                };
+            };
+        };
+    };
+    readiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReadinessDto"];
                 };
             };
         };

@@ -12,6 +12,12 @@ it — sidebar tree, mapping detail, DOM/recipe/DDL/SQL viewers. The backend and
 are new (this repo's `feat/etl360-foundation` work); the parser is the original
 standalone tool, unchanged in behavior.
 
+![ETL 360 architecture](docs/img/etl360-architecture.svg)
+
+The same artwork is clickable inside the app's landing page (each region opens the tab it
+depicts); see `docs/visual-guide.md` for the full flowchart set and `docs/architecture.md`
+for the precise system and sequence diagrams this illustration summarizes.
+
 ## Prerequisites
 
 - **JDK 17+** — no JDK is preinstalled on a bare machine; install a distribution such as

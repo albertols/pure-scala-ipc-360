@@ -68,6 +68,39 @@ assert t["rows"] == 417, f"expected 417 rows, got {t["rows"]}"
 assert by_count[0] >= 4, f"no cluster groups 4+ recipes (largest {by_count[0]})"
 ' || fail "cluster index floors"
 
+echo "[validate-loop] readiness…"
+READY=$(curl -sf localhost:8080/api/readiness) || fail "readiness"
+echo "$READY" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+c, o, g = d["corpus"], d["operational"], d["dags"]
+print(f"[validate-loop] readiness: {c["xml"]} xml, {c["recipes"]} recipes, {c["ddl"]} ddl; "
+      f"{o["clusters"]} clusters, {o["days"]} days, {o["rows"]} rows; {g["workflows"]} workflows; "
+      f"status {d["status"]}")
+# Floors from the committed mock. A drop here means a data root flipped or the aggregate regressed.
+assert c["xml"] == 81, f"expected 81 xml, got {c["xml"]}"
+assert c["recipes"] == 86, f"expected 86 recipes, got {c["recipes"]}"
+assert c["ddl"] == 212, f"expected 212 ddl, got {c["ddl"]}"
+assert o["clusters"] == 21 and o["days"] == 14 and o["rows"] == 417, "operational floors moved"
+# The DAG count is the one number only this endpoint serves — and it must NOT come from the graph.
+# 22, not 23: a naive grep over LAYER_TO_LAYER/*/statements.sql sweeps in ARCHIVE/, a decoy
+# directory outside the 8-name layer vocabulary that LayerToLayerService.entries() excludes
+# (docs/adr/0016-landing-readiness-aggregate.md).
+assert g["workflows"] == 22, f"expected 22 workflows, got {g["workflows"]}"
+# "ok"/"ko" is the real vocabulary (DiagnosticsService, ADR-0013) — the backend never emits
+# "degraded"; that word names only the frontend mascot mood (a presentational concept only).
+assert d["status"] in ("ok", "ko"), "status must mirror diagnostics"
+assert len(d["roots"]) == 3, "expected corpus, dwhControl and composer roots"
+# progress is nullable and, per @JsonInclude(NON_NULL) on the DTO, ABSENT from the JSON
+# entirely when null rather than serialized as "progress": null — so d.get(...), never d[...],
+# is the only lookup that does not raise KeyError in the packaged-deployment case this comment
+# describes. Only assert its shape when present, on this repo checkout of the committed mock
+# where docs/ always exists.
+progress = d.get("progress")
+if progress is not None:
+    assert progress["adrs"] >= 16, f"expected at least 16 ADRs, got {progress["adrs"]}"
+' || fail "readiness floors"
+
 FIRST_CLUSTER=$(echo "$CLUSTERS" | python3 -c 'import json,sys; print(json.load(sys.stdin)["clusters"][0]["name"])')
 curl -sf "localhost:8080/api/operational/clusters/$FIRST_CLUSTER" | grep -q '"recipes"' || fail "cluster detail"
 curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/operational/clusters/no-such-cluster | grep -q 404 \

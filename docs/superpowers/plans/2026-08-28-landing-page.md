@@ -54,7 +54,7 @@ Committed-mock values this plan asserts against: corpus **81** XMLs · **86** re
 
 | File | Responsibility |
 |---|---|
-| `src/tabs.ts` | `TABS` and `FUTURE_TABS`, lifted out of `App.tsx` so the tab strip and the landing page cannot drift. No JSX beyond the existing icon elements. |
+| `src/tabs.tsx` | `TABS` and `FUTURE_TABS`, lifted out of `App.tsx` so the tab strip and the landing page cannot drift. No JSX beyond the existing icon elements. |
 | `src/api/readinessQueries.ts` | `useReadiness()`. |
 | `src/assets/mascot-hero.jpg` | The user's image at 600px, JPEG q80 (~151 KB). |
 | `src/components/landing/Landing.tsx` | Composition + entry affordances. Owns no data fetching beyond `useReadiness()`. |
@@ -65,7 +65,7 @@ Committed-mock values this plan asserts against: corpus **81** XMLs · **86** re
 | `src/components/landing/EnvironmentPanel.tsx` | Resolved roots, tiers, GCP project/region. |
 | `src/components/landing/ArchitectureDiagram.tsx` | Inline SVG with clickable regions. |
 
-**Modified:** `frontend/src/App.tsx` (view switch, imports `TABS` from `src/tabs.ts`), `frontend/src/index.css` (new keyframes + reduced-motion rules), `scripts/validate_loop.sh`, `README.md`, `docs/architecture.md`, `CLAUDE.md`. **New docs:** `docs/adr/0016-landing-readiness-aggregate.md`, `docs/img/etl360-architecture.svg`.
+**Modified:** `frontend/src/App.tsx` (view switch, imports `TABS` from `src/tabs.tsx`), `frontend/src/index.css` (new keyframes + reduced-motion rules), `scripts/validate_loop.sh`, `README.md`, `docs/architecture.md`, `CLAUDE.md`. **New docs:** `docs/adr/0016-landing-readiness-aggregate.md`, `docs/img/etl360-architecture.svg`.
 
 ---
 
@@ -87,7 +87,7 @@ Committed-mock values this plan asserts against: corpus **81** XMLs · **86** re
 
 **The nullable contract is the load-bearing part.** There are **two** ways this can fail, not one: `docs/` may be absent (a packaged deployment need not ship documentation), **and** `RepoRoot.resolve` throws when it cannot find a `pom.xml`+`parser/` ancestor. Both must yield `null`, not an exception. A landing page that 500s because documentation is missing would be absurd.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -181,7 +181,7 @@ class ProgressScannerTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ProgressScannerTest
@@ -189,7 +189,7 @@ mvn -q -pl backend test -Dtest=ProgressScannerTest
 
 Expected: FAIL — `cannot find symbol: class ProgressScanner`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```java
 package io.pure360.etl360.service;
@@ -319,7 +319,7 @@ public class ProgressScanner {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 mvn -q -pl backend test -Dtest=ProgressScannerTest
@@ -327,7 +327,7 @@ mvn -q -pl backend test -Dtest=ProgressScannerTest
 
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Sanity-check it against the real repo**
+- [x] **Step 5: Sanity-check it against the real repo**
 
 ```bash
 cd /Users/serna/IdeaProjects/pure-scala-ipc-360
@@ -336,7 +336,7 @@ echo "expect done=$(cat docs/superpowers/plans/*.md | grep -c '^- \[x\]') total=
 
 The scanner's numbers must match this shell count. If they differ, the regex is wrong — fix the regex, not the expectation. (At authorship: done=596, total=601, adrs=16.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/ProgressScanner.java \
@@ -372,7 +372,7 @@ there is no pom.xml+parser/ ancestor."
 
 **Call `index()` exactly once.** It invokes `B15Reader.fingerprint()`, a stat sweep of every dated export directory. ADR-0014 records that a per-call invocation was already shipped and fixed once.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -437,7 +437,7 @@ class ReadinessServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ReadinessServiceTest
@@ -445,7 +445,7 @@ mvn -q -pl backend test -Dtest=ReadinessServiceTest
 
 Expected: FAIL — `cannot find symbol: class ReadinessService`.
 
-- [ ] **Step 3: Write the DTO**
+- [x] **Step 3: Write the DTO**
 
 ```java
 package io.pure360.etl360.api.dto;
@@ -483,7 +483,7 @@ public record ReadinessDto(String status, Corpus corpus, Operational operational
 }
 ```
 
-- [ ] **Step 4: Write the service**
+- [x] **Step 4: Write the service**
 
 ```java
 package io.pure360.etl360.service;
@@ -572,7 +572,7 @@ names. The three nested records are `RootStatus`, `ControlSchema` and (for compo
 that field uses; they do **not** share one shape. If an accessor named above does not exist, use the
 real one rather than inventing a getter.
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 ```bash
 mvn -q -pl backend test -Dtest=ReadinessServiceTest
@@ -580,7 +580,7 @@ mvn -q -pl backend test -Dtest=ReadinessServiceTest
 
 Expected: PASS, 5 tests.
 
-- [ ] **Step 6: Prove `index()` is called once, not per field**
+- [x] **Step 6: Prove `index()` is called once, not per field**
 
 Add to `ReadinessServiceTest`:
 
@@ -608,7 +608,7 @@ Wire the `*ForTest()` helpers from the autowired beans (add `@Autowired` fields 
 `ClusterIndexService.index()` is `final` or the class cannot be subclassed, make the minimal change
 that allows the override rather than dropping the test — this discipline was violated once already.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/dto/ReadinessDto.java \
@@ -645,7 +645,7 @@ template collides with it (unlike `/api/operational/{date}`, which forced explic
 checks in the previous sub-project). Copy `SummaryController`'s shape: constructor injection, one
 `@GetMapping`, no logic.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360;
@@ -712,7 +712,7 @@ class ReadinessContractTest {
 }
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 mvn -q -pl backend test -Dtest=ReadinessContractTest
@@ -720,7 +720,7 @@ mvn -q -pl backend test -Dtest=ReadinessContractTest
 
 Expected: FAIL — 404 on `/api/readiness`.
 
-- [ ] **Step 3: Write the controller**
+- [x] **Step 3: Write the controller**
 
 ```java
 package io.pure360.etl360.api;
@@ -748,7 +748,7 @@ public class ReadinessController {
 }
 ```
 
-- [ ] **Step 4: Run the test, then the full backend suite**
+- [x] **Step 4: Run the test, then the full backend suite**
 
 ```bash
 mvn -q -pl backend test -Dtest=ReadinessContractTest
@@ -759,7 +759,7 @@ grep -l "<failure\|<error" backend/target/surefire-reports/*.xml || echo "no fai
 
 Expected: contract test PASS (3 tests); full suite **281** (267 baseline + 6 `ProgressScannerTest` + 5 `ReadinessServiceTest` + 3 here), 0 failures. **Count `<testcase>` elements, not the `.txt` sum** — see Global Constraints. Report the real number.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/ReadinessController.java \
@@ -790,7 +790,7 @@ themselves undisturbed."
 
 **Why:** every landing component reads this one payload. One hook, one loading state, one error state.
 
-- [ ] **Step 1: Regenerate the API types against a running backend**
+- [x] **Step 1: Regenerate the API types against a running backend**
 
 ```bash
 mvn -q -am -pl backend install -DskipTests && (cd backend && mvn -q spring-boot:run &) && sleep 25
@@ -801,7 +801,7 @@ grep -c "ReadinessDto" frontend/src/api/types.gen.ts
 
 Expected: `ReadinessDto` present (non-zero). If it is absent the backend was not running or not rebuilt — fix that and regenerate. **Do not hand-edit `types.gen.ts`.**
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
@@ -863,7 +863,7 @@ describe('useReadiness', () => {
 })
 ```
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 ```bash
 cd frontend && pnpm test readinessQueries
@@ -871,7 +871,7 @@ cd frontend && pnpm test readinessQueries
 
 Expected: FAIL — `Failed to resolve import "./readinessQueries"`.
 
-- [ ] **Step 4: Write the hook**
+- [x] **Step 4: Write the hook**
 
 ```ts
 import { useQuery } from '@tanstack/react-query'
@@ -895,7 +895,7 @@ export const useReadiness = () =>
   })
 ```
 
-- [ ] **Step 5: Run the tests and the type check**
+- [x] **Step 5: Run the tests and the type check**
 
 ```bash
 cd frontend && pnpm test readinessQueries && pnpm exec tsc --noEmit
@@ -903,7 +903,7 @@ cd frontend && pnpm test readinessQueries && pnpm exec tsc --noEmit
 
 Expected: PASS, 3 tests; `tsc` clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/api/readinessQueries.ts frontend/src/api/readinessQueries.test.ts \
@@ -920,7 +920,7 @@ payload a deployment without docs/ produces."
 ### Task 5: Lift `TABS` and `FUTURE_TABS` out of `App.tsx`
 
 **Files:**
-- Create: `frontend/src/tabs.ts`
+- Create: `frontend/src/tabs.tsx`
 - Create: `frontend/src/tabs.test.ts`
 - Modify: `frontend/src/App.tsx`
 
@@ -930,7 +930,7 @@ payload a deployment without docs/ produces."
 
 **Why:** the landing page shows one card per tab, with the same label, accent and description the tab strip uses. Duplicating those arrays guarantees they drift the first time a description is edited. This is a pure move — **no content changes** — so the tab strip renders identically afterwards.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -958,7 +958,7 @@ describe('tabs metadata', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 cd frontend && pnpm test tabs
@@ -966,9 +966,9 @@ cd frontend && pnpm test tabs
 
 Expected: FAIL — `Failed to resolve import "./tabs"`.
 
-- [ ] **Step 3: Move the arrays verbatim**
+- [x] **Step 3: Move the arrays verbatim**
 
-Create `frontend/src/tabs.ts` containing the `TABS` and `FUTURE_TABS` declarations **cut verbatim**
+Create `frontend/src/tabs.tsx` containing the `TABS` and `FUTURE_TABS` declarations **cut verbatim**
 from `App.tsx` (currently at `App.tsx:12-72` and `:74-77`), plus:
 
 ```ts
@@ -990,21 +990,21 @@ Type `TABS` as `TabMeta[]` and export both arrays. Then in `App.tsx`, delete bot
 **Do not edit any label, accent, description or icon while moving them.** A diff that changes copy
 during a move is impossible to review as a move.
 
-- [ ] **Step 4: Verify the move changed nothing**
+- [x] **Step 4: Verify the move changed nothing**
 
 ```bash
 cd frontend && pnpm test tabs App && pnpm exec tsc --noEmit
-git diff --stat -- src/App.tsx src/tabs.ts
+git diff --stat -- src/App.tsx src/tabs.tsx
 ```
 
 Expected: tests PASS, `tsc` clean. `App.tsx` should show only deletions plus one import line.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
-git add frontend/src/tabs.ts frontend/src/tabs.test.ts frontend/src/App.tsx \
+git add frontend/src/tabs.tsx frontend/src/tabs.test.ts frontend/src/App.tsx \
         docs/superpowers/plans/2026-08-28-landing-page.md
-git commit -m "refactor(frontend): lift TABS/FUTURE_TABS into src/tabs.ts
+git commit -m "refactor(frontend): lift TABS/FUTURE_TABS into src/tabs.tsx
 
 The landing page renders one card per tab using the same label, accent and
 description the tab strip uses. A second copy would drift the first time a
@@ -1039,7 +1039,7 @@ colour grade rendered *over* it. **The character's pose does not change between 
 into the photograph. This is a known, accepted limitation (spec §5); do not "fix" it by substituting
 drawn artwork.
 
-- [ ] **Step 1: Produce the asset**
+- [x] **Step 1: Produce the asset**
 
 ```bash
 cd /Users/serna/IdeaProjects/pure-scala-ipc-360
@@ -1056,7 +1056,7 @@ sips -g pixelWidth -g pixelHeight frontend/src/assets/mascot-hero.jpg | tail -2
 Expected: ~151,000 bytes, 600×600. **If `$SRC` no longer exists** (it is a session-scoped cache),
 stop and ask the user to re-supply the mascot image rather than substituting any other artwork.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```tsx
 import { describe, expect, it, afterEach } from 'vitest'
@@ -1108,7 +1108,7 @@ describe('MascotScene', () => {
 })
 ```
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 ```bash
 cd frontend && pnpm test MascotScene
@@ -1116,7 +1116,7 @@ cd frontend && pnpm test MascotScene
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 4: Add the keyframes and their reduced-motion rules**
+- [x] **Step 4: Add the keyframes and their reduced-motion rules**
 
 Append to `frontend/src/index.css`, beside the existing `spinner-rotate` block at `:75-86`:
 
@@ -1146,7 +1146,7 @@ Append to `frontend/src/index.css`, beside the existing `spinner-rotate` block a
 }
 ```
 
-- [ ] **Step 5: Write the component**
+- [x] **Step 5: Write the component**
 
 `MascotScene.tsx` renders, in order:
 
@@ -1164,7 +1164,7 @@ Append to `frontend/src/index.css`, beside the existing `spinner-rotate` block a
 The root element carries `data-testid="mascot-scene"` and `data-mood={status}`. Colours come from
 existing tokens only (`--text`, `--text-muted`, `--cyan` for bubbles, `--orange` for twigs).
 
-- [ ] **Step 6: Pin the reduced-motion contract — and note the spec's sketch of it was wrong**
+- [x] **Step 6: Pin the reduced-motion contract — and note the spec's sketch of it was wrong**
 
 Spec §12 lists a `reducedMotion.test.tsx` asserting "no animation classes are applied". **That test
 cannot exist as described.** Reduced motion is handled in CSS (`@media (prefers-reduced-motion: reduce)`),
@@ -1205,7 +1205,7 @@ Run it: `cd frontend && pnpm test reducedMotion` — it must fail if any class i
 from a reduced-motion block, which you can verify by temporarily deleting one class name from the CSS
 rule and re-running.
 
-- [ ] **Step 7: Run the tests, the type check and the build**
+- [x] **Step 7: Run the tests, the type check and the build**
 
 ```bash
 cd frontend && pnpm test MascotScene reducedMotion && pnpm exec tsc --noEmit && pnpm build
@@ -1215,7 +1215,7 @@ ls -l dist/assets/*.jpg 2>/dev/null | awk '{print "  bundled asset bytes:", $5}'
 Expected: PASS (5 tests), `tsc` clean, build clean, and the bundled JPEG ~151 KB. If the bundle grew
 by more than ~200 KB, the wrong asset was committed.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add frontend/src/components/landing/reducedMotion.test.ts \
@@ -1256,7 +1256,7 @@ spinner-rotate precedent (ADR-0005)."
 **Why:** these are the "prelude of what's coming" — the numbers that tell the user how much is
 actually here before they walk in.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // StatsGrid.test.tsx
@@ -1331,7 +1331,7 @@ describe('ProgressStrip', () => {
 })
 ```
 
-- [ ] **Step 2: Run them to verify they fail**
+- [x] **Step 2: Run them to verify they fail**
 
 ```bash
 cd frontend && pnpm test StatsGrid ProgressStrip
@@ -1339,7 +1339,7 @@ cd frontend && pnpm test StatsGrid ProgressStrip
 
 Expected: FAIL — modules not found.
 
-- [ ] **Step 3: Implement both**
+- [x] **Step 3: Implement both**
 
 `StatsGrid` renders a responsive grid of stat tiles: value in `--text` at a large size in
 `JetBrains Mono`, label beneath in `--text-muted`. Tiles: XMLs, recipes, DDLs, layers (corpus);
@@ -1354,7 +1354,7 @@ completeness** — the third test pins that distinction.
 
 Existing tokens only.
 
-- [ ] **Step 4: Run the tests and the type check**
+- [x] **Step 4: Run the tests and the type check**
 
 ```bash
 cd frontend && pnpm test StatsGrid ProgressStrip && pnpm exec tsc --noEmit
@@ -1362,7 +1362,7 @@ cd frontend && pnpm test StatsGrid ProgressStrip && pnpm exec tsc --noEmit
 
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/landing/StatsGrid.tsx \
@@ -1389,12 +1389,12 @@ percentage-complete for the product."
 - Create: `frontend/src/components/landing/EnvironmentPanel.test.tsx`
 
 **Interfaces:**
-- Consumes: `TABS`, `FUTURE_TABS` from `src/tabs.ts` (Task 5); `ReadinessT['roots']`; `useAppConfig()` from `api/queries.ts`.
+- Consumes: `TABS`, `FUTURE_TABS` from `src/tabs.tsx` (Task 5); `ReadinessT['roots']`; `useAppConfig()` from `api/queries.ts`.
 - Produces, for Task 10: `<TabPreview onEnter={(tab: TabId) => void} />`, `<EnvironmentPanel roots={ReadinessT['roots']} />`.
 
 **Why:** the user asked for "a brief introduction what's expected from each tab" and "a way to show the current config.json used".
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // TabPreview.test.tsx
@@ -1476,7 +1476,7 @@ describe('EnvironmentPanel', () => {
 })
 ```
 
-- [ ] **Step 2: Run them to verify they fail**
+- [x] **Step 2: Run them to verify they fail**
 
 ```bash
 cd frontend && pnpm test TabPreview EnvironmentPanel
@@ -1484,7 +1484,7 @@ cd frontend && pnpm test TabPreview EnvironmentPanel
 
 Expected: FAIL — modules not found.
 
-- [ ] **Step 3: Implement both**
+- [x] **Step 3: Implement both**
 
 `TabPreview` maps `TABS` to `<button>` cards (icon, label in the tab's own `accent`, description in
 `--text-muted`), each calling `onEnter(tab.id)`. `FUTURE_TABS` render as non-interactive `<div>`s —
@@ -1496,7 +1496,7 @@ resolved path in `JetBrains Mono` (wrapping, not truncated — the whole point i
 chip, and — when `status !== 'ok'` — the `hint`. Follow `DataRootsPanel`'s existing presentation
 rather than inventing a second style for the same information.
 
-- [ ] **Step 4: Run the tests and the type check**
+- [x] **Step 4: Run the tests and the type check**
 
 ```bash
 cd frontend && pnpm test TabPreview EnvironmentPanel && pnpm exec tsc --noEmit
@@ -1504,7 +1504,7 @@ cd frontend && pnpm test TabPreview EnvironmentPanel && pnpm exec tsc --noEmit
 
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/landing/TabPreview.tsx \
@@ -1514,7 +1514,7 @@ git add frontend/src/components/landing/TabPreview.tsx \
         docs/superpowers/plans/2026-08-28-landing-page.md
 git commit -m "feat(landing): tab previews and the environment panel
 
-Tab cards come from the shared tabs.ts so they cannot drift from the strip;
+Tab cards come from the shared tabs.tsx so they cannot drift from the strip;
 future tabs render as non-interactive, since offering entry to something that
 does not exist is worse than not listing it. The environment panel answers 'is
 this pointed at my data' and shows the ADR-0013 hint when a root is broken."
@@ -1555,7 +1555,7 @@ illustrated overview, not a replacement):
                                     GCP: BigQuery · Dataproc · Cloud Logging
 ```
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { describe, expect, it, vi, afterEach } from 'vitest'
@@ -1613,7 +1613,7 @@ describe('ArchitectureDiagram', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 ```bash
 cd frontend && pnpm test ArchitectureDiagram
@@ -1621,7 +1621,7 @@ cd frontend && pnpm test ArchitectureDiagram
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement the component**
+- [x] **Step 3: Implement the component**
 
 One inline `<svg viewBox>` with `role="img"` and a `<title>`. Nodes are drawn as rounded rects with
 icon glyphs (Java, Spring, XML, JSON, Airflow, Spark, GCP) as SVG paths, labels in `--text`,
@@ -1640,7 +1640,7 @@ Non-interactive nodes (parser, backend, GCP surfaces) are plain `<g>` — the se
 
 Existing tokens only. Scale with `viewBox` + `width: 100%` so it is responsive.
 
-- [ ] **Step 4: Export the same artwork for the README**
+- [x] **Step 4: Export the same artwork for the README**
 
 Save the identical `<svg>` markup as `docs/img/etl360-architecture.svg`, with two changes for
 standalone rendering: replace `var(--token)` colours with their literal hex values from
@@ -1660,7 +1660,7 @@ grep -c "var(--" docs/img/etl360-architecture.svg
 
 Expected: `valid XML`, and **0** `var(--` occurrences — a CSS variable has no value outside the app.
 
-- [ ] **Step 5: Run the tests, the type check and the build**
+- [x] **Step 5: Run the tests, the type check and the build**
 
 ```bash
 cd frontend && pnpm test ArchitectureDiagram && pnpm exec tsc --noEmit && pnpm build
@@ -1668,7 +1668,7 @@ cd frontend && pnpm test ArchitectureDiagram && pnpm exec tsc --noEmit && pnpm b
 
 Expected: PASS, 4 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/landing/ArchitectureDiagram.tsx \
@@ -1709,7 +1709,7 @@ precise reference; this is the illustrated overview."
 - **Always shown; nothing is persisted.** No "skip intro" flag — which also means there is no persisted value that can wedge the first screen, a hazard this codebase met once already (a corrupt `density` white-screened Tab 3 in sub-project 10).
 - The transition is ~400 ms of `opacity`/`transform` only, and is skipped under `prefers-reduced-motion`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // Landing.test.tsx
@@ -1826,7 +1826,7 @@ Append to `App.test.tsx`:
   })
 ```
 
-- [ ] **Step 2: Run them to verify they fail**
+- [x] **Step 2: Run them to verify they fail**
 
 ```bash
 cd frontend && pnpm test Landing App
@@ -1834,7 +1834,7 @@ cd frontend && pnpm test Landing App
 
 Expected: FAIL — `Landing` not found; App still opens on a tab.
 
-- [ ] **Step 3: Implement `Landing`**
+- [x] **Step 3: Implement `Landing`**
 
 Composes, top to bottom: `MascotScene` (full-width hero, `status` and the first non-`ok` root from
 `readiness.roots` passed in), a title block, the primary **Enter** button, `StatsGrid`,
@@ -1847,7 +1847,7 @@ Composes, top to bottom: `MascotScene` (full-width hero, `status` and the first 
 - A `useEffect` binds `keydown` for `Escape` → `onEnter()`, removed on unmount.
 - `failingRoot` = the first root whose `status !== 'ok'`, or `null`.
 
-- [ ] **Step 4: Wire `App.tsx`**
+- [x] **Step 4: Wire `App.tsx`**
 
 ```tsx
 const [view, setView] = useState<'landing' | 'tabs'>('landing')
@@ -1874,7 +1874,7 @@ Add the transition to `index.css` beside the other landing keyframes:
 }
 ```
 
-- [ ] **Step 5: Run the full frontend suite, the type check and the build**
+- [x] **Step 5: Run the full frontend suite, the type check and the build**
 
 ```bash
 cd frontend && pnpm test && pnpm exec tsc --noEmit && pnpm build
@@ -1882,7 +1882,7 @@ cd frontend && pnpm test && pnpm exec tsc --noEmit && pnpm build
 
 Expected: all PASS. Report the measured totals — baseline was 591 tests / 45 files.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/landing/Landing.tsx \
@@ -1914,7 +1914,7 @@ standing rather than blanking the hero."
 
 **Interfaces:** none — gates and prose only.
 
-- [ ] **Step 1: Add the readiness sweep to `validate_loop.sh`**
+- [x] **Step 1: Add the readiness sweep to `validate_loop.sh`**
 
 After the existing cluster-index block, insert:
 
@@ -1944,7 +1944,7 @@ nested same-quotes, which requires **Python ≥3.12**. `/usr/bin/python3` on thi
 Homebrew's 3.12 wins `PATH` in a login shell. This is pre-existing (inherited from an earlier
 sub-project) — match the existing style rather than diverging, but be aware the gate depends on it.
 
-- [ ] **Step 2: Run the gate**
+- [x] **Step 2: Run the gate**
 
 ```bash
 make validate-loop
@@ -1952,7 +1952,7 @@ make validate-loop
 
 Expected: `[validate-loop] PASS`, with the new line printing `81 xml, 86 recipes, 212 ddl; 21 clusters, 14 days, 417 rows; 23 workflows`.
 
-- [ ] **Step 3: Prove the gate actually gates**
+- [x] **Step 3: Prove the gate actually gates**
 
 ```bash
 cp scripts/validate_loop.sh /tmp/vl.bak
@@ -1966,7 +1966,7 @@ Expected: the tampered run **fails** with a non-zero exit; the restored run PASS
 prints numbers without asserting them is not a gate — the previous sub-project's reviewer verified
 its floors this way and found them sound; do the same here.
 
-- [ ] **Step 4: Write ADR-0016**
+- [x] **Step 4: Write ADR-0016**
 
 Create `docs/adr/0016-landing-readiness-aggregate.md` from `docs/adr/0000-template.md`, recording:
 
@@ -1991,7 +1991,7 @@ Create `docs/adr/0016-landing-readiness-aggregate.md` from `docs/adr/0000-templa
 - **Consequences:** `progress` is nullable and consumers must handle it; the landing page renders
   resolved paths and a GCP project id, so screenshots are mock-tier only (spec §14).
 
-- [ ] **Step 5: Update `docs/architecture.md` and `CLAUDE.md`**
+- [x] **Step 5: Update `docs/architecture.md` and `CLAUDE.md`**
 
 `docs/architecture.md` — add to the endpoint table:
 
@@ -2007,7 +2007,7 @@ illustrated overview, not a replacement.
 (81/86/212, 21/30/14/417, 23 workflows) to the testing section; extend the ADR range to `0001`–`0016`;
 point the current spec/plan at this sub-project.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/validate_loop.sh docs/adr/0016-landing-readiness-aggregate.md \
@@ -2033,7 +2033,7 @@ repo-sourced and nullable, and why no skip-intro flag is persisted."
 whether the mood is legible at a glance, or whether the transition feels like the "click and go" the
 user asked for. Only looking can.
 
-- [ ] **Step 1: Run every deterministic gate from clean**
+- [x] **Step 1: Run every deterministic gate from clean**
 
 ```bash
 mvn -q -am -pl backend clean test
@@ -2047,7 +2047,7 @@ make validate-loop
 Record the measured totals. **Count `<testcase>` elements** — the `.txt` sum undercounts by the
 number of `@Nested` tests.
 
-- [ ] **Step 2: Boot against the committed mock tiers**
+- [x] **Step 2: Boot against the committed mock tiers**
 
 ```bash
 export ETL360_DWH_CONTROL_ROOT="backend/src/main/resources/mock/DWH_CONTROL"
@@ -2058,7 +2058,7 @@ make dev
 Pinning the mock tiers is what makes the screenshots safe to commit (spec §14) — the page renders
 resolved paths and a project id, and on a real deployment those are real.
 
-- [ ] **Step 3: Walk it in Chrome at `http://localhost:8443`**
+- [x] **Step 3: Walk it in Chrome at `http://localhost:8443`**
 
 Check and record each:
 
@@ -2082,7 +2082,7 @@ export ETL360_COMPOSER_ROOT="/nonexistent-composer-root"
 10. The mascot switches to **pruning**, twigs fall, the grade cools, and the failing root **and its
     hint** are named on screen.
 
-- [ ] **Step 4: Capture screenshots**
+- [x] **Step 4: Capture screenshots**
 
 Capture to `docs/img/`: `landing-ready.png`, `landing-degraded.png`, `landing-architecture.png`.
 Then verify and check for identifiers before committing:
@@ -2094,14 +2094,29 @@ file docs/img/landing-*.png && du -sh docs/img
 **Review each image for real paths or a real project id before committing.** They were captured
 against the mock tiers, so they should show mock paths — confirm that rather than assuming it.
 
-- [ ] **Step 5: Record the results in the spec**
+**Deviation (recorded during the final whole-branch review, 2026-08-29):** this step shipped as
+committed (`0b016d4`) with two differences from what it names, and the plan file itself was not
+staged in that commit — a Global Constraint / CLAUDE.md hard-rule-4 breach fixed here.
+1. Two JPGs were captured, not three PNGs — `docs/img/landing-ok.jpg` and
+   `docs/img/landing-degraded.jpg`, not `landing-ready.png`/`landing-degraded.png`. JPG was chosen
+   over PNG for these two (screenshots of a page with a photographic mascot hero, not a diagram)
+   to keep `docs/img` small; the naming drifted from `-ready` to `-ok` to match the DTO's actual
+   `"ok"`/`"ko"` vocabulary (see the acceptance-walk results' defect 1) rather than the spec's
+   invented `"ready"`/`"degraded"` pair.
+2. `landing-architecture.png` was never captured as a separate screenshot. The architecture region
+   is already visible inside `landing-ok.jpg` (the page's third fold), and the illustrated
+   overview this step's rationale was chasing already exists as the committed
+   `docs/img/etl360-architecture.svg`, rendered in the README — a second raster capture of the
+   same diagram would have been a redundant asset, not new information.
+
+- [x] **Step 5: Record the results in the spec**
 
 Append `## Acceptance walk — results (Task 12, <date>)` to the spec, one line per item above with
 **PASS (observed)** or **PENDING** and what was seen. Mark anything not actually observed as PENDING
 rather than inferring it from a unit test — an honest PENDING is worth more than an optimistic PASS.
 Add the screenshots to `docs/visual-guide.md`.
 
-- [ ] **Step 6: Stop the servers and commit**
+- [x] **Step 6: Stop the servers and commit**
 
 ```bash
 lsof -ti tcp:8080 | xargs kill 2>/dev/null; lsof -ti tcp:8443 | xargs kill 2>/dev/null
@@ -2116,7 +2131,7 @@ paths and the transition. Screenshots captured against the committed mock tiers
 and checked for identifiers."
 ```
 
-- [ ] **Step 7: Finish the branch**
+- [x] **Step 7: Finish the branch**
 
 Use `superpowers:finishing-a-development-branch`. Do not merge before every checkbox above is
 ticked, every gate is green **from a clean build**, and the acceptance results record an outcome for

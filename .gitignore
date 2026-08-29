@@ -5,6 +5,7 @@ target/
 .DS_Store
 spark-warehouse/
 node_modules/
+frontend/dist/
 
 # Figma Make platform-provisioned config (not present outside the Figma Make sandbox;
 # vite.config.ts statically imports frontend/.figma/make/site.json, so a local stub
