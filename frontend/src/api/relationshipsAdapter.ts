@@ -19,8 +19,20 @@ export interface OperationalGraphView {
   layers: string[]
 }
 
+/**
+ * The layer sequence, and the ONE ordering of it.
+ *
+ * Read in two places — `layoutCards`'s column assignment and the `graph.layers` list that feeds
+ * Tab 3's filter chips — so this constant is what keeps the canvas and the toolbar telling the
+ * same story. Giving one dimension two orderings depending on where you look is the class of
+ * problem ADR-0017 exists to remove.
+ *
+ * `ETL` sits third, between `ODS` and `DWH`: it is a refined-tier layer (ADR-0017 pairs it with
+ * `DWH` as silver), not a post-QDM one. It ranked 7th until sub-project 12, which put the chips
+ * and the canvas columns in the operator's actual pipeline order.
+ */
 export const LAYER_RANK: Record<string, number> = {
-  STG: 0, ODS: 1, DWH: 2, CDM: 3, RDM: 4, QDM: 5, ETL: 6, OUTPUT: 7, UNKNOWN: 8,
+  STG: 0, ODS: 1, ETL: 2, DWH: 3, CDM: 4, RDM: 5, QDM: 6, OUTPUT: 7, UNKNOWN: 8,
 }
 
 // Layout constants (adapter-local; mirrors canvasLayout.ts's 40px margin idiom,

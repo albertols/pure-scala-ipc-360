@@ -397,9 +397,13 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
     precision: 'hour',
     isNow: true,
   })
-  const [layerFilter, setLayerFilter] = useState<string>('ALL')
+  // Layer and Status are SETS: an operator narrows by "CDM and DWH" or "KO and PENDING", which
+  // single-select made inexpressible. Empty means no filter — `ALL` clears the set rather than
+  // being a value in it. Kind stays single: it has two real values, so a set adds a state
+  // (`{recipe, table}`) whose meaning is already `ALL`.
+  const [layerFilter, setLayerFilter] = useState<string[]>([])
   const [kindFilter, setKindFilter] = useState<string>('ALL')
-  const [statusFilter, setStatusFilter] = useState<string>('ALL')
+  const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   // Task 9: snapshot the resolved path when "Open preview" is clicked, rather
   // than re-deriving from `selected` on every render — so the overlay keeps
@@ -543,9 +547,9 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   // the edges that touched them. Because `recipeNames` is derived from this list, an unchecked
   // recipe also stops costing a slot in the run-history request.
   const cards = useMemo(() => withoutDeselectedRecipes(graph?.cards ?? [], view.deselectedRecipes).filter(c => {
-    if (layerFilter !== 'ALL' && c.layer !== layerFilter) return false
+    if (layerFilter.length > 0 && !layerFilter.includes(c.layer)) return false
     if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
-    if (statusFilter !== 'ALL' && c.status !== statusFilter) return false
+    if (statusFilter.length > 0 && !statusFilter.includes(c.status)) return false
     if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
     return true
   }), [graph, view.deselectedRecipes, layerFilter, kindFilter, statusFilter, searchQuery])
@@ -826,13 +830,15 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
         {/* The toolbar IS the legend (ADR-0017): the control you filter a dimension with carries
             that dimension's colour, so there is no separate legend block that can drift from the
             cards it describes. `ALL` stays neutral in every group — it is not a value. */}
-        <FilterChips label="Layer" options={['ALL', ...graph.layers]} value={layerFilter} onChange={setLayerFilter}
+        <MultiFilterChips testId="layer-filter" label="Layer" options={graph.layers}
+          selected={layerFilter} onToggle={setLayerFilter}
           colors={Object.fromEntries(graph.layers.map(l => [l, layerColor(l)]))} />
         <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter}
           colors={{ recipe: kindPalette('recipe').accent, table: kindPalette('table').accent }} />
         {/* RUNNING isn't a real operational state (mock/real history only ever
             resolves OK/KO/PENDING) — swapped for PENDING per the plan's ledger note. */}
-        <FilterChips label="Status" options={['ALL', 'OK', 'KO', 'PENDING']} value={statusFilter} onChange={setStatusFilter}
+        <MultiFilterChips testId="status-filter" label="Status" options={['OK', 'KO', 'PENDING']}
+          selected={statusFilter} onToggle={setStatusFilter}
           colors={{ OK: '#34d399', KO: '#f87171', PENDING: '#4a5570' }} />
 
         <div style={{ flex: 1 }} />
@@ -1140,6 +1146,59 @@ function GCPLink({ icon, label, href }: { icon: Parameters<typeof GCPIcon>[0]['s
       {label}
       <span style={{ marginLeft: 'auto', fontSize: 10 }}>↗</span>
     </a>
+  )
+}
+
+/**
+ * A chip group whose selection is a SET.
+ *
+ * `ALL` is not an option value — it is the clear control, and it renders active exactly when the
+ * set is empty. That keeps "no filter" and "every value selected" from being two states that
+ * look different but mean the same thing.
+ */
+function MultiFilterChips({
+  testId, label, options, selected, onToggle, colors,
+}: {
+  testId: string
+  label: string
+  options: string[]
+  selected: string[]
+  onToggle: (next: string[]) => void
+  colors?: Record<string, string>
+}) {
+  const toggle = (o: string) =>
+    onToggle(selected.includes(o) ? selected.filter(v => v !== o) : [...selected, o])
+
+  return (
+    <div data-testid={testId} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      <span style={{ fontSize: 10, color: '#4a5570', marginRight: 2 }}>{label}:</span>
+      <button
+        onClick={() => onToggle([])}
+        aria-pressed={selected.length === 0}
+        style={{
+          padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
+          fontFamily: 'JetBrains Mono, monospace',
+          background: selected.length === 0 ? 'var(--surface-3)' : 'transparent',
+          border: `1px solid ${selected.length === 0 ? 'var(--border)' : 'transparent'}`,
+          color: selected.length === 0 ? '#e2e8f8' : '#4a5570',
+        }}
+      >ALL</button>
+      {options.map(o => {
+        const c = colors?.[o]
+        const on = selected.includes(o)
+        return (
+          <button key={o} onClick={() => toggle(o)} aria-pressed={on} style={{
+            padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
+            fontFamily: 'JetBrains Mono, monospace',
+            background: on ? (c ? `${c}22` : 'var(--surface-3)') : 'transparent',
+            border: `1px solid ${on ? (c ?? 'var(--border)') : 'transparent'}`,
+            // Unselected chips keep their palette colour — the row is the legend (ADR-0017).
+            color: on ? (c ?? '#e2e8f8') : (c ?? '#4a5570'),
+            fontWeight: on ? 700 : 400,
+          }}>{o}</button>
+        )
+      })}
+    </div>
   )
 }
 

@@ -1852,13 +1852,13 @@ Spec §14.
 - Modify: `frontend/src/api/relationshipsAdapter.ts` (`LAYER_RANK`), `relationshipsAdapter.test.ts`
 - Modify: `frontend/src/components/tab3/ETLOperational.tsx` (`FilterChips`, filter state), `ETLOperational.test.tsx`
 
-- [ ] **Step 1: Write the failing layer-order test** — `LAYER_RANK` orders `STG ODS ETL DWH CDM RDM QDM OUTPUT UNKNOWN`, and a graph with ETL and DWH nodes puts the ETL column strictly left of the DWH one.
-- [ ] **Step 2: Write the failing multi-select tests** — selecting `CDM` then `DWH` shows both layers' cards; clicking a selected chip deselects it; `ALL` clears the set; an empty set filters nothing; the same for `OK` + `KO` on Status.
-- [ ] **Step 3: Run both and confirm they fail.**
-- [ ] **Step 4: Reorder `LAYER_RANK`** and update the adapter tests whose expected column positions move.
-- [ ] **Step 5: Make `FilterChips` multi-capable** — a `multi` prop taking `string[]` and a toggle callback; Layer and Status use it, Kind does not.
-- [ ] **Step 6: Run `pnpm test` + `npx tsc --noEmit`.**
-- [ ] **Step 7: Commit** — message `feat(tab3): multi-select layer/status filters; ETL sits between ODS and DWH`.
+- [x] **Step 1: Write the failing layer-order test** — `LAYER_RANK` orders `STG ODS ETL DWH CDM RDM QDM OUTPUT UNKNOWN`, and a graph with ETL and DWH nodes puts the ETL column strictly left of the DWH one.
+- [x] **Step 2: Write the failing multi-select tests** — selecting `CDM` then `DWH` shows both layers' cards; clicking a selected chip deselects it; `ALL` clears the set; an empty set filters nothing; the same for `OK` + `KO` on Status.
+- [x] **Step 3: Run both and confirm they fail.**
+- [x] **Step 4: Reorder `LAYER_RANK`** and update the adapter tests whose expected column positions move.
+- [x] **Step 5: Make `FilterChips` multi-capable** — a `multi` prop taking `string[]` and a toggle callback; Layer and Status use it, Kind does not.
+- [x] **Step 6: Run `pnpm test` + `npx tsc --noEmit`.**
+- [x] **Step 7: Commit** — message `feat(tab3): multi-select layer/status filters; ETL sits between ODS and DWH`.
 
 ---
 

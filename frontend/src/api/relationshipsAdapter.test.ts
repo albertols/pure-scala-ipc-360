@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  DENSITY_FOOTPRINT, DENSITY_GUTTER, DENSITY_PITCH, MIN_GUTTER,
+  DENSITY_FOOTPRINT, DENSITY_GUTTER, DENSITY_PITCH, MIN_GUTTER, LAYER_RANK,
   fitToViewport, toOperationalGraph, summarizeSnapshot,
 } from './relationshipsAdapter'
 import type { RelationshipGraph, OperationalSummary, B15Row } from './queries'
@@ -387,5 +387,32 @@ describe('layoutCards leaves no card overlapping another', () => {
         expect(overlaps, `${a.name} overlaps ${b.name} at ${d}`).toBe(false)
       }
     }
+  })
+})
+
+// ─── layer order (sub-project 12, defect 10) ────────────────────────────────
+
+describe('layer order', () => {
+  it('runs STG, ODS, ETL, DWH, CDM, RDM, QDM, then OUTPUT and UNKNOWN', () => {
+    const order = Object.entries(LAYER_RANK).sort((a, b) => a[1] - b[1]).map(([k]) => k)
+    expect(order).toEqual(['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM', 'OUTPUT', 'UNKNOWN'])
+  })
+
+  it('puts the ETL column strictly left of the DWH one on the canvas', () => {
+    // LAYER_RANK drives BOTH the filter chips and the canvas columns, so the reorder has to be
+    // visible in the layout too — one dimension, one ordering.
+    const g = {
+      nodes: [
+        { id: 'e', kind: 'table', name: 'ETL.T', layer: 'ETL' },
+        { id: 'd', kind: 'table', name: 'DWH.T', layer: 'DWH' },
+        { id: 'o', kind: 'table', name: 'ODS.T', layer: 'ODS' },
+      ],
+      edges: [],
+      meta: { layers: ['ODS', 'ETL', 'DWH'] },
+    }
+    const { cards } = toOperationalGraph(g as never, undefined, null, 'compact')
+    const x = (id: string) => cards.find(c => c.id === id)!.x!
+    expect(x('o')).toBeLessThan(x('e'))
+    expect(x('e')).toBeLessThan(x('d'))
   })
 })

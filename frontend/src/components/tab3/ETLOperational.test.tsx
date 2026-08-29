@@ -1185,3 +1185,79 @@ describe('global search', () => {
     expect(readOperationalView().selectedClusters).toEqual([])
   })
 })
+
+// ─── multi-select filters (sub-project 12, defect 10) ───────────────────────
+
+describe('multi-select Layer and Status filters', () => {
+  // jsdom does not implement innerText, so count the cards rather than reading their names.
+  const names = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>('[data-card="1"]')]
+
+  it('holds more than one Layer at once', async () => {
+    // Single-select forced all-or-nothing on exactly the dimension an operator narrows by.
+    const { container } = renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const all = names(container).length
+
+    fireEvent.click(screen.getByRole('button', { name: 'STG' }))
+    const stgOnly = names(container).length
+    expect(stgOnly).toBeGreaterThan(0)
+
+    fireEvent.click(screen.getByRole('button', { name: 'DWH' }))
+    const both = names(container).length
+    expect(both).toBeGreaterThanOrEqual(stgOnly)
+    expect(both).toBeLessThanOrEqual(all)
+  })
+
+  it('deselects a chip on a second click', async () => {
+    const { container } = renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const before = names(container).length
+
+    fireEvent.click(screen.getByRole('button', { name: 'STG' }))
+    expect(names(container).length).toBeLessThanOrEqual(before)
+    fireEvent.click(screen.getByRole('button', { name: 'STG' }))
+    expect(names(container).length).toBe(before)     // empty set filters nothing
+  })
+
+  it('ALL clears the whole set rather than being a value in it', async () => {
+    const { container } = renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const before = names(container).length
+
+    fireEvent.click(screen.getByRole('button', { name: 'STG' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'ALL' })[0]!)
+    expect(names(container).length).toBe(before)
+  })
+
+  it('holds more than one Status at once', async () => {
+    const { container } = renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    const okOnly = names(container).length
+    fireEvent.click(screen.getByRole('button', { name: 'PENDING' }))
+    expect(names(container).length).toBeGreaterThanOrEqual(okOnly)
+  })
+
+  it('marks every selected chip as selected, not just the last one', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const stg = screen.getByRole('button', { name: 'STG' })
+    const dwh = screen.getByRole('button', { name: 'DWH' })
+    fireEvent.click(stg)
+    fireEvent.click(dwh)
+    expect(stg).toHaveAttribute('aria-pressed', 'true')
+    expect(dwh).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('orders the Layer chips STG, ODS, ETL, DWH, CDM, RDM, QDM', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const labels = [...document.querySelectorAll('[data-testid="layer-filter"] button')]
+      .map(b => b.textContent)
+    const wanted = ['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM']
+    const present = wanted.filter(l => labels.includes(l))
+    expect(present.map(l => labels.indexOf(l))).toEqual([...present.map(l => labels.indexOf(l))].sort((a, b) => a - b))
+  })
+})
