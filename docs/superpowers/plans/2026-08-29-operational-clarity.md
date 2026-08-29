@@ -1535,7 +1535,7 @@ git commit -m "feat(tab3): back/forward through related hops, restoring the canv
 - Consumes: `visitNode` (Task 12), `OperationalCard`/`kindPalette` (Tasks 7-8).
 - Produces: `<RelatedOverlay nodeId clusters onClose />`, and `readRelatedParam(): { nodeId: string; clusters: string[] } | null` in `App.tsx`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 describe('Show All Related', () => {
@@ -1588,16 +1588,16 @@ it('renders the related view standalone from ?related=', async () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd frontend && pnpm test -- RelatedOverlay ETLOperational App`
 Expected: FAIL — no such component.
 
-- [ ] **Step 3: Write `RelatedOverlay.tsx`**
+- [x] **Step 3: Write `RelatedOverlay.tsx`**
 
 Follow `PreviewOverlay.tsx`'s structure (read it first): fixed backdrop, `Esc` closes, `aria-label="Close related overlay"` on the close button, `data-testid="related-overlay"`. Body: the focused card centred, each of `card.relations` rendered as a `data-testid="overlay-node"` compact card around it with an edge drawn to the centre, each calling `visitNode` on click so the canvas behind stays in sync (spec §6.3) and every overlay hop joins the same history stack.
 
-- [ ] **Step 4: Add the affordance in the detail panel**
+- [x] **Step 4: Add the affordance in the detail panel**
 
 Beside `Related (n)`, an anchor — never a button:
 
@@ -1616,16 +1616,16 @@ Beside `Related (n)`, an anchor — never a button:
                 >Show all related ↗</a>
 ```
 
-- [ ] **Step 5: Read `?related=` in `App.tsx`**
+- [x] **Step 5: Read `?related=` in `App.tsx`**
 
 Mirror `readFocusRecipe` (`:175`): a `readRelatedParam()` reading `related` and `clusters` from `window.location.search`, and an early return rendering `<RelatedOverlay …/>` standalone, before the `TopBar`, exactly as focus mode does.
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/components/tab3/RelatedOverlay.tsx frontend/src/components/tab3/RelatedOverlay.test.tsx \

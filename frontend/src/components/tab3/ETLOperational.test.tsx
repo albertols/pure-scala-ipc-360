@@ -1055,3 +1055,59 @@ describe('Related back/forward', () => {
     await waitFor(() => expect(shown()).toBe(firstTitle))
   })
 })
+
+// ─── Show All Related (sub-project 12, defect 6) ────────────────────────────
+
+describe('Show all related', () => {
+  const openLink = async () => {
+    renderTab()
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+    return screen.getByRole('link', { name: /show all related/i })
+  }
+
+  it('is a real link, so the browser can open it in a new tab unaided', async () => {
+    // No window.open and no synthetic mouse-button handling: an <a href> gets ⌘-click,
+    // middle-click and "Open link in new tab" from the platform, all three correct for free.
+    const link = await openLink()
+    expect(link.getAttribute('href')).toMatch(/^\?related=.+&clusters=/)
+  })
+
+  it('opens the in-app overlay on a plain left click', async () => {
+    const link = await openLink()
+    fireEvent.click(link)
+    expect(await screen.findByTestId('related-overlay')).toBeInTheDocument()
+  })
+
+  it('leaves a modified click entirely to the browser', async () => {
+    const link = await openLink()
+    const ev = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true })
+    link.dispatchEvent(ev)
+    expect(ev.defaultPrevented).toBe(false)
+    expect(screen.queryByTestId('related-overlay')).not.toBeInTheDocument()
+  })
+
+  it('closes on its ✕', async () => {
+    const link = await openLink()
+    fireEvent.click(link)
+    fireEvent.click(await screen.findByLabelText('Close related overlay'))
+    await waitFor(() => expect(screen.queryByTestId('related-overlay')).not.toBeInTheDocument())
+  })
+
+  it('keeps the canvas selection in sync with the overlay focus', async () => {
+    // Closing must leave the operator where they navigated, not snap back to where they started.
+    const link = await openLink()
+    const before = within(screen.getByTestId('details-panel'))
+      .getAllByTestId('operational-card')[0]!.textContent
+    fireEvent.click(link)
+
+    const neighbours = await screen.findAllByTestId('overlay-node')
+    expect(neighbours.length).toBeGreaterThan(0)
+    fireEvent.click(neighbours[0]!)
+    fireEvent.click(screen.getByLabelText('Close related overlay'))
+
+    await waitFor(() => expect(within(screen.getByTestId('details-panel'))
+      .getAllByTestId('operational-card')[0]!.textContent).not.toBe(before))
+    // And that hop is on the same trail as a canvas click.
+    expect(screen.getByLabelText('Back to previous node')).toBeEnabled()
+  })
+})

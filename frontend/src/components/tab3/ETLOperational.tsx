@@ -15,6 +15,7 @@ import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePi
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
 import { PreviewOverlay } from './PreviewOverlay'
+import { RelatedOverlay } from './RelatedOverlay'
 import { ClusterPane } from './ClusterPane'
 import { SelectionStrip, type SelectionSummary } from './SelectionStrip'
 import { OperationalProgress, type ProgressStage } from './OperationalProgress'
@@ -404,6 +405,8 @@ export function ETLOperational() {
   // showing the recipe it was opened for even if the selection changes or
   // clears underneath it while it's open.
   const [preview, setPreview] = useState<{ recipePath: string | null; mappingPath: string | null } | null>(null)
+  /** Node id whose neighbourhood the hovering "Show all related" window is focused on. */
+  const [relatedNode, setRelatedNode] = useState<string | null>(null)
 
   // Task 16: the raw b15 rows for the selected date — distinct from `summary` above (the all-time
   // per-recipe aggregate), needed for the floating chip's exact row count/OK-KO split. Gated on
@@ -966,6 +969,25 @@ export function ETLOperational() {
                 >{'▶'}</button>
                 <span style={{ marginLeft: 2 }}>Related ({selectedCard.relations.length})</span>
                 <InfoTooltip text="Tables and recipes that directly exchange data with this node." placement="right" />
+                <div style={{ flex: 1 }} />
+                {/* An ANCHOR, never a button. Left-click opens the in-app window; ⌘/Ctrl-click,
+                    middle-click and "Open link in new tab" all fall through to the browser, which
+                    already implements every one of those gestures correctly. Nothing here
+                    reimplements them, and there is no window.open. */}
+                <a
+                  href={relatedHref(selectedCard.id, view.selectedClusters)}
+                  onClick={e => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+                    e.preventDefault()
+                    setRelatedNode(selectedCard.id)
+                  }}
+                  title="Show all related — click to open here, ⌘/middle-click for a new tab"
+                  style={{
+                    fontSize: 10, color: 'var(--blue)', textDecoration: 'none',
+                    padding: '1px 6px', borderRadius: 4,
+                    border: '1px solid rgba(79,156,249,0.25)', background: 'rgba(79,156,249,0.1)',
+                  }}
+                >Show all related ↗</a>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {selectedCard.relations.map(rid => {
@@ -1003,6 +1025,19 @@ export function ETLOperational() {
           </div>
         )}
       </div>
+
+      {relatedNode && (
+        <RelatedOverlay
+          nodeId={relatedNode}
+          clusters={view.selectedClusters}
+          selectedDate={view.selectedDate}
+          // The canvas behind stays in sync with the overlay's focus (spec §6.3), so closing
+          // leaves the operator where they navigated to rather than snapping back — and every
+          // overlay hop joins the same ◀/▶ trail as a canvas click.
+          onFocus={id => { visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan }); setRelatedNode(id) }}
+          onClose={() => setRelatedNode(null)}
+        />
+      )}
 
       {preview && (
         <PreviewOverlay
@@ -1100,6 +1135,12 @@ function FilterChips({
       })}
     </div>
   )
+}
+
+/** The standalone-tab URL for one node's neighbourhood — the `href` that makes ⌘/middle-click
+ * work without a line of JavaScript. Mirrors `readRelatedParam()` in `RelatedOverlay.tsx`. */
+export function relatedHref(nodeId: string, clusters: string[]): string {
+  return `?related=${encodeURIComponent(nodeId)}&clusters=${encodeURIComponent(clusters.join(','))}`
 }
 
 /** ◀ / ▶ — visibly inert at the ends rather than merely unresponsive. */

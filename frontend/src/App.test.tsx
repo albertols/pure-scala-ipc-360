@@ -244,3 +244,35 @@ describe('App — visited tabs stay mounted (Task 12)', () => {
     expect(screen.queryByText(/Select a cluster/)).not.toBeInTheDocument()
   })
 })
+
+// ─── ?related= standalone mode (sub-project 12, defect 6) ───────────────────
+
+describe('App — related mode', () => {
+  it('renders the related neighbourhood standalone, with no tab shell', async () => {
+    // The second URL mode, read exactly like ?focus=. This is what makes ⌘/middle-clicking
+    // "Show all related" open a genuine, shareable browser tab.
+    window.history.replaceState({}, '', '/?related=' + encodeURIComponent('table:CDM.LKP_PAIS')
+      + '&clusters=' + encodeURIComponent('cluster-a,cluster-b'))
+    renderApp()
+
+    expect(await screen.findByTestId('related-overlay')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Search files, mappings…')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /IPC ETL Viewer/ })).not.toBeInTheDocument()
+  })
+
+  it('has no close control standalone — a browser tab closes itself', async () => {
+    window.history.replaceState({}, '', '/?related=' + encodeURIComponent('table:CDM.LKP_PAIS'))
+    renderApp()
+
+    await screen.findByTestId('related-overlay')
+    expect(screen.queryByLabelText('Close related overlay')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('related-backdrop')).not.toBeInTheDocument()
+  })
+
+  it('does not hijack a normal load', async () => {
+    window.history.replaceState({}, '', '/')
+    renderApp()
+    expect(screen.queryByTestId('related-overlay')).not.toBeInTheDocument()
+    await screen.findByRole('button', { name: /^enter/i })
+  })
+})
