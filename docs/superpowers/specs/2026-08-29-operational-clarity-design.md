@@ -566,6 +566,34 @@ Branch `feat/etl360-operational-clarity`.
 
 ---
 
+## 11.1 Acceptance walk results (2026-08-29)
+
+Driven through the Chrome extension against `make dev` (backend :8080, frontend :8443),
+1600x1000 window, committed mock tier unless noted.
+
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| 1 | No card overlaps another at any density; edges visible | **PASS** | Walked `detailed` / `compact` / `minimal` on `cluster-wf-cas-core-4002` (18 nodes). All cards separated with visible gutters and edges at every density. |
+| 2 | Long names do not widen a card past its column | **PASS** | Every wrapper reports the declared footprint width; names ellipsis-clamp inside it. `width:'auto'` is gone, so a name structurally cannot widen a card. Caveat: the committed mock's longest name (33 chars) is shorter than a real export's — the *structural* guarantee is what carries this, not the sample. |
+| 3 | Collapsing the pane hides the snapshot chip; expanding restores it | **PASS** | `expanded → present`, `collapsed → absent`, `re-expanded → present`. |
+| 4 | Hiding TIME VIEW frees the whole bar; chip names the date; survives reload | **PASS** | Bar measured at 55px, gone entirely when hidden (border included, date input absent). Chip read `⏱ 2026-07-29 · 3h ▾`. `timeViewCollapsed:true` written to `localStorage`. |
+| 5 | Tables blue + top edge, recipes orange + left edge, layer chips by tier | **PASS** | Recipe: `borderLeftColor rgb(248,113,113)` on KO with the orange kind border elsewhere. Table: `borderTopColor rgb(248,113,113)`, blue kind border. `ODS` renders bronze on a recipe and `DWH` silver on a table — the same layer, one colour, independent of kind. Toolbar chips carry the same palette. |
+| 6 | Selection strip shorter, stats legible | **PASS** | 4px padding on `--bg` with `--text-muted` stats; reads clearly beside the cluster chips. |
+| 7 | `◀ ▶` walk back through the exact nodes and views | **PASS** | Three hops out, three back: the unwind retraced the trail exactly in reverse and enabled forward at each step. |
+| 8 | "Show all related": overlay on click, real new tab on modified click | **PASS** | Element is an `<a>` with a `?related=` href. Left click opened the in-app window (`CAS_DWH_ORPHAN_METRICS · 1 connected`). The same URL loaded standalone in a second tab: identical content, no tab shell, no ✕ — a browser tab closes itself. |
+| 9 | A `FAILURE` row renders KO, not PENDING | **PASS** | Proven end-to-end against a temp composer root carrying the user's exact row. Recipe → **KO** with a red LEFT edge; its table → **KO** with a red TOP edge (propagated from the writer); the strip moved `49 OK · 7 KO` → `47 OK · 8 KO`; the run message survived intact. |
+| 10 | `/api/diagnostics` reports an unrecognized status token | **PASS** | Same run, with a `SKIPPED` row injected: `b15.unrecognizedStatuses: [{value:"SKIPPED", count:1}]`, and that card resolved to PENDING — mislabelled but *named*. |
+| 11 | Top-bar search finds a table with no cluster selected and navigates to it | **PASS** | `CAS_DWH` from the no-cluster state returned 2 recipes + 2 tables with their clusters; clicking a table hit selected its cluster, loaded the graph, and opened that node's Details. |
+| 12 | All gates pass, no committed mock floor changed | **PASS** | `make test` 314 backend + 717 frontend, `tsc` clean, `make validate-loop` PASS with every floor unchanged. `git diff main...HEAD -- parser/ backend/src/main/resources/mock/` is **empty**. |
+
+The §3.4 assumption — that `DENSITY_FOOTPRINT.detailed.height = 280` really is the tallest a
+detailed card renders — held: no detailed card was clipped or overlapped at any point in the walk.
+
+The temp-composer fixture used for criteria 9 and 10 was deleted afterwards and the backend
+restored to the committed mock (`composer tier: mock`, `unrecognizedStatuses: []`, 417 rows).
+
+---
+
 ## 12. Deviations
 
 **D1 — §7.5's fixture is a `@TempDir`, not a committed test resource.** The plan called for

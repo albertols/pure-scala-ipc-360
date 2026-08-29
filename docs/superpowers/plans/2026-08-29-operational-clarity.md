@@ -1774,21 +1774,21 @@ The only task that can settle §3.4's 280px assumption and §4's look. **Not opt
 **Files:**
 - Modify: `docs/superpowers/specs/2026-08-29-operational-clarity-design.md` (§12 Deviations, results)
 
-- [ ] **Step 1: Boot the app**
+- [x] **Step 1: Boot the app**
 
 Run: `make dev`. Wait for `:8080` health and `:8443`.
 
-- [ ] **Step 2: Drive Chrome through the extension**
+- [x] **Step 2: Drive Chrome through the extension**
 
 Load the browser tools in ONE `ToolSearch` call, open `https://localhost:8443`, enter the app, and walk **all twelve** acceptance criteria from spec §10 in order. Capture a screenshot per criterion.
 
 Criterion 1 is the load-bearing one: select the largest committed-mock cluster, then at **each** of `detailed`, `compact` and `minimal`, confirm visually that **no card overlaps another** and that edges are visible between columns. If a detailed card is clipped or still overlaps, `DENSITY_FOOTPRINT.detailed.height` is too small — raise it, re-run Task 5's invariant test, and record the corrected value in spec §12.
 
-- [ ] **Step 3: Record results**
+- [x] **Step 3: Record results**
 
 Write a PASS/FAIL table into spec §12 with one line per criterion and the evidence for each. Record any sanctioned visual deviation explicitly rather than silently accepting it.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-08-29-operational-clarity-design.md \
