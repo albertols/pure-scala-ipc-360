@@ -117,6 +117,9 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
    `frontend/src/theme/semanticColors.ts` — **the only file that maps a layer, kind or
    status to a colour**. Never hardcode one of those hexes elsewhere; the values are
    mirrored in `src/index.css` as custom properties and the two change together.
+   `LAYER_RANK` (`api/relationshipsAdapter.ts`) is likewise the ONE layer ordering —
+   `STG ODS ETL DWH CDM RDM QDM OUTPUT UNKNOWN` — and it drives the canvas columns AND
+   Tab 3's filter chips. Never sort layers by a second rule anywhere.
 2. **Corpus safety.** `parser/src/main/resources/xmltobq/` is anonymized sample data;
    outputs sit next to inputs. Experiment in temp copies. `DWH_CONTROL/` stays
    git-ignored, never committed.
@@ -212,6 +215,13 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   degraded to the b15 index) plus its bounds. It also gates the b15 status vocabulary
   (`docs/adr/0018-b15-status-vocabulary.md`): `FAILURE` must be in `statusKo`, `rowsScanned` must be
   417, and `unrecognizedStatuses` must be empty for the committed mock.
+  `GET /api/operational/lineage?node=&limit=` (`docs/adr/0020-lineage-flow.md`) backs Tab 3's
+  "Show all related", which is a full upstream+downstream flow rather than a one-hop list. It is
+  **breadth-first on purpose** — the node budget must cut the furthest hops, never an arbitrary
+  branch — and **not cluster-scoped**, because lineage crosses cluster boundaries and stopping at
+  the selection would draw a complete-looking flow that is not one. `make validate-loop` asserts
+  both directions are reached, that every edge endpoint is a returned node, and that a capped
+  result reports `truncated` with a surviving `totalReachable`.
 
 ## Corpus caveats
 
@@ -300,7 +310,7 @@ checklist): `docs/visual-guide.md`.
   `LayerToLayerService`, `Etl360Properties`, `scripts/dev.sh`, `XMLParser.scala`,
   `frontend/vite.config.ts`) — change one of those and update the doc in the same commit.
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0019`
+- Design rationale: `docs/adr/0001`–`0020`
 - `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,
   alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
   expression grammar. Start at `docs/ipc/README.md`.

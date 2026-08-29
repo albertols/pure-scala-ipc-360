@@ -148,6 +148,40 @@ assert d["truncated"] is True, "capped result did not report truncated"
 curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/search?q=c" | grep -q 200   || fail "short query should be 200-with-empty, not an error"
 curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/search?q=CAS&limit=500" | grep -q 400   || fail "over-range limit should be 400"
 
+echo "[validate-loop] lineage…"
+# ADR-0020. The both-directions assertion is load-bearing: a lineage that only walks one way
+# still renders as a flow, so a regression there would be invisible in the GUI.
+SEED=$(curl -sf "localhost:8080/api/operational/search?q=CAS_DWH_EVENTS_FACT" \
+  | python3 -c 'import json,sys; hits=json.load(sys.stdin)["hits"]; print(next(h["name"] for h in hits if h["kind"]=="table"))')
+curl -sf "localhost:8080/api/operational/lineage?node=table:$SEED" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+nodes, edges = d["nodes"], d["edges"]
+hops = {n["hop"] for n in nodes}
+ids = {n["id"] for n in nodes}
+assert 0 in hops, "seed is not at hop 0"
+assert any(h < 0 for h in hops), "no upstream reached"
+assert any(h > 0 for h in hops), "no downstream reached"
+for e in edges:
+    assert e["from"] in ids and e["to"] in ids, "edge endpoint outside the returned nodes"
+assert not d["truncated"], "committed mock lineage should fit the default budget"
+assert d["totalReachable"] == len(nodes), "totalReachable disagrees with an untruncated result"
+print(f"[validate-loop] lineage: {len(nodes)} nodes "
+      f"({sum(1 for n in nodes if n[\"hop\"] < 0)} up, {sum(1 for n in nodes if n[\"hop\"] > 0)} down), "
+      f"{len(edges)} edges")
+' || fail "lineage"
+# Bounded like /search: a capped flow must SAY it was capped.
+curl -sf "localhost:8080/api/operational/lineage?node=table:$SEED&limit=2" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+n = len(d["nodes"])
+assert n == 2, f"limit not honoured: {n}"
+assert d["truncated"] is True, "capped lineage did not report truncated"
+assert d["totalReachable"] > 2, "totalReachable did not survive truncation"
+' || fail "lineage bounds"
+curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/lineage?node=table:NOPE" | grep -q 404 \
+  || fail "unknown lineage node should be 404"
+
 echo "[validate-loop] b15 status vocabulary…"
 # ADR-0018. The committed mock writes only canonical tokens, so an unrecognized one here means
 # either the mock drifted or the normalizer regressed. FAILURE must be in the KO vocabulary —
