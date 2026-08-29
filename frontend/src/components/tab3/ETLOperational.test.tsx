@@ -12,6 +12,7 @@ import { resetOperationalView, setOperationalView } from '../../state/operationa
 import * as operationalViewStore from '../../state/operationalView'
 import type { RelationshipGraph } from '../../api/queries'
 import { DENSITY_FOOTPRINT } from '../../api/relationshipsAdapter'
+import { layerColor, kindPalette } from '../../theme/semanticColors'
 import type { components } from '../../api/types.gen'
 
 type OperationalSummaryDto = components['schemas']['OperationalSummaryDto']
@@ -935,5 +936,35 @@ describe('canvas card footprint', () => {
       ...[...container.querySelectorAll<HTMLElement>('[data-card="1"]')]
         .map(el => parseFloat(el.style.left) + DENSITY_FOOTPRINT.minimal.width))
     expect(Number(edges.getAttribute('width'))).toBeGreaterThanOrEqual(rightmost)
+  })
+})
+
+// ─── toolbar as legend (sub-project 12, defect 4) ───────────────────────────
+
+describe('toolbar filter chips are the palette legend', () => {
+  it('tints Layer chips with their tier colour even while unselected', async () => {
+    // The toolbar teaches the palette: the control you filter a dimension with carries that
+    // dimension's colour, so there is no separate legend that can drift from the cards.
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(screen.getByRole('button', { name: 'STG' })).toHaveStyle({ color: layerColor('STG') })
+  })
+
+  it('tints Kind chips with the GCP product accents', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(screen.getByRole('button', { name: 'recipe' }))
+      .toHaveStyle({ color: kindPalette('recipe').accent })
+    expect(screen.getByRole('button', { name: 'table' }))
+      .toHaveStyle({ color: kindPalette('table').accent })
+  })
+
+  it('still marks the ACTIVE chip distinctly from the merely-tinted ones', async () => {
+    // Colouring every chip must not cost the "which filter is on?" signal.
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const active = screen.getAllByRole('button', { name: 'ALL' })[0]!
+    const inactive = screen.getByRole('button', { name: 'recipe' })
+    expect(active.style.background).not.toBe(inactive.style.background)
   })
 })

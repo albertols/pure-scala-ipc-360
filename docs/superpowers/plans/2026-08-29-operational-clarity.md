@@ -1161,7 +1161,7 @@ git commit -m "feat(tab3): tables read BigQuery blue, recipes Spark orange, laye
 **Interfaces:**
 - Consumes: `layerColor`, `kindPalette` (Task 7).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 it('tints the Layer and Kind filter chips with the palette they filter by', async () => {
@@ -1176,12 +1176,12 @@ it('tints the Layer and Kind filter chips with the palette they filter by', asyn
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test ETLOperational`
 Expected: FAIL — chips render `#4a5570` when unselected.
 
-- [ ] **Step 3: Pass colours to the existing prop**
+- [x] **Step 3: Pass colours to the existing prop**
 
 `FilterChips` already accepts `colors?: Record<string, string>` (`:1006`). Supply it for both filters, and change the unselected-chip `color` at `:1027` to fall back to the supplied colour rather than always `#4a5570`:
 
@@ -1194,12 +1194,12 @@ Expected: FAIL — chips render `#4a5570` when unselected.
           colors={{ recipe: kindPalette('recipe').accent, table: kindPalette('table').accent }} />
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test ETLOperational && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/ETLOperational.test.tsx \

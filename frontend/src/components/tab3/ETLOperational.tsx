@@ -10,6 +10,7 @@ import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../.
 import { OperationalCard } from '../shared/OperationalCard'
 import { pickDefaultRun } from '../shared/RunPicker'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
+import { layerColor, kindPalette } from '../../theme/semanticColors'
 import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
@@ -776,8 +777,13 @@ export function ETLOperational() {
         </div>
 
         {/* filters — options are data-driven from the real graph */}
-        <FilterChips label="Layer" options={['ALL', ...graph.layers]} value={layerFilter} onChange={setLayerFilter} />
-        <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter} />
+        {/* The toolbar IS the legend (ADR-0017): the control you filter a dimension with carries
+            that dimension's colour, so there is no separate legend block that can drift from the
+            cards it describes. `ALL` stays neutral in every group — it is not a value. */}
+        <FilterChips label="Layer" options={['ALL', ...graph.layers]} value={layerFilter} onChange={setLayerFilter}
+          colors={Object.fromEntries(graph.layers.map(l => [l, layerColor(l)]))} />
+        <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter}
+          colors={{ recipe: kindPalette('recipe').accent, table: kindPalette('table').accent }} />
         {/* RUNNING isn't a real operational state (mock/real history only ever
             resolves OK/KO/PENDING) — swapped for PENDING per the plan's ledger note. */}
         <FilterChips label="Status" options={['ALL', 'OK', 'KO', 'PENDING']} value={statusFilter} onChange={setStatusFilter}
@@ -1027,9 +1033,11 @@ function FilterChips({
           <button key={o} onClick={() => onChange(o)} style={{
             padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
             fontFamily: 'JetBrains Mono, monospace',
+            // An unselected chip keeps its palette COLOUR (that is what makes the row a legend)
+            // but not its background or border — so "which filter is on?" survives the tinting.
             background: value === o ? (c ? `${c}22` : 'var(--surface-3)') : 'transparent',
             border: `1px solid ${value === o ? (c ?? 'var(--border)') : 'transparent'}`,
-            color: value === o ? (c ?? '#e2e8f8') : '#4a5570',
+            color: value === o ? (c ?? '#e2e8f8') : (c ?? '#4a5570'),
           }}>{o}</button>
         )
       })}
