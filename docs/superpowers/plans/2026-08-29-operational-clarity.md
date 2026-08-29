@@ -1872,6 +1872,85 @@ Spec §14.
 
 ---
 
+## Task 22: card saturation
+
+Spec §15.1. Two constants and their tests.
+
+- [ ] **Step 1** — update `semanticColors.test.ts`: assert `kindPalette('table').body === '#1f314c'` and `kindPalette('recipe').body === '#412f26'`, and that both are still opaque hexes and distinct.
+- [ ] **Step 2** — run, confirm RED.
+- [ ] **Step 3** — set the two `body` values and lift `border` alpha `0.28 → 0.35` in `KIND_PALETTE`; mirror nothing in `index.css` (the custom properties are the ACCENTS, which are unchanged).
+- [ ] **Step 4** — `pnpm test && npx tsc --noEmit`.
+- [ ] **Step 5** — commit: `feat(tab3): saturate the kind bodies so blue and orange read at a glance`.
+
+---
+
+## Task 23: banded Sugiyama layout engine
+
+Spec §15.3. Pure module, no React.
+
+**Files:** Create `frontend/src/components/tab3/lineageLayout.ts`, `lineageLayout.test.ts`.
+
+**Interfaces:**
+- Produces: `layoutLineage(nodes, edges, opts?) => LineageLayout` with `{ nodes: PlacedNode[], edges: RoutedEdge[], bands: Band[], width, height }`; `PlacedNode` carries `x, y, band, isDummy`; `RoutedEdge` carries `points: {x,y}[]` plus `from/to/kind`. Also `countCrossings(layout)` exported for tests. Consumed by Task 24.
+
+- [ ] **Step 1: Write the failing tests** — band grouping (every node's y falls inside its tier's band); a multi-column edge produces a dummy chain with one dummy per intervening column; no two placed boxes overlap; `countCrossings` on a deliberately-crossed fixture is lower after barycentre than with name-only ordering; layout is deterministic across two calls; a single node and an empty input both behave.
+- [ ] **Step 2** — run, confirm RED (module absent).
+- [ ] **Step 3: Implement** — columns by hop; band by layer via a `TIER_OF` map; dummy insertion with interpolated band; barycentre sweeps (forward on predecessors, backward on successors, `SWEEPS = 8`, ordering keyed `(band, median, name)` so a node can never leave its band); slot packing per (column, band) with dummy rows thin; band heights = max over columns; edge polylines built from each chain.
+- [ ] **Step 4** — `pnpm vitest run lineageLayout`.
+- [ ] **Step 5** — commit: `feat(tab3): banded Sugiyama layout for the lineage flow`.
+
+---
+
+## Task 24: the flow renders the new layout
+
+Spec §15.3-15.4.
+
+**Files:** Modify `LineageFlow.tsx`, `LineageFlow.test.tsx`.
+
+- [ ] **Step 1: Write the failing tests** — band rails render with their tier labels; a long edge's path has more than two points (it is routed, not a single curve); hovering a node adds a traced state to its ancestors and descendants and dims the rest; leaving clears it.
+- [ ] **Step 2** — run, confirm RED.
+- [ ] **Step 3: Implement** — consume `lineageLayout`; render band rails in a sticky left gutter; draw each edge from its `points`; compute ancestor+descendant sets on hover (BFS both directions over the original edges) and apply `traced`/`dimmed`.
+- [ ] **Step 4** — `pnpm test && npx tsc --noEmit`.
+- [ ] **Step 5** — commit: `feat(tab3): band rails, routed edges and hover tracing in the lineage`.
+
+---
+
+## Task 25: lineage chrome — clusters, filters, Details dock
+
+Spec §15.5.
+
+**Files:** Create `frontend/src/components/shared/MultiFilterChips.tsx`; modify `ETLOperational.tsx` (import it instead of its local copy), `LineageFlow.tsx`, `LineageFlow.test.tsx`, `RelatedOverlay.tsx`.
+
+- [ ] **Step 1: Write the failing tests** — the clusters strip lists each distinct cluster with its node count; the filter bar dims rather than removes (node count unchanged, dimmed count stated); a single click opens the Details dock with that node's card; a double click calls `onReseed`; `⌖ center here` in the dock also re-seeds.
+- [ ] **Step 2** — run, confirm RED.
+- [ ] **Step 3: Extract `MultiFilterChips`** to `shared/` verbatim and point `ETLOperational` at it — one implementation, no second copy.
+- [ ] **Step 4: Implement** the clusters strip, the filter bar (dim semantics), and the Details dock; split `onFocus` into `onSelect` (click) and `onReseed` (double-click / dock control), and update `RelatedOverlay` to pass both.
+- [ ] **Step 5** — `pnpm test && npx tsc --noEmit`.
+- [ ] **Step 6** — commit: `feat(tab3): lineage gains clusters, the shared filter bar and a Details dock`.
+
+---
+
+## Task 26: manual arrangement, always resettable
+
+Spec §15.6.
+
+- [ ] **Step 1: Write the failing tests** — dragging a node changes only its own rendered position; `reset layout` restores the exact computed coordinates (compare against a fresh `lineageLayout` call); the reset control is absent until something has been dragged.
+- [ ] **Step 2** — run, confirm RED.
+- [ ] **Step 3: Implement** — a `Record<id, {dx,dy}>` in component state applied at render only; pointer-event drag; a `reset layout` button shown only when the record is non-empty.
+- [ ] **Step 4** — `pnpm test && npx tsc --noEmit`.
+- [ ] **Step 5** — commit: `feat(tab3): drag lineage nodes, with a reset that restores the computed layout`.
+
+---
+
+## Task 27: gates and the third browser walk
+
+- [ ] **Step 1** — `make test`, `make check`, `make validate-loop`; every committed mock floor unchanged.
+- [ ] **Step 2: Browser walk across the complexity range** — validate the simplest lineage (3 nodes, 1 column wide), a mid one, and the widest (26 nodes / 13 columns / 6 wide, `table:CAS_CDM_EVENTS_MART` and `table:CAS_RDM_EVENTS_EXPORT`). For each: bands aligned and labelled, long edges visibly routed rather than passing behind cards, hover tracing correct, click→Details, double-click→re-seed, clusters strip, filter dimming, drag + reset. Capture screenshots.
+- [ ] **Step 3** — record results in spec §11.3 and any deviations in §12.
+- [ ] **Step 4** — commit: `docs(spec): third acceptance walk — lineage legibility`.
+
+---
+
 ## Task 17: merge
 
 - [ ] **Step 1: Final full gate from a clean build**

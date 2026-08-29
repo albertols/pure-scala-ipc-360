@@ -646,6 +646,88 @@ the change being made, not a regression.
 
 ---
 
+## 15. Lineage legibility (defects 11-12)
+
+### 15.1 Card saturation (defect 11)
+
+ADR-0017's kind bodies were the accent blended at 10% over `--surface`, which reads closer to
+neutral grey than to blue/orange. Raised to **20%** — `table #1f314c`, `recipe #412f26` — with
+the kind border alpha lifted `0.28 → 0.35`. Still well within contrast for `--text` at
+`#e2e8f8`; the point is that kind should be legible from the body colour alone, at a glance,
+without reading the chip.
+
+### 15.2 What was wrong with the flow
+
+The hop-distance layout of §13 put the right nodes in the right columns and then stacked each
+column by average-predecessor-y. On the real corpus that is not enough:
+
+- **50 of 81 lineages contain an edge spanning more than one column.** Those were drawn as a
+  single curve from source to target, passing *behind* every card in between — the edge simply
+  disappears where it matters most.
+- **46 of 81 have a column mixing medallion tiers**, so a column reads as an arbitrary pile:
+  `CDM, ODS, ODS, ETL, QDM` top to bottom, with no vertical anchor between columns.
+- Largest lineages run to 26 nodes over 13 columns, 6 wide.
+
+### 15.3 Layout: banded Sugiyama
+
+`lineageLayout.ts` — pure, so all of it is unit-testable:
+
+1. **Columns** by signed hop (unchanged).
+2. **Tier bands** (defect 12A): rows are grouped into `bronze (STG, ODS)`, `silver (DWH, ETL)`,
+   `gold (CDM, RDM, QDM)`, `platinum (OUTPUT)`, `unresolved (UNKNOWN)`, each a labelled
+   horizontal lane spanning the whole flow. A node's band is fixed by its layer, so vertical
+   position means the same thing in every column.
+3. **Dummy nodes** for every edge spanning more than one column, in the classic Sugiyama sense —
+   the edge becomes a chain through a reserved slot in each intervening column, so a long edge
+   is routed *around* cards instead of behind them. Dummy slots are thin (14px vs 56px) so the
+   lanes cost little height. A dummy's band is the linear interpolation between its endpoints'
+   bands, which keeps long edges travelling in a straight-ish lane.
+4. **Barycentre ordering within each band**, swept forward and backward until stable — the
+   standard crossing-reduction heuristic, constrained so it can never move a node out of its
+   tier.
+
+**Measured on the six widest lineages in the corpus, counting long-edge segments:**
+
+| | crossings |
+|---|---|
+| barycentre, no bands | 17 |
+| barycentre **within tier bands** | **6** |
+
+Banding was expected to *cost* crossings — it is a constraint. It does the opposite (−65%),
+because tier correlates strongly with flow direction and therefore acts as a good prior. A
+first measurement that ignored long-edge segments showed banding costing crossings; that
+measurement was wrong precisely because it omitted the edges dummy routing exists to fix.
+
+### 15.4 Reading the flow (defect 12D)
+
+- **Trace on hover/selection.** Hovering a node highlights its entire ancestor *and* descendant
+  path and dims everything else. In a 26-node hairball this is the actual troubleshooting tool:
+  "show me only what reaches this".
+- **Edge kind stays legible**: `writes` solid, `source` solid-light, `lookup` dashed.
+- **Band rails** are labelled down the left gutter and persist while scrolling horizontally.
+
+### 15.5 Chrome (defects 12B, 12C)
+
+- **Click a card → Details** (defect 12B): a docked panel inside the overlay showing the same
+  `OperationalCard` the main view shows, its Related list, and its GCP links. Single click
+  selects (and syncs the canvas behind, per §6.3); **double-click re-seeds** the lineage on that
+  node, with an explicit `⌖ center here` control in the dock for discoverability.
+- **Clusters strip** (defect 12C): the distinct clusters the lineage touches, each with its node
+  count, marking which are in the current selection and which are context.
+- **Filter bar** (defect 12C): the same `MultiFilterChips` the main toolbar uses, extracted to a
+  shared component so there is one implementation. In the lineage it **dims** rather than
+  removes — deleting nodes from a lineage severs the paths that make it a lineage. The header
+  states how many are dimmed.
+
+### 15.6 Manual arrangement (defect 12D, opt-in)
+
+Nodes can be dragged. Offsets live in view state only, never in the layout function, so
+`lineageLayout` stays pure and deterministic — a `reset layout` control clears every offset and
+the view returns to exactly the computed default. Dragging is an add-on; the default has to be
+excellent on its own.
+
+---
+
 ## 11.1 Acceptance walk results (2026-08-29)
 
 Driven through the Chrome extension against `make dev` (backend :8080, frontend :8443),
