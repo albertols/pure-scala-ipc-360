@@ -1,6 +1,9 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useOperationalView, setOperationalView, resetOperationalView, PERSISTED_KEYS } from './operationalView'
+import {
+  useOperationalView, setOperationalView, resetOperationalView, PERSISTED_KEYS,
+  visitNode, stepHistory, HISTORY_CAP,
+} from './operationalView'
 
 beforeEach(() => { localStorage.clear(); resetOperationalView() })
 afterEach(() => { localStorage.clear() })
@@ -147,5 +150,69 @@ describe('timeViewCollapsed', () => {
     localStorage.setItem('etl360.tab3.view', JSON.stringify({ timeViewCollapsed: 'yes' }))
     resetOperationalView()
     expect(renderHook(() => useOperationalView()).result.current.timeViewCollapsed).toBe(false)
+  })
+})
+
+// ─── node navigation history (sub-project 12, defect 6) ─────────────────────
+
+describe('node history', () => {
+  const visit = (nodeId: string, x: number) => ({ nodeId, zoom: 1, pan: { x, y: 0 } })
+  const state = () => renderHook(() => useOperationalView()).result.current
+
+  it('selects the node it records', () => {
+    act(() => visitNode(visit('a', 10)))
+    expect(state().selectedNode).toBe('a')
+    expect(state().historyIndex).toBe(0)
+  })
+
+  it('steps back through the node AND the canvas view it was left at', () => {
+    // Restoring only the selection would auto-pan somewhere subtly different from where the
+    // operator left off, which is most of what "losing your place" actually is.
+    act(() => { visitNode(visit('a', 10)); visitNode(visit('b', 20)); visitNode(visit('c', 30)) })
+    act(() => stepHistory(-1))
+    expect(state().selectedNode).toBe('b')
+    expect(state().pan).toEqual({ x: 20, y: 0 })
+
+    act(() => stepHistory(1))
+    expect(state().selectedNode).toBe('c')
+    expect(state().pan).toEqual({ x: 30, y: 0 })
+  })
+
+  it('forks the history when a new hop starts from the middle of the stack', () => {
+    act(() => { visitNode(visit('a', 10)); visitNode(visit('b', 20)) })
+    act(() => stepHistory(-1))
+    act(() => visitNode(visit('z', 90)))
+
+    expect(state().nodeHistory.map(v => v.nodeId)).toEqual(['a', 'z'])
+    act(() => stepHistory(1))
+    expect(state().selectedNode).toBe('z')      // nothing forward of z
+  })
+
+  it('caps the stack, dropping the oldest', () => {
+    act(() => { for (let i = 0; i < HISTORY_CAP + 5; i++) visitNode(visit(`n${i}`, i)) })
+    expect(state().nodeHistory).toHaveLength(HISTORY_CAP)
+    expect(state().nodeHistory[0]!.nodeId).toBe('n5')
+    expect(state().historyIndex).toBe(HISTORY_CAP - 1)
+  })
+
+  it('is a no-op at either end', () => {
+    act(() => visitNode(visit('a', 10)))
+    act(() => { stepHistory(-1); stepHistory(-1) })
+    expect(state().selectedNode).toBe('a')
+    act(() => stepHistory(1))
+    expect(state().selectedNode).toBe('a')
+  })
+
+  it('is never persisted — a selection must not outlive a reload', () => {
+    act(() => visitNode(visit('a', 10)))
+    // visitNode touches no persisted key, so on its own it must not even write the blob.
+    expect(localStorage.getItem('etl360.tab3.view')).toBeNull()
+
+    // And when an unrelated persisted key DOES trigger a write, the trail must stay out of it.
+    act(() => setOperationalView({ density: 'compact' }))
+    const stored = JSON.parse(localStorage.getItem('etl360.tab3.view')!)
+    expect(stored.nodeHistory).toBeUndefined()
+    expect(stored.historyIndex).toBeUndefined()
+    expect(PERSISTED_KEYS).not.toContain('nodeHistory')
   })
 })

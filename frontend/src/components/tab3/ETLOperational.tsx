@@ -4,7 +4,7 @@ import type { ApiError } from '../../api/client'
 import { useOperationalSummary, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
 import type { AppConfig, RelationshipGraph } from '../../api/queries'
 import { useClusterIndex, useScopedRelationships, useRuns, type RunT } from '../../api/clusterQueries'
-import { setOperationalView, useOperationalView } from '../../state/operationalView'
+import { setOperationalView, useOperationalView, visitNode, stepHistory } from '../../state/operationalView'
 import { toOperationalGraph, summarizeSnapshot, fitToViewport, DENSITY_FOOTPRINT, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../../api/gcpLinks'
 import { OperationalCard } from '../shared/OperationalCard'
@@ -900,7 +900,11 @@ export function ETLOperational() {
           cards={cards}
           edges={graph.edges}
           selected={view.selectedNode}
-          onSelect={id => setOperationalView({ selectedNode: id })}
+          // Every selection joins the navigation trail, so ◀ unwinds canvas clicks and Related
+          // hops through the same stack. Deselection (null) is not a stop on a trail.
+          onSelect={id => id === null
+            ? setOperationalView({ selectedNode: null })
+            : visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan })}
           zoom={view.zoom}
           pan={view.pan}
           onPan={onPan}
@@ -916,7 +920,7 @@ export function ETLOperational() {
 
         {/* detail side panel */}
         {selectedCard && (
-          <div style={{
+          <div data-testid="details-panel" style={{
             width: 300, flexShrink: 0,
             background: 'var(--surface)', borderLeft: '1px solid var(--border)',
             overflow: 'auto', padding: '16px',
@@ -944,7 +948,23 @@ export function ETLOperational() {
             {/* related cards */}
             <div>
               <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-                Related ({selectedCard.relations.length})
+                {/* Following a lineage used to be a one-way trip: each Related click replaced the
+                    selection with no record of where you came from. */}
+                <button
+                  aria-label="Back to previous node"
+                  title="Back to the previous node and the view you left it at"
+                  disabled={view.historyIndex <= 0}
+                  onClick={() => stepHistory(-1)}
+                  style={historyBtn(view.historyIndex > 0)}
+                >{'◀'}</button>
+                <button
+                  aria-label="Forward to next node"
+                  title="Forward"
+                  disabled={view.historyIndex >= view.nodeHistory.length - 1}
+                  onClick={() => stepHistory(1)}
+                  style={historyBtn(view.historyIndex < view.nodeHistory.length - 1)}
+                >{'▶'}</button>
+                <span style={{ marginLeft: 2 }}>Related ({selectedCard.relations.length})</span>
                 <InfoTooltip text="Tables and recipes that directly exchange data with this node." placement="right" />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -952,7 +972,9 @@ export function ETLOperational() {
                   const relCard = graph.cards.find(c => c.id === rid)
                   if (!relCard) return null
                   return (
-                    <div key={rid} onClick={() => setOperationalView({ selectedNode: rid })} style={{ cursor: 'pointer' }}>
+                    <div key={rid} data-testid="related-card"
+                      onClick={() => visitNode({ nodeId: rid, zoom: view.zoom, pan: view.pan })}
+                      style={{ cursor: 'pointer' }}>
                       <OperationalCard card={relCard} density="compact" />
                     </div>
                   )
@@ -1078,6 +1100,19 @@ function FilterChips({
       })}
     </div>
   )
+}
+
+/** ◀ / ▶ — visibly inert at the ends rather than merely unresponsive. */
+function historyBtn(enabled: boolean): React.CSSProperties {
+  return {
+    width: 18, height: 18, padding: 0, borderRadius: 4,
+    background: enabled ? 'var(--surface-3)' : 'transparent',
+    border: `1px solid ${enabled ? 'var(--border)' : 'transparent'}`,
+    color: enabled ? 'var(--text)' : '#2a3050',
+    cursor: enabled ? 'pointer' : 'default',
+    fontSize: 9, lineHeight: 1,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }
 }
 
 const zoomBtn: React.CSSProperties = {

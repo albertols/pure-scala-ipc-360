@@ -1015,3 +1015,43 @@ describe('TIME VIEW collapse', () => {
     await waitFor(() => expect(container.querySelector('input[type="date"]')).toBeNull())
   })
 })
+
+// ─── related navigation history (sub-project 12, defect 6) ──────────────────
+
+describe('Related back/forward', () => {
+  it('starts with both controls inert and walks back through the hops it recorded', async () => {
+    renderTab()
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+
+    // First selection: nowhere to go in either direction.
+    expect(screen.getByLabelText('Back to previous node')).toBeDisabled()
+    expect(screen.getByLabelText('Forward to next node')).toBeDisabled()
+
+    const related = await screen.findAllByTestId('related-card')
+    expect(related.length).toBeGreaterThan(0)
+    fireEvent.click(related[0]!)
+
+    const back = screen.getByLabelText('Back to previous node')
+    expect(back).toBeEnabled()
+    fireEvent.click(back)
+
+    // Back at the start: back inert again, forward now live.
+    await waitFor(() => expect(screen.getByLabelText('Back to previous node')).toBeDisabled())
+    expect(screen.getByLabelText('Forward to next node')).toBeEnabled()
+  })
+
+  it('a Related hop no longer discards where you came from', async () => {
+    renderTab()
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+    // Scoped to the details panel: `operational-card` also matches every card on the canvas.
+    const shown = () => within(screen.getByTestId('details-panel'))
+      .getAllByTestId('operational-card')[0]!.textContent
+    const firstTitle = shown()
+
+    fireEvent.click((await screen.findAllByTestId('related-card'))[0]!)
+    await waitFor(() => expect(shown()).not.toBe(firstTitle))
+
+    fireEvent.click(screen.getByLabelText('Back to previous node'))
+    await waitFor(() => expect(shown()).toBe(firstTitle))
+  })
+})

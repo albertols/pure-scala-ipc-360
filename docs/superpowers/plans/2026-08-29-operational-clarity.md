@@ -1381,7 +1381,7 @@ git commit -m "feat(tab3): TIME VIEW collapses to a chip and frees the whole bar
 **Interfaces:**
 - Produces: `NodeVisit { nodeId: string; zoom: number; pan: { x: number; y: number } }`; store keys `nodeHistory: NodeVisit[]`, `historyIndex: number`; functions `visitNode(visit: NodeVisit): void`, `stepHistory(delta: -1 | 1): void`, `HISTORY_CAP = 25`. Consumed by Task 13.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```ts
 // operationalView.test.ts
@@ -1425,12 +1425,12 @@ it('never persists history — a selection must not outlive a reload', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd frontend && pnpm test operationalView`
 Expected: FAIL — `visitNode` is not exported.
 
-- [ ] **Step 3: Implement the stack**
+- [x] **Step 3: Implement the stack**
 
 ```ts
 export interface NodeVisit {
@@ -1475,7 +1475,7 @@ export function stepHistory(delta: -1 | 1): void {
 
 Add `nodeHistory: []` and `historyIndex: -1` to `DEFAULTS`; leave both out of `PERSISTED_KEYS`.
 
-- [ ] **Step 4: Wire the controls**
+- [x] **Step 4: Wire the controls**
 
 Replace the `Related (n)` header at `:898-902` with a row carrying `◀`/`▶`, and change the related-card click at `:908` from `setOperationalView({ selectedNode: rid })` to `visitNode({ nodeId: rid, zoom: view.zoom, pan: view.pan })`. Also route canvas selection (`:857`) through `visitNode`.
 
@@ -1488,7 +1488,7 @@ Replace the `Related (n)` header at `:898-902` with a row carrying `◀`/`▶`, 
                   style={historyBtn(view.historyIndex < view.nodeHistory.length - 1)}>▶</button>
 ```
 
-- [ ] **Step 5: Write the component test**
+- [x] **Step 5: Write the component test**
 
 ```tsx
 it('walks back through three related hops to the node it started from', async () => {
@@ -1507,12 +1507,12 @@ it('walks back through three related hops to the node it started from', async ()
 })
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/state/operationalView.ts frontend/src/state/operationalView.test.ts \
