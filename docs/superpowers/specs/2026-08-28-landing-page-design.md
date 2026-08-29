@@ -294,3 +294,46 @@ must never be committed: no path, project id, or hostname from any real environm
 test, fixture, doc, ADR, screenshot, or commit message. Screenshots for `docs/img/` are captured
 against the committed mock tiers only, and reviewed for identifiers before committing — the same
 rule sub-project 10 followed.
+
+---
+
+## Acceptance walk results (2026-08-29)
+
+Run in Chrome at `http://localhost:8443` against the committed mock tiers, plus a deliberately broken
+control-schema root. Screenshots: `docs/img/landing-ok.jpg`, `docs/img/landing-degraded.jpg`.
+
+**Confirmed.** The landing page is what loads, not Tab 1. Stats match the mock floors exactly — 81/86/212
+corpus with 8 layers, 21/30/14/417 operational behind a `data: mock` chip, and **22** DAGs (the corrected
+figure, live). Progress renders (661/673 plan tasks, 16 ADRs). The environment panel names all three roots
+with their tiers, and `dwhControl` shows the path that actually SERVED — the mock mirror — not the
+configured real path. GCP project and region render (spec §6.4). Future-tab cards show their descriptions
+as visible text. All four tab cards and every architecture region enter the right tab, verified by the
+active tab's accent (Modifier → `#818cf8`, Operational → `#fb923c`). Esc reaches the shell on the default
+Viewer tab. The existing tab shell renders unchanged. No horizontal overflow. Console clean — zero errors,
+zero warnings.
+
+**Two defects found, both fixed and re-verified in the browser.**
+
+1. *The mascot reported "all is well" while the app was broken* (commit `2e618d2`). With both control-schema
+   tiers pointed at nonexistent paths, `/api/readiness` correctly returned `status: "ko"` — and the mascot
+   stayed in its OK mood. Cause: `DiagnosticsService` emits only `"ok"`/`"ko"` (`"degraded"` appears ZERO
+   times in the backend), but this spec invented the word `"degraded"` and four downstream sites believed
+   it, including `Landing.tsx`'s status mapping, two contract-test assertions and the `validate-loop` gate.
+   Every one of them passed on a healthy machine, which is every machine the tests run on. Fixed at all four
+   sites with a regression test pinning the real `"ko"` value, and the mapping now fails safe: any non-`"ok"`
+   status renders the degraded mood. **This spec's own vocabulary was the root cause** — see §3's corrected
+   row. Re-verified: `"ko"` now renders `data-mood="degraded"`, twigs present and bubbles absent, naming the
+   failing root and its hint.
+
+2. *The call-to-action sat below the fold* (commit `3ee9452`). The hero stretched to its flex parent's full
+   930px and, being `aspectRatio: 1/1`, 930px tall — putting "Enter ETL 360" at y=1120 in an 864px viewport,
+   on a page whose whole promise is click-and-go. Capped on WIDTH (`min(600px, 52vh)`), not height: the inner
+   box is `aspectRatio: 1/1` over an `objectFit: cover` image, so a height cap would letterbox the square and
+   centre-crop the mascot's head off. The hero now renders at 456px — below its 600px natural size, so it is
+   also no longer upscaled and soft — with the button 194px clear of the fold.
+
+Neither was reachable by unit test: jsdom computes no layout, and the status bug is invisible on a healthy
+host. That is the case for keeping a browser walk in this harness.
+
+**Still outstanding: human visual sign-off.** The mechanisms are gated; the aesthetic judgement is the
+user's.
