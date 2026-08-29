@@ -102,10 +102,14 @@ export function LineageFlow({
     return { x: p.x + (o?.dx ?? 0), y: p.y + (o?.dy ?? 0) }
   }
 
-  // Ancestors + descendants of the hovered node, over the ORIGINAL edges (not the routed chains,
+  // Ancestors + descendants of the traced node, over the ORIGINAL edges (not the routed chains,
   // whose dummies are not nodes anyone can trace to).
+  //
+  // Hover PREVIEWS a trace; selection PINS it. Hover alone would drop the highlight the instant
+  // you moved the pointer toward the Details dock to read it — i.e. exactly when you wanted it.
+  const traceRoot = hovered ?? selected
   const traced = useMemo(() => {
-    if (!hovered || !lineage.data) return null
+    if (!traceRoot || !lineage.data) return null
     const up = new Map<string, string[]>(), down = new Map<string, string[]>()
     for (const e of lineage.data.edges) {
       if (!down.has(e.from)) down.set(e.from, [])
@@ -113,9 +117,9 @@ export function LineageFlow({
       down.get(e.from)!.push(e.to)
       up.get(e.to)!.push(e.from)
     }
-    const seen = new Set<string>([hovered])
+    const seen = new Set<string>([traceRoot])
     for (const dir of [up, down]) {
-      const queue = [hovered]
+      const queue = [traceRoot]
       while (queue.length) {
         const cur = queue.pop()!
         for (const nxt of dir.get(cur) ?? []) {
@@ -125,7 +129,7 @@ export function LineageFlow({
       }
     }
     return seen
-  }, [hovered, lineage.data])
+  }, [traceRoot, lineage.data])
 
   const matchesFilter = (n: LineageNodeT) =>
     (layerFilter.length === 0 || layerFilter.includes(n.layer))
@@ -268,13 +272,7 @@ export function LineageFlow({
                 background: BAND_TINT[b.tier], borderRadius: 8,
                 borderTop: `1px solid ${BAND_INK[b.tier]}22`,
                 pointerEvents: 'none',
-              }}>
-                <span style={{
-                  position: 'sticky', left: 6, display: 'inline-block', marginTop: 4,
-                  fontSize: 9, letterSpacing: '0.08em', fontFamily: 'JetBrains Mono, monospace',
-                  color: BAND_INK[b.tier], opacity: 0.75,
-                }}>{b.label}</span>
-              </div>
+              }} />
             ))}
 
             <svg width={layout.width + RAIL_W} height={layout.height}
@@ -345,6 +343,26 @@ export function LineageFlow({
                 </div>
               )
             })}
+
+            {/* Tier labels, painted above the cards. They are sticky, so once the flow is
+                scrolled they travel over whatever card is beneath — hence the opaque backing
+                rather than bare text. */}
+            {layout.bands.map(b => (
+              <div key={`${b.tier}-label`} style={{
+                position: 'absolute', left: 0, top: b.y - 6,
+                width: layout.width + RAIL_W, height: 16,
+                pointerEvents: 'none', zIndex: 5,
+              }}>
+                <span data-testid="lineage-band-label" style={{
+                  position: 'sticky', left: 6, display: 'inline-block',
+                  padding: '1px 7px', borderRadius: 4,
+                  fontSize: 9, letterSpacing: '0.08em', fontFamily: 'JetBrains Mono, monospace',
+                  color: BAND_INK[b.tier],
+                  background: 'var(--bg)',
+                  border: `1px solid ${BAND_INK[b.tier]}33`,
+                }}>{b.label}</span>
+              </div>
+            ))}
 
             {/* hop ruler */}
             {[...new Map(layout.nodes.filter(p => !p.isDummy)

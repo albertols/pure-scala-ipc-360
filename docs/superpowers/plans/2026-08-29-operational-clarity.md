@@ -1944,10 +1944,10 @@ Spec §15.6.
 
 ## Task 27: gates and the third browser walk
 
-- [ ] **Step 1** — `make test`, `make check`, `make validate-loop`; every committed mock floor unchanged.
-- [ ] **Step 2: Browser walk across the complexity range** — validate the simplest lineage (3 nodes, 1 column wide), a mid one, and the widest (26 nodes / 13 columns / 6 wide, `table:CAS_CDM_EVENTS_MART` and `table:CAS_RDM_EVENTS_EXPORT`). For each: bands aligned and labelled, long edges visibly routed rather than passing behind cards, hover tracing correct, click→Details, double-click→re-seed, clusters strip, filter dimming, drag + reset. Capture screenshots.
-- [ ] **Step 3** — record results in spec §11.3 and any deviations in §12.
-- [ ] **Step 4** — commit: `docs(spec): third acceptance walk — lineage legibility`.
+- [x] **Step 1** — `make test`, `make check`, `make validate-loop`; every committed mock floor unchanged.
+- [x] **Step 2: Browser walk across the complexity range** — validate the simplest lineage (3 nodes, 1 column wide), a mid one, and the widest (26 nodes / 13 columns / 6 wide, `table:CAS_CDM_EVENTS_MART` and `table:CAS_RDM_EVENTS_EXPORT`). For each: bands aligned and labelled, long edges visibly routed rather than passing behind cards, hover tracing correct, click→Details, double-click→re-seed, clusters strip, filter dimming, drag + reset. Capture screenshots.
+- [x] **Step 3** — record results in spec §11.3 and any deviations in §12.
+- [x] **Step 4** — commit: `docs(spec): third acceptance walk — lineage legibility`.
 
 ---
 

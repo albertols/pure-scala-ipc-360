@@ -130,7 +130,11 @@ describe('LineageFlow — bands', () => {
     await screen.findByText('ODS.MIDDLE')
     const rails = [...document.querySelectorAll('[data-testid="lineage-band"]')]
     expect(rails.length).toBeGreaterThanOrEqual(2)
-    expect(rails.map(r => r.textContent).join(' ')).toMatch(/STG . ODS/)
+    // Labels are painted in a separate pass ABOVE the cards — a sticky label travels over
+    // whatever card is beneath it once the flow is scrolled.
+    const labels = [...document.querySelectorAll('[data-testid="lineage-band-label"]')]
+    expect(labels).toHaveLength(rails.length)
+    expect(labels.map(l => l.textContent).join(' ')).toMatch(/STG . ODS/)
   })
 })
 
@@ -250,5 +254,26 @@ describe('LineageFlow — manual arrangement', () => {
     // and the restored coordinates are the layout function's, not a remembered snapshot
     const computed = layoutLineage(NODES, EDGES).nodes.find(p => p.id === 'seed')!
     expect(posOf('seed')).toEqual({ left: `${computed.x + RAIL_W}px`, top: `${computed.y}px` })
+  })
+})
+
+describe('LineageFlow — the trace survives reaching for the dock', () => {
+  it('pins the trace to the selected node, not just the hovered one', async () => {
+    // Hover alone drops the highlight the moment the pointer moves toward the Details dock —
+    // which is precisely when the operator wanted to keep looking at it.
+    const { container } = render(<LineageFlow nodeId="seed" />, { wrapper })
+    fireEvent.click(await screen.findByText('DWH.OUT'))
+    expect(container.querySelectorAll('[data-traced="true"]').length).toBeGreaterThan(0)
+    expect(container.querySelectorAll('[data-dimmed="true"]').length).toBeGreaterThan(0)
+  })
+
+  it('lets a hover preview override the pinned selection, then fall back to it', async () => {
+    const { container } = render(<LineageFlow nodeId="seed" />, { wrapper })
+    fireEvent.click(await screen.findByText('DWH.OUT'))
+    const pinned = container.querySelectorAll('[data-traced="true"]').length
+
+    fireEvent.mouseEnter(screen.getByTestId('lineage-seed'))
+    fireEvent.mouseLeave(screen.getByTestId('lineage-seed'))
+    expect(container.querySelectorAll('[data-traced="true"]').length).toBe(pinned)
   })
 })

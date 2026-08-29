@@ -781,6 +781,31 @@ open and on every re-seed.
 
 ---
 
+### 11.3 Third acceptance walk — §15 (2026-08-29)
+
+Driven through Chrome at 1800x1100 across the corpus's full complexity range.
+
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| 11 | Table bodies read blue, recipe bodies orange | **PASS** | Main canvas computes `rgb(31,49,76)` and `rgb(65,47,38)` — the 20% blends. Clearly separable at a glance in both the canvas and the lineage. |
+| 12A | Layers aligned vertically by tier | **PASS** | Four labelled rails — `STG · ODS`, `DWH · ETL`, `CDM · RDM · QDM`, `OUTPUT` — hold across every column. Image 27's `CDM, ODS, ODS, ETL, QDM` pile is gone. |
+| 12B | Cards clickable → Details | **PASS** | Single click opens a docked panel with the node's card, its clusters and its hop; `⌖ center lineage here` re-seeds, as does a double-click. |
+| 12C | Clusters and the main view's bar | **PASS** | `cluster-wf-cas-load-4001 5 · cluster-wf-cas-core-4002 3 · cluster-wf-cas-out-4003 3`, and the same `MultiFilterChips` component as the toolbar. Filtering **dims** (20 of 26 on `ODS`, "20 dimmed" stated) and renders every card, so no path is severed. |
+| 12D | Relationships legible at every scale | **PASS** | Simplest (3 nodes, 1 band): a clean chain, no wasted chrome. Widest (`CAS_RDM_EVENTS_EXPORT`, 26 nodes / 9 columns / 6 wide): four bands, no overlaps, long edges visibly routed between bands rather than behind cards. |
+| 12D | Tracing | **PASS** | Selecting `CAS_LKP_STATUS` lit its path — `CAS_LKP_STATUS → _ETL_m_CAS_DWH_EVENTS_FACT (KO) → CAS_DWH_EVENTS_FACT (KO)` — in blue and dimmed the other 9. On the seed: 22 traced, 4 dimmed, 24 traced edges. |
+| 12D | Drag and reset | **PASS** | Dragging moved only its own card, by exactly the pointer delta; `reset layout` appeared only after a drag and restored the precise coordinates (`2012,402` → `2092,462` → `2012,402`). |
+| — | Layout invariants on REAL data | **PASS** | `lineageLayout` run over **all 81 corpus lineages**: 0 overlapping cards, 50 long edges routed, 22 crossings in total, worst single lineage 2. |
+
+**Found and fixed during the walk:** the tier labels are `position: sticky`, so once the flow
+scrolls they travel over whatever card is beneath them — they were rendering *behind* the cards.
+They are now painted in a separate pass above the cards with an opaque backing (deviation D8).
+
+**Changed during the walk:** tracing was hover-only, which drops the highlight the instant the
+pointer moves toward the Details dock to read it — i.e. exactly when it is wanted. Hover now
+*previews* a trace and selection *pins* it (deviation D9).
+
+---
+
 ## 12. Deviations
 
 **D1 — §7.5's fixture is a `@TempDir`, not a committed test resource.** The plan called for
@@ -815,6 +840,15 @@ not by the unit test, which had a single-layer fixture and therefore asserted no
 **D7 — `LineageFlow` scrolls the seed into view on mount.** Not in §13.3, which described the
 layout but not the opening viewport. A wide lineage lays out from hop −N, so the view opened on
 a column the operator had not asked about.
+
+**D8 — tier labels are painted in a separate pass above the cards.** §15.3 described band rails
+without saying how they layer. Sticky labels slide over the content as the flow scrolls, so
+drawing them with the (behind-the-cards) band tint left them hidden. They now render after the
+cards with an opaque backing.
+
+**D9 — tracing is pinned by selection, not only by hover.** §15.4 said "hovering a node". A
+hover-only trace disappears as soon as the pointer travels to the Details dock, which is where
+the operator goes next. Hover previews; selection pins; hover still overrides while it lasts.
 
 **D2 — `B15Reader` gained an `Etl360Properties` constructor parameter.** §7.2 did not say how the
 reader would reach the configured vocabulary. It takes it the way `LayerToLayerService` already
