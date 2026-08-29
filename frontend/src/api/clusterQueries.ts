@@ -141,6 +141,41 @@ export const useOperationalSearch = (q: string) => {
   })
 }
 
+/** One node on a lineage; `hop` is signed — negative upstream, 0 the seed, positive downstream. */
+export interface LineageNodeT {
+  id: string
+  kind: 'recipe' | 'table'
+  name: string
+  layer: string
+  hop: number
+  clusters: string[]
+}
+
+export interface LineageT {
+  seed: string
+  nodes: LineageNodeT[]
+  edges: { from: string; to: string; kind: 'source' | 'lookup' | 'writes' }[]
+  truncated: boolean
+  totalReachable: number
+}
+
+export const LINEAGE_DEFAULT_LIMIT = 150
+export const LINEAGE_MAX_LIMIT = 600
+
+/**
+ * One node's transitive lineage. NOT cluster-scoped by design — lineage crosses cluster
+ * boundaries, and stopping at the selection would draw a complete-looking flow that is not one
+ * (ADR-0020). Bounded by node count instead, which is what keeps it a purposeful slice.
+ */
+export const useLineage = (nodeId: string | null, limit: number = LINEAGE_DEFAULT_LIMIT) =>
+  useQuery({
+    queryKey: ['lineage', nodeId, limit],
+    queryFn: () => apiGet<LineageT>(
+      `/operational/lineage?node=${encodeURIComponent(nodeId!)}&limit=${limit}`),
+    staleTime: STALE_MS,
+    enabled: !!nodeId,
+  })
+
 export interface RunsResult {
   byRecipe: Record<string, RunT[]>
   isLoading: boolean

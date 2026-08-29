@@ -1834,13 +1834,13 @@ Spec §13.3. Replaces the overlay's body; both entry points unchanged.
 - Consumes: Task 18's endpoint; `OperationalCard`, `semanticColors`.
 - Produces: `<LineageFlow nodeId onFocus />`, and `layoutLineage(nodes, edges)` (pure, unit-testable) returning positioned nodes.
 
-- [ ] **Step 1: Write the failing test for `layoutLineage`** — columns are ordered by hop, the seed sits at hop 0, no two nodes in a column overlap, and every edge resolves to two positioned endpoints.
-- [ ] **Step 2: Write the failing component test** — renders a seed and both directions, marks the seed, states the truncation line when `truncated`, and calls `onFocus` when a node is clicked.
-- [ ] **Step 3: Run both and confirm they fail.**
-- [ ] **Step 4: Implement `layoutLineage` + `LineageFlow`** — hop-distance columns, rows ordered by average predecessor y, SVG edges, `OperationalCard` at compact density.
-- [ ] **Step 5: Rewire `RelatedOverlay`** to render `LineageFlow` in place of the neighbour grid, keeping `standalone`, `onFocus` and `onClose` exactly as they are.
-- [ ] **Step 6: Run `pnpm test` + `npx tsc --noEmit`.**
-- [ ] **Step 7: Commit** — message `feat(tab3): Show all related is a full lineage flow, not a neighbour list`.
+- [x] **Step 1: Write the failing test for `layoutLineage`** — columns are ordered by hop, the seed sits at hop 0, no two nodes in a column overlap, and every edge resolves to two positioned endpoints.
+- [x] **Step 2: Write the failing component test** — renders a seed and both directions, marks the seed, states the truncation line when `truncated`, and calls `onFocus` when a node is clicked.
+- [x] **Step 3: Run both and confirm they fail.**
+- [x] **Step 4: Implement `layoutLineage` + `LineageFlow`** — hop-distance columns, rows ordered by average predecessor y, SVG edges, `OperationalCard` at compact density.
+- [x] **Step 5: Rewire `RelatedOverlay`** to render `LineageFlow` in place of the neighbour grid, keeping `standalone`, `onFocus` and `onClose` exactly as they are.
+- [x] **Step 6: Run `pnpm test` + `npx tsc --noEmit`.**
+- [x] **Step 7: Commit** — message `feat(tab3): Show all related is a full lineage flow, not a neighbour list`.
 
 ---
 

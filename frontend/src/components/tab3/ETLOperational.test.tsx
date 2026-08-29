@@ -222,6 +222,23 @@ const server = setupServer(
     content: PREVIEW_RECIPE,
   })),
   http.get('/api/ipc/rules', () => HttpResponse.json(IPC_RULES)),
+  http.get('/api/operational/lineage', ({ request }) => {
+    const seed = new URL(request.url).searchParams.get('node') ?? ''
+    // Mirrors the mini graph above: source table -> recipe -> target table.
+    const nodes = [
+      { id: 't_src', kind: 'table', name: 'stg_dwhes.CAS_T_SRC', layer: 'STG', hop: -2, clusters: [] },
+      { id: 'r', kind: 'recipe', name: '_ETL_m_CAS_T.json', layer: 'STG', hop: -1, clusters: ['cl-a'] },
+      { id: 't_tgt', kind: 'table', name: 'stg_dwhes.CAS_T_TGT', layer: 'STG', hop: 0, clusters: [] },
+    ]
+    return HttpResponse.json({
+      seed, nodes: nodes.map(n => ({ ...n, hop: n.id === seed ? 0 : n.hop })),
+      edges: [
+        { from: 't_src', to: 'r', kind: 'source' },
+        { from: 'r', to: 't_tgt', kind: 'writes' },
+      ],
+      truncated: false, totalReachable: 3,
+    })
+  }),
   http.get('/api/operational/search', ({ request }) => {
     const q = (new URL(request.url).searchParams.get('q') ?? '').toLowerCase()
     const all = [
@@ -1111,9 +1128,10 @@ describe('Show all related', () => {
       .getAllByTestId('operational-card')[0]!.textContent
     fireEvent.click(link)
 
-    const neighbours = await screen.findAllByTestId('overlay-node')
-    expect(neighbours.length).toBeGreaterThan(0)
-    fireEvent.click(neighbours[0]!)
+    // The overlay body is a lineage flow now, not a neighbour list.
+    const others = await screen.findAllByTestId('lineage-node')
+    expect(others.length).toBeGreaterThan(0)
+    fireEvent.click(others[0]!)
     fireEvent.click(screen.getByLabelText('Close related overlay'))
 
     await waitFor(() => expect(within(screen.getByTestId('details-panel'))
