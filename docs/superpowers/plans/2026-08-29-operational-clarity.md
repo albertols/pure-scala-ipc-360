@@ -336,7 +336,7 @@ reports what it could not recognize."
 - Consumes: `B15Status` (Task 1), `Etl360Properties.B15` (Task 1).
 - Produces: `B15Reader.status()` → the live `B15Status` instance, for Task 3's diagnostics.
 
-- [ ] **Step 1: Write the fixture**
+- [x] **Step 1: Write the fixture**
 
 `backend/src/test/resources/mock-status-dialect/b15_application_end_with_recipe_null_status.csv` — the header must match `B15Reader`'s `cell(...)` keys exactly. Uses the user-reported real-world shape, including a comma inside the quoted `message`:
 
@@ -348,7 +348,7 @@ cluster-dialect-a,_ETL_C_RECIPE.json,etl-c_recipe-20260818-0800,2026-08-18T06:03
 cluster-dialect-a,_ETL_D_RECIPE.json,etl-d_recipe-20260818-0800,2026-08-18T06:04:11.117Z,0m 44sec,SUCCESS,
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -406,12 +406,12 @@ class B15ReaderStatusDialectTest {
 
 Write `TestB15.rowsFrom(String testResourceDir)` as a small package-private helper in the same test package, constructing `B15Reader` exactly the way the existing `B15Reader` tests do — read them first and copy their construction, rather than inventing a second idiom.
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=B15ReaderStatusDialectTest`
 Expected: FAIL — `expected "FAILED" but was "FAILURE"` (the reader passes the token through raw today).
 
-- [ ] **Step 4: Canonicalise at parse**
+- [x] **Step 4: Canonicalise at parse**
 
 In `B15Reader.java`, hold a `B15Status` built from `Etl360Properties.b15()` (constructor-injected, like the other properties this class reads), expose it, and wrap the status cell at `:141`:
 
@@ -430,17 +430,17 @@ In `B15Reader.java`, hold a `B15Status` built from `Etl360Properties.b15()` (con
                     status.canonical(cell(row, "status")), cell(row, "message")));
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `mvn -q -am -pl backend test -Dtest=B15ReaderStatusDialectTest`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 6: Run the full backend suite**
+- [x] **Step 6: Run the full backend suite**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS. The committed mock writes `SUCCESS`/`FAILED`, which canonicalise to themselves, so every existing count is unchanged.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/B15Reader.java \

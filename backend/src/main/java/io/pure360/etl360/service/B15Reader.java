@@ -5,6 +5,8 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import io.pure360.etl360.api.dto.B15RowDto;
 import io.pure360.etl360.config.DataRoots;
+import io.pure360.etl360.config.Etl360Properties;
+import io.pure360.etl360.service.support.B15Status;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -42,12 +44,21 @@ public class B15Reader {
     private record Cached(FileTime mtime, long size, List<B15RowDto> rows) {}
 
     private final DataRoots roots;
+    private final B15Status status;
     private final CsvMapper csvMapper = new CsvMapper();
     private final Map<Path, Cached> cache = new ConcurrentHashMap<>();
 
-    public B15Reader(DataRoots roots) {
+    public B15Reader(DataRoots roots, Etl360Properties props) {
         this.roots = roots;
+        this.status = props.b15().toStatus();
     }
+
+    /**
+     * The status vocabulary this reader canonicalises against — exposed so
+     * {@code DiagnosticsService} can report the tokens it could not recognize, which is what
+     * keeps a mislabelled PENDING card from being a silent failure. See ADR-0018.
+     */
+    public B15Status status() { return status; }
 
     public Optional<Path> inputsDir() {
         return roots.composer()
@@ -138,7 +149,10 @@ public class B15Reader {
                 out.add(new B15RowDto(
                     cell(row, "cluster_name"), cell(row, "recipe_filename"), cell(row, "job_id"),
                     cell(row, "app_start_iso"), cell(row, "avg_job_duration_in_mins_sec"),
-                    cell(row, "status"), cell(row, "message")));
+                    // Canonicalised HERE, at the ONE boundary, so ClusterIndexService,
+                    // ClusterController, OperationalService and the frontend's STATUS_MAP all
+                    // keep comparing exactly two literals and need no change. ADR-0018.
+                    status.canonical(cell(row, "status")), cell(row, "message")));
             }
             return List.copyOf(out);
         } catch (IOException e) {

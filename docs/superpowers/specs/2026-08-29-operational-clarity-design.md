@@ -566,4 +566,13 @@ Branch `feat/etl360-operational-clarity`.
 
 ## 12. Deviations
 
-*(Recorded during implementation — empty at approval.)*
+**D1 — §7.5's fixture is a `@TempDir`, not a committed test resource.** The plan called for
+`backend/src/test/resources/mock-status-dialect/…csv`. `B15ReaderTest` already writes its CSVs
+inline into a JUnit `@TempDir`, so `B15ReaderStatusDialectTest` follows that idiom instead of
+introducing a second one. The substance of §7.5 is unchanged and strengthened: no file is
+committed at all, so there is nothing a future corpus walk could pick up by accident.
+
+**D2 — `B15Reader` gained an `Etl360Properties` constructor parameter.** §7.2 did not say how the
+reader would reach the configured vocabulary. It takes it the way `LayerToLayerService` already
+does (`LayerToLayerService.java:24`), which cost a one-line edit at seven test construction
+sites and keeps one precedent in the codebase rather than two.
