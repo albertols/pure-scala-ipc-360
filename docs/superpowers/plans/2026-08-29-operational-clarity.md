@@ -1648,7 +1648,7 @@ git commit -m "feat(tab3): Show All Related — overlay on click, real new tab o
 - Consumes: `GET /api/operational/search` (Task 4).
 - Produces: `useOperationalSearch(q: string)`, `<OperationalSearch query onPick />`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 it('finds a table with no cluster selected and navigates into its cluster', async () => {
@@ -1674,31 +1674,31 @@ it('renders nothing for an empty query', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd frontend && pnpm test -- OperationalSearch ETLOperational`
 Expected: FAIL — `ETLOperational` accepts no `searchQuery` prop.
 
-- [ ] **Step 3: Add the hook**
+- [x] **Step 3: Add the hook**
 
 In `queries.ts`, following the file's existing `useQuery` idiom, with `enabled: q.trim().length >= 2`.
 
-- [ ] **Step 4: Write the panel**
+- [x] **Step 4: Write the panel**
 
 `OperationalSearch.tsx` — hits grouped by kind, `data-testid={`search-hit-${kind}`}`, each row naming its clusters; clicking sets `selectedClusters` to the hit's clusters and stores the node id to select once the scoped graph resolves. Render it above the tab body so it works in the no-cluster state too.
 
-- [ ] **Step 5: Wire the prop and relabel the toolbar input**
+- [x] **Step 5: Wire the prop and relabel the toolbar input**
 
 `App.tsx:269` → `<ETLOperational searchQuery={activeTab === 'operational' ? searchQuery : ''} />`, matching the guard Tabs 1/2 use at `:259`/`:264`.
 
 `ETLOperational.tsx:763` placeholder → `Filter this canvas…` — the old `Search tables / recipes…` was a promise it could not keep, since it can only see loaded cards.
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/components/tab3/OperationalSearch.tsx frontend/src/components/tab3/OperationalSearch.test.tsx \

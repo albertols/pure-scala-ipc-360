@@ -141,6 +141,11 @@ export function stepHistory(delta: -1 | 1): void {
   })
 }
 
+/** Current state, outside React. For tests and for non-render callers; components use the hook. */
+export function readOperationalView(): OperationalViewState {
+  return state
+}
+
 /** Test-only: drop in-memory state and re-read localStorage. */
 export function resetOperationalView(): void {
   state = hydrate()

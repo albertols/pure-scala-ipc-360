@@ -107,6 +107,40 @@ export const useScopedRelationships = (clusters: string[]) => {
   })
 }
 
+/** One hit from `GET /api/operational/search` — a recipe or table, and the clusters reaching it. */
+export interface SearchHitT {
+  kind: 'recipe' | 'table'
+  name: string
+  layer: string
+  clusters: string[]
+}
+
+export interface SearchHitsT {
+  hits: SearchHitT[]
+  truncated: boolean
+}
+
+/** The minimum the backend will act on; below it the endpoint returns empty rather than erroring. */
+export const SEARCH_MIN_Q = 2
+
+/**
+ * Cross-index search over the whole b15 history AND the relationships graph.
+ *
+ * Distinct from Tab 3's toolbar input, which filters the cards already on the canvas: this finds
+ * things in clusters that have not been loaded, which is the only way to answer "which cluster
+ * runs this table?" without guessing. Table names are not in the b15 index at all, so this
+ * cannot be done client-side (ADR-0019).
+ */
+export const useOperationalSearch = (q: string) => {
+  const needle = q.trim()
+  return useQuery({
+    queryKey: ['operationalSearch', needle],
+    queryFn: () => apiGet<SearchHitsT>(`/operational/search?q=${encodeURIComponent(needle)}`),
+    staleTime: STALE_MS,
+    enabled: needle.length >= SEARCH_MIN_Q,
+  })
+}
+
 export interface RunsResult {
   byRecipe: Record<string, RunT[]>
   isLoading: boolean

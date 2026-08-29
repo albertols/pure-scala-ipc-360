@@ -280,7 +280,7 @@ export default function App() {
             )}
             {visited.has('operational') && (
               <div style={{ display: activeTab === 'operational' ? 'contents' : 'none' }}>
-                <ETLOperational />
+                <ETLOperational searchQuery={activeTab === 'operational' ? searchQuery : ''} />
               </div>
             )}
             {visited.has('dag') && (

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { delay, http, HttpResponse } from 'msw'
 import { ETLOperational } from './ETLOperational'
-import { resetOperationalView, setOperationalView } from '../../state/operationalView'
+import { resetOperationalView, setOperationalView, readOperationalView } from '../../state/operationalView'
 // Module namespace import (alongside the named one above) so `vi.spyOn` can watch
 // `setOperationalView` calls made from INSIDE ETLOperational.tsx itself — Vitest's ESM transform
 // routes every consumer's call through this same exports object, so the spy sees them too.
@@ -222,6 +222,17 @@ const server = setupServer(
     content: PREVIEW_RECIPE,
   })),
   http.get('/api/ipc/rules', () => HttpResponse.json(IPC_RULES)),
+  http.get('/api/operational/search', ({ request }) => {
+    const q = (new URL(request.url).searchParams.get('q') ?? '').toLowerCase()
+    const all = [
+      { kind: 'recipe', name: '_ETL_m_CAS_T.json', layer: 'ODS', clusters: ['cl-a'] },
+      { kind: 'table', name: 'stg_dwhes.CAS_T_TGT', layer: 'STG', clusters: ['cl-a'] },
+      { kind: 'table', name: 'DWH.ORPHAN_NO_RUNS', layer: 'DWH', clusters: [] },
+    ]
+    return HttpResponse.json({
+      hits: all.filter(h => h.name.toLowerCase().includes(q)), truncated: false,
+    })
+  }),
 )
 beforeAll(() => server.listen())
 afterEach(() => {
@@ -297,7 +308,7 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
 
     // Search narrows to the one card whose name contains the query — only
     // the recipe's filename carries a ".json" extension.
-    const search = screen.getByPlaceholderText('Search tables / recipes…')
+    const search = screen.getByPlaceholderText('Filter this canvas…')
     fireEvent.change(search, { target: { value: '.json' } })
     expect(screen.getByText('_ETL_m_CAS_T.json')).toBeInTheDocument()
     expect(screen.queryByText('stg_dwhes.CAS_T_SRC')).not.toBeInTheDocument()
@@ -1109,5 +1120,50 @@ describe('Show all related', () => {
       .getAllByTestId('operational-card')[0]!.textContent).not.toBe(before))
     // And that hop is on the same trail as a canvas click.
     expect(screen.getByLabelText('Back to previous node')).toBeEnabled()
+  })
+})
+
+// ─── global search reaches Tab 3 (sub-project 12, defect 8) ─────────────────
+
+describe('global search', () => {
+  const renderWithQuery = (q: string, clusters: string[] = ['cl-a']) => {
+    setOperationalView({ selectedClusters: clusters })
+    return render(<ETLOperational searchQuery={q} />, { wrapper })
+  }
+
+  it('renders nothing for an empty query', async () => {
+    renderWithQuery('')
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(screen.queryByTestId('operational-search')).not.toBeInTheDocument()
+  })
+
+  it('shows results over the no-cluster state — the state you are in when you need it', async () => {
+    // Tab 3's own toolbar input can only filter cards already loaded, and loading them requires
+    // already knowing which cluster to pick. This is the escape from that circle.
+    renderWithQuery('CAS', [])
+    expect(await screen.findByTestId('operational-search')).toBeInTheDocument()
+    expect(screen.getByTestId('cluster-prompt')).toBeInTheDocument()
+  })
+
+  it('finds TABLES, which the b15 index alone cannot see', async () => {
+    renderWithQuery('CAS_T_TGT', [])
+    expect(await screen.findByTestId('search-hit-table')).toHaveTextContent('stg_dwhes.CAS_T_TGT')
+  })
+
+  it('picking a hit selects its clusters and then the node itself', async () => {
+    renderWithQuery('CAS_T_TGT', [])
+    fireEvent.click(await screen.findByTestId('search-hit-table'))
+
+    await waitFor(() => expect(readOperationalView().selectedClusters).toEqual(['cl-a']))
+    // The node cannot be selected until the scoped graph carrying it resolves; it must not be
+    // dropped in the meantime.
+    await waitFor(() => expect(readOperationalView().selectedNode).toBe('t_tgt'))
+  })
+
+  it('says so when a hit has no runs, rather than offering a dead click', async () => {
+    renderWithQuery('ORPHAN', [])
+    expect(await screen.findByTestId('search-hit-table')).toHaveTextContent('no runs')
+    fireEvent.click(screen.getByTestId('search-hit-table'))
+    expect(readOperationalView().selectedClusters).toEqual([])
   })
 })

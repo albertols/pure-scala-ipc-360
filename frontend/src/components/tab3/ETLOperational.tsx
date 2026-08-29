@@ -16,6 +16,7 @@ import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
 import { PreviewOverlay } from './PreviewOverlay'
 import { RelatedOverlay } from './RelatedOverlay'
+import { OperationalSearch } from './OperationalSearch'
 import { ClusterPane } from './ClusterPane'
 import { SelectionStrip, type SelectionSummary } from './SelectionStrip'
 import { OperationalProgress, type ProgressStage } from './OperationalProgress'
@@ -365,7 +366,7 @@ const RelationshipGraph = memo(function RelationshipGraph({
  * the entire unscoped graph's 20 984 B, and it grows as recipes x dates — tens of megabytes at
  * ~7 000 recipes and 90 dated exports. It now carries the same `clusters=` scope the graph does.
  */
-export function ETLOperational() {
+export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?: string } = {}) {
   const view = useOperationalView()
   const hasSelection = view.selectedClusters.length > 0
 
@@ -407,6 +408,11 @@ export function ETLOperational() {
   const [preview, setPreview] = useState<{ recipePath: string | null; mappingPath: string | null } | null>(null)
   /** Node id whose neighbourhood the hovering "Show all related" window is focused on. */
   const [relatedNode, setRelatedNode] = useState<string | null>(null)
+  /**
+   * A node picked from the GLOBAL search that cannot be selected yet, because its clusters were
+   * only just added and the scoped graph has not resolved. Held until it can be honoured.
+   */
+  const [pendingNode, setPendingNode] = useState<string | null>(null)
 
   // Task 16: the raw b15 rows for the selected date — distinct from `summary` above (the all-time
   // per-recipe aggregate), needed for the floating chip's exact row count/OK-KO split. Gated on
@@ -439,6 +445,20 @@ export function ETLOperational() {
     for (const n of rel.data?.nodes ?? []) if (n.id) m.set(n.id, n)
     return m
   }, [rel.data])
+
+  /**
+   * A global-search pick. Selecting the hit's clusters triggers a scoped fetch, so the node it
+   * names does not exist yet — `pendingNode` holds it until the graph that contains it arrives.
+   * A hit with no clusters cannot be navigated to at all; the panel already says so.
+   */
+  const handleSearchPick = (hit: { name: string; clusters: string[] }) => {
+    if (hit.clusters.length === 0) return
+    setOperationalView({ selectedClusters: hit.clusters, selectedNode: null })
+    setPendingNode(hit.name)
+  }
+
+  /** One element, rendered by every branch that can be on screen while the operator types. */
+  const searchPanel = <OperationalSearch query={globalQuery} onPick={handleSearchPick} />
 
   // Task 16: `index.data.dates` is now the single source of the date list.
   // `OperationalService#dates()` returns `b15.dates()`, and `ClusterIndexService.build()` opens
@@ -495,6 +515,17 @@ export function ETLOperational() {
     () => (rel.data ? toOperationalGraph(rel.data, scopedSummary, view.selectedDate, view.density) : null),
     [rel.data, scopedSummary, view.selectedDate, view.density],
   )
+
+  // Honour a pending global-search pick as soon as the scoped graph carrying it resolves.
+  // Matched on NAME, not id: the search endpoint returns names, and node-id shape is a backend
+  // detail this component has no reason to depend on.
+  useEffect(() => {
+    if (pendingNode === null || !graph) return
+    const card = graph.cards.find(c => c.name === pendingNode)
+    if (!card) return
+    visitNode({ nodeId: card.id, zoom: view.zoom, pan: view.pan })
+    setPendingNode(null)
+  }, [pendingNode, graph])
 
   // Task 15: cycling density re-lays out at the new pitch AND refits the viewport in one store
   // update — otherwise a Compact re-layout could leave the view panned/zoomed for the OLD
@@ -645,7 +676,8 @@ export function ETLOperational() {
   // has been made and none will be until a cluster is checked.
   if (!hasSelection) {
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {searchPanel}
         <ClusterPane />
         <div
           data-testid="cluster-prompt"
@@ -678,7 +710,8 @@ export function ETLOperational() {
   const scopeError = (rel.error ?? summary.error) as ApiError | null
   if (scopeError) {
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {searchPanel}
         <ClusterPane />
         <div style={{ flex: 1, background: 'var(--bg)' }}>
           <ApiErrorBlock error={scopeError} />
@@ -692,7 +725,8 @@ export function ETLOperational() {
   // than a named stage.
   if (!graph || summary.isLoading) {
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {searchPanel}
         <ClusterPane />
         <div style={{ flex: 1, background: 'var(--bg)' }}>
           <OperationalProgress stages={stages} />
@@ -712,7 +746,8 @@ export function ETLOperational() {
   // The pane stays mounted: changing the selection must not require a reload.
   if (graph.cards.length === 0) {
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {searchPanel}
         <ClusterPane />
         <div style={{ flex: 1, overflow: 'auto', padding: 16, background: 'var(--bg)' }}>
           <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No relationship entries</div>
@@ -753,8 +788,9 @@ export function ETLOperational() {
   const bigQueryHref = buildBigQueryUrl(cfg.data)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
 
+      {searchPanel}
       <SelectionStrip summary={selectionSummary} />
 
       {/* toolbar */}
@@ -777,7 +813,7 @@ export function ETLOperational() {
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search tables / recipes…"
+            placeholder="Filter this canvas…"
             style={{
               background: 'var(--surface-2)', border: '1px solid var(--border)',
               borderRadius: 5, color: '#c8d3e8', fontSize: 11, padding: '5px 10px 5px 26px',
