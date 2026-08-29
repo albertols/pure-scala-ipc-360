@@ -521,7 +521,7 @@ git commit -m "feat(diagnostics): report b15 status tokens the reader could not 
 - Consumes: `ClusterIndexService.Index` (`byCluster()`, `runsByRecipe()`), `RelationshipService.graph()`, `LayerToLayerService`.
 - Produces: `GET /api/operational/search?q=&limit=` → `SearchHitsDto { List<HitDto> hits, boolean truncated }`, `HitDto { String kind, String name, String layer, List<String> clusters }`. Consumed by Task 12.
 
-- [ ] **Step 1: Write the DTO**
+- [x] **Step 1: Write the DTO**
 
 ```java
 package io.pure360.etl360.api.dto;
@@ -542,7 +542,7 @@ public record SearchHitsDto(List<HitDto> hits, boolean truncated) {
 }
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```java
 package io.pure360.etl360.api;
@@ -610,12 +610,12 @@ class OperationalSearchContractTest {
 }
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=OperationalSearchContractTest`
 Expected: FAIL — 404 on `/api/operational/search`.
 
-- [ ] **Step 4: Implement the endpoint**
+- [x] **Step 4: Implement the endpoint**
 
 Add to `ClusterController` (it already holds `ClusterIndexService`, `LayerToLayerService`; inject `RelationshipService`):
 
@@ -644,17 +644,17 @@ Add to `ClusterController` (it already holds `ClusterIndexService`, `LayerToLaye
 
 Build it as: (1) `clustersByRecipe` from `index.runsByRecipe()`; (2) recipe hits from `index.runsByRecipe().keySet()`; (3) table hits from `RelationshipService.graph()` nodes of kind `table`, whose clusters are the union of `clustersByRecipe` over every recipe joined to that table by an edge in either direction. Sort recipes before tables, each alphabetically, so results are deterministic. Take `limit + 1` to decide `truncated`, then trim to `limit`.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `mvn -q -am -pl backend test -Dtest=OperationalSearchContractTest`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 6: Run the full backend suite**
+- [x] **Step 6: Run the full backend suite**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/dto/SearchHitsDto.java \
