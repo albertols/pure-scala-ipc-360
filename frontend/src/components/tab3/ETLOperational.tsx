@@ -826,6 +826,21 @@ export function ETLOperational() {
             error={diagnostics.error as ApiError | null} />
         <StatusSummary cards={shownCards} />
 
+        {/* The collapsed TIME VIEW's stand-in. Carries the snapshot the canvas is showing, so
+            hiding the bar never costs the operator sight of WHICH snapshot that is. */}
+        {view.timeViewCollapsed && (
+          <button
+            data-testid="time-view-chip"
+            aria-label="Show time view"
+            title="Show the time view"
+            onClick={() => setOperationalView({ timeViewCollapsed: false })}
+            style={{ ...zoomBtn, width: 'auto', padding: '0 10px', fontSize: 10,
+                     fontFamily: 'JetBrains Mono, monospace' }}
+          >
+            {`⏱ ${view.selectedDate ?? '—'} · ${timeMeta.hour}h ▾`}
+          </button>
+        )}
+
         {/* density — Task 15: an explicit control, not something zoom implies. Cycling re-lays
             out at the new pitch AND refits the viewport (onCycleDensity), so "fitting more flow
             on screen" is a real re-pack rather than a re-scale of the same layout. */}
@@ -851,19 +866,31 @@ export function ETLOperational() {
       </div>
 
       {/* time picker + availability calendar (Task 16): additive sibling — TimePicker itself is
-          untouched, so only this wrapper gains the flex row it takes to sit them side by side. */}
-      <div style={{
-        padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)',
-        display: 'flex', alignItems: 'center', gap: 8,
-      }}>
-        <TimePicker value={timeVal} onChange={handleTimeChange} />
-        <AvailabilityCalendar
-          availableDates={availableDates}
-          selectionDates={selectionDates}
-          selectedDate={view.selectedDate}
-          onSelect={d => setOperationalView({ selectedDate: d })}
-        />
-      </div>
+          untouched, so only this wrapper gains the flex row it takes to sit them side by side.
+          Sub-project 12: collapsible. When hidden the WRAPPER AND ITS BORDER are gone, so the
+          whole bar is returned to the canvas rather than leaving a residual strip; the toolbar
+          chip above keeps the active snapshot named. */}
+      {!view.timeViewCollapsed && (
+        <div data-testid="time-view-bar" style={{
+          padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <TimePicker value={timeVal} onChange={handleTimeChange} />
+          <AvailabilityCalendar
+            availableDates={availableDates}
+            selectionDates={selectionDates}
+            selectedDate={view.selectedDate}
+            onSelect={d => setOperationalView({ selectedDate: d })}
+          />
+          <div style={{ flex: 1 }} />
+          <button
+            aria-label="Hide time view"
+            title="Hide the time view and give the bar back to the canvas"
+            onClick={() => setOperationalView({ timeViewCollapsed: true })}
+            style={{ ...zoomBtn, width: 22, height: 22, fontSize: 11 }}
+          >{'✕'}</button>
+        </div>
+      )}
 
       {/* main area */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>

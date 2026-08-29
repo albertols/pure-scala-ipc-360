@@ -121,3 +121,31 @@ describe('operationalView', () => {
     }
   })
 })
+
+// ─── timeViewCollapsed (sub-project 12, defect 3) ───────────────────────────
+
+describe('timeViewCollapsed', () => {
+  it('defaults to visible', () => {
+    expect(renderHook(() => useOperationalView()).result.current.timeViewCollapsed).toBe(false)
+  })
+
+  it('persists, so hiding the bar survives a reload', () => {
+    act(() => setOperationalView({ timeViewCollapsed: true }))
+    expect(JSON.parse(localStorage.getItem('etl360.tab3.view')!).timeViewCollapsed).toBe(true)
+    expect(PERSISTED_KEYS).toContain('timeViewCollapsed')
+  })
+
+  it('rehydrates a stored value', () => {
+    localStorage.setItem('etl360.tab3.view', JSON.stringify({ timeViewCollapsed: true }))
+    resetOperationalView()
+    expect(renderHook(() => useOperationalView()).result.current.timeViewCollapsed).toBe(true)
+  })
+
+  it('ignores a wrongly-typed persisted value instead of trusting it', () => {
+    // Same hazard `density` documents: a bad persisted value reaches every render, and because
+    // it lives in localStorage it would do so again on every reload with no in-app way out.
+    localStorage.setItem('etl360.tab3.view', JSON.stringify({ timeViewCollapsed: 'yes' }))
+    resetOperationalView()
+    expect(renderHook(() => useOperationalView()).result.current.timeViewCollapsed).toBe(false)
+  })
+})

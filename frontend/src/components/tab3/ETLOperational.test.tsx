@@ -986,3 +986,32 @@ describe('floating snapshot chip', () => {
     expect(await screen.findByTestId('snapshot-chip')).toBeInTheDocument()
   })
 })
+
+// ─── collapsible TIME VIEW (sub-project 12, defect 3) ───────────────────────
+
+describe('TIME VIEW collapse', () => {
+  it('frees the whole bar when hidden, and names the active snapshot in a toolbar chip', async () => {
+    renderTab()
+    expect(await screen.findByTestId('time-view-bar')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Hide time view'))
+    await waitFor(() => expect(screen.queryByTestId('time-view-bar')).not.toBeInTheDocument())
+
+    // The active snapshot must never become invisible just because the bar is closed.
+    const chip = screen.getByTestId('time-view-chip')
+    expect(chip).toHaveTextContent(/\d{4}-\d{2}-\d{2}/)
+
+    fireEvent.click(chip)
+    expect(await screen.findByTestId('time-view-bar')).toBeInTheDocument()
+    expect(screen.queryByTestId('time-view-chip')).not.toBeInTheDocument()
+  })
+
+  it('takes the date picker and the calendar with it', async () => {
+    const { container } = renderTab()
+    await screen.findByTestId('time-view-bar')
+    expect(container.querySelector('input[type="date"]')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Hide time view'))
+    await waitFor(() => expect(container.querySelector('input[type="date"]')).toBeNull())
+  })
+})

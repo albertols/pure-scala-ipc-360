@@ -1291,7 +1291,7 @@ git commit -m "fix(tab3): the snapshot chip follows the pane; the selection stri
 **Interfaces:**
 - Produces: `OperationalViewState.timeViewCollapsed: boolean`, persisted.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```ts
 // operationalView.test.ts
@@ -1324,12 +1324,12 @@ it('frees the whole bar when the time view is hidden, and names the date in a ch
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd frontend && pnpm test -- operationalView ETLOperational`
 Expected: FAIL — `timeViewCollapsed` is not a key; no testids.
 
-- [ ] **Step 3: Add the state key**
+- [x] **Step 3: Add the state key**
 
 In `operationalView.ts`: add `timeViewCollapsed: boolean` to the interface, `false` to `DEFAULTS`, `'timeViewCollapsed'` to `PERSISTED_KEYS`, and to `VALIDATORS`:
 
@@ -1337,7 +1337,7 @@ In `operationalView.ts`: add `timeViewCollapsed: boolean` to the interface, `fal
   timeViewCollapsed: v => typeof v === 'boolean' ? v : undefined,
 ```
 
-- [ ] **Step 4: Implement the collapse**
+- [x] **Step 4: Implement the collapse**
 
 Wrap the row at `:836-847` in `{!view.timeViewCollapsed && (...)}` with `data-testid="time-view-bar"`, add a `✕`-style `aria-label="Hide time view"` button at its right end, and render the chip in the toolbar when collapsed:
 
@@ -1355,12 +1355,12 @@ Wrap the row at `:836-847` in `{!view.timeViewCollapsed && (...)}` with `data-te
         )}
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/state/operationalView.ts frontend/src/state/operationalView.test.ts \

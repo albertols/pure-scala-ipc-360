@@ -16,18 +16,20 @@ export interface OperationalViewState {
   selectedRunDate: string | null
   paneWidth: number
   paneCollapsed: boolean
+  /** Hides the TIME VIEW bar entirely, freeing its ~46px for the canvas. */
+  timeViewCollapsed: boolean
 }
 
 const STORAGE_KEY = 'etl360.tab3.view'
 
 /** Durable preferences. Everything else is session-lived: a selection should not outlive a reload. */
-export const PERSISTED_KEYS = ['density', 'paneWidth', 'paneCollapsed'] as const
+export const PERSISTED_KEYS = ['density', 'paneWidth', 'paneCollapsed', 'timeViewCollapsed'] as const
 
 const DEFAULTS: OperationalViewState = {
   selectedClusters: [], expandedCluster: null, deselectedRecipes: [], selectedDates: [],
   density: 'detailed', zoom: 0.85, pan: { x: 40, y: 40 },
   selectedNode: null, selectedDate: null, selectedRunDate: null,
-  paneWidth: 260, paneCollapsed: false,
+  paneWidth: 260, paneCollapsed: false, timeViewCollapsed: false,
 }
 
 const DENSITY_LEVELS: readonly CardDensity[] = ['detailed', 'compact', 'minimal']
@@ -49,6 +51,7 @@ const VALIDATORS: { [K in typeof PERSISTED_KEYS[number]]: (v: unknown) => Operat
   paneWidth: v => (typeof v === 'number' && Number.isFinite(v))
     ? Math.max(MIN_PANE_W, Math.min(MAX_PANE_W, v)) : undefined,
   paneCollapsed: v => typeof v === 'boolean' ? v : undefined,
+  timeViewCollapsed: v => typeof v === 'boolean' ? v : undefined,
 }
 
 function hydrate(): OperationalViewState {
