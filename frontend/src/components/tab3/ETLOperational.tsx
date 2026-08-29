@@ -5,7 +5,7 @@ import { useOperationalSummary, useOperational, useAppConfig, useDiagnostics } f
 import type { AppConfig, RelationshipGraph } from '../../api/queries'
 import { useClusterIndex, useScopedRelationships, useRuns, type RunT } from '../../api/clusterQueries'
 import { setOperationalView, useOperationalView } from '../../state/operationalView'
-import { toOperationalGraph, summarizeSnapshot, fitToViewport, type OperationalEdge } from '../../api/relationshipsAdapter'
+import { toOperationalGraph, summarizeSnapshot, fitToViewport, DENSITY_FOOTPRINT, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../../api/gcpLinks'
 import { OperationalCard } from '../shared/OperationalCard'
 import { pickDefaultRun } from '../shared/RunPicker'
@@ -148,8 +148,11 @@ const RelationshipGraph = memo(function RelationshipGraph({
 
   // Computed maxima from card coordinates + margins (was a static 1200x700;
   // real layouts can exceed that, and floor stays for small/empty graphs).
-  const CANVAS_W = Math.max(1200, ...cards.map(c => (c.x ?? 0) + 280))
-  const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + 220))
+  // Canvas extent = furthest card plus its OWN footprint, not two hardcoded numbers that only
+  // ever matched the `detailed` density they were written for.
+  const foot = DENSITY_FOOTPRINT[density]
+  const CANVAS_W = Math.max(1200, ...cards.map(c => (c.x ?? 0) + foot.width))
+  const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + foot.height))
 
   const detachDrag = useCallback(() => {
     const listeners = activeDragListeners.current
@@ -279,7 +282,10 @@ const RelationshipGraph = memo(function RelationshipGraph({
               position: 'absolute',
               left: card.x ?? 0,
               top: card.y ?? 0,
-              width: density === 'detailed' ? 252 : 'auto',
+              // Fixed, never 'auto': an auto-width card grows to its longest name and overruns
+              // the very column pitch that was computed for its declared width — which is what
+              // made long real-corpus names overlap horizontally (sub-project 12, defect 1).
+              width: DENSITY_FOOTPRINT[density].width,
               zIndex: selected === card.id ? 10 : 1,
               // A 1-hop neighbour is context, not scope: readable, visibly not what you asked for.
               opacity: card.neighbor ? 0.45 : 1,

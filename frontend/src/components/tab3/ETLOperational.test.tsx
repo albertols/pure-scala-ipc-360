@@ -11,6 +11,7 @@ import { resetOperationalView, setOperationalView } from '../../state/operationa
 // routes every consumer's call through this same exports object, so the spy sees them too.
 import * as operationalViewStore from '../../state/operationalView'
 import type { RelationshipGraph } from '../../api/queries'
+import { DENSITY_FOOTPRINT } from '../../api/relationshipsAdapter'
 import type { components } from '../../api/types.gen'
 
 type OperationalSummaryDto = components['schemas']['OperationalSummaryDto']
@@ -896,5 +897,43 @@ describe('ETLOperational — cluster-scoped loading', () => {
     renderTab()
 
     expect(await screen.findByText(/Run history unavailable/)).toBeInTheDocument()
+  })
+})
+
+// ─── card footprint (sub-project 12, defect 1) ──────────────────────────────
+
+describe('canvas card footprint', () => {
+  it.each(['detailed', 'compact', 'minimal'] as const)(
+    'positions every card at its declared footprint width at %s density', async density => {
+      // `width: 'auto'` let a compact/minimal card grow to its longest name — past the very
+      // column pitch computed for its declared width — which is what made real-corpus names
+      // overlap horizontally. The wrapper must state the width the layout assumed.
+      setOperationalView({ density })
+      const { container } = renderTab()
+      await waitFor(() =>
+        expect(container.querySelectorAll('[data-card="1"]').length).toBeGreaterThan(0))
+
+      const wrappers = container.querySelectorAll<HTMLElement>('[data-card="1"]')
+      expect(wrappers.length).toBeGreaterThan(0)
+      for (const el of wrappers) {
+        expect(el.style.width).toBe(`${DENSITY_FOOTPRINT[density].width}px`)
+      }
+    })
+
+  it('sizes the canvas from the footprint, not from a hardcoded detailed-only constant', async () => {
+    setOperationalView({ density: 'minimal' })
+    const { container } = renderTab()
+    await waitFor(() =>
+      expect(container.querySelectorAll('[data-card="1"]').length).toBeGreaterThan(0))
+
+    // The edges layer is sized from CANVAS_W/CANVAS_H, which used to add a hardcoded +280/+220
+    // — the detailed footprint — regardless of the density actually rendering.
+    // Anchored on the arrow marker so this cannot accidentally select the toolbar's 13px
+    // search-icon svg, which is also an `svg[width]`.
+    const edges = container.querySelector('marker#oa')!.closest('svg')!
+    const rightmost = Math.max(
+      ...[...container.querySelectorAll<HTMLElement>('[data-card="1"]')]
+        .map(el => parseFloat(el.style.left) + DENSITY_FOOTPRINT.minimal.width))
+    expect(Number(edges.getAttribute('width'))).toBeGreaterThanOrEqual(rightmost)
   })
 })

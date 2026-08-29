@@ -824,7 +824,7 @@ Defect 1's render half — this is the change that fixes images 14 and 15.
 **Interfaces:**
 - Consumes: `DENSITY_FOOTPRINT` (Task 5).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 it('renders every card at its declared footprint width, at every density', async () => {
@@ -844,12 +844,12 @@ it('renders every card at its declared footprint width, at every density', async
 
 Add `data-testid="card-wrapper"` to the positioned wrapper at `:277-290` in the same step.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test ETLOperational`
 Expected: FAIL — `expected "auto" to be "240px"`.
 
-- [ ] **Step 3: Point both call sites at the footprint**
+- [x] **Step 3: Point both call sites at the footprint**
 
 At `:282`:
 
@@ -869,12 +869,12 @@ At `:151-152`:
   const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + foot.height))
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test ETLOperational && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/ETLOperational.test.tsx \
