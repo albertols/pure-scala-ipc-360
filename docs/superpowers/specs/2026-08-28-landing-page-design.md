@@ -149,6 +149,15 @@ from the tab strip.
 `tasksDone / tasksTotal`, ADR count, and a shipped-vs-planned split. Presented as progress, not as
 a percentage-complete claim about the product.
 
+**Corrected during the final whole-branch review.** No layer implements the shipped-vs-planned
+split named above: `ReadinessDto.Progress` is `(tasksDone, tasksTotal, adrs)` and `ProgressStrip`
+renders only the ratio and the ADR count. The backlog is conveyed implicitly, as
+`tasksTotal - tasksDone`, never as an enumerated `shipped[]`/`planned[]` list. This is the one part
+of the user's original request ("feature progress and backlog") that shipped under-delivered — see
+§10's matching correction for the wire shape, and ADR-0016's Context section for the same note.
+Whether to build the itemized split is left to the user to decide separately; this branch does not
+add it.
+
 ### 6.4 `EnvironmentPanel`
 The resolved absolute path and tier for each data root, plus the GCP project and region from
 `/api/config` — the user's "show the current config.json used". Reuses `DataRootsPanel`'s existing
@@ -211,12 +220,17 @@ surface, and its sanctioned departures are:
   "dags":        { "workflows": 22 },
   "roots":       [ { "name": "corpus", "resolved": "…", "tier": "real", "status": "ok",
                      "hint": null } ],
-  "progress":    { "tasksDone": 596, "tasksTotal": 601, "adrs": 16,
-                   "shipped": [ … ], "planned": [ … ] } }
+  "progress":    { "tasksDone": 596, "tasksTotal": 601, "adrs": 16 } }
 ```
 
 `status` is derived from `DiagnosticsService`'s existing overall status — the landing page does not
 compute a second opinion about health. `progress` is **nullable**: see §11.
+
+**Corrected during the final whole-branch review:** the `"shipped": […], "planned": […]` pair shown
+above in an earlier draft was never implemented — `ReadinessDto.Progress` carries only
+`tasksDone`/`tasksTotal`/`adrs`, as the JSON above (now) shows. This table is the authoritative wire
+shape; treat the three-field `progress` object as the real contract, not the removed pair. See
+§6.3's matching correction.
 
 `frontend/src/api/types.gen.ts` is regenerated via `make generate-api`, never hand-edited.
 

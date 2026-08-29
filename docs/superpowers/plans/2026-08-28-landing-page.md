@@ -2033,7 +2033,7 @@ repo-sourced and nullable, and why no skip-intro flag is persisted."
 whether the mood is legible at a glance, or whether the transition feels like the "click and go" the
 user asked for. Only looking can.
 
-- [ ] **Step 1: Run every deterministic gate from clean**
+- [x] **Step 1: Run every deterministic gate from clean**
 
 ```bash
 mvn -q -am -pl backend clean test
@@ -2047,7 +2047,7 @@ make validate-loop
 Record the measured totals. **Count `<testcase>` elements** — the `.txt` sum undercounts by the
 number of `@Nested` tests.
 
-- [ ] **Step 2: Boot against the committed mock tiers**
+- [x] **Step 2: Boot against the committed mock tiers**
 
 ```bash
 export ETL360_DWH_CONTROL_ROOT="backend/src/main/resources/mock/DWH_CONTROL"
@@ -2058,7 +2058,7 @@ make dev
 Pinning the mock tiers is what makes the screenshots safe to commit (spec §14) — the page renders
 resolved paths and a project id, and on a real deployment those are real.
 
-- [ ] **Step 3: Walk it in Chrome at `http://localhost:8443`**
+- [x] **Step 3: Walk it in Chrome at `http://localhost:8443`**
 
 Check and record each:
 
@@ -2082,7 +2082,7 @@ export ETL360_COMPOSER_ROOT="/nonexistent-composer-root"
 10. The mascot switches to **pruning**, twigs fall, the grade cools, and the failing root **and its
     hint** are named on screen.
 
-- [ ] **Step 4: Capture screenshots**
+- [x] **Step 4: Capture screenshots**
 
 Capture to `docs/img/`: `landing-ready.png`, `landing-degraded.png`, `landing-architecture.png`.
 Then verify and check for identifiers before committing:
@@ -2094,14 +2094,29 @@ file docs/img/landing-*.png && du -sh docs/img
 **Review each image for real paths or a real project id before committing.** They were captured
 against the mock tiers, so they should show mock paths — confirm that rather than assuming it.
 
-- [ ] **Step 5: Record the results in the spec**
+**Deviation (recorded during the final whole-branch review, 2026-08-29):** this step shipped as
+committed (`0b016d4`) with two differences from what it names, and the plan file itself was not
+staged in that commit — a Global Constraint / CLAUDE.md hard-rule-4 breach fixed here.
+1. Two JPGs were captured, not three PNGs — `docs/img/landing-ok.jpg` and
+   `docs/img/landing-degraded.jpg`, not `landing-ready.png`/`landing-degraded.png`. JPG was chosen
+   over PNG for these two (screenshots of a page with a photographic mascot hero, not a diagram)
+   to keep `docs/img` small; the naming drifted from `-ready` to `-ok` to match the DTO's actual
+   `"ok"`/`"ko"` vocabulary (see the acceptance-walk results' defect 1) rather than the spec's
+   invented `"ready"`/`"degraded"` pair.
+2. `landing-architecture.png` was never captured as a separate screenshot. The architecture region
+   is already visible inside `landing-ok.jpg` (the page's third fold), and the illustrated
+   overview this step's rationale was chasing already exists as the committed
+   `docs/img/etl360-architecture.svg`, rendered in the README — a second raster capture of the
+   same diagram would have been a redundant asset, not new information.
+
+- [x] **Step 5: Record the results in the spec**
 
 Append `## Acceptance walk — results (Task 12, <date>)` to the spec, one line per item above with
 **PASS (observed)** or **PENDING** and what was seen. Mark anything not actually observed as PENDING
 rather than inferring it from a unit test — an honest PENDING is worth more than an optimistic PASS.
 Add the screenshots to `docs/visual-guide.md`.
 
-- [ ] **Step 6: Stop the servers and commit**
+- [x] **Step 6: Stop the servers and commit**
 
 ```bash
 lsof -ti tcp:8080 | xargs kill 2>/dev/null; lsof -ti tcp:8443 | xargs kill 2>/dev/null
@@ -2116,7 +2131,7 @@ paths and the transition. Screenshots captured against the committed mock tiers
 and checked for identifiers."
 ```
 
-- [ ] **Step 7: Finish the branch**
+- [x] **Step 7: Finish the branch**
 
 Use `superpowers:finishing-a-development-branch`. Do not merge before every checkbox above is
 ticked, every gate is green **from a clean build**, and the acceptance results record an outcome for

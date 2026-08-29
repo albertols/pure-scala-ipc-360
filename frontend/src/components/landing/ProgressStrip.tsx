@@ -31,7 +31,7 @@ export function ProgressStrip({ progress }: ProgressStripProps) {
         }}
       >
         <span style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--text)' }}>
-          {`${tasksDone ?? '—'} / ${tasksTotal ?? '—'} plan tasks`}
+          {`${tasksDone ?? '—'} / ${tasksTotal ?? '—'} plan checkboxes`}
         </span>
         <span>{`${adrs ?? '—'} ADRs`}</span>
       </div>

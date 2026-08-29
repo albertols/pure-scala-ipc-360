@@ -11,8 +11,14 @@ discoverable only after hitting the symptom, not on arrival.
 
 A landing page needs several numbers no single existing endpoint carries together: corpus counts
 (`GET /api/summary`), b15 operational totals (`GET /api/operational/clusters`), data-root diagnosis
-(`GET /api/diagnostics`), a count of distinct Airflow DAGs, and this repo's own shipped/planned
-progress — nothing served that last pair at all.
+(`GET /api/diagnostics`), a count of distinct Airflow DAGs, and this repo's own build progress —
+nothing served that last one at all.
+
+**Deviation from an earlier draft of this ADR:** "shipped/planned progress" above was written
+expecting an itemized shipped-vs-planned split (a `shipped: [...]`/`planned: [...]` pair). What
+shipped is a `tasksDone`/`tasksTotal` ratio plus an ADR count (`ReadinessDto.Progress`, §Decision
+below) — the backlog is conveyed only as `tasksTotal - tasksDone`, never enumerated. That split was
+specified but not built; whether to build it is an open decision for the user, not this branch.
 
 ## Decision
 
@@ -55,8 +61,8 @@ acceptance walk and fixed by mapping "any non-`ok` status" to `degraded` instead
 ## Consequences
 
 - `progress` is nullable end-to-end: the DTO, the frontend hook, and every consumer must handle
-  `null` rather than assume shipped/planned stats exist. A deployment without `docs/` still renders
-  every other section of the landing page.
+  `null` rather than assume `tasksDone`/`tasksTotal`/`adrs` exist. A deployment without `docs/`
+  still renders every other section of the landing page.
 - The DAG count can diverge from a number computed by grouping the relationships graph by
   `workflow`, if the two ever disagree — they read the same underlying rows today, but Tab 4's count
   is scoped to whatever subset of the graph is currently loaded (cluster-scoped, ADR-0014) while

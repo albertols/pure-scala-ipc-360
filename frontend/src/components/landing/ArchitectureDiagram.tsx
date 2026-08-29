@@ -22,7 +22,12 @@ import { TABS } from '../../tabs'
  * Every region that maps to a tab uses that tab's OWN `accent` from `TABS` — never a re-decided
  * colour — and is a real `<g role="button" tabIndex={0}>` with a keyboard handler (Enter/Space),
  * not a mouse-only `onClick`. Decorative glyphs and connectors are `aria-hidden`; the diagram as
- * a whole carries a `<title>` as its text alternative via `role="img"`.
+ * a whole carries a `<title>` as its text alternative — via `role="group"` + `aria-labelledby`
+ * pointing at that `<title>`'s id, NOT `role="img"`. ARIA's "children presentational" rule
+ * includes `img`: putting it on the outer `<svg>` would make a real screen reader announce this
+ * as one flat image and swallow every `role="button"` region inside it — reachable by Tab, but
+ * silently unnamed. `role="group"` conveys "a labelled collection of controls" without hiding
+ * its children's own roles.
  */
 
 export interface ArchitectureDiagramProps {
@@ -272,17 +277,20 @@ const FRONTEND_H = 104
 const GCP_Y = 492
 const GCP_H = 60
 
+const TITLE_ID = 'arch-diagram-title'
+
 export function ArchitectureDiagram({ onEnter }: ArchitectureDiagramProps) {
   return (
     <svg
       viewBox="0 0 800 580"
-      role="img"
+      role="group"
+      aria-labelledby={TITLE_ID}
       style={{ width: '100%', height: 'auto', display: 'block' }}
     >
       {/* Worded to avoid repeating "Powermart XML"/"parser"/"backend"/"frontend" verbatim — those
           exact substrings are each asserted unique elsewhere on the visible labels below, and a
           text-alternative title containing the same substring would make that lookup ambiguous. */}
-      <title>
+      <title id={TITLE_ID}>
         ETL 360 architecture: an IPC/XML export becomes JSON recipes and BigQuery DDL through the
         Scala translation layer, which a Spring-based API serves to the React application's four
         tabs — Viewer, Modifier, Operational, DAG — with links out to BigQuery, Dataproc and Cloud

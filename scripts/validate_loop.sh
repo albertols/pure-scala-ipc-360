@@ -91,10 +91,14 @@ assert g["workflows"] == 22, f"expected 22 workflows, got {g["workflows"]}"
 # "degraded"; that word names only the frontend mascot mood (a presentational concept only).
 assert d["status"] in ("ok", "ko"), "status must mirror diagnostics"
 assert len(d["roots"]) == 3, "expected corpus, dwhControl and composer roots"
-# progress is nullable (docs/ may be absent in a packaged deployment) — only assert its shape
-# when present, on this repo checkout of the committed mock where docs/ always exists.
-if d["progress"] is not None:
-    assert d["progress"]["adrs"] >= 16, f"expected at least 16 ADRs, got {d["progress"]["adrs"]}"
+# progress is nullable and, per @JsonInclude(NON_NULL) on the DTO, ABSENT from the JSON
+# entirely when null rather than serialized as "progress": null — so d.get(...), never d[...],
+# is the only lookup that does not raise KeyError in the packaged-deployment case this comment
+# describes. Only assert its shape when present, on this repo checkout of the committed mock
+# where docs/ always exists.
+progress = d.get("progress")
+if progress is not None:
+    assert progress["adrs"] >= 16, f"expected at least 16 ADRs, got {progress["adrs"]}"
 ' || fail "readiness floors"
 
 FIRST_CLUSTER=$(echo "$CLUSTERS" | python3 -c 'import json,sys; print(json.load(sys.stdin)["clusters"][0]["name"])')

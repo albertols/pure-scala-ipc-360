@@ -55,8 +55,11 @@ platform-agnostic. A multi-module Maven repo:
   hero scene whose overlay/colour-grade flips between an "ok" and a "degraded" mood off
   `readiness.status`, corpus/operational/DAG stat cards, a clickable architecture diagram reused in
   the README, tab-preview cards sourced from `src/tabs.tsx` (so the strip and the landing page
-  cannot drift), and a repo-sourced shipped/planned progress strip (`- [x]`/`- [ ]` plan checkboxes
-  plus an ADR count, nullable when `docs/` is unreachable — `docs/adr/0016-landing-readiness-aggregate.md`).
+  cannot drift), and a repo-sourced progress strip — a `tasksDone / tasksTotal` ratio counted over
+  every `- [x]`/`- [ ]` plan checkbox across all plans plus an ADR count, nullable when `docs/` is
+  unreachable (`docs/adr/0016-landing-readiness-aggregate.md`). The backlog is conveyed only as
+  `tasksTotal - tasksDone`, never as an itemized shipped/planned list — that split was specified
+  but not built; see the spec's §6.3/§10 deviation note.
   Tab 2's seven sanctioned visual
   departures (`2026-08-01-etl-modifier-ux2-design.md` §10) and sub-project 10's Tab 3 rebuild +
   the app-wide `InfoTooltip` contrast fix (`2026-08-27-operational-scale-design.md` §12) are

@@ -7,6 +7,7 @@ import io.pure360.etl360.api.dto.SummaryDto;
 import io.pure360.etl360.config.DataRoots;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -65,7 +66,7 @@ public class ReadinessService {
             d.corpus().status(), d.corpus().hint()));
         rootList.add(new ReadinessDto.Root("dwhControl", servingPath(d.dwhControl()),
             d.dwhControl().tier(), d.dwhControl().status(), d.dwhControl().hint()));
-        rootList.add(new ReadinessDto.Root("composer", d.composer().resolved(),
+        rootList.add(new ReadinessDto.Root("composer", servingComposerPath(d),
             d.composer().tier(), d.composer().status(), d.composer().hint()));
 
         ReadinessDto.Progress progress = safeProgress();
@@ -87,6 +88,19 @@ public class ReadinessService {
      */
     private static String servingPath(DiagnosticsDto.ControlSchema control) {
         return "mock".equals(control.tier()) ? control.mockPath() : control.resolvedReal();
+    }
+
+    /**
+     * Same discipline as {@link #servingPath(DiagnosticsDto.ControlSchema)}, but composer has no
+     * {@code ControlSchema}-shaped DTO to branch on — it is a plain {@code RootStatus} whose
+     * {@code resolved} field is always the configured (real) path, regardless of which tier
+     * served. {@link DataRoots#composer()} is the one place that already picked the winning tier
+     * (real, then mock, then absent) via the same usability probe {@code composerMode()} uses, so
+     * defer to it rather than re-deriving the branch here; only when neither tier is usable
+     * (composer absent) does this fall back to the configured path {@code diagnostics} reports.
+     */
+    private String servingComposerPath(DiagnosticsDto d) {
+        return roots.composer().map(Path::toString).orElseGet(() -> d.composer().resolved());
     }
 
     /**

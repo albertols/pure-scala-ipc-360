@@ -23,4 +23,14 @@ describe('ProgressStrip', () => {
     render(<ProgressStrip progress={{ tasksDone: 596, tasksTotal: 601, adrs: 16 }} />)
     expect(screen.queryByText(/99%|complete/i)).not.toBeInTheDocument()
   })
+
+  // ProgressScanner counts every `- [ ]` line — steps, not tasks (one plan task here spans
+  // several checkbox steps). "plan tasks" overstates by roughly an order of magnitude on a
+  // page whose whole standard is literal truth — see the spec's own ground-truth row, which
+  // calls these "plan checkboxes".
+  it('labels the ratio as plan checkboxes, not plan tasks', () => {
+    render(<ProgressStrip progress={{ tasksDone: 596, tasksTotal: 601, adrs: 16 }} />)
+    expect(screen.getByText(/plan checkboxes/i)).toBeInTheDocument()
+    expect(screen.queryByText(/plan tasks/i)).not.toBeInTheDocument()
+  })
 })

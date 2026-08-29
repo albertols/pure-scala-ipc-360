@@ -115,6 +115,31 @@ class ReadinessServiceTest {
         assertThat(dwhControlRoot.resolved()).isNotEqualTo(control.resolvedReal());
     }
 
+    /**
+     * Same defect, same fix, other root: {@code DiagnosticsService} distinguishes the composer
+     * root's {@code resolved} (the configured path, unused once the mock tier wins) from the
+     * mock mirror {@link DataRoots#composer()} actually resolves to — {@code ReadinessService}
+     * must report the path that served, not the configured string, exactly as it already does
+     * for {@code dwhControl}.
+     *
+     * <p>This repo's committed test environment has no usable {@code composer/dwh/config/
+     * cluster_tuning/inputs} under the configured composer root, so composer always resolves to
+     * the mock tier here — mirroring the dwhControl fixture precondition above.
+     */
+    @Test
+    void reportsTheMockPathForComposerWhenTheMockTierWon() {
+        assertThat(dataRoots.composerMode()).isEqualTo("mock");
+        String mockComposerPath = dataRoots.composer().orElseThrow().toString();
+
+        ReadinessDto.Root composerRoot = readiness.readiness().roots().stream()
+            .filter(root -> "composer".equals(root.name()))
+            .findFirst().orElseThrow();
+
+        assertThat(composerRoot.resolved()).isEqualTo(mockComposerPath);
+        assertThat(composerRoot.resolved())
+            .isNotEqualTo(diagnosticsService.report().composer().resolved());
+    }
+
     /** index() calls B15Reader.fingerprint(), a stat sweep per dated export (ADR-0014). */
     @Test
     void readsTheClusterIndexExactlyOncePerRequest() {

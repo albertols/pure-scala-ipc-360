@@ -77,17 +77,25 @@ describe('ArchitectureDiagram', () => {
   // The diagram as a whole is a non-decorative graphic (it conveys real architecture,
   // not decoration) and must carry a text alternative; per-icon glyphs are decorative
   // duplicates of an adjacent text label and must be hidden from assistive tech instead
-  // of announced as meaningless shapes.
-  it('carries a text alternative for the whole diagram and hides decorative glyphs', () => {
+  // of announced as meaningless shapes. It must NOT be `role="img"`: ARIA's "children
+  // presentational" rule for `img` would silence the five `role="button"` regions nested
+  // inside it, leaving them keyboard-focusable but announced with no role or name.
+  it('carries a text alternative for the whole diagram, hides decorative glyphs, and does not silence its nested buttons', () => {
     const { container } = render(<ArchitectureDiagram onEnter={() => {}} />)
     const svg = container.querySelector('svg')
-    expect(svg).toHaveAttribute('role', 'img')
+    expect(svg).not.toHaveAttribute('role', 'img')
+    expect(svg).toHaveAttribute('role', 'group')
 
     const title = svg?.querySelector('title')
     expect(title).toBeTruthy()
     expect(title?.textContent ?? '').toMatch(/architecture/i)
+    expect(title).toHaveAttribute('id', svg?.getAttribute('aria-labelledby'))
 
     const hiddenNodes = container.querySelectorAll('[aria-hidden="true"]')
     expect(hiddenNodes.length).toBeGreaterThan(0)
+
+    // The nested regions must still expose their own role/name — proving `role="group"`
+    // (unlike `role="img"`) does not swallow them.
+    expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
   })
 })
