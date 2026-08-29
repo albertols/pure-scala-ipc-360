@@ -84,7 +84,7 @@ Defect 7, the critical one. Backend-only, no wire change.
 - Produces: `B15Status.of(List<String> ok, List<String> ko)` → instance; `String canonical(String raw)` returning `"SUCCESS"`, `"FAILED"` or `""`; `B15Status.DEFAULT`. Also `Etl360Properties.B15` record with `statusOk()`, `statusKo()`, `B15.DEFAULTS`.
 - Consumed by: Task 2 (`B15Reader`), Task 3 (`DiagnosticsService`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -148,12 +148,12 @@ class B15StatusTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=B15StatusTest`
 Expected: compilation failure — `package io.pure360.etl360.service.support` does not contain `B15Status`.
 
-- [ ] **Step 3: Write the normalizer**
+- [x] **Step 3: Write the normalizer**
 
 ```java
 package io.pure360.etl360.service.support;
@@ -238,7 +238,7 @@ public final class B15Status {
 }
 ```
 
-- [ ] **Step 4: Add the `B15` config record**
+- [x] **Step 4: Add the `B15` config record**
 
 In `Etl360Properties.java`, add `B15 b15` as the last record component, mirroring the `LayerToLayer` pattern exactly (`:62-78`):
 
@@ -298,17 +298,17 @@ and the nested record itself:
 
 Add `import io.pure360.etl360.service.support.B15Status;` to the file's imports.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `mvn -q -am -pl backend test -Dtest=B15StatusTest`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 6: Run the full backend suite — nothing else may move**
+- [x] **Step 6: Run the full backend suite — nothing else may move**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS. The new record component is additive with a defaulting binding constructor, so no existing test's `Etl360Properties` construction breaks.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/support/B15Status.java \
