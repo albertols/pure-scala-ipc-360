@@ -19,7 +19,7 @@ import java.util.Map;
  * files — never row payloads.
  */
 public record DiagnosticsDto(String status, RootStatus corpus, ControlSchema dwhControl,
-                             RootStatus composer) {
+                             RootStatus composer, B15Vocabulary b15) {
 
     /** A plainly-resolved root: corpus (no fallback tier) or composer (mock-backed). */
     public record RootStatus(String name, String configured, String resolved, boolean exists,
@@ -59,4 +59,21 @@ public record DiagnosticsDto(String status, RootStatus corpus, ControlSchema dwh
 
     /** An {@code INSERT INTO <table> VALUES} identifier actually present in the scanned files. */
     public record InsertTarget(String table, int count) {}
+
+    /**
+     * The b15 {@code status} vocabulary, and the tokens the scan could not place.
+     *
+     * <p>The rest of this DTO explains an EMPTY Tab 3. This part explains a MISLABELLED one: a
+     * status token matching neither list resolves to PENDING, so a run that actually failed
+     * renders as "never ran" — the same silent-failure shape as a mis-pointed root, one level
+     * down. {@code statusOk}/{@code statusKo} are echoed so an operator can see what to add to
+     * {@code b15StatusOk}/{@code b15StatusKo} in config.json; {@code rowsScanned} says how much
+     * history the counts below were drawn from, so an empty list can be read as "nothing
+     * unrecognized" rather than "nothing looked at".
+     */
+    public record B15Vocabulary(List<String> statusOk, List<String> statusKo, int rowsScanned,
+                                List<StatusToken> unrecognizedStatuses) {}
+
+    /** An unrecognized b15 status token, by first-seen spelling, and how often it appeared. */
+    public record StatusToken(String value, long count) {}
 }

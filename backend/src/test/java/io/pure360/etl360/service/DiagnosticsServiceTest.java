@@ -27,8 +27,9 @@ class DiagnosticsServiceTest {
         DataRoots roots = new DataRoots(props);
         LayerToLayerService l2l = new LayerToLayerService(roots, props);
         B15Reader b15 = new B15Reader(roots, props);
+        ClusterIndexService index = new ClusterIndexService(b15);
         return new DiagnosticsService(props, roots, new CorpusService(props),
-            new OperationalService(l2l, b15, new ClusterIndexService(b15)), l2l);
+            new OperationalService(l2l, b15, index), l2l, b15, index);
     }
 
     /** Props whose dwhControlRoot is {@code tmp/DWH_CONTROL} and whose mock tier deliberately does not exist. */

@@ -463,11 +463,11 @@ git commit -m "fix(b15): canonicalise status at parse, proven on a test-only dia
 - Consumes: `B15Reader.status()` (Task 2).
 - Produces: `/api/diagnostics` gains `b15.unrecognizedStatuses: [{ value, count }]`, consumed by Task 14's gate.
 
-- [ ] **Step 1: Read the existing diagnostics shape**
+- [x] **Step 1: Read the existing diagnostics shape**
 
 Run: `sed -n '1,200p' backend/src/main/java/io/pure360/etl360/service/DiagnosticsService.java` and read the DTO it builds. Add the new field following that file's existing nesting convention — do not restructure it.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Extend the existing diagnostics contract test with:
 
@@ -484,21 +484,21 @@ Extend the existing diagnostics contract test with:
     }
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=DiagnosticsContractTest`
 Expected: FAIL — no such JSON path.
 
-- [ ] **Step 4: Add the field**
+- [x] **Step 4: Add the field**
 
 Map `B15Reader.status().unrecognized()` (a `Map<String, Long>`) into a list of `{ value, count }` records, newest-largest first — the ordering `B15Status.unrecognized()` already guarantees.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `mvn -q -am -pl backend test -Dtest=DiagnosticsContractTest`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/DiagnosticsService.java \
