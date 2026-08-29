@@ -677,7 +677,7 @@ Defect 1's data half. Pure adapter change, no component change yet.
 **Interfaces:**
 - Produces: `DENSITY_FOOTPRINT`, `DENSITY_GUTTER`, `MIN_GUTTER`, and `DENSITY_PITCH` (same `{ col, row, width, height }` shape as today, now derived). Consumed by Task 6.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, it, expect } from 'vitest'
@@ -744,12 +744,12 @@ describe('layoutCards produces no overlapping cards', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test relationshipsAdapter`
 Expected: FAIL — `DENSITY_FOOTPRINT` is not exported.
 
-- [ ] **Step 3: Replace the table with a derived one**
+- [x] **Step 3: Replace the table with a derived one**
 
 ```ts
 /**
@@ -793,17 +793,17 @@ export const DENSITY_PITCH: Record<CardDensity, { col: number; row: number; widt
   ) as Record<CardDensity, { col: number; row: number; width: number; height: number }>
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test relationshipsAdapter`
 Expected: PASS.
 
-- [ ] **Step 5: Run the whole frontend suite and typecheck**
+- [x] **Step 5: Run the whole frontend suite and typecheck**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS. Existing tests that assert specific `x`/`y` values will need their expected numbers updated to the new pitch — update them, do not loosen the assertions.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/api/relationshipsAdapter.ts frontend/src/api/relationshipsAdapter.test.ts \
