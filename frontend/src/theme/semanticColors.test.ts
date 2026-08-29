@@ -54,6 +54,12 @@ describe('kind palette', () => {
     expect(layerColours.has(KIND_PALETTE.recipe.accent)).toBe(false)
   })
 
+  it('saturates the bodies enough that kind reads without the chip', () => {
+    // Shipped at a 10% blend, which read closer to neutral grey than to blue/orange.
+    expect(kindPalette('table').body).toBe('#1f314c')
+    expect(kindPalette('recipe').body).toBe('#412f26')
+  })
+
   it('gives each kind an OPAQUE body, since cards sit on the dot-grid canvas', () => {
     // A translucent body lets the grid show through the card, which reads as a rendering fault
     // rather than a tint.

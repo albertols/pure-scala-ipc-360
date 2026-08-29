@@ -42,8 +42,9 @@ export interface KindPalette {
   /**
    * The card body. OPAQUE, not an alpha wash: cards sit on the dot-grid canvas, and a
    * translucent body lets the grid show through the card — which reads as a rendering fault
-   * rather than a tint. These are the accent pre-blended at 10% over `--surface` (#131621),
-   * so they stay subtle while remaining solid.
+   * rather than a tint. These are the accent pre-blended at 20% over `--surface` (#131621):
+   * solid, and saturated enough that kind reads from the body alone without going to the chip.
+   * (10% was the first attempt and sat too close to neutral grey to carry the distinction.)
    */
   body: string
   border: string
@@ -53,8 +54,8 @@ export interface KindPalette {
 
 /** GCP product colours: a table is a BigQuery table, a recipe is a Dataproc/Spark job. */
 export const KIND_PALETTE: Record<CardKind, KindPalette> = {
-  table:  { accent: '#4f9cf9', body: '#192337', border: 'rgba(79,156,249,0.28)', statusEdge: 'top' },
-  recipe: { accent: '#fb923c', body: '#2a2224', border: 'rgba(251,146,60,0.28)', statusEdge: 'left' },
+  table:  { accent: '#4f9cf9', body: '#1f314c', border: 'rgba(79,156,249,0.35)', statusEdge: 'top' },
+  recipe: { accent: '#fb923c', body: '#412f26', border: 'rgba(251,146,60,0.35)', statusEdge: 'left' },
 }
 
 export function kindPalette(kind: CardKind): KindPalette {

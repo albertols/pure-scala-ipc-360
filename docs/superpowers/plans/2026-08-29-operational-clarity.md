@@ -1876,11 +1876,11 @@ Spec §14.
 
 Spec §15.1. Two constants and their tests.
 
-- [ ] **Step 1** — update `semanticColors.test.ts`: assert `kindPalette('table').body === '#1f314c'` and `kindPalette('recipe').body === '#412f26'`, and that both are still opaque hexes and distinct.
-- [ ] **Step 2** — run, confirm RED.
-- [ ] **Step 3** — set the two `body` values and lift `border` alpha `0.28 → 0.35` in `KIND_PALETTE`; mirror nothing in `index.css` (the custom properties are the ACCENTS, which are unchanged).
-- [ ] **Step 4** — `pnpm test && npx tsc --noEmit`.
-- [ ] **Step 5** — commit: `feat(tab3): saturate the kind bodies so blue and orange read at a glance`.
+- [x] **Step 1** — update `semanticColors.test.ts`: assert `kindPalette('table').body === '#1f314c'` and `kindPalette('recipe').body === '#412f26'`, and that both are still opaque hexes and distinct.
+- [x] **Step 2** — run, confirm RED.
+- [x] **Step 3** — set the two `body` values and lift `border` alpha `0.28 → 0.35` in `KIND_PALETTE`; mirror nothing in `index.css` (the custom properties are the ACCENTS, which are unchanged).
+- [x] **Step 4** — `pnpm test && npx tsc --noEmit`.
+- [x] **Step 5** — commit: `feat(tab3): saturate the kind bodies so blue and orange read at a glance`.
 
 ---
 
@@ -1893,11 +1893,11 @@ Spec §15.3. Pure module, no React.
 **Interfaces:**
 - Produces: `layoutLineage(nodes, edges, opts?) => LineageLayout` with `{ nodes: PlacedNode[], edges: RoutedEdge[], bands: Band[], width, height }`; `PlacedNode` carries `x, y, band, isDummy`; `RoutedEdge` carries `points: {x,y}[]` plus `from/to/kind`. Also `countCrossings(layout)` exported for tests. Consumed by Task 24.
 
-- [ ] **Step 1: Write the failing tests** — band grouping (every node's y falls inside its tier's band); a multi-column edge produces a dummy chain with one dummy per intervening column; no two placed boxes overlap; `countCrossings` on a deliberately-crossed fixture is lower after barycentre than with name-only ordering; layout is deterministic across two calls; a single node and an empty input both behave.
-- [ ] **Step 2** — run, confirm RED (module absent).
-- [ ] **Step 3: Implement** — columns by hop; band by layer via a `TIER_OF` map; dummy insertion with interpolated band; barycentre sweeps (forward on predecessors, backward on successors, `SWEEPS = 8`, ordering keyed `(band, median, name)` so a node can never leave its band); slot packing per (column, band) with dummy rows thin; band heights = max over columns; edge polylines built from each chain.
-- [ ] **Step 4** — `pnpm vitest run lineageLayout`.
-- [ ] **Step 5** — commit: `feat(tab3): banded Sugiyama layout for the lineage flow`.
+- [x] **Step 1: Write the failing tests** — band grouping (every node's y falls inside its tier's band); a multi-column edge produces a dummy chain with one dummy per intervening column; no two placed boxes overlap; `countCrossings` on a deliberately-crossed fixture is lower after barycentre than with name-only ordering; layout is deterministic across two calls; a single node and an empty input both behave.
+- [x] **Step 2** — run, confirm RED (module absent).
+- [x] **Step 3: Implement** — columns by hop; band by layer via a `TIER_OF` map; dummy insertion with interpolated band; barycentre sweeps (forward on predecessors, backward on successors, `SWEEPS = 8`, ordering keyed `(band, median, name)` so a node can never leave its band); slot packing per (column, band) with dummy rows thin; band heights = max over columns; edge polylines built from each chain.
+- [x] **Step 4** — `pnpm vitest run lineageLayout`.
+- [x] **Step 5** — commit: `feat(tab3): banded Sugiyama layout for the lineage flow`.
 
 ---
 
