@@ -54,6 +54,8 @@ resolve ETL360_DWH_CONTROL_ROOT dwhControlRoot; SRC_DWH=$RES_SRC
 resolve ETL360_GCP_PROJECT gcpProjectId;        SRC_GCP=$RES_SRC
 resolve ETL360_L2L_TABLE layerToLayerTable;     SRC_L2L_TABLE=$RES_SRC
 resolve ETL360_L2L_LAYER_DIRS layerDirs;        SRC_L2L_DIRS=$RES_SRC
+resolve ETL360_B15_STATUS_OK b15StatusOk;       SRC_B15_OK=$RES_SRC
+resolve ETL360_B15_STATUS_KO b15StatusKo;       SRC_B15_KO=$RES_SRC
 resolve ETL360_GCP_LOGGING_DURATION gcpLoggingDuration; SRC_GCP_DUR=$RES_SRC
 
 # Toolchains: config.json OUTRANKS ambient env (machine-global JAVA_HOME/PATH are the
@@ -107,6 +109,10 @@ GCP_DUR="${ETL360_GCP_LOGGING_DURATION:-P31D}"
 # and an empty Tab 3, so the table below prints what will actually be scanned for.
 L2L_TABLE="${ETL360_L2L_TABLE:-CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG}"
 L2L_DIRS="${ETL360_L2L_LAYER_DIRS:-STG,ODS,DWH,CDM,RDM,QDM,ETL,OUTPUT}"
+# MUST mirror B15Status.DEFAULT_OK/DEFAULT_KO — a status token in neither list renders as
+# PENDING, i.e. a failed run reads as "never ran". Printed for the same reason as l2l-table.
+B15_OK="${ETL360_B15_STATUS_OK:-SUCCESS,SUCCEEDED,OK,COMPLETED,DONE}"
+B15_KO="${ETL360_B15_STATUS_KO:-FAILURE,FAILED,ERROR,KILLED,ABORTED,CANCELLED}"
 # MUST mirror DataRoots.java: a root is "real" only if it carries the substructure its
 # reader needs ($3), not merely because the directory exists. A legacy DWH_CONTROL with
 # no LAYER_TO_LAYER/ reports mock here exactly as the backend resolves it — otherwise
@@ -124,6 +130,8 @@ row gcp-project "$GCP"      "$SRC_GCP"
 row gcp-log-dur "$GCP_DUR"  "$SRC_GCP_DUR"
 row l2l-table   "$L2L_TABLE" "$SRC_L2L_TABLE"
 row l2l-dirs    "$L2L_DIRS"  "$SRC_L2L_DIRS"
+row b15-ok      "$B15_OK"    "$SRC_B15_OK"
+row b15-ko      "$B15_KO"    "$SRC_B15_KO"
 row JAVA_HOME   "${JAVA_HOME:-—}" "$SRC_JAVA"
 row node        "$(command -v node || echo '—')" "$SRC_NODE"
 

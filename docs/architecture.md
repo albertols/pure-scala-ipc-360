@@ -98,7 +98,8 @@ leading slash (e.g. `CDM/m_DM_INFOHUB_BIZLINK`). Errors are RFC 7807
 | GET | `/api/operational/runs` | run history by recipe, newest-first (`?recipe=` repeatable; `?limit=` ≤50). The server caps recipes per request, but the **binding limit is the HTTP request line**, not that count: `useRuns` chunks by an encoded **byte budget** (~6 KB) because a 200-recipe chunk of real filenames exceeds Tomcat's 8 KB header limit and is rejected by the connector before the app sees it. Do not restate the count as the limit — that is what let the cliff ship. |
 | `GET /api/config` | Sanitized runtime config: GCP project/region, Dataproc/Logging/BigQuery URL templates, `dwhControlMode`/`composerMode` |
 | `GET /api/health` | Liveness + corpus stats: XML/recipe counts, corpus root, `dwhControlMode`, `composerMode` |
-| `GET /api/diagnostics` | Data-root self-diagnosis (`docs/adr/0013-data-root-diagnostics.md`): per root the configured value, the resolved absolute path, which tier won and why the other lost. For the control schema it re-walks `LAYER_TO_LAYER/` recording **staged** counts — `presentDirs` → `filesRead` → `anchorHits` → `rowsParsed` — so the first zero identifies the failing step, plus `insertTargetsFound[]` (the `INSERT INTO <table>` identifiers actually in the files) and a one-sentence `hint`. Tab 3 renders it as an always-on tier chip and expands it under an empty graph |
+| `GET /api/operational/search` | Cross-index search over b15 recipe names AND relationship-graph table names (`docs/adr/0019-operational-search.md`): `?q=` (min 2 chars — shorter returns an EMPTY result, never a 400, because the caller is a search box on its first keystroke), `?limit=` (default 50, max 200, over-range → 400). Each hit is `{kind, name, layer, clusters[]}` where `clusters` are the b15 clusters that reach it — for a recipe the ones it ran in, for a table the union over every recipe joined to it by an edge in either direction. `truncated` states when hits were dropped, so a capped list never reads as a complete one. This is the recipe→table→cluster join ADR-0014 deliberately kept off the client: table names exist only in the L2L graph, which is never fetched unscoped |
+| `GET /api/diagnostics` | Data-root self-diagnosis (`docs/adr/0013-data-root-diagnostics.md`): per root the configured value, the resolved absolute path, which tier won and why the other lost. For the control schema it re-walks `LAYER_TO_LAYER/` recording **staged** counts — `presentDirs` → `filesRead` → `anchorHits` → `rowsParsed` — so the first zero identifies the failing step, plus `insertTargetsFound[]` (the `INSERT INTO <table>` identifiers actually in the files) and a one-sentence `hint`. Tab 3 renders it as an always-on tier chip and expands it under an empty graph. Also carries `b15` (`docs/adr/0018-b15-status-vocabulary.md`): the configured `statusOk`/`statusKo` vocabularies, `rowsScanned`, and `unrecognizedStatuses[]` — the status tokens that matched neither list and therefore resolved to PENDING. Where the rest of this report explains an EMPTY tab, that field explains a MISLABELLED one |
 | `GET /api/readiness` | Landing-page aggregate (`docs/adr/0016-landing-readiness-aggregate.md`): `{status, corpus, operational, dags, roots, progress}` — corpus counts (`SummaryDto`), b15 totals (`ClusterIndexService`), a DAG count, per-root resolved path/tier/status/hint (mirroring `/api/diagnostics`, but each `roots[]` entry reports the path that actually **served**, never the configured path echoed back), and `progress` (this repo's own `- [x]`/`- [ ]` plan-checkbox and ADR counts, **nullable** when `docs/` is unreachable — e.g. a packaged deployment). `dags.workflows` is the count of distinct `LayerToLayerEntryDto.workflow` values from `LayerToLayerService.entries()`, **not** a grouping of the `/api/relationships` graph the way Tab 4 derives its DAG clusters — that would pull the exact whole-corpus payload sub-project 10 (`docs/adr/0014-b15-cluster-index.md`) exists to bound, just to count workflow names |
 
 Tab 1 (IPC ETL Viewer) is the first frontend consumer of the mapping endpoints: the
@@ -176,20 +177,30 @@ resolve against the auto-detected repo root (first ancestor with both `pom.xml` 
 | `etl360.gcp.dataproc-job-url` | (template, not overridden individually) | Dataproc job console URL pattern | — |
 | `etl360.gcp.dataproc-cluster-url` | (template) | Dataproc cluster console URL pattern | — |
 | `etl360.gcp.logging-url` | (template) | Cloud Logging query URL pattern | — |
+| `etl360.layer-to-layer.anchor-table` | `ETL360_L2L_TABLE` | `CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG` | anonymized SAMPLE value, not IPC law (ADR-0013) — a mismatch parses to zero rows silently, which is what `/api/diagnostics` exists to explain |
+| `etl360.layer-to-layer.layer-dirs` | `ETL360_L2L_LAYER_DIRS` | `STG,ODS,DWH,CDM,RDM,QDM,ETL,OUTPUT` | same: sample directory names, not law |
+| `etl360.b15.status-ok` | `ETL360_B15_STATUS_OK` | `SUCCESS,SUCCEEDED,OK,COMPLETED,DONE` | b15 `status` vocabulary (ADR-0018). REPLACES the default, never extends it |
+| `etl360.b15.status-ko` | `ETL360_B15_STATUS_KO` | `FAILURE,FAILED,ERROR,KILLED,ABORTED,CANCELLED` | a token in neither list resolves to PENDING and is reported in `/api/diagnostics`'s `b15.unrecognizedStatuses` |
 
 `server.address: 127.0.0.1`, `server.port: 8080` — local-only, no auth, matches spec
 §10 (out of scope: GCP deployment, authentication).
 
 ## See also
 
-- `docs/adr/0001`–`0012` — the decisions behind this shape, with rejected alternatives.
+- `docs/adr/0001`–`0019` — the decisions behind this shape, with rejected alternatives.
 - `docs/superpowers/specs/2026-07-29-etl360-foundation-design.md`,
   `docs/superpowers/specs/2026-07-30-synthetic-operational-data-design.md`,
   `docs/superpowers/specs/2026-07-31-operational-casuistics-design.md`,
   `docs/superpowers/specs/2026-08-01-etl-modifier-redesign-design.md`,
-  `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md` — full design specs.
+  `docs/superpowers/specs/2026-08-01-etl-modifier-ux2-design.md`,
+  `docs/superpowers/specs/2026-08-27-operational-scale-design.md`,
+  `docs/superpowers/specs/2026-08-28-landing-page-design.md`,
+  `docs/superpowers/specs/2026-08-29-operational-clarity-design.md` — full design specs.
 - `docs/superpowers/plans/2026-07-29-etl360-foundation.md`,
   `docs/superpowers/plans/2026-07-30-synthetic-operational-data.md`,
   `docs/superpowers/plans/2026-07-31-operational-casuistics.md`,
   `docs/superpowers/plans/2026-08-01-etl-modifier-redesign.md`,
-  `docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md` — task-by-task build logs.
+  `docs/superpowers/plans/2026-08-01-etl-modifier-ux2.md`,
+  `docs/superpowers/plans/2026-08-27-operational-scale.md`,
+  `docs/superpowers/plans/2026-08-28-landing-page.md`,
+  `docs/superpowers/plans/2026-08-29-operational-clarity.md` — task-by-task build logs.

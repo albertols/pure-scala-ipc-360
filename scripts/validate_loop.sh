@@ -119,6 +119,52 @@ assert runs[0]["appStartIso"], "run carries no appStartIso"
 assert runs[0]["jobId"], "run carries no jobId"
 ' || fail "runs shape"
 
+echo "[validate-loop] operational search…"
+# ADR-0019. The TABLE assertion is the load-bearing one: table names live only in the L2L graph,
+# so a search that returns recipes but no tables means the join silently degraded to the b15
+# index — which is exactly the capability this endpoint exists to add.
+curl -sf "localhost:8080/api/operational/search?q=CAS" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+hits = d["hits"]
+kinds = {h["kind"] for h in hits}
+assert hits, "search for CAS returned nothing"
+assert "recipe" in kinds, "no recipe hits"
+assert "table" in kinds, "no TABLE hits — the recipe->table->cluster join is not wired"
+assert any(h["clusters"] for h in hits), "no hit names a cluster"
+r = sum(1 for h in hits if h["kind"] == "recipe")
+t = sum(1 for h in hits if h["kind"] == "table")
+print(f"[validate-loop] search: {len(hits)} hits for CAS ({r} recipes, {t} tables)")
+' || fail "operational search"
+# Bounded by construction: a capped list must SAY it was capped.
+curl -sf "localhost:8080/api/operational/search?q=CAS&limit=2" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+n = len(d["hits"])
+assert n == 2, f"limit not honoured: {n}"
+assert d["truncated"] is True, "capped result did not report truncated"
+' || fail "search bounds"
+# A one-character query is a search box on its first keystroke, not a caller bug.
+curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/search?q=c" | grep -q 200   || fail "short query should be 200-with-empty, not an error"
+curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/search?q=CAS&limit=500" | grep -q 400   || fail "over-range limit should be 400"
+
+echo "[validate-loop] b15 status vocabulary…"
+# ADR-0018. The committed mock writes only canonical tokens, so an unrecognized one here means
+# either the mock drifted or the normalizer regressed. FAILURE must be in the KO vocabulary —
+# it is the token whose absence made every failed run on a real export render as PENDING.
+curl -sf localhost:8080/api/diagnostics | python3 -c '
+import json, sys
+b15 = json.load(sys.stdin)["b15"]
+assert "FAILURE" in b15["statusKo"], "FAILURE is not in the KO vocabulary"
+assert "SUCCESS" in b15["statusOk"], "SUCCESS is not in the OK vocabulary"
+rows = b15["rowsScanned"]
+assert rows == 417, f"b15 rows scanned moved: {rows}"
+unrec = b15["unrecognizedStatuses"]
+assert unrec == [], f"committed mock produced unrecognized status tokens: {unrec}"
+nok, nko = len(b15["statusOk"]), len(b15["statusKo"])
+print(f"[validate-loop] b15 vocabulary: {nok} ok / {nko} ko tokens, {rows} rows scanned, 0 unrecognized")
+' || fail "b15 status vocabulary"
+
 echo "[validate-loop] scoped relationships…"
 FULL_NODES=$(curl -sf localhost:8080/api/relationships | python3 -c 'import json,sys; print(len(json.load(sys.stdin)["nodes"]))')
 curl -sf "localhost:8080/api/relationships?clusters=$FIRST_CLUSTER" | python3 -c "

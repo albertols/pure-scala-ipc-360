@@ -111,6 +111,12 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
 1. **Figma visual contract.** `frontend/`'s look (tokens in `src/index.css`, Inter/
    JetBrains Mono, layout/interactions) is sacred. Rewiring swaps data sources only —
    no restyling without an explicit ask. See `docs/adr/0005-figma-visual-contract.md`.
+   The one sanctioned amendment is Tab 3's semantic palette
+   (`docs/adr/0017-semantic-colour-system.md`): kind = GCP product colour + the edge the
+   status bar sits on, layer = medallion tier, status = unchanged. All of it lives in
+   `frontend/src/theme/semanticColors.ts` — **the only file that maps a layer, kind or
+   status to a colour**. Never hardcode one of those hexes elsewhere; the values are
+   mirrored in `src/index.css` as custom properties and the two change together.
 2. **Corpus safety.** `parser/src/main/resources/xmltobq/` is anonymized sample data;
    outputs sit next to inputs. Experiment in temp copies. `DWH_CONTROL/` stays
    git-ignored, never committed.
@@ -199,6 +205,13 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   recipes · 14 dates · 417 rows** operational, and **22** distinct `workflow` values — the DAG count
   is read from `LayerToLayerService.entries()`, never the relationships graph
   (`docs/adr/0016-landing-readiness-aggregate.md`).
+  Sub-project 12 adds `GET /api/operational/search?q=&limit=` (`docs/adr/0019-operational-search.md`)
+  — the recipe↔table↔cluster join ADR-0014 deliberately kept off the client, since table names live
+  only in the L2L graph and are therefore invisible to any client-side search; `make validate-loop`
+  curls it and asserts BOTH recipe and table hits (a recipes-only result means the join silently
+  degraded to the b15 index) plus its bounds. It also gates the b15 status vocabulary
+  (`docs/adr/0018-b15-status-vocabulary.md`): `FAILURE` must be in `statusKo`, `rowsScanned` must be
+  417, and `unrecognizedStatuses` must be empty for the committed mock.
 
 ## Corpus caveats
 
@@ -235,6 +248,15 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   `layerToLayerTable`/`layerDirs`) with the current values as defaults — a real export that misses
   on either parses to zero rows *silently*, which is what `GET /api/diagnostics` exists to explain.
   Never hardcode a second copy of either value; read them from `Etl360Properties.LayerToLayer`.
+- The b15 **`status` vocabulary is anonymized sample data too**: the corpus writes
+  `SUCCESS`/`FAILED`, a real Composer export writes `FAILURE`. Until sub-project 12 that token
+  matched no literal in four separate places and fell through to `PENDING`, so every failed run
+  rendered as "never ran" and the tab reported `0 KO` on data full of failures. Canonicalisation
+  now happens ONCE, in `B15Reader.parse` via `service/support/B15Status.java`, and is configurable
+  (`etl360.b15.status-ok`/`.status-ko`, `config.json` `b15StatusOk`/`b15StatusKo`). Never add a
+  second status comparison anywhere downstream — everything after the reader sees only
+  `SUCCESS`/`FAILED`/`""`. Unrecognized tokens are reported by `GET /api/diagnostics`
+  (`b15.unrecognizedStatuses`), never swallowed (`docs/adr/0018-b15-status-vocabulary.md`).
 - Four recipe `type` values (`BERYLFALLS`, `ASHPATH2`, `CEDARWICK2`, `EARLYGLADE`) and
   one structural key (`greencliff`) are anonymizer output, not IPC vocabulary — resolved
   to their canonical kind/key (`sourceQualifier`/`joinerInput`/`storedProcedure`/
@@ -278,14 +300,14 @@ checklist): `docs/visual-guide.md`.
   `LayerToLayerService`, `Etl360Properties`, `scripts/dev.sh`, `XMLParser.scala`,
   `frontend/vite.config.ts`) — change one of those and update the doc in the same commit.
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0016`
+- Design rationale: `docs/adr/0001`–`0019`
 - `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,
   alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
   expression grammar. Start at `docs/ipc/README.md`.
 - Current spec/plan:
-  `docs/superpowers/specs/2026-08-28-landing-page-design.md` +
-  `docs/superpowers/plans/2026-08-28-landing-page.md`
-  (previous sub-project: `…/2026-08-27-operational-scale-design.md` + its plan)
+  `docs/superpowers/specs/2026-08-29-operational-clarity-design.md` +
+  `docs/superpowers/plans/2026-08-29-operational-clarity.md`
+  (previous sub-project: `…/2026-08-28-landing-page-design.md` + its plan)
 - Parser deep-dive: `parser/src/main/scala/io/pure360/ipc/xmltojson/README.md`,
   `_DWH_Transformations_and_XML_Parsing.md`
 - Dev harness, prerequisites, `.env.example` reference: root `README.md`

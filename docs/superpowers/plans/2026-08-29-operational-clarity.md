@@ -1717,7 +1717,7 @@ git commit -m "feat(tab3): the top-bar search finds tables and recipes across th
 - Create: `docs/adr/0017-semantic-colour-system.md`, `0018-b15-status-vocabulary.md`, `0019-operational-search.md`
 - Modify: `docs/architecture.md`, `HOW_TO_RUN_ON_YOUR_DATA.md`, root `CLAUDE.md`
 
-- [ ] **Step 1: Extend `validate_loop.sh`**
+- [x] **Step 1: Extend `validate_loop.sh`**
 
 Add to sweep (1), beside the existing cluster curls:
 
@@ -1733,29 +1733,29 @@ curl -fsS "$BASE/api/diagnostics" | jq -e '.b15.unrecognizedStatuses | length ==
   || fail "committed mock produced unrecognized b15 status tokens"
 ```
 
-- [ ] **Step 2: Assert no floor moved**
+- [x] **Step 2: Assert no floor moved**
 
 Run: `make validate-loop`
 Expected: PASS, with `21 clusters · 30 recipes · 14 dates · 417 rows` and the readiness floors `81 XML · 86 recipes · 212 DDL` / `22` workflows all **unchanged**. If any moved, a corpus file was touched — revert it; that is a Global Constraint violation, not a floor to update.
 
-- [ ] **Step 3: Config surface**
+- [x] **Step 3: Config surface**
 
 `config.example.json` gains `b15StatusOk` / `b15StatusKo` with the defaults; `scripts/dev.sh` maps them to `ETL360_B15_STATUS_OK` / `ETL360_B15_STATUS_KO` following the existing `layerToLayerTable` mapping. Verify with `scripts/dev.sh --check-config`.
 
-- [ ] **Step 4: Write the three ADRs**
+- [x] **Step 4: Write the three ADRs**
 
 Use `docs/adr/0000-template.md`. **0017** — semantic colour system: kind = GCP product, layer = medallion tier, status = edge; `semanticColors.ts` is the only mapper; scoped amendment to ADR-0005. **0018** — b15 status vocabulary: the `FAILURE`→PENDING silent failure, one normalizer at the read boundary, canonical output unchanged, configurable like ADR-0013's anchor table, unrecognized tokens reported. **0019** — operational search: the recipe↔table↔cluster join ADR-0014 kept off the client, and why it is bounded.
 
-- [ ] **Step 5: Update the docs**
+- [x] **Step 5: Update the docs**
 
 `docs/architecture.md` — add `/api/operational/search` to the endpoint table and the `etl360.b15.*` keys to the config reference. `HOW_TO_RUN_ON_YOUR_DATA.md` — a status-vocabulary section, and add `B15Reader` to its per-section derivation table (the file's own currency rule). Root `CLAUDE.md` — the new endpoint, the new ADRs, the current spec/plan pointer.
 
-- [ ] **Step 6: Full gate run**
+- [x] **Step 6: Full gate run**
 
 Run: `make test && make check && make validate-loop`
 Expected: all PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/validate_loop.sh scripts/dev.sh config.example.json \

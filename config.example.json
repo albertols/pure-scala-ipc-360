@@ -6,6 +6,8 @@
   "gcpLoggingDuration": "P31D",
   "layerToLayerTable": "CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG",
   "layerDirs": ["STG", "ODS", "DWH", "CDM", "RDM", "QDM", "ETL", "OUTPUT"],
+  "b15StatusOk": ["SUCCESS", "SUCCEEDED", "OK", "COMPLETED", "DONE"],
+  "b15StatusKo": ["FAILURE", "FAILED", "ERROR", "KILLED", "ABORTED", "CANCELLED"],
   "javaHome": "",
   "nodeBin": ""
 }

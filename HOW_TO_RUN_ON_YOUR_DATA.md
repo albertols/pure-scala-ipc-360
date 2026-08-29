@@ -222,6 +222,42 @@ without failing the rest of the file; the count is surfaced as `skippedRows`.
 
 ---
 
+### 3.4 The b15 `status` vocabulary
+
+The `status` column's values are **export-specific**, not IPC law. This repo's sample data
+writes `SUCCESS`/`FAILED`; a real Composer export writes `FAILURE`. A token this build does
+not recognize resolves to `PENDING` — so a run that **failed** renders as "never ran", and the
+tab reports `0 KO` over data full of failures. That is silent by nature, which is why the
+vocabulary is configurable and unmatched tokens are reported rather than swallowed.
+
+Recognized out of the box (case-insensitive, trimmed):
+
+| Outcome | Tokens |
+|---|---|
+| OK | `SUCCESS` `SUCCEEDED` `OK` `COMPLETED` `DONE` |
+| KO | `FAILURE` `FAILED` `ERROR` `KILLED` `ABORTED` `CANCELLED` |
+
+If yours differs, set it in `config.json`:
+
+```json
+"b15StatusOk": ["SUCCESS", "SUCCEEDED"],
+"b15StatusKo": ["FAILURE", "ERROR", "TIMED_OUT"]
+```
+
+Two things to know:
+
+- A configured list **replaces** the default, it does not extend it. That is deliberate: it is
+  the only way to reclassify a token (e.g. treat `CANCELLED` as neither a failure nor a
+  success by simply leaving it out of both).
+- `GET /api/diagnostics` reports `b15.unrecognizedStatuses` — every token that matched neither
+  list, with a count and the spelling it was first seen in. If your KO count looks wrong, that
+  field names the cause. `b15.rowsScanned` tells you how much history those counts came from,
+  so an empty list reads as "nothing unrecognized" rather than "nothing looked at".
+
+See `docs/adr/0018-b15-status-vocabulary.md`.
+
+---
+
 ## 4. Generate recipes from your XMLs
 
 A raw Powermart export contains XML only. Tab 1 works immediately, but Tab 2 reads
@@ -361,6 +397,8 @@ proxy `localhost:8080` in `frontend/vite.config.ts`. Override the frontend port 
 | Parser run reports success but writes nothing | Absolute `--xmlPath` pointing at a single file | Pass the directory instead (§4) |
 | Some dates missing from the operational date picker | Directory name is not `YYYY_MM_DD`, or the CSV filename differs | §3.2 |
 | A recipe's layer shows `UNKNOWN` | b15 `recipe_filename` has no matching `LAYER_TO_LAYER` row | Expected; add the control row if you want attribution |
+| **Runs that failed show as `PENDING`, and the OK/KO split reads `0 KO`** | Your b15 `status` column uses a token this build does not recognize | Check `b15.unrecognizedStatuses` in `/api/diagnostics`; add the token to `b15StatusKo` (§3.4) |
+| A run shows `PENDING` and `unrecognizedStatuses` is empty | The `status` cell really is blank for that row | Expected — a blank status is genuinely "no outcome recorded" |
 | Build fails on JDK version | Corp profile pins an old JDK | Set `javaHome` in `config.json` to a 17+ home; list candidates with `/usr/libexec/java_home -V` |
 | Maven/pnpm cannot download dependencies | Corp mirror not configured | `~/.m2/settings.xml`, `~/.npmrc` (§1) |
 | `config.json is not valid JSON` | Trailing comma or comment | It is parsed strictly before anything else runs |
@@ -428,6 +466,7 @@ re-check the section that depends on it:
 | §3.1 corpus walk, layer inference, exclusions | `backend/.../service/CorpusService.java` |
 | §3.2 b15 filename, date pattern, CSV headers | `backend/.../service/OperationalService.java` |
 | §3.3 layer dirs, control table, row grammar | `backend/.../service/LayerToLayerService.java`, `backend/.../config/Etl360Properties.java` (`LayerToLayer`) |
+| §3.4 b15 status vocabulary, unrecognized reporting | `backend/.../service/support/B15Status.java`, `backend/.../service/B15Reader.java`, `backend/.../config/Etl360Properties.java` (`B15`), `docs/adr/0018-b15-status-vocabulary.md` |
 | §4 parser flags, traversal, path quirk | `parser/.../xmltojson/XMLParser.scala`, `parser/.../utils/dir/ScalaFileUtils.scala` |
 | §5 verification fields | `backend/.../api/HealthController.java`, `backend/.../api/ConfigController.java`, `backend/.../service/DiagnosticsService.java`, `backend/.../api/ClusterController.java`, `backend/.../service/ClusterIndexService.java`, `backend/.../api/ReadinessController.java`, `backend/.../service/ReadinessService.java`, `docs/adr/0013-data-root-diagnostics.md`, `docs/adr/0014-b15-cluster-index.md`, `docs/adr/0016-landing-readiness-aggregate.md` |
 | §5 frontend port/proxy | `frontend/vite.config.ts` |
