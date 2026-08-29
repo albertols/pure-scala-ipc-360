@@ -566,6 +566,86 @@ Branch `feat/etl360-operational-clarity`.
 
 ---
 
+## 13. Lineage flow view (defect 9)
+
+### 13.1 Why the direct-neighbour list is not enough
+
+§6's overlay answers "what touches this node". The question an operator actually has in front
+of a failed table is "where did this come from, and what breaks next" — which is a **path**, not
+a set. A one-hop list makes you re-open the overlay at every step and reassemble the chain in
+your head, which is the same loss-of-place §6.2.1 fixed for the detail panel.
+
+### 13.2 Endpoint
+
+```
+GET /api/operational/lineage?node=<id>&limit=<n>
+```
+
+Breadth-first outward from the seed, following edges in **both** directions, so the result is the
+transitive upstream *and* downstream closure. BFS (not DFS) is load-bearing: it is what makes the
+node budget cut the FURTHEST hops rather than an arbitrary branch, so "the nearest lineage is
+complete" is true by construction rather than by luck.
+
+- Each node carries a **signed hop distance**: negative upstream, `0` for the seed, positive
+  downstream. That is the view's x-axis.
+- `limit` default 150, max 600. `truncated` and `totalReachable` are both returned, so the view
+  can say *how much* it is not showing rather than implying completeness.
+- Cycle-safe by a visited set — the L2L graph is not guaranteed acyclic, and a lookup edge can
+  close a loop.
+- **Not cluster-scoped.** Lineage crosses cluster boundaries by nature; truncating it at the
+  selection would draw a complete-looking flow that is not. This does not reopen the ADR-0014
+  problem: the request is bounded by node count and seeded from one node, so it fetches a
+  *purposeful slice*, never the whole graph. Nodes outside the current cluster selection are
+  flagged so the view can render them as context.
+
+### 13.3 The view
+
+`LineageFlow.tsx` replaces the overlay's body. Columns are hop distance, seed centred and marked;
+within a column, rows order by average predecessor y — the same stacking discipline
+`layoutCards` uses, so the two views read alike. Cards are `OperationalCard` at `compact`
+density, so §4's palette applies unchanged: kind by body colour and status edge, layer by tier.
+Edges are drawn as SVG paths with the `source`/`lookup`/`writes` kind preserved.
+
+Both entry points from §6.2.3 are unchanged — left-click opens the hovering window, a modified
+click opens the same view standalone at `?related=`, and clicking a node re-seeds the lineage
+while syncing the canvas selection and the back/forward trail.
+
+When capped, the header states it plainly: `showing 150 of 312 · nearest 3 hops complete`, with
+a control that raises the budget.
+
+---
+
+## 14. Multi-select filters and layer order (defect 10)
+
+### 14.1 Multi-select
+
+`layerFilter` and `statusFilter` become **sets**, not single values. An empty set means "no
+filter" (today's `ALL`); the `ALL` chip clears the set rather than being a value in it. Clicking
+a value toggles it, so `CDM` + `DWH` or `KO` + `PENDING` are expressible — which single-select
+made impossible, forcing all-or-nothing on exactly the dimensions an operator narrows by.
+
+`Kind` stays single-select: it has two real values, so selecting both is `ALL` and a set adds a
+state with no meaning of its own.
+
+### 14.2 Layer order
+
+`LAYER_RANK` (`relationshipsAdapter.ts:22`) becomes:
+
+```
+STG 0 · ODS 1 · ETL 2 · DWH 3 · CDM 4 · RDM 5 · QDM 6 · OUTPUT 7 · UNKNOWN 8
+```
+
+ETL moves from 7th to 3rd. That constant is read in two places — `layoutCards`'s column
+assignment (`:179`) and the `graph.layers` ordering that feeds the chips (`:321`) — so the
+reorder reaches **both the filter bar and the canvas columns**, deliberately. Giving one
+dimension two different orderings depending on where you look is the same class of problem §4
+exists to remove.
+
+This is a layout change, so the adapter tests that assert column positions move with it; that is
+the change being made, not a regression.
+
+---
+
 ## 11.1 Acceptance walk results (2026-08-29)
 
 Driven through the Chrome extension against `make dev` (backend :8080, frontend :8443),

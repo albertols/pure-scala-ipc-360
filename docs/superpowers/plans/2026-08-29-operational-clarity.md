@@ -1798,6 +1798,80 @@ git commit -m "docs(spec): browser acceptance walk results for sub-project 12"
 
 ---
 
+## Task 18: GET /api/operational/lineage
+
+Spec §13.2. Backend-only, bounded, cycle-safe.
+
+**Files:**
+- Create: `backend/src/main/java/io/pure360/etl360/api/dto/LineageDto.java`
+- Create: `backend/src/main/java/io/pure360/etl360/service/LineageService.java`
+- Modify: `backend/src/main/java/io/pure360/etl360/api/ClusterController.java`
+- Create: `backend/src/test/java/io/pure360/etl360/LineageContractTest.java`
+
+**Interfaces:**
+- Consumes: `RelationshipService.graph()`, `ClusterIndexService.clustersByRecipe()`.
+- Produces: `GET /api/operational/lineage?node=&limit=` -> `LineageDto { seed, nodes[], edges[], truncated, totalReachable }`, `LineageNodeDto { id, kind, name, layer, hop, clusters[] }` where `hop` is signed. Consumed by Task 19.
+
+- [ ] **Step 1: Write the failing contract test** — seed a known CAS table; assert the seed has `hop == 0`, at least one node with `hop < 0` and one with `hop > 0`, that every returned edge has both endpoints in `nodes`, that an unknown node 404s, that `limit` bounds the result and sets `truncated`, that an over-range limit 400s, and that the response is deterministic across two calls.
+- [ ] **Step 2: Run it and confirm it fails** — `mvn -pl backend test -Dtest=LineageContractTest`, expect 404 on the new path.
+- [ ] **Step 3: Implement `LineageService`** — BFS outward from the seed over an undirected adjacency built from the graph's edges, recording the signed hop (upstream when traversing an incoming edge, downstream when traversing an outgoing one), a visited set for cycle safety, and a node budget that cuts the furthest hops because BFS reaches them last. Return `totalReachable` by continuing the traversal for counting after the budget is spent.
+- [ ] **Step 4: Wire the endpoint** in `ClusterController`, mirroring `search`'s bounds idiom (`InvalidRequestException` for an over-range limit, `NotFoundException` for an unknown node).
+- [ ] **Step 5: Run the test and the full backend suite** — `mvn -am -pl backend test`, expect PASS with no existing count changed.
+- [ ] **Step 6: Commit** — `git add` the four paths plus the plan; message `feat(api): GET /api/operational/lineage — bounded upstream+downstream closure`.
+
+---
+
+## Task 19: the lineage flow view
+
+Spec §13.3. Replaces the overlay's body; both entry points unchanged.
+
+**Files:**
+- Create: `frontend/src/components/tab3/LineageFlow.tsx`, `LineageFlow.test.tsx`
+- Modify: `frontend/src/api/clusterQueries.ts` (`useLineage`)
+- Modify: `frontend/src/components/tab3/RelatedOverlay.tsx`
+
+**Interfaces:**
+- Consumes: Task 18's endpoint; `OperationalCard`, `semanticColors`.
+- Produces: `<LineageFlow nodeId onFocus />`, and `layoutLineage(nodes, edges)` (pure, unit-testable) returning positioned nodes.
+
+- [ ] **Step 1: Write the failing test for `layoutLineage`** — columns are ordered by hop, the seed sits at hop 0, no two nodes in a column overlap, and every edge resolves to two positioned endpoints.
+- [ ] **Step 2: Write the failing component test** — renders a seed and both directions, marks the seed, states the truncation line when `truncated`, and calls `onFocus` when a node is clicked.
+- [ ] **Step 3: Run both and confirm they fail.**
+- [ ] **Step 4: Implement `layoutLineage` + `LineageFlow`** — hop-distance columns, rows ordered by average predecessor y, SVG edges, `OperationalCard` at compact density.
+- [ ] **Step 5: Rewire `RelatedOverlay`** to render `LineageFlow` in place of the neighbour grid, keeping `standalone`, `onFocus` and `onClose` exactly as they are.
+- [ ] **Step 6: Run `pnpm test` + `npx tsc --noEmit`.**
+- [ ] **Step 7: Commit** — message `feat(tab3): Show all related is a full lineage flow, not a neighbour list`.
+
+---
+
+## Task 20: multi-select filters and layer order
+
+Spec §14.
+
+**Files:**
+- Modify: `frontend/src/api/relationshipsAdapter.ts` (`LAYER_RANK`), `relationshipsAdapter.test.ts`
+- Modify: `frontend/src/components/tab3/ETLOperational.tsx` (`FilterChips`, filter state), `ETLOperational.test.tsx`
+
+- [ ] **Step 1: Write the failing layer-order test** — `LAYER_RANK` orders `STG ODS ETL DWH CDM RDM QDM OUTPUT UNKNOWN`, and a graph with ETL and DWH nodes puts the ETL column strictly left of the DWH one.
+- [ ] **Step 2: Write the failing multi-select tests** — selecting `CDM` then `DWH` shows both layers' cards; clicking a selected chip deselects it; `ALL` clears the set; an empty set filters nothing; the same for `OK` + `KO` on Status.
+- [ ] **Step 3: Run both and confirm they fail.**
+- [ ] **Step 4: Reorder `LAYER_RANK`** and update the adapter tests whose expected column positions move.
+- [ ] **Step 5: Make `FilterChips` multi-capable** — a `multi` prop taking `string[]` and a toggle callback; Layer and Status use it, Kind does not.
+- [ ] **Step 6: Run `pnpm test` + `npx tsc --noEmit`.**
+- [ ] **Step 7: Commit** — message `feat(tab3): multi-select layer/status filters; ETL sits between ODS and DWH`.
+
+---
+
+## Task 21: gates, docs and the second browser walk
+
+- [ ] **Step 1: Extend `validate_loop.sh`** — curl `/api/operational/lineage` for a known CAS node; assert the seed is `hop 0`, that both a negative and a positive hop are present, that every edge endpoint is in `nodes`, and that `limit=2` sets `truncated`.
+- [ ] **Step 2: Run `make test`, `make check`, `make validate-loop`** — all pass, every committed mock floor unchanged.
+- [ ] **Step 3: Update docs** — `docs/architecture.md` endpoint table, ADR-0019 (extend to cover lineage, or file ADR-0020 if the decision is genuinely separate), root `CLAUDE.md`.
+- [ ] **Step 4: Second browser walk** — verify the lineage flow reads upstream/downstream with the seed marked, that both opening behaviours still work, that multi-select holds two layers and two statuses at once, and that the chips AND canvas both read STG→ODS→ETL→DWH→CDM→RDM→QDM. Record results in spec §11.1.
+- [ ] **Step 5: Commit** — message `docs+gate: lineage endpoint gated, second acceptance walk recorded`.
+
+---
+
 ## Task 17: merge
 
 - [ ] **Step 1: Final full gate from a clean build**
