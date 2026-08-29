@@ -25,14 +25,17 @@ export function RelatedOverlay({
   clusters,
   selectedDate = null,
   onFocus,
+  onReseed,
   onClose,
   standalone = false,
 }: {
   nodeId: string
   clusters: string[]
   selectedDate?: string | null
-  /** Re-centre on a neighbour. Absent in standalone mode, where there is no canvas to sync. */
+  /** Single click on a node: selects it, and syncs the canvas behind the overlay. */
   onFocus?: (nodeId: string) => void
+  /** Double click, or the dock's centre control: re-seeds the lineage. */
+  onReseed?: (nodeId: string) => void
   onClose?: () => void
   standalone?: boolean
 }) {
@@ -94,7 +97,16 @@ export function RelatedOverlay({
       </div>
 
       <div style={{ flex: 1, overflow: 'hidden', padding: 16, minHeight: 0 }}>
-        <LineageFlow nodeId={nodeId} statusById={statusById} onFocus={onFocus} />
+        <LineageFlow
+          nodeId={nodeId}
+          statusById={statusById}
+          selectedClusters={clusters}
+          // Single click selects — it opens the dock AND syncs the canvas behind (spec §6.3).
+          onSelect={onFocus}
+          // Double click (or the dock's ⌖) re-seeds. Splitting the two is what lets a card be
+          // inspectable without every inspection also moving the whole view.
+          onReseed={onReseed ?? onFocus}
+        />
       </div>
     </div>
   )

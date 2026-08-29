@@ -1907,11 +1907,11 @@ Spec §15.3-15.4.
 
 **Files:** Modify `LineageFlow.tsx`, `LineageFlow.test.tsx`.
 
-- [ ] **Step 1: Write the failing tests** — band rails render with their tier labels; a long edge's path has more than two points (it is routed, not a single curve); hovering a node adds a traced state to its ancestors and descendants and dims the rest; leaving clears it.
-- [ ] **Step 2** — run, confirm RED.
-- [ ] **Step 3: Implement** — consume `lineageLayout`; render band rails in a sticky left gutter; draw each edge from its `points`; compute ancestor+descendant sets on hover (BFS both directions over the original edges) and apply `traced`/`dimmed`.
-- [ ] **Step 4** — `pnpm test && npx tsc --noEmit`.
-- [ ] **Step 5** — commit: `feat(tab3): band rails, routed edges and hover tracing in the lineage`.
+- [x] **Step 1: Write the failing tests** — band rails render with their tier labels; a long edge's path has more than two points (it is routed, not a single curve); hovering a node adds a traced state to its ancestors and descendants and dims the rest; leaving clears it.
+- [x] **Step 2** — run, confirm RED.
+- [x] **Step 3: Implement** — consume `lineageLayout`; render band rails in a sticky left gutter; draw each edge from its `points`; compute ancestor+descendant sets on hover (BFS both directions over the original edges) and apply `traced`/`dimmed`.
+- [x] **Step 4** — `pnpm test && npx tsc --noEmit`.
+- [x] **Step 5** — commit: `feat(tab3): band rails, routed edges and hover tracing in the lineage`.
 
 ---
 
@@ -1921,12 +1921,12 @@ Spec §15.5.
 
 **Files:** Create `frontend/src/components/shared/MultiFilterChips.tsx`; modify `ETLOperational.tsx` (import it instead of its local copy), `LineageFlow.tsx`, `LineageFlow.test.tsx`, `RelatedOverlay.tsx`.
 
-- [ ] **Step 1: Write the failing tests** — the clusters strip lists each distinct cluster with its node count; the filter bar dims rather than removes (node count unchanged, dimmed count stated); a single click opens the Details dock with that node's card; a double click calls `onReseed`; `⌖ center here` in the dock also re-seeds.
-- [ ] **Step 2** — run, confirm RED.
-- [ ] **Step 3: Extract `MultiFilterChips`** to `shared/` verbatim and point `ETLOperational` at it — one implementation, no second copy.
-- [ ] **Step 4: Implement** the clusters strip, the filter bar (dim semantics), and the Details dock; split `onFocus` into `onSelect` (click) and `onReseed` (double-click / dock control), and update `RelatedOverlay` to pass both.
-- [ ] **Step 5** — `pnpm test && npx tsc --noEmit`.
-- [ ] **Step 6** — commit: `feat(tab3): lineage gains clusters, the shared filter bar and a Details dock`.
+- [x] **Step 1: Write the failing tests** — the clusters strip lists each distinct cluster with its node count; the filter bar dims rather than removes (node count unchanged, dimmed count stated); a single click opens the Details dock with that node's card; a double click calls `onReseed`; `⌖ center here` in the dock also re-seeds.
+- [x] **Step 2** — run, confirm RED.
+- [x] **Step 3: Extract `MultiFilterChips`** to `shared/` verbatim and point `ETLOperational` at it — one implementation, no second copy.
+- [x] **Step 4: Implement** the clusters strip, the filter bar (dim semantics), and the Details dock; split `onFocus` into `onSelect` (click) and `onReseed` (double-click / dock control), and update `RelatedOverlay` to pass both.
+- [x] **Step 5** — `pnpm test && npx tsc --noEmit`.
+- [x] **Step 6** — commit: `feat(tab3): lineage gains clusters, the shared filter bar and a Details dock`.
 
 ---
 
@@ -1934,11 +1934,11 @@ Spec §15.5.
 
 Spec §15.6.
 
-- [ ] **Step 1: Write the failing tests** — dragging a node changes only its own rendered position; `reset layout` restores the exact computed coordinates (compare against a fresh `lineageLayout` call); the reset control is absent until something has been dragged.
-- [ ] **Step 2** — run, confirm RED.
-- [ ] **Step 3: Implement** — a `Record<id, {dx,dy}>` in component state applied at render only; pointer-event drag; a `reset layout` button shown only when the record is non-empty.
-- [ ] **Step 4** — `pnpm test && npx tsc --noEmit`.
-- [ ] **Step 5** — commit: `feat(tab3): drag lineage nodes, with a reset that restores the computed layout`.
+- [x] **Step 1: Write the failing tests** — dragging a node changes only its own rendered position; `reset layout` restores the exact computed coordinates (compare against a fresh `lineageLayout` call); the reset control is absent until something has been dragged.
+- [x] **Step 2** — run, confirm RED.
+- [x] **Step 3: Implement** — a `Record<id, {dx,dy}>` in component state applied at render only; pointer-event drag; a `reset layout` button shown only when the record is non-empty.
+- [x] **Step 4** — `pnpm test && npx tsc --noEmit`.
+- [x] **Step 5** — commit: `feat(tab3): drag lineage nodes, with a reset that restores the computed layout`.
 
 ---
 

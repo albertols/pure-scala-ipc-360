@@ -11,6 +11,7 @@ import { OperationalCard } from '../shared/OperationalCard'
 import { pickDefaultRun } from '../shared/RunPicker'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { layerColor, kindPalette } from '../../theme/semanticColors'
+import { MultiFilterChips } from '../shared/MultiFilterChips'
 import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
@@ -1076,7 +1077,11 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
           // The canvas behind stays in sync with the overlay's focus (spec §6.3), so closing
           // leaves the operator where they navigated to rather than snapping back — and every
           // overlay hop joins the same ◀/▶ trail as a canvas click.
-          onFocus={id => { visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan }); setRelatedNode(id) }}
+          // Click selects: the canvas behind tracks the lineage focus, and the hop joins the
+          // same back/forward trail as a canvas click — but the flow itself stays put.
+          onFocus={id => visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan })}
+          // Double click re-seeds the flow on that node.
+          onReseed={id => { visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan }); setRelatedNode(id) }}
           onClose={() => setRelatedNode(null)}
         />
       )}
@@ -1146,59 +1151,6 @@ function GCPLink({ icon, label, href }: { icon: Parameters<typeof GCPIcon>[0]['s
       {label}
       <span style={{ marginLeft: 'auto', fontSize: 10 }}>↗</span>
     </a>
-  )
-}
-
-/**
- * A chip group whose selection is a SET.
- *
- * `ALL` is not an option value — it is the clear control, and it renders active exactly when the
- * set is empty. That keeps "no filter" and "every value selected" from being two states that
- * look different but mean the same thing.
- */
-function MultiFilterChips({
-  testId, label, options, selected, onToggle, colors,
-}: {
-  testId: string
-  label: string
-  options: string[]
-  selected: string[]
-  onToggle: (next: string[]) => void
-  colors?: Record<string, string>
-}) {
-  const toggle = (o: string) =>
-    onToggle(selected.includes(o) ? selected.filter(v => v !== o) : [...selected, o])
-
-  return (
-    <div data-testid={testId} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-      <span style={{ fontSize: 10, color: '#4a5570', marginRight: 2 }}>{label}:</span>
-      <button
-        onClick={() => onToggle([])}
-        aria-pressed={selected.length === 0}
-        style={{
-          padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
-          fontFamily: 'JetBrains Mono, monospace',
-          background: selected.length === 0 ? 'var(--surface-3)' : 'transparent',
-          border: `1px solid ${selected.length === 0 ? 'var(--border)' : 'transparent'}`,
-          color: selected.length === 0 ? '#e2e8f8' : '#4a5570',
-        }}
-      >ALL</button>
-      {options.map(o => {
-        const c = colors?.[o]
-        const on = selected.includes(o)
-        return (
-          <button key={o} onClick={() => toggle(o)} aria-pressed={on} style={{
-            padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
-            fontFamily: 'JetBrains Mono, monospace',
-            background: on ? (c ? `${c}22` : 'var(--surface-3)') : 'transparent',
-            border: `1px solid ${on ? (c ?? 'var(--border)') : 'transparent'}`,
-            // Unselected chips keep their palette colour — the row is the legend (ADR-0017).
-            color: on ? (c ?? '#e2e8f8') : (c ?? '#4a5570'),
-            fontWeight: on ? 700 : 400,
-          }}>{o}</button>
-        )
-      })}
-    </div>
   )
 }
 

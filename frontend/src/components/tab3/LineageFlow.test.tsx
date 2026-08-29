@@ -4,7 +4,8 @@ import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
-import { LineageFlow, layoutLineage, LINEAGE_FOOTPRINT } from './LineageFlow'
+import { LineageFlow, RAIL_W } from './LineageFlow'
+import { layoutLineage, LINEAGE_FOOTPRINT } from './lineageLayout'
 import type { LineageNodeT, LineageT } from '../../api/clusterQueries'
 
 // A 5-node chain with the seed in the middle: two hops upstream, two downstream.
@@ -14,14 +15,22 @@ const NODES: LineageNodeT[] = [
   { id: 'seed', kind: 'table', name: 'ODS.MIDDLE', layer: 'ODS', hop: 0, clusters: [] },
   { id: 'r_down', kind: 'recipe', name: '_ETL_down.json', layer: 'DWH', hop: 1, clusters: ['cl-a'] },
   { id: 't_out', kind: 'table', name: 'DWH.OUT', layer: 'DWH', hop: 2, clusters: [] },
+  // Sibling branch: a descendant of the seed's ANCESTOR, so it is in the lineage but not on
+  // any path through the seed — exactly what tracing should dim.
+  { id: 'r_side', kind: 'recipe', name: '_ETL_side.json', layer: 'CDM', hop: -1, clusters: ['cl-a'] },
+  { id: 't_side', kind: 'table', name: 'CDM.SIDE', layer: 'CDM', hop: 0, clusters: [] },
 ]
 const EDGES: LineageT['edges'] = [
   { from: 't_src', to: 'r_up', kind: 'source' },
   { from: 'r_up', to: 'seed', kind: 'writes' },
   { from: 'seed', to: 'r_down', kind: 'source' },
   { from: 'r_down', to: 't_out', kind: 'writes' },
+  // spans three columns — the case that used to be drawn behind the cards in between
+  { from: 't_src', to: 'r_down', kind: 'lookup' },
+  { from: 't_src', to: 'r_side', kind: 'source' },
+  { from: 'r_side', to: 't_side', kind: 'writes' },
 ]
-const LINEAGE: LineageT = { seed: 'seed', nodes: NODES, edges: EDGES, truncated: false, totalReachable: 5 }
+const LINEAGE: LineageT = { seed: 'seed', nodes: NODES, edges: EDGES, truncated: false, totalReachable: 7 }
 
 const server = setupServer(
   http.get('/api/operational/lineage', ({ request }) => {
@@ -46,52 +55,6 @@ const wrapper = ({ children }: { children: ReactNode }) => (
   </QueryClientProvider>
 )
 
-describe('layoutLineage', () => {
-  it('orders columns by hop, left to right', () => {
-    const placed = layoutLineage(NODES, EDGES)
-    const xById = new Map(placed.map(p => [p.id, p.x]))
-    expect(xById.get('t_src')!).toBeLessThan(xById.get('r_up')!)
-    expect(xById.get('r_up')!).toBeLessThan(xById.get('seed')!)
-    expect(xById.get('seed')!).toBeLessThan(xById.get('r_down')!)
-    expect(xById.get('r_down')!).toBeLessThan(xById.get('t_out')!)
-  })
-
-  it('gives every node with the same hop the same column', () => {
-    const twins: LineageNodeT[] = [
-      ...NODES,
-      { id: 'r_up2', kind: 'recipe', name: '_ETL_up2.json', layer: 'ODS', hop: -1, clusters: [] },
-    ]
-    const placed = layoutLineage(twins, EDGES)
-    const byId = new Map(placed.map(p => [p.id, p]))
-    expect(byId.get('r_up')!.x).toBe(byId.get('r_up2')!.x)
-    expect(byId.get('r_up')!.y).not.toBe(byId.get('r_up2')!.y)
-  })
-
-  it('never overlaps two nodes', () => {
-    const placed = layoutLineage(NODES, EDGES)
-    const { width, height } = LINEAGE_FOOTPRINT
-    for (let i = 0; i < placed.length; i++) {
-      for (let j = i + 1; j < placed.length; j++) {
-        const a = placed[i]!, b = placed[j]!
-        const overlaps = a.x < b.x + width && b.x < a.x + width
-          && a.y < b.y + height && b.y < a.y + height
-        expect(overlaps, `${a.name} overlaps ${b.name}`).toBe(false)
-      }
-    }
-  })
-
-  it('handles a lineage with no edges at all', () => {
-    // A node nothing touches is a real, and diagnostically interesting, case.
-    const placed = layoutLineage([NODES[2]!], [])
-    expect(placed).toHaveLength(1)
-    expect(placed[0]!.x).toBeGreaterThanOrEqual(0)
-  })
-
-  it('is stable — the same input lays out identically twice', () => {
-    expect(layoutLineage(NODES, EDGES)).toEqual(layoutLineage(NODES, EDGES))
-  })
-})
-
 describe('LineageFlow', () => {
   it('renders the whole chain, not just the direct neighbours', async () => {
     // The point of the change: a one-hop list made you reassemble the chain in your head.
@@ -110,12 +73,12 @@ describe('LineageFlow', () => {
   it('counts upstream and downstream separately in the header', async () => {
     render(<LineageFlow nodeId="seed" />, { wrapper })
     expect(await screen.findByTestId('lineage-summary'))
-      .toHaveTextContent(/2 upstream .* 2 downstream/)
+      .toHaveTextContent(/3 upstream .* 2 downstream/)
   })
 
   it('states what it is not showing when the budget was spent', async () => {
     render(<LineageFlow nodeId="big" />, { wrapper })
-    expect(await screen.findByTestId('lineage-truncation')).toHaveTextContent(/5 of 312/)
+    expect(await screen.findByTestId('lineage-truncation')).toHaveTextContent(/7 of 312/)
   })
 
   it('says nothing about truncation when nothing was truncated', async () => {
@@ -124,9 +87,9 @@ describe('LineageFlow', () => {
     expect(screen.queryByTestId('lineage-truncation')).not.toBeInTheDocument()
   })
 
-  it('re-seeds on a node click', async () => {
+  it('reports a single click as a selection', async () => {
     const picked: string[] = []
-    render(<LineageFlow nodeId="seed" onFocus={id => picked.push(id)} />, { wrapper })
+    render(<LineageFlow nodeId="seed" onSelect={id => picked.push(id)} />, { wrapper })
     fireEvent.click(await screen.findByText('DWH.OUT'))
     await waitFor(() => expect(picked).toContain('t_out'))
   })
@@ -155,5 +118,137 @@ describe('LineageFlow — opening position', () => {
     const seedX = parseFloat((screen.getByTestId('lineage-seed') as HTMLElement).style.left)
     expect(scroller.scrollLeft).toBeGreaterThan(0)
     expect(scroller.scrollLeft).toBeLessThanOrEqual(seedX + LINEAGE_FOOTPRINT.width)
+  })
+})
+
+
+// ─── banded layout, tracing, chrome and manual arrangement (spec §15) ───────
+
+describe('LineageFlow — bands', () => {
+  it('labels a rail per tier so a vertical position means something', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    await screen.findByText('ODS.MIDDLE')
+    const rails = [...document.querySelectorAll('[data-testid="lineage-band"]')]
+    expect(rails.length).toBeGreaterThanOrEqual(2)
+    expect(rails.map(r => r.textContent).join(' ')).toMatch(/STG . ODS/)
+  })
+})
+
+describe('LineageFlow — routed edges', () => {
+  it('routes a multi-column edge through waypoints instead of one curve behind the cards', async () => {
+    const { container } = render(<LineageFlow nodeId="seed" />, { wrapper })
+    await screen.findByText('ODS.MIDDLE')
+    const long = container.querySelector('[data-lineage-edge="lookup"]')!
+    // A single cubic has one C; a routed polyline has a segment per column gap.
+    expect((long.getAttribute('d')!.match(/C/g) ?? []).length).toBeGreaterThan(1)
+  })
+})
+
+describe('LineageFlow — tracing', () => {
+  it('highlights the whole path through a node and dims the rest on hover', async () => {
+    const { container } = render(<LineageFlow nodeId="seed" />, { wrapper })
+    await screen.findByText('ODS.MIDDLE')
+    fireEvent.mouseEnter(screen.getByTestId('lineage-seed'))
+
+    const traced = container.querySelectorAll('[data-traced="true"]')
+    const dimmed = container.querySelectorAll('[data-dimmed="true"]')
+    // seed + its ancestors + its descendants, and nothing else
+    expect(traced.length).toBeGreaterThanOrEqual(3)
+    expect(dimmed.length).toBeGreaterThan(0)
+
+    fireEvent.mouseLeave(screen.getByTestId('lineage-seed'))
+    expect(container.querySelectorAll('[data-dimmed="true"]').length).toBe(0)
+  })
+})
+
+describe('LineageFlow — chrome', () => {
+  it('lists the clusters the lineage touches, with a count each', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    expect(await screen.findByTestId('lineage-clusters')).toHaveTextContent('cl-a')
+    // three recipes in the fixture carry cl-a
+    expect(screen.getByTestId('lineage-clusters')).toHaveTextContent('cl-a3')
+  })
+
+  it('renders the same filter bar the main toolbar uses', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    await screen.findByText('ODS.MIDDLE')
+    expect(document.querySelector('[data-testid="lineage-layer-filter"]')).toBeInTheDocument()
+    expect(document.querySelector('[data-testid="lineage-status-filter"]')).toBeInTheDocument()
+  })
+
+  it('DIMS on filter rather than removing, so the paths stay intact', async () => {
+    // Deleting nodes from a lineage severs the very paths that make it a lineage.
+    const { container } = render(<LineageFlow nodeId="seed" />, { wrapper })
+    await screen.findByText('ODS.MIDDLE')
+    const before = container.querySelectorAll('[data-lineage-card]').length
+
+    fireEvent.click([...document.querySelectorAll('[data-testid="lineage-layer-filter"] button')]
+      .find(b => b.textContent === 'DWH')!)
+
+    expect(container.querySelectorAll('[data-lineage-card]').length).toBe(before)
+    expect(container.querySelectorAll('[data-dimmed="true"]').length).toBeGreaterThan(0)
+    expect(screen.getByTestId('lineage-filter-note')).toHaveTextContent(/dimmed/)
+  })
+})
+
+describe('LineageFlow — details and re-seeding', () => {
+  it('opens a Details dock on a single click, like the main view', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    fireEvent.click(await screen.findByText('DWH.OUT'))
+    expect(await screen.findByTestId('lineage-details')).toHaveTextContent('DWH.OUT')
+  })
+
+  it('re-seeds on a double click, not on a single one', async () => {
+    const reseeded: string[] = []
+    render(<LineageFlow nodeId="seed" onReseed={id => reseeded.push(id)} />, { wrapper })
+    const target = await screen.findByText('DWH.OUT')
+    fireEvent.click(target)
+    expect(reseeded).toHaveLength(0)
+    fireEvent.doubleClick(target)
+    expect(reseeded).toEqual(['t_out'])
+  })
+
+  it('offers an explicit centre control in the dock, for discoverability', async () => {
+    const reseeded: string[] = []
+    render(<LineageFlow nodeId="seed" onReseed={id => reseeded.push(id)} />, { wrapper })
+    fireEvent.click(await screen.findByText('DWH.OUT'))
+    fireEvent.click(await screen.findByRole('button', { name: /center lineage here/i }))
+    expect(reseeded).toEqual(['t_out'])
+  })
+})
+
+describe('LineageFlow — manual arrangement', () => {
+  const posOf = (id: string) => {
+    const el = [...document.querySelectorAll<HTMLElement>('[data-lineage-card]')]
+      .find(e => e.getAttribute('data-lineage-card') === id)!
+    return { left: el.style.left, top: el.style.top }
+  }
+
+  it('offers no reset until something has actually been moved', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    await screen.findByText('ODS.MIDDLE')
+    expect(screen.queryByRole('button', { name: /reset layout/i })).not.toBeInTheDocument()
+  })
+
+  it('moves only the dragged node, and resets to the computed default exactly', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    await screen.findByText('ODS.MIDDLE')
+    const before = { seed: posOf('seed'), other: posOf('t_out') }
+
+    const card = [...document.querySelectorAll<HTMLElement>('[data-lineage-card]')]
+      .find(e => e.getAttribute('data-lineage-card') === 'seed')!
+    fireEvent.pointerDown(card, { clientX: 0, clientY: 0, pointerId: 1 })
+    fireEvent.pointerMove(window, { clientX: 40, clientY: 25, pointerId: 1 })
+    fireEvent.pointerUp(window, { pointerId: 1 })
+
+    expect(posOf('seed')).not.toEqual(before.seed)
+    expect(posOf('t_out')).toEqual(before.other)
+
+    fireEvent.click(screen.getByRole('button', { name: /reset layout/i }))
+    expect(posOf('seed')).toEqual(before.seed)
+
+    // and the restored coordinates are the layout function's, not a remembered snapshot
+    const computed = layoutLineage(NODES, EDGES).nodes.find(p => p.id === 'seed')!
+    expect(posOf('seed')).toEqual({ left: `${computed.x + RAIL_W}px`, top: `${computed.y}px` })
   })
 })
