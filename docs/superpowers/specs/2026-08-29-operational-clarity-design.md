@@ -48,8 +48,10 @@ Ground truth for every claim below is cited as `file:line` against the tree at
   caveats"); §7 is proven with a **test-only fixture**, never by editing mock data.
   No committed mock floor moves in this sub-project.
 - **No parser change.** Nothing here touches `parser/`.
-- **No restyle outside Tab 3.** §4 introduces a shared token file, but only Tab 3's
-  operational cards, toolbar and selection strip consume it. Tabs 1/2/4 are untouched.
+- **No restyle outside Tab 3's card**, with one accepted exception recorded as deviation D3:
+  `OperationalCard` is also rendered by Tab 4's detail panel (`ETLDag.tsx:740`), so the palette
+  reaches that one card. Tabs 1 and 2 are untouched, and Tab 4's canvas, clusters and run history
+  are untouched.
 - **No new persisted server state.** §8's search endpoint is read-only and derives
   everything from indexes that already exist.
 - **Not a general graph explorer.** §6's overlay shows one node's direct
@@ -571,6 +573,23 @@ Branch `feat/etl360-operational-clarity`.
 inline into a JUnit `@TempDir`, so `B15ReaderStatusDialectTest` follows that idiom instead of
 introducing a second one. The substance of §7.5 is unchanged and strengthened: no file is
 committed at all, so there is nothing a future corpus walk could pick up by accident.
+
+**D3 — the card palette reaches Tab 4's detail panel.** §2 originally claimed Tabs 1/2/4 were
+untouched. `grep` during Task 8 showed `ETLDag.tsx:740` renders the same shared
+`OperationalCard`, so Tab 4's detail card picks up the new kind/layer/status treatment. Accepted
+rather than gated behind a `palette` prop: it is the same object — a recipe with a run status —
+and giving it two different colour systems in two tabs would be the worse outcome. Tab 4's own
+canvas, cluster list and run history are genuinely untouched. Added to the browser walk.
+
+**D4 — `KindPalette.tint` became `KindPalette.body`, opaque.** The design said
+`rgba(accent, 0.07)`. Cards sit on the dot-grid canvas, so a translucent body lets the grid show
+through the card, which reads as a rendering fault rather than a tint. `body` is the accent
+pre-blended at 10% over `--surface`, kept as a solid hex.
+
+**D5 — the `minimal` density gained a layer chip and a status edge.** It previously rendered
+`LAYER · name` in one span with no status bar at all. Uniform treatment across the three
+densities is what makes §4's claim ("kind is readable from the geometry of the status bar")
+true everywhere rather than at two densities out of three.
 
 **D2 — `B15Reader` gained an `Etl360Properties` constructor parameter.** §7.2 did not say how the
 reader would reach the configured vocabulary. It takes it the way `LayerToLayerService` already

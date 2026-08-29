@@ -1067,7 +1067,7 @@ git commit -m "feat(tab3): one semantic palette for kind, layer and status"
 **Interfaces:**
 - Consumes: `layerColor`, `kindPalette`, `statusColor`, `statusBg`, `CARD_SHADOW` (Task 7).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { render, screen } from '@testing-library/react'
@@ -1115,12 +1115,12 @@ describe('card palette', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test OperationalCard`
 Expected: FAIL — no `operational-card` testid; layer chip colour is kind-derived.
 
-- [ ] **Step 3: Restyle all three densities**
+- [x] **Step 3: Restyle all three densities**
 
 In each of the three return branches (`:52`, `:79`, `:128`):
 - add `data-testid="operational-card"`
@@ -1131,17 +1131,17 @@ In each of the three return branches (`:52`, `:79`, `:128`):
 
 Apply the status edge to the `minimal` branch too — today it has no status bar at all, only a dot.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test OperationalCard && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 5: Confirm Tabs 1/2/4 are untouched**
+- [x] **Step 5: Confirm Tabs 1/2/4 are untouched**
 
 Run: `cd frontend && pnpm test`
 Expected: PASS. `OperationalCard` is used only by Tab 3 and the Tab 3 detail panel — confirm with `grep -rn "OperationalCard" frontend/src --include=*.tsx | grep -v test` before committing, and record the result in the commit body.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/shared/OperationalCard.tsx \

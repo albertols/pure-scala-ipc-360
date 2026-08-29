@@ -54,13 +54,16 @@ describe('kind palette', () => {
     expect(layerColours.has(KIND_PALETTE.recipe.accent)).toBe(false)
   })
 
-  it('gives each kind a tint and a border derived from its own accent', () => {
+  it('gives each kind an OPAQUE body, since cards sit on the dot-grid canvas', () => {
+    // A translucent body lets the grid show through the card, which reads as a rendering fault
+    // rather than a tint.
     for (const kind of ['table', 'recipe'] as const) {
-      const p = kindPalette(kind)
-      expect(p.tint).toContain('rgba(')
-      expect(p.border).toContain('rgba(')
-      expect(p.tint).not.toBe(p.border)
+      expect(kindPalette(kind).body).toMatch(/^#[0-9a-f]{6}$/)
     }
+  })
+
+  it('keeps the two kind bodies visibly distinct', () => {
+    expect(kindPalette('table').body).not.toBe(kindPalette('recipe').body)
   })
 })
 

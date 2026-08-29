@@ -5,21 +5,27 @@ import { buildLoggingUrl, buildDataprocJobUrl } from '../../api/gcpLinks'
 import { RunPicker, pickDefaultRun } from './RunPicker'
 import { GCPIcon } from './GCPIcon'
 import { InfoTooltip } from './InfoTooltip'
+import {
+  layerColor, kindPalette, statusColor, statusBg, CARD_SHADOW, STATUS_EDGE_PX,
+} from '../../theme/semanticColors'
 
 export type { CardDensity } from '../../types'
 
-const STATUS_COLOR: Record<string, string> = {
-  OK: '#34d399',
-  KO: '#f87171',
-  RUNNING: '#fbbf24',
-  PENDING: '#4a5570',
-}
+// Colour comes from `theme/semanticColors.ts` — the one place that maps a layer, a kind or a
+// status to a value (ADR-0017). The local STATUS_COLOR/STATUS_BG maps that used to live here
+// were half of the problem: the other half was the LAYER chip reading `card.kind`, so the same
+// layer rendered in two different colours depending on what kind of node carried it.
 
-const STATUS_BG: Record<string, string> = {
-  OK: 'rgba(52,211,153,0.08)',
-  KO: 'rgba(248,113,113,0.08)',
-  RUNNING: 'rgba(251,191,36,0.08)',
-  PENDING: 'rgba(74,85,112,0.08)',
+/** Chip for the node's LAYER — medallion tier, never the kind accent. */
+function LayerChip({ layer }: { layer: string }) {
+  const c = layerColor(layer)
+  return (
+    <span data-testid="layer-chip" style={{
+      fontSize: 9, padding: '1px 5px', borderRadius: 3,
+      background: `${c}26`, color: c, border: `1px solid ${c}44`,
+      fontFamily: 'JetBrains Mono, monospace', flexShrink: 0,
+    }}>{layer}</span>
+  )
 }
 
 export function OperationalCard({
@@ -36,8 +42,14 @@ export function OperationalCard({
   onSelectRun?: (run: RunT) => void
   config?: AppConfig
 }) {
-  const color = STATUS_COLOR[card.status]
-  const bg = STATUS_BG[card.status]
+  const color = statusColor(card.status)
+  const bg = statusBg(card.status)
+  const kp = kindPalette(card.kind)
+  // The status bar's EDGE encodes the kind: left for a recipe, top for a table — so kind stays
+  // readable from geometry, not hue alone.
+  const edge = kp.statusEdge === 'left'
+    ? { borderLeftWidth: STATUS_EDGE_PX, borderLeftColor: color, borderLeftStyle: 'solid' as const }
+    : { borderTopWidth: STATUS_EDGE_PX, borderTopColor: color, borderTopStyle: 'solid' as const }
 
   const selectedRun = pickDefaultRun(runs, selectedRunDate)
   const linkJobId = selectedRun?.jobId || card.jobId || ''
@@ -50,23 +62,27 @@ export function OperationalCard({
   if (density === 'minimal') {
     return (
       <div
+        data-testid="operational-card"
         onClick={onClick}
         style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          height: 26, padding: '0 8px',
-          background: 'var(--surface)',
-          border: `1px solid ${selected ? color : 'var(--border)'}`,
+          display: 'flex', alignItems: 'center', gap: 5,
+          height: 26, padding: '0 7px',
+          background: kp.body,
+          border: `1px solid ${selected ? color : kp.border}`,
+          ...edge,
           borderRadius: 6,
+          boxShadow: CARD_SHADOW,
           cursor: onClick ? 'pointer' : 'default',
           minWidth: 160,
         }}
       >
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+        <LayerChip layer={card.layer} />
         <span style={{
           fontSize: 10, color: '#e2e8f8', flex: 1, minWidth: 0,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
-          {card.layer} · {card.name}
+          {card.name}
         </span>
         <span style={{ fontSize: 9, fontWeight: 700, color, flexShrink: 0, fontFamily: 'JetBrains Mono, monospace' }}>
           {card.status}
@@ -78,11 +94,13 @@ export function OperationalCard({
   if (density === 'compact') {
     return (
       <div
+        data-testid="operational-card"
         onClick={onClick}
         style={{
-          background: 'var(--surface)',
-          border: `1px solid ${selected ? color : 'var(--border)'}`,
-          borderLeft: `3px solid ${color}`,
+          background: kp.body,
+          border: `1px solid ${selected ? color : kp.border}`,
+          ...edge,
+          boxShadow: CARD_SHADOW,
           borderRadius: 8,
           padding: '8px 10px',
           display: 'flex', alignItems: 'center', gap: 8,
@@ -99,12 +117,7 @@ export function OperationalCard({
             {card.name}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-            <span style={{
-              fontSize: 9, padding: '1px 5px', borderRadius: 3,
-              background: card.kind === 'table' ? 'rgba(79,156,249,0.15)' : 'rgba(251,191,36,0.15)',
-              color: card.kind === 'table' ? '#4f9cf9' : '#fbbf24',
-              fontFamily: 'JetBrains Mono, monospace',
-            }}>{card.layer}</span>
+            <LayerChip layer={card.layer} />
             <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{card.kind}</span>
           </div>
         </div>
@@ -128,16 +141,17 @@ export function OperationalCard({
 
   return (
     <div
+      data-testid="operational-card"
       onClick={onClick}
       style={{
-        background: 'var(--surface)',
-        border: `1px solid ${selected ? color : 'var(--border)'}`,
-        borderLeft: `3px solid ${color}`,
+        background: kp.body,
+        border: `1px solid ${selected ? color : kp.border}`,
+        ...edge,
         borderRadius: 8,
         padding: '12px 14px',
         cursor: onClick ? 'pointer' : 'default',
         minWidth: 240,
-        boxShadow: selected ? `0 0 0 1px ${color}44` : 'none',
+        boxShadow: selected ? `${CARD_SHADOW}, 0 0 0 1px ${color}44` : CARD_SHADOW,
         transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
     >
@@ -153,12 +167,7 @@ export function OperationalCard({
             {card.name}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-            <span style={{
-              fontSize: 9, padding: '1px 5px', borderRadius: 3,
-              background: card.kind === 'table' ? 'rgba(79,156,249,0.15)' : 'rgba(251,191,36,0.15)',
-              color: card.kind === 'table' ? '#4f9cf9' : '#fbbf24',
-              fontFamily: 'JetBrains Mono, monospace',
-            }}>{card.layer}</span>
+            <LayerChip layer={card.layer} />
             <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{card.kind}</span>
             {card.kind === 'table'
               ? <GCPIcon service="bigquery" size={12} />
