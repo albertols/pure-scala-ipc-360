@@ -1864,11 +1864,11 @@ Spec §14.
 
 ## Task 21: gates, docs and the second browser walk
 
-- [ ] **Step 1: Extend `validate_loop.sh`** — curl `/api/operational/lineage` for a known CAS node; assert the seed is `hop 0`, that both a negative and a positive hop are present, that every edge endpoint is in `nodes`, and that `limit=2` sets `truncated`.
-- [ ] **Step 2: Run `make test`, `make check`, `make validate-loop`** — all pass, every committed mock floor unchanged.
-- [ ] **Step 3: Update docs** — `docs/architecture.md` endpoint table, ADR-0019 (extend to cover lineage, or file ADR-0020 if the decision is genuinely separate), root `CLAUDE.md`.
-- [ ] **Step 4: Second browser walk** — verify the lineage flow reads upstream/downstream with the seed marked, that both opening behaviours still work, that multi-select holds two layers and two statuses at once, and that the chips AND canvas both read STG→ODS→ETL→DWH→CDM→RDM→QDM. Record results in spec §11.1.
-- [ ] **Step 5: Commit** — message `docs+gate: lineage endpoint gated, second acceptance walk recorded`.
+- [x] **Step 1: Extend `validate_loop.sh`** — curl `/api/operational/lineage` for a known CAS node; assert the seed is `hop 0`, that both a negative and a positive hop are present, that every edge endpoint is in `nodes`, and that `limit=2` sets `truncated`.
+- [x] **Step 2: Run `make test`, `make check`, `make validate-loop`** — all pass, every committed mock floor unchanged.
+- [x] **Step 3: Update docs** — `docs/architecture.md` endpoint table, ADR-0019 (extend to cover lineage, or file ADR-0020 if the decision is genuinely separate), root `CLAUDE.md`.
+- [x] **Step 4: Second browser walk** — verify the lineage flow reads upstream/downstream with the seed marked, that both opening behaviours still work, that multi-select holds two layers and two statuses at once, and that the chips AND canvas both read STG→ODS→ETL→DWH→CDM→RDM→QDM. Record results in spec §11.1.
+- [x] **Step 5: Commit** — message `docs+gate: lineage endpoint gated, second acceptance walk recorded`.
 
 ---
 

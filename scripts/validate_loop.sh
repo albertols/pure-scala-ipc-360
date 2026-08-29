@@ -166,9 +166,9 @@ for e in edges:
     assert e["from"] in ids and e["to"] in ids, "edge endpoint outside the returned nodes"
 assert not d["truncated"], "committed mock lineage should fit the default budget"
 assert d["totalReachable"] == len(nodes), "totalReachable disagrees with an untruncated result"
-print(f"[validate-loop] lineage: {len(nodes)} nodes "
-      f"({sum(1 for n in nodes if n[\"hop\"] < 0)} up, {sum(1 for n in nodes if n[\"hop\"] > 0)} down), "
-      f"{len(edges)} edges")
+up = sum(1 for n in nodes if n["hop"] < 0)
+down = sum(1 for n in nodes if n["hop"] > 0)
+print(f"[validate-loop] lineage: {len(nodes)} nodes ({up} up, {down} down), {len(edges)} edges")
 ' || fail "lineage"
 # Bounded like /search: a capped flow must SAY it was capped.
 curl -sf "localhost:8080/api/operational/lineage?node=table:$SEED&limit=2" | python3 -c '

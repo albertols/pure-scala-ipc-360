@@ -672,6 +672,31 @@ detailed card renders — held: no detailed card was clipped or overlapped at an
 The temp-composer fixture used for criteria 9 and 10 was deleted afterwards and the backend
 restored to the committed mock (`composer tier: mock`, `unrecognizedStatuses: []`, 417 rows).
 
+### 11.2 Second acceptance walk — §13 and §14 (2026-08-29)
+
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| 13a | "Show all related" is a lineage flow, not a neighbour list | **PASS** | Seeded on `_ETL_m_CAS_DWH_EVENTS_FACT.json`: **26 nodes over 9 hop columns, 12 upstream · 12 downstream, 28 edges** — a genuine multi-hop flow well past one hop. |
+| 13b | Seed is centred and marked | **PASS** | Ringed in its kind accent at the `◉ selected` column; hop ruler reads `−3 −2 −1 ◉ selected +1 +2`. Opening scroll position lands the seed in view (`scrollLeft 1111`, seed within the scroller's box). |
+| 13c | Palette reused unchanged | **PASS** | Blue table bodies / orange recipe bodies, tier-coloured layer chips (ODS bronze, ETL silver, CDM gold, OUTPUT platinum, QDM gold), OK-green and KO-red status edges — top edge on tables, left on recipes. |
+| 13d | Both opening behaviours kept | **PASS** | Left click opens the hovering window; the same `?related=` URL loaded standalone in a second tab renders the identical flow, full-viewport, no shell. |
+| 13e | Lineage crosses cluster boundaries and is bounded | **PASS** | `make validate-loop` asserts both directions reached, every edge endpoint present, and `limit=2` → `truncated` with a surviving `totalReachable`. Gate reports `26 nodes (13 up, 11 down), 28 edges`. |
+| 14a | Layer and Status hold more than one value | **PASS** | 18 cards → DWH 5 → +CDM **8** (a real union) → deselect DWH → CDM's 3 → `ALL` clears to 18. Status: OK 8 → +KO **10**. Both chips report `aria-pressed=true` simultaneously. |
+| 14b | Layer order STG, ODS, ETL, DWH, CDM, RDM, QDM | **PASS** *(after a fix)* | Chips render `ALL · ODS · ETL · DWH · CDM · RDM · QDM` (STG absent — this cluster has no STG node). Canvas columns follow the same rank. |
+
+**14b is why this walk mattered.** The first attempt rendered `CDM · DWH · ETL · ODS · RDM · QDM` —
+`graph.layers` preserved the backend's `meta.layers` arrival order and only rank-sorted the
+*appended* extras, so reordering `LAYER_RANK` moved the canvas columns and left the toolbar
+untouched: the exact "one dimension, two orderings" §4 exists to prevent. The unit test had
+passed **vacuously** — the tab's fixture graph carries a single layer, so "are these indices
+ascending?" was true of a one-element list. Fixed by sorting the whole union by rank
+(`relationshipsAdapter.ts`), and the order assertion moved to a genuine multi-layer adapter
+fixture. Recorded as deviation D6.
+
+A second finding, also browser-only: the flow opened scrolled to its furthest ancestor (hop −5),
+leaving the node the operator had just clicked off-screen. `LineageFlow` now centres the seed on
+open and on every re-seed.
+
 ---
 
 ## 12. Deviations
@@ -698,6 +723,16 @@ pre-blended at 10% over `--surface`, kept as a solid hex.
 `LAYER · name` in one span with no status bar at all. Uniform treatment across the three
 densities is what makes §4's claim ("kind is readable from the geometry of the status bar")
 true everywhere rather than at two densities out of three.
+
+**D6 — `graph.layers` is now rank-sorted as a whole, not "meta order then extras".** §14.2 said
+the reorder would reach the chips; it did not, because the adapter preserved `meta.layers`'
+arrival order. The completeness guarantee (every layer on a card gets a chip) is unchanged — the
+union is still taken — but the union is now sorted by `LAYER_RANK`. Found in the browser walk,
+not by the unit test, which had a single-layer fixture and therefore asserted nothing.
+
+**D7 — `LineageFlow` scrolls the seed into view on mount.** Not in §13.3, which described the
+layout but not the opening viewport. A wide lineage lays out from hop −N, so the view opened on
+a column the operator had not asked about.
 
 **D2 — `B15Reader` gained an `Etl360Properties` constructor parameter.** §7.2 did not say how the
 reader would reach the configured vocabulary. It takes it the way `LayerToLayerService` already

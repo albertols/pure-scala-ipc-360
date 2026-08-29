@@ -1251,13 +1251,13 @@ describe('multi-select Layer and Status filters', () => {
     expect(dwh).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('orders the Layer chips STG, ODS, ETL, DWH, CDM, RDM, QDM', async () => {
+  it('renders ALL first, as the clear control rather than a value', async () => {
     renderTab()
     await screen.findByText('_ETL_m_CAS_T.json')
     const labels = [...document.querySelectorAll('[data-testid="layer-filter"] button')]
       .map(b => b.textContent)
-    const wanted = ['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM']
-    const present = wanted.filter(l => labels.includes(l))
-    expect(present.map(l => labels.indexOf(l))).toEqual([...present.map(l => labels.indexOf(l))].sort((a, b) => a - b))
+    expect(labels[0]).toBe('ALL')
+    // Chip ORDER is asserted in relationshipsAdapter.test.ts, against a multi-layer fixture —
+    // this tab's graph has a single layer, which made an order assertion here vacuous.
   })
 })

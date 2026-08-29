@@ -327,11 +327,21 @@ export function toOperationalGraph(
   // gets bands, bandless). So: meta order first, untouched, then every OTHER layer actually
   // present on the returned cards appended in band order. Subsumes the old UNKNOWN special case,
   // which was the same bug seen from one angle only.
-  const metaLayers = graph.meta?.layers ?? []
-  const layers = [...metaLayers]
-  const extras = [...new Set(orderedCards.map(c => c.layer))].filter(l => !layers.includes(l))
-  extras.sort((a, b) => rankOf(a) - rankOf(b) || a.localeCompare(b))
-  layers.push(...extras)
+  // Two guarantees, and they are separate:
+  //
+  // COMPLETENESS — every layer that can reach a card must have a chip. `meta.layers` is derived
+  // from the CORE entries of a scoped request (RelationshipService.java:135), so a 1-hop
+  // neighbour whose layer sits outside the selection is simply missing from it; feeding the chips
+  // straight from `meta.layers` would leave those cards with no chip that can reach them. Hence
+  // the union with the layers actually present on the returned cards.
+  //
+  // ORDER — the union is then sorted by LAYER_RANK, whole. It used to be "meta order first, then
+  // extras sorted", which quietly made `meta`'s arrival order the chip order: reordering
+  // LAYER_RANK moved the canvas columns and left the toolbar alone, giving one dimension two
+  // orderings — the exact thing ADR-0017 exists to prevent. Caught in a browser walk, not by a
+  // unit test, because the fixture had a single layer.
+  const layers = [...new Set([...(graph.meta?.layers ?? []), ...orderedCards.map(c => c.layer)])]
+  layers.sort((a, b) => rankOf(a) - rankOf(b) || a.localeCompare(b))
 
   return { cards: orderedCards, edges, layers }
 }

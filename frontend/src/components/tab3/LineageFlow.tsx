@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useLineage, LINEAGE_DEFAULT_LIMIT, LINEAGE_MAX_LIMIT,
   type LineageNodeT, type LineageT,
@@ -90,12 +90,23 @@ export function LineageFlow({
 }) {
   const [limit, setLimit] = useState(LINEAGE_DEFAULT_LIMIT)
   const lineage = useLineage(nodeId, limit)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
 
   const placed = useMemo(
     () => (lineage.data ? layoutLineage(lineage.data.nodes, lineage.data.edges) : []),
     [lineage.data],
   )
   const posById = useMemo(() => new Map(placed.map(p => [p.id, p])), [placed])
+
+  // Centre the SEED on open and on every re-seed. A wide lineage lays out from its furthest
+  // ancestor, so the natural scroll position is hop −N — the view would open on a column of
+  // nodes the operator did not ask about, with the node they clicked off-screen to the right.
+  const seedX = posById.get(lineage.data?.seed ?? '')?.x
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || seedX === undefined) return
+    el.scrollLeft = Math.max(0, seedX + LINEAGE_FOOTPRINT.width / 2 - el.clientWidth / 2)
+  }, [seedX])
 
   if (lineage.isLoading) {
     return <div style={{ padding: 16, fontSize: 12, color: 'var(--text-dim)' }}>Tracing the lineage…</div>
@@ -156,7 +167,7 @@ export function LineageFlow({
         <span style={{ color: 'var(--text-dim)', fontSize: 10 }}>upstream ◀── seed ──▶ downstream</span>
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+      <div ref={scrollRef} data-testid="lineage-scroll" style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <div style={{ position: 'relative', width, height }}>
           <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
             <defs>

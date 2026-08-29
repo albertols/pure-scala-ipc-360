@@ -416,3 +416,40 @@ describe('layer order', () => {
     expect(x('e')).toBeLessThan(x('d'))
   })
 })
+
+describe('graph.layers — the list the filter chips render', () => {
+  const multiLayer = (metaLayers: string[]) => ({
+    nodes: [
+      { id: 'q', kind: 'table', name: 'QDM.T', layer: 'QDM' },
+      { id: 'e', kind: 'table', name: 'ETL.T', layer: 'ETL' },
+      { id: 's', kind: 'table', name: 'STG.T', layer: 'STG' },
+      { id: 'd', kind: 'table', name: 'DWH.T', layer: 'DWH' },
+      { id: 'o', kind: 'table', name: 'ODS.T', layer: 'ODS' },
+      { id: 'c', kind: 'table', name: 'CDM.T', layer: 'CDM' },
+      { id: 'r', kind: 'table', name: 'RDM.T', layer: 'RDM' },
+    ],
+    edges: [],
+    meta: { layers: metaLayers },
+  })
+
+  it('is rank-ordered regardless of the order meta happened to arrive in', () => {
+    // The bug this covers: `layers` used to be "meta order first, extras appended", which made
+    // the backend's arrival order the CHIP order — so reordering LAYER_RANK moved the canvas
+    // columns and left the toolbar alone. One dimension, one ordering.
+    const scrambled = toOperationalGraph(
+      multiLayer(['CDM', 'DWH', 'ETL', 'ODS', 'RDM', 'QDM', 'STG']) as never, undefined, null)
+    expect(scrambled.layers).toEqual(['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM'])
+  })
+
+  it('still includes a layer present only on a card, never dropping a chip', () => {
+    // Completeness is the OTHER guarantee: a 1-hop neighbour's layer is absent from meta.layers
+    // on a scoped request, and its cards would otherwise have no chip that can reach them.
+    const partial = toOperationalGraph(multiLayer(['STG', 'ODS']) as never, undefined, null)
+    expect(partial.layers).toEqual(['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM'])
+  })
+
+  it('never repeats a layer that is in both meta and the cards', () => {
+    const dup = toOperationalGraph(multiLayer(['STG', 'STG', 'DWH']) as never, undefined, null)
+    expect(new Set(dup.layers).size).toBe(dup.layers.length)
+  })
+})

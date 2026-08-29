@@ -142,3 +142,18 @@ describe('LineageFlow', () => {
     expect(await screen.findByTestId('lineage-empty')).toBeInTheDocument()
   })
 })
+
+describe('LineageFlow — opening position', () => {
+  it('scrolls the seed into view instead of opening on the furthest ancestor', async () => {
+    // A wide lineage lays out from hop -N, so the natural scroll position shows a column the
+    // operator did not ask about, with the node they clicked off-screen to the right.
+    const { container } = render(<LineageFlow nodeId="seed" />, { wrapper })
+    await screen.findByTestId('lineage-seed')
+    const scroller = container.querySelector<HTMLElement>('[data-testid="lineage-scroll"]')!
+    // jsdom reports clientWidth 0, so the computed target collapses to the seed's own x; the
+    // assertion that matters is that it moved OFF the far-left origin toward the seed.
+    const seedX = parseFloat((screen.getByTestId('lineage-seed') as HTMLElement).style.left)
+    expect(scroller.scrollLeft).toBeGreaterThan(0)
+    expect(scroller.scrollLeft).toBeLessThanOrEqual(seedX + LINEAGE_FOOTPRINT.width)
+  })
+})
