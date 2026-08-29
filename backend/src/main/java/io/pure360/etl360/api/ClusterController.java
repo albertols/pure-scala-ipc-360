@@ -5,10 +5,12 @@ import io.pure360.etl360.api.dto.ClusterIndexDto;
 import io.pure360.etl360.api.dto.LayerToLayerEntryDto;
 import io.pure360.etl360.api.dto.RelationshipsDto;
 import io.pure360.etl360.api.dto.RunsDto;
+import io.pure360.etl360.api.dto.LineageDto;
 import io.pure360.etl360.api.dto.SearchHitsDto;
 import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.service.ClusterIndexService;
 import io.pure360.etl360.service.LayerToLayerService;
+import io.pure360.etl360.service.LineageService;
 import io.pure360.etl360.service.RelationshipService;
 import io.pure360.etl360.service.support.InvalidRequestException;
 import io.pure360.etl360.service.support.NotFoundException;
@@ -43,13 +45,16 @@ public class ClusterController {
     private final ClusterIndexService index;
     private final LayerToLayerService layerToLayer;
     private final RelationshipService relationships;
+    private final LineageService lineage;
     private final DataRoots roots;
 
     public ClusterController(ClusterIndexService index, LayerToLayerService layerToLayer,
-                             RelationshipService relationships, DataRoots roots) {
+                             RelationshipService relationships, LineageService lineage,
+                             DataRoots roots) {
         this.index = index;
         this.layerToLayer = layerToLayer;
         this.relationships = relationships;
+        this.lineage = lineage;
         this.roots = roots;
     }
 
@@ -142,6 +147,26 @@ public class ClusterController {
             out.put(recipe, List.copyOf(newestFirst));
         }
         return new RunsDto(limit, out);
+    }
+
+    static final int LINEAGE_DEFAULT_LIMIT = 150;
+    static final int LINEAGE_MAX_LIMIT = 600;
+
+    /**
+     * One node's transitive upstream AND downstream closure — see {@link LineageDto} and ADR-0020.
+     *
+     * <p>Unlike {@code /search}, an unknown {@code node} IS a 404: the caller here has a node id
+     * in hand (it came from a graph this server served), so a miss means something is genuinely
+     * wrong rather than that the user is still typing.
+     */
+    @GetMapping("/lineage")
+    public LineageDto lineage(@RequestParam("node") String node,
+                              @RequestParam(name = "limit", defaultValue = "" + LINEAGE_DEFAULT_LIMIT) int limit) {
+        if (limit < 1 || limit > LINEAGE_MAX_LIMIT) {
+            throw new InvalidRequestException(
+                "limit must be between 1 and " + LINEAGE_MAX_LIMIT + ", got " + limit);
+        }
+        return lineage.lineage(node, limit);
     }
 
     static final int SEARCH_MIN_Q = 2;

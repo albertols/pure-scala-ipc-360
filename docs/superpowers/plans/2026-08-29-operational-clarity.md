@@ -1812,12 +1812,12 @@ Spec §13.2. Backend-only, bounded, cycle-safe.
 - Consumes: `RelationshipService.graph()`, `ClusterIndexService.clustersByRecipe()`.
 - Produces: `GET /api/operational/lineage?node=&limit=` -> `LineageDto { seed, nodes[], edges[], truncated, totalReachable }`, `LineageNodeDto { id, kind, name, layer, hop, clusters[] }` where `hop` is signed. Consumed by Task 19.
 
-- [ ] **Step 1: Write the failing contract test** — seed a known CAS table; assert the seed has `hop == 0`, at least one node with `hop < 0` and one with `hop > 0`, that every returned edge has both endpoints in `nodes`, that an unknown node 404s, that `limit` bounds the result and sets `truncated`, that an over-range limit 400s, and that the response is deterministic across two calls.
-- [ ] **Step 2: Run it and confirm it fails** — `mvn -pl backend test -Dtest=LineageContractTest`, expect 404 on the new path.
-- [ ] **Step 3: Implement `LineageService`** — BFS outward from the seed over an undirected adjacency built from the graph's edges, recording the signed hop (upstream when traversing an incoming edge, downstream when traversing an outgoing one), a visited set for cycle safety, and a node budget that cuts the furthest hops because BFS reaches them last. Return `totalReachable` by continuing the traversal for counting after the budget is spent.
-- [ ] **Step 4: Wire the endpoint** in `ClusterController`, mirroring `search`'s bounds idiom (`InvalidRequestException` for an over-range limit, `NotFoundException` for an unknown node).
-- [ ] **Step 5: Run the test and the full backend suite** — `mvn -am -pl backend test`, expect PASS with no existing count changed.
-- [ ] **Step 6: Commit** — `git add` the four paths plus the plan; message `feat(api): GET /api/operational/lineage — bounded upstream+downstream closure`.
+- [x] **Step 1: Write the failing contract test** — seed a known CAS table; assert the seed has `hop == 0`, at least one node with `hop < 0` and one with `hop > 0`, that every returned edge has both endpoints in `nodes`, that an unknown node 404s, that `limit` bounds the result and sets `truncated`, that an over-range limit 400s, and that the response is deterministic across two calls.
+- [x] **Step 2: Run it and confirm it fails** — `mvn -pl backend test -Dtest=LineageContractTest`, expect 404 on the new path.
+- [x] **Step 3: Implement `LineageService`** — BFS outward from the seed over an undirected adjacency built from the graph's edges, recording the signed hop (upstream when traversing an incoming edge, downstream when traversing an outgoing one), a visited set for cycle safety, and a node budget that cuts the furthest hops because BFS reaches them last. Return `totalReachable` by continuing the traversal for counting after the budget is spent.
+- [x] **Step 4: Wire the endpoint** in `ClusterController`, mirroring `search`'s bounds idiom (`InvalidRequestException` for an over-range limit, `NotFoundException` for an unknown node).
+- [x] **Step 5: Run the test and the full backend suite** — `mvn -am -pl backend test`, expect PASS with no existing count changed.
+- [x] **Step 6: Commit** — `git add` the four paths plus the plan; message `feat(api): GET /api/operational/lineage — bounded upstream+downstream closure`.
 
 ---
 
