@@ -1218,7 +1218,7 @@ Defects 2 and 5. Both are small, both are pure presentation, and a reviewer woul
 - Modify: `frontend/src/components/tab3/SelectionStrip.tsx:46,59`
 - Modify: `frontend/src/components/tab3/ETLOperational.test.tsx`, `SelectionStrip.test.tsx`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // ETLOperational.test.tsx
@@ -1245,12 +1245,12 @@ it('renders the stats at readable contrast on a darker strip', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd frontend && pnpm test -- SelectionStrip ETLOperational`
 Expected: FAIL — no `snapshot-chip`/`selection-stats` testids; chip is unconditional.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `RelationshipGraph` gains `summaryVisible: boolean` in its props interface (`:83-105`) and gates the chip:
 
@@ -1265,12 +1265,12 @@ At the call site (`:861`), pass `summaryVisible={!view.paneCollapsed}`.
 
 `SelectionStrip.tsx`: add `data-testid="selection-strip"` with `padding: '4px 10px'` and `background: 'var(--bg)'` at `:46`; add `data-testid="selection-stats"` with `color: 'var(--text-muted)'` at `:59`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/ETLOperational.tsx frontend/src/components/tab3/SelectionStrip.tsx \

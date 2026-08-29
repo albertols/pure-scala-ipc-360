@@ -41,9 +41,12 @@ export function SelectionStrip({ summary }: { summary: SelectionSummary | null }
 
   return (
     <div
+      data-testid="selection-strip"
       style={{
         display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-        padding: '6px 10px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border-subtle)',
+        // Shorter, and DARKER than the surface it used to share with the toolbar: the stats sat
+        // at --text-dim on --surface-2 and all but vanished beside the cluster chips.
+        padding: '4px 10px', background: 'var(--bg)', borderBottom: '1px solid var(--border-subtle)',
       }}
     >
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -56,7 +59,8 @@ export function SelectionStrip({ summary }: { summary: SelectionSummary | null }
           </span>
         ))}
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text-dim)', fontFamily: 'JetBrains Mono, monospace' }}>
+      <div data-testid="selection-stats"
+        style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
         {`${nf.format(selectedClusters.length)} clusters · ${nf.format(s.recipes)} recipes · ${nf.format(s.dates)} dates · ${nf.format(s.ok)} OK · ${nf.format(s.ko)} KO · ${nf.format(s.nodes)} nodes · ${nf.format(s.neighbors)} from neighbours`}
       </div>
       <button

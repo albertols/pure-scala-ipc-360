@@ -82,6 +82,7 @@ const RelationshipGraph = memo(function RelationshipGraph({
   pan,
   onPan,
   summaryItems,
+  summaryVisible,
   runsByRecipe,
   selectedRunDate,
   onSelectRun,
@@ -103,6 +104,8 @@ const RelationshipGraph = memo(function RelationshipGraph({
    * footer (spec §7.1's Tab 3 row). Empty when there's no selected-date
    * snapshot loaded yet. */
   summaryItems: SummaryItem[]
+  /** False while the cluster pane is collapsed — see the chip's own comment below. */
+  summaryVisible: boolean
   /** Task 14: chunked `/api/operational/runs` result, keyed by recipe filename. */
   runsByRecipe: Record<string, RunT[]>
   selectedRunDate: string | null
@@ -322,9 +325,13 @@ const RelationshipGraph = memo(function RelationshipGraph({
       )}
 
       {/* Task 16: view-aware corpus summary — floating bottom-left chip (no
-          left rail to dock into, unlike Tabs 1/2/4). */}
-      {summaryItems.length > 0 && (
-        <div style={{
+          left rail to dock into, unlike Tabs 1/2/4).
+          Sub-project 12: gated on the pane, because collapsing the pane is the "maximum canvas"
+          gesture and this chip floats over the very cards it just made room for. An explicit
+          PROP rather than a store read inside this component, which is memo'd over its props —
+          a store read would slip past that memo boundary. */}
+      {summaryVisible && summaryItems.length > 0 && (
+        <div data-testid="snapshot-chip" style={{
           position: 'absolute', bottom: 14, left: 14,
           padding: '5px 10px', background: 'var(--surface)', border: '1px solid var(--border)',
           borderRadius: 5,
@@ -871,6 +878,7 @@ export function ETLOperational() {
           pan={view.pan}
           onPan={onPan}
           summaryItems={summaryItems}
+          summaryVisible={!view.paneCollapsed}
           runsByRecipe={runsByRecipe}
           density={view.density}
           containerRef={graphContainerRef}

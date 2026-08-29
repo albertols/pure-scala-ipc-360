@@ -52,3 +52,23 @@ describe('SelectionStrip', () => {
     expect(container).toBeEmptyDOMElement()
   })
 })
+
+// ─── strip density and legibility (sub-project 12, defect 5) ────────────────
+
+describe('SelectionStrip — density and contrast', () => {
+  it('reads its stats at muted contrast on a darker strip, not dim-on-surface', () => {
+    // Shipped as --text-dim (#4a5570) on --surface-2: the numbers all but vanished next to the
+    // cluster chips beside them.
+    setOperationalView({ selectedClusters: ['cl-a'] })
+    render(<SelectionStrip summary={SUMMARY} />)
+
+    expect(screen.getByTestId('selection-stats')).toHaveStyle({ color: 'var(--text-muted)' })
+    expect(screen.getByTestId('selection-strip')).toHaveStyle({ background: 'var(--bg)' })
+  })
+
+  it('is shorter than it was', () => {
+    setOperationalView({ selectedClusters: ['cl-a'] })
+    render(<SelectionStrip summary={SUMMARY} />)
+    expect(screen.getByTestId('selection-strip')).toHaveStyle({ padding: '4px 10px' })
+  })
+})

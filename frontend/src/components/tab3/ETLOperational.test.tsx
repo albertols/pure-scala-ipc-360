@@ -968,3 +968,21 @@ describe('toolbar filter chips are the palette legend', () => {
     expect(active.style.background).not.toBe(inactive.style.background)
   })
 })
+
+// ─── pane-aware snapshot chip (sub-project 12, defect 2) ────────────────────
+
+describe('floating snapshot chip', () => {
+  it('hides while the cluster pane is collapsed and returns when it reopens', async () => {
+    // Collapsing the pane is the "give me maximum canvas" gesture. The chip floats over the
+    // bottom-left of that canvas, so it has to honour the same gesture instead of sitting on
+    // top of the cards the operator just made room for.
+    renderTab()
+    expect(await screen.findByTestId('snapshot-chip')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Collapse cluster pane'))
+    await waitFor(() => expect(screen.queryByTestId('snapshot-chip')).not.toBeInTheDocument())
+
+    fireEvent.click(screen.getByLabelText('Expand cluster pane'))
+    expect(await screen.findByTestId('snapshot-chip')).toBeInTheDocument()
+  })
+})
