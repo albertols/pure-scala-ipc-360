@@ -13,6 +13,12 @@ etl360:
   layer-to-layer:
     anchor-table: ${ETL360_L2L_TABLE:CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG}
     layer-dirs: ${ETL360_L2L_LAYER_DIRS:STG,ODS,DWH,CDM,RDM,QDM,ETL,OUTPUT}
+  # The b15 `status` column's vocabulary (ADR-0018). Export-specific, not IPC law: this corpus
+  # writes SUCCESS/FAILED, a real Composer export writes FAILURE. A token in NEITHER list
+  # resolves to PENDING and is reported by /api/diagnostics rather than swallowed.
+  b15:
+    status-ok: ${ETL360_B15_STATUS_OK:SUCCESS,SUCCEEDED,OK,COMPLETED,DONE}
+    status-ko: ${ETL360_B15_STATUS_KO:FAILURE,FAILED,ERROR,KILLED,ABORTED,CANCELLED}
   gcp:
     project-id: ${ETL360_GCP_PROJECT:db-dev-example-project}
     region: ${ETL360_GCP_REGION:europe-southwest1}

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { DENSITY_PITCH, fitToViewport, toOperationalGraph, summarizeSnapshot } from './relationshipsAdapter'
+import {
+  DENSITY_FOOTPRINT, DENSITY_GUTTER, DENSITY_PITCH, MIN_GUTTER, LAYER_RANK,
+  fitToViewport, toOperationalGraph, summarizeSnapshot,
+} from './relationshipsAdapter'
 import type { RelationshipGraph, OperationalSummary, B15Row } from './queries'
 
 // Mini fixture: 2 STG head tables + a lookup table into r3; recipes r3/r4 both
@@ -110,8 +113,10 @@ describe('toOperationalGraph — cards, status, edges, layout', () => {
     expect(r5.status).toBe('PENDING')
   })
 
-  it('(c) lays out STG->ODS->DWH strictly left-to-right on the 320px column pitch', () => {
-    for (const c of view.cards) expect((c.x! - 40) % 320).toBe(0)
+  it('(c) lays out STG->ODS->DWH strictly left-to-right on the detailed column pitch', () => {
+    // Reads the pitch rather than restating it: a hardcoded copy of this number is the exact
+    // species of duplicate whose drift from the real card size caused the overlap defect.
+    for (const c of view.cards) expect((c.x! - 40) % DENSITY_PITCH.detailed.col).toBe(0)
     const chain = ['t_stg1', 'r3', 't_ods', 'r5', 't_fact'].map(id => byId.get(id)!)
     for (let i = 1; i < chain.length; i++) expect(chain[i]!.x!).toBeGreaterThan(chain[i - 1]!.x!)
   })
@@ -319,5 +324,132 @@ describe('summarizeSnapshot uses the file\'s own status map', () => {
   it('never counts a status the map does not classify', () => {
     expect(summarizeSnapshot([{ recipeFilename: 'a.json', status: 'PENDING' }], [], []))
       .toMatchObject({ ok: 0, ko: 0, rows: 1 })
+  })
+})
+
+
+// ─── density geometry (sub-project 12, defect 1) ────────────────────────────
+//
+// The shipped table declared `detailed: { row: 190, height: 150 }` for a card that renders ~280px
+// tall, and ETLOperational positioned compact/minimal cards at `width: 'auto'`. Cards overlapped
+// both ways on the real corpus. Pitch is now DERIVED from a footprint, so the arithmetic cannot
+// drift again.
+
+const DENSITIES = ['detailed', 'compact', 'minimal'] as const
+
+describe('density geometry', () => {
+  it.each(DENSITIES)('pitch clears the footprint by at least MIN_GUTTER at %s', d => {
+    expect(DENSITY_PITCH[d].col).toBeGreaterThanOrEqual(DENSITY_FOOTPRINT[d].width + MIN_GUTTER)
+    expect(DENSITY_PITCH[d].row).toBeGreaterThanOrEqual(DENSITY_FOOTPRINT[d].height + MIN_GUTTER)
+  })
+
+  it.each(DENSITIES)('pitch is exactly footprint + gutter at %s', d => {
+    expect(DENSITY_PITCH[d].col).toBe(DENSITY_FOOTPRINT[d].width + DENSITY_GUTTER[d].col)
+    expect(DENSITY_PITCH[d].row).toBe(DENSITY_FOOTPRINT[d].height + DENSITY_GUTTER[d].row)
+  })
+
+  it.each(DENSITIES)('still exposes width/height for the existing readers at %s', d => {
+    expect(DENSITY_PITCH[d].width).toBe(DENSITY_FOOTPRINT[d].width)
+    expect(DENSITY_PITCH[d].height).toBe(DENSITY_FOOTPRINT[d].height)
+  })
+})
+
+describe('layoutCards leaves no card overlapping another', () => {
+  // Fan-in: two recipes writing one table. Forces two cards into the same column, which is
+  // exactly where the row pitch has to hold.
+  const fanIn = {
+    nodes: [
+      { id: 's1', kind: 'table', name: 'STG.SRC_ONE', layer: 'STG' },
+      { id: 's2', kind: 'table', name: 'STG.SRC_TWO', layer: 'STG' },
+      { id: 'r1', kind: 'recipe', name: '_ETL_m_ONE.json', layer: 'DWH' },
+      { id: 'r2', kind: 'recipe', name: '_ETL_m_TWO.json', layer: 'DWH' },
+      { id: 't1', kind: 'table', name: 'DWH.TARGET', layer: 'DWH' },
+    ],
+    edges: [
+      { from: 's1', to: 'r1', kind: 'source' },
+      { from: 's2', to: 'r2', kind: 'source' },
+      { from: 'r1', to: 't1', kind: 'writes' },
+      { from: 'r2', to: 't1', kind: 'writes' },
+    ],
+    meta: { layers: ['STG', 'DWH'] },
+  }
+
+  it.each(DENSITIES)('no two footprint rectangles intersect at %s', d => {
+    const { cards } = toOperationalGraph(fanIn as never, undefined, null, d)
+    const { width, height } = DENSITY_FOOTPRINT[d]
+    expect(cards.length).toBeGreaterThan(1)
+    for (let i = 0; i < cards.length; i++) {
+      for (let j = i + 1; j < cards.length; j++) {
+        const a = cards[i]!, b = cards[j]!
+        const overlaps =
+          (a.x ?? 0) < (b.x ?? 0) + width && (b.x ?? 0) < (a.x ?? 0) + width &&
+          (a.y ?? 0) < (b.y ?? 0) + height && (b.y ?? 0) < (a.y ?? 0) + height
+        expect(overlaps, `${a.name} overlaps ${b.name} at ${d}`).toBe(false)
+      }
+    }
+  })
+})
+
+// ─── layer order (sub-project 12, defect 10) ────────────────────────────────
+
+describe('layer order', () => {
+  it('runs STG, ODS, ETL, DWH, CDM, RDM, QDM, then OUTPUT and UNKNOWN', () => {
+    const order = Object.entries(LAYER_RANK).sort((a, b) => a[1] - b[1]).map(([k]) => k)
+    expect(order).toEqual(['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM', 'OUTPUT', 'UNKNOWN'])
+  })
+
+  it('puts the ETL column strictly left of the DWH one on the canvas', () => {
+    // LAYER_RANK drives BOTH the filter chips and the canvas columns, so the reorder has to be
+    // visible in the layout too — one dimension, one ordering.
+    const g = {
+      nodes: [
+        { id: 'e', kind: 'table', name: 'ETL.T', layer: 'ETL' },
+        { id: 'd', kind: 'table', name: 'DWH.T', layer: 'DWH' },
+        { id: 'o', kind: 'table', name: 'ODS.T', layer: 'ODS' },
+      ],
+      edges: [],
+      meta: { layers: ['ODS', 'ETL', 'DWH'] },
+    }
+    const { cards } = toOperationalGraph(g as never, undefined, null, 'compact')
+    const x = (id: string) => cards.find(c => c.id === id)!.x!
+    expect(x('o')).toBeLessThan(x('e'))
+    expect(x('e')).toBeLessThan(x('d'))
+  })
+})
+
+describe('graph.layers — the list the filter chips render', () => {
+  const multiLayer = (metaLayers: string[]) => ({
+    nodes: [
+      { id: 'q', kind: 'table', name: 'QDM.T', layer: 'QDM' },
+      { id: 'e', kind: 'table', name: 'ETL.T', layer: 'ETL' },
+      { id: 's', kind: 'table', name: 'STG.T', layer: 'STG' },
+      { id: 'd', kind: 'table', name: 'DWH.T', layer: 'DWH' },
+      { id: 'o', kind: 'table', name: 'ODS.T', layer: 'ODS' },
+      { id: 'c', kind: 'table', name: 'CDM.T', layer: 'CDM' },
+      { id: 'r', kind: 'table', name: 'RDM.T', layer: 'RDM' },
+    ],
+    edges: [],
+    meta: { layers: metaLayers },
+  })
+
+  it('is rank-ordered regardless of the order meta happened to arrive in', () => {
+    // The bug this covers: `layers` used to be "meta order first, extras appended", which made
+    // the backend's arrival order the CHIP order — so reordering LAYER_RANK moved the canvas
+    // columns and left the toolbar alone. One dimension, one ordering.
+    const scrambled = toOperationalGraph(
+      multiLayer(['CDM', 'DWH', 'ETL', 'ODS', 'RDM', 'QDM', 'STG']) as never, undefined, null)
+    expect(scrambled.layers).toEqual(['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM'])
+  })
+
+  it('still includes a layer present only on a card, never dropping a chip', () => {
+    // Completeness is the OTHER guarantee: a 1-hop neighbour's layer is absent from meta.layers
+    // on a scoped request, and its cards would otherwise have no chip that can reach them.
+    const partial = toOperationalGraph(multiLayer(['STG', 'ODS']) as never, undefined, null)
+    expect(partial.layers).toEqual(['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM'])
+  })
+
+  it('never repeats a layer that is in both meta and the cards', () => {
+    const dup = toOperationalGraph(multiLayer(['STG', 'STG', 'DWH']) as never, undefined, null)
+    expect(new Set(dup.layers).size).toBe(dup.layers.length)
   })
 })

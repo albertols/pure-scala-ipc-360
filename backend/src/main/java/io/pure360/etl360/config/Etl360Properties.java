@@ -1,5 +1,6 @@
 package io.pure360.etl360.config;
 
+import io.pure360.etl360.service.support.B15Status;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.ConstructorBinding;
 
@@ -8,19 +9,27 @@ import java.util.List;
 
 @ConfigurationProperties(prefix = "etl360")
 public record Etl360Properties(String corpusRoot, String dwhControlRoot, String mockRoot,
-                               String composerRoot, Gcp gcp, LayerToLayer layerToLayer) {
+                               String composerRoot, Gcp gcp, LayerToLayer layerToLayer, B15 b15) {
 
-    /** Binding constructor: substitutes the defaults for an unset {@code etl360.layer-to-layer}. */
+    /** Binding constructor: substitutes the defaults for an unset {@code etl360.layer-to-layer}
+     * or {@code etl360.b15}. */
     @ConstructorBinding
     public Etl360Properties {
         layerToLayer = layerToLayer == null ? LayerToLayer.DEFAULTS : layerToLayer.withDefaults();
+        b15 = b15 == null ? B15.DEFAULTS : b15.withDefaults();
     }
 
     /** Pre-{@code layerToLayer} arity, kept so call sites that don't care about the control-schema
      * vocabulary (most tests) stay readable. Binds nothing — Spring uses the canonical one. */
     public Etl360Properties(String corpusRoot, String dwhControlRoot, String mockRoot,
                             String composerRoot, Gcp gcp) {
-        this(corpusRoot, dwhControlRoot, mockRoot, composerRoot, gcp, LayerToLayer.DEFAULTS);
+        this(corpusRoot, dwhControlRoot, mockRoot, composerRoot, gcp, LayerToLayer.DEFAULTS, B15.DEFAULTS);
+    }
+
+    /** Pre-{@code b15} arity, same reason: the b15 status vocabulary is irrelevant to most tests. */
+    public Etl360Properties(String corpusRoot, String dwhControlRoot, String mockRoot,
+                            String composerRoot, Gcp gcp, LayerToLayer layerToLayer) {
+        this(corpusRoot, dwhControlRoot, mockRoot, composerRoot, gcp, layerToLayer, B15.DEFAULTS);
     }
 
     public record Gcp(String projectId, String region, String dataprocJobUrl,
@@ -74,6 +83,34 @@ public record Etl360Properties(String corpusRoot, String dwhControlRoot, String 
 
         /** The literal the scanner anchors statements on. */
         public String anchor() { return "INSERT INTO " + anchorTable + " VALUES"; }
+    }
+
+    /**
+     * The b15 {@code status} vocabulary {@link io.pure360.etl360.service.B15Reader} canonicalises
+     * against.
+     *
+     * <p>Configurable for exactly the reason {@link LayerToLayer} is: the committed values are
+     * this corpus's anonymized sample dialect, and a real export writing a different token used to
+     * fail <b>silently</b> — every failed run rendering as PENDING, "never ran". Unlike the
+     * anchor table, a mismatch here does not empty the tab, it quietly mislabels it, which is why
+     * {@code /api/diagnostics} reports the tokens that matched neither list.
+     *
+     * <p>See {@link io.pure360.etl360.service.support.B15Status} and ADR-0018.
+     */
+    public record B15(List<String> statusOk, List<String> statusKo) {
+        public static final B15 DEFAULTS = new B15(B15Status.DEFAULT_OK, B15Status.DEFAULT_KO);
+
+        /** A partially-specified binding (only one of the two keys set) keeps the default for the other. */
+        B15 withDefaults() {
+            List<String> ok = statusOk == null || statusOk.isEmpty()
+                ? B15Status.DEFAULT_OK : List.copyOf(statusOk);
+            List<String> ko = statusKo == null || statusKo.isEmpty()
+                ? B15Status.DEFAULT_KO : List.copyOf(statusKo);
+            return new B15(ok, ko);
+        }
+
+        /** The normalizer this vocabulary describes. */
+        public B15Status toStatus() { return B15Status.of(statusOk, statusKo); }
     }
 
     private static Path resolveAgainstRepoRoot(String p) {

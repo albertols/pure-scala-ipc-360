@@ -107,6 +107,75 @@ export const useScopedRelationships = (clusters: string[]) => {
   })
 }
 
+/** One hit from `GET /api/operational/search` — a recipe or table, and the clusters reaching it. */
+export interface SearchHitT {
+  kind: 'recipe' | 'table'
+  name: string
+  layer: string
+  clusters: string[]
+}
+
+export interface SearchHitsT {
+  hits: SearchHitT[]
+  truncated: boolean
+}
+
+/** The minimum the backend will act on; below it the endpoint returns empty rather than erroring. */
+export const SEARCH_MIN_Q = 2
+
+/**
+ * Cross-index search over the whole b15 history AND the relationships graph.
+ *
+ * Distinct from Tab 3's toolbar input, which filters the cards already on the canvas: this finds
+ * things in clusters that have not been loaded, which is the only way to answer "which cluster
+ * runs this table?" without guessing. Table names are not in the b15 index at all, so this
+ * cannot be done client-side (ADR-0019).
+ */
+export const useOperationalSearch = (q: string) => {
+  const needle = q.trim()
+  return useQuery({
+    queryKey: ['operationalSearch', needle],
+    queryFn: () => apiGet<SearchHitsT>(`/operational/search?q=${encodeURIComponent(needle)}`),
+    staleTime: STALE_MS,
+    enabled: needle.length >= SEARCH_MIN_Q,
+  })
+}
+
+/** One node on a lineage; `hop` is signed — negative upstream, 0 the seed, positive downstream. */
+export interface LineageNodeT {
+  id: string
+  kind: 'recipe' | 'table'
+  name: string
+  layer: string
+  hop: number
+  clusters: string[]
+}
+
+export interface LineageT {
+  seed: string
+  nodes: LineageNodeT[]
+  edges: { from: string; to: string; kind: 'source' | 'lookup' | 'writes' }[]
+  truncated: boolean
+  totalReachable: number
+}
+
+export const LINEAGE_DEFAULT_LIMIT = 150
+export const LINEAGE_MAX_LIMIT = 600
+
+/**
+ * One node's transitive lineage. NOT cluster-scoped by design — lineage crosses cluster
+ * boundaries, and stopping at the selection would draw a complete-looking flow that is not one
+ * (ADR-0020). Bounded by node count instead, which is what keeps it a purposeful slice.
+ */
+export const useLineage = (nodeId: string | null, limit: number = LINEAGE_DEFAULT_LIMIT) =>
+  useQuery({
+    queryKey: ['lineage', nodeId, limit],
+    queryFn: () => apiGet<LineageT>(
+      `/operational/lineage?node=${encodeURIComponent(nodeId!)}&limit=${limit}`),
+    staleTime: STALE_MS,
+    enabled: !!nodeId,
+  })
+
 export interface RunsResult {
   byRecipe: Record<string, RunT[]>
   isLoading: boolean

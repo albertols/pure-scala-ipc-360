@@ -24,7 +24,7 @@ class RelationshipServiceTest {
         Etl360Properties props = new Etl360Properties(
             "parser/src/main/resources/xmltobq", "does/not/exist",
             "does/not/exist/mock", "does/not/exist/either", null);
-        return new ClusterIndexService(new B15Reader(new DataRoots(props)));
+        return new ClusterIndexService(new B15Reader(new DataRoots(props), props));
     }
 
     /** Counts how many times the graph builder re-reads the cluster index. */
@@ -242,7 +242,7 @@ class RelationshipServiceTest {
             tmp.resolve("unused-mock").toString(), tmp.resolve("composer").toString(),
             new Etl360Properties.Gcp("p", "r", "u1", "u2", "u3"));
         var roots = new DataRoots(props);
-        CountingIndex counting = new CountingIndex(new B15Reader(roots));
+        CountingIndex counting = new CountingIndex(new B15Reader(roots, props));
         RelationshipService svc = new RelationshipService(new LayerToLayerService(roots, props),
             new CorpusService(Files.createDirectories(tmp.resolve("empty-corpus"))), counting);
 

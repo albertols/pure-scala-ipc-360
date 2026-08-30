@@ -5,6 +5,7 @@ import type { OperationalCard as CardData } from '../../types'
 import type { RunT } from '../../api/clusterQueries'
 import type { AppConfig } from '../../api/queries'
 import { DEFAULT_LOGGING_URL } from '../../api/gcpLinks'
+import { layerColor, kindPalette, statusColor, STATUS_EDGE_PX } from '../../theme/semanticColors'
 
 afterEach(cleanup)
 
@@ -83,7 +84,9 @@ describe('OperationalCard — density', () => {
 
   it('minimal is a single line of layer, name and status', () => {
     render(<OperationalCard card={CARD} density="minimal" config={CONFIG} />)
-    expect(screen.getByText(/ODS/)).toBeInTheDocument()
+    // Sub-project 12: the layer is its own tier-coloured chip at every density, so it no longer
+    // shares a span with the name — and `/ODS/` alone now also matches _ETL_m_CAS_ODS_EVENTS.json.
+    expect(screen.getByTestId('layer-chip')).toHaveTextContent('ODS')
     expect(screen.getByText('OK')).toBeInTheDocument()
     expect(screen.queryByText(/Last run/)).not.toBeInTheDocument()
   })
@@ -146,5 +149,61 @@ describe('OperationalCard — history tooltip tells the truth about the bars', (
     hover(container)
     expect(screen.queryByText(/Click a bar/)).not.toBeInTheDocument()
     expect(screen.getByText(/Each bar is one run/)).toBeInTheDocument()
+  })
+})
+
+// ─── semantic palette (sub-project 12, defect 4) ────────────────────────────
+
+describe('OperationalCard — semantic palette', () => {
+  const DENSITIES = ['detailed', 'compact', 'minimal'] as const
+  const asTable: CardData = { ...CARD, kind: 'table', name: 'ODS.CAS_ODS_EVENTS' }
+
+  it.each(DENSITIES)('colours the layer chip by LAYER, not by kind, at %s', d => {
+    // THE defect: `ODS` used to render blue on a table and amber on a recipe — the same layer,
+    // two colours, neither of which meant "ODS".
+    const recipe = render(<OperationalCard card={CARD} density={d} />)
+    const recipeChip = recipe.getByTestId('layer-chip')
+    expect(recipeChip).toHaveStyle({ color: layerColor('ODS') })
+    cleanup()
+
+    render(<OperationalCard card={asTable} density={d} />)
+    expect(screen.getByTestId('layer-chip')).toHaveStyle({ color: layerColor('ODS') })
+  })
+
+  it.each(DENSITIES)('puts a recipe status bar on the LEFT edge at %s', d => {
+    render(<OperationalCard card={CARD} density={d} />)
+    const box = screen.getByTestId('operational-card')
+    expect(box).toHaveStyle({ borderLeftColor: statusColor('OK') })
+    expect(box).toHaveStyle({ borderLeftWidth: `${STATUS_EDGE_PX}px` })
+  })
+
+  it.each(DENSITIES)('puts a table status bar on the TOP edge at %s', d => {
+    render(<OperationalCard card={asTable} density={d} />)
+    const box = screen.getByTestId('operational-card')
+    expect(box).toHaveStyle({ borderTopColor: statusColor('OK') })
+    expect(box).toHaveStyle({ borderTopWidth: `${STATUS_EDGE_PX}px` })
+  })
+
+  it.each(DENSITIES)('tints a recipe body Spark orange at %s', d => {
+    render(<OperationalCard card={CARD} density={d} />)
+    expect(screen.getByTestId('operational-card'))
+      .toHaveStyle({ background: kindPalette('recipe').body })
+  })
+
+  it.each(DENSITIES)('tints a table body BigQuery blue at %s', d => {
+    render(<OperationalCard card={asTable} density={d} />)
+    expect(screen.getByTestId('operational-card'))
+      .toHaveStyle({ background: kindPalette('table').body })
+  })
+
+  it('carries the KO status colour on the same edge as OK', () => {
+    render(<OperationalCard card={{ ...CARD, status: 'KO' }} />)
+    expect(screen.getByTestId('operational-card'))
+      .toHaveStyle({ borderLeftColor: statusColor('KO') })
+  })
+
+  it('gives an unresolved layer the neutral colour, not a tier colour', () => {
+    render(<OperationalCard card={{ ...CARD, layer: 'UNKNOWN' }} />)
+    expect(screen.getByTestId('layer-chip')).toHaveStyle({ color: layerColor('UNKNOWN') })
   })
 })

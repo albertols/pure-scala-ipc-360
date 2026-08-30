@@ -5,12 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { delay, http, HttpResponse } from 'msw'
 import { ETLOperational } from './ETLOperational'
-import { resetOperationalView, setOperationalView } from '../../state/operationalView'
+import { resetOperationalView, setOperationalView, readOperationalView } from '../../state/operationalView'
 // Module namespace import (alongside the named one above) so `vi.spyOn` can watch
 // `setOperationalView` calls made from INSIDE ETLOperational.tsx itself — Vitest's ESM transform
 // routes every consumer's call through this same exports object, so the spy sees them too.
 import * as operationalViewStore from '../../state/operationalView'
 import type { RelationshipGraph } from '../../api/queries'
+import { DENSITY_FOOTPRINT } from '../../api/relationshipsAdapter'
+import { layerColor, kindPalette } from '../../theme/semanticColors'
 import type { components } from '../../api/types.gen'
 
 type OperationalSummaryDto = components['schemas']['OperationalSummaryDto']
@@ -220,6 +222,34 @@ const server = setupServer(
     content: PREVIEW_RECIPE,
   })),
   http.get('/api/ipc/rules', () => HttpResponse.json(IPC_RULES)),
+  http.get('/api/operational/lineage', ({ request }) => {
+    const seed = new URL(request.url).searchParams.get('node') ?? ''
+    // Mirrors the mini graph above: source table -> recipe -> target table.
+    const nodes = [
+      { id: 't_src', kind: 'table', name: 'stg_dwhes.CAS_T_SRC', layer: 'STG', hop: -2, clusters: [] },
+      { id: 'r', kind: 'recipe', name: '_ETL_m_CAS_T.json', layer: 'STG', hop: -1, clusters: ['cl-a'] },
+      { id: 't_tgt', kind: 'table', name: 'stg_dwhes.CAS_T_TGT', layer: 'STG', hop: 0, clusters: [] },
+    ]
+    return HttpResponse.json({
+      seed, nodes: nodes.map(n => ({ ...n, hop: n.id === seed ? 0 : n.hop })),
+      edges: [
+        { from: 't_src', to: 'r', kind: 'source' },
+        { from: 'r', to: 't_tgt', kind: 'writes' },
+      ],
+      truncated: false, totalReachable: 3,
+    })
+  }),
+  http.get('/api/operational/search', ({ request }) => {
+    const q = (new URL(request.url).searchParams.get('q') ?? '').toLowerCase()
+    const all = [
+      { kind: 'recipe', name: '_ETL_m_CAS_T.json', layer: 'ODS', clusters: ['cl-a'] },
+      { kind: 'table', name: 'stg_dwhes.CAS_T_TGT', layer: 'STG', clusters: ['cl-a'] },
+      { kind: 'table', name: 'DWH.ORPHAN_NO_RUNS', layer: 'DWH', clusters: [] },
+    ]
+    return HttpResponse.json({
+      hits: all.filter(h => h.name.toLowerCase().includes(q)), truncated: false,
+    })
+  }),
 )
 beforeAll(() => server.listen())
 afterEach(() => {
@@ -295,7 +325,7 @@ describe('ETLOperational — real graph, cards, filters, search, selection', () 
 
     // Search narrows to the one card whose name contains the query — only
     // the recipe's filename carries a ".json" extension.
-    const search = screen.getByPlaceholderText('Search tables / recipes…')
+    const search = screen.getByPlaceholderText('Filter this canvas…')
     fireEvent.change(search, { target: { value: '.json' } })
     expect(screen.getByText('_ETL_m_CAS_T.json')).toBeInTheDocument()
     expect(screen.queryByText('stg_dwhes.CAS_T_SRC')).not.toBeInTheDocument()
@@ -896,5 +926,338 @@ describe('ETLOperational — cluster-scoped loading', () => {
     renderTab()
 
     expect(await screen.findByText(/Run history unavailable/)).toBeInTheDocument()
+  })
+})
+
+// ─── card footprint (sub-project 12, defect 1) ──────────────────────────────
+
+describe('canvas card footprint', () => {
+  it.each(['detailed', 'compact', 'minimal'] as const)(
+    'positions every card at its declared footprint width at %s density', async density => {
+      // `width: 'auto'` let a compact/minimal card grow to its longest name — past the very
+      // column pitch computed for its declared width — which is what made real-corpus names
+      // overlap horizontally. The wrapper must state the width the layout assumed.
+      setOperationalView({ density })
+      const { container } = renderTab()
+      await waitFor(() =>
+        expect(container.querySelectorAll('[data-card="1"]').length).toBeGreaterThan(0))
+
+      const wrappers = container.querySelectorAll<HTMLElement>('[data-card="1"]')
+      expect(wrappers.length).toBeGreaterThan(0)
+      for (const el of wrappers) {
+        expect(el.style.width).toBe(`${DENSITY_FOOTPRINT[density].width}px`)
+      }
+    })
+
+  it('sizes the canvas from the footprint, not from a hardcoded detailed-only constant', async () => {
+    setOperationalView({ density: 'minimal' })
+    const { container } = renderTab()
+    await waitFor(() =>
+      expect(container.querySelectorAll('[data-card="1"]').length).toBeGreaterThan(0))
+
+    // The edges layer is sized from CANVAS_W/CANVAS_H, which used to add a hardcoded +280/+220
+    // — the detailed footprint — regardless of the density actually rendering.
+    // Anchored on the arrow marker so this cannot accidentally select the toolbar's 13px
+    // search-icon svg, which is also an `svg[width]`.
+    const edges = container.querySelector('marker#oa')!.closest('svg')!
+    const rightmost = Math.max(
+      ...[...container.querySelectorAll<HTMLElement>('[data-card="1"]')]
+        .map(el => parseFloat(el.style.left) + DENSITY_FOOTPRINT.minimal.width))
+    expect(Number(edges.getAttribute('width'))).toBeGreaterThanOrEqual(rightmost)
+  })
+})
+
+// ─── toolbar as legend (sub-project 12, defect 4) ───────────────────────────
+
+describe('toolbar filter chips are the palette legend', () => {
+  it('tints Layer chips with their tier colour even while unselected', async () => {
+    // The toolbar teaches the palette: the control you filter a dimension with carries that
+    // dimension's colour, so there is no separate legend that can drift from the cards.
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(screen.getByRole('button', { name: 'STG' })).toHaveStyle({ color: layerColor('STG') })
+  })
+
+  it('tints Kind chips with the GCP product accents', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(screen.getByRole('button', { name: 'recipe' }))
+      .toHaveStyle({ color: kindPalette('recipe').accent })
+    expect(screen.getByRole('button', { name: 'table' }))
+      .toHaveStyle({ color: kindPalette('table').accent })
+  })
+
+  it('still marks the ACTIVE chip distinctly from the merely-tinted ones', async () => {
+    // Colouring every chip must not cost the "which filter is on?" signal.
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const active = screen.getAllByRole('button', { name: 'ALL' })[0]!
+    const inactive = screen.getByRole('button', { name: 'recipe' })
+    expect(active.style.background).not.toBe(inactive.style.background)
+  })
+})
+
+// ─── pane-aware snapshot chip (sub-project 12, defect 2) ────────────────────
+
+describe('floating snapshot chip', () => {
+  it('hides while the cluster pane is collapsed and returns when it reopens', async () => {
+    // Collapsing the pane is the "give me maximum canvas" gesture. The chip floats over the
+    // bottom-left of that canvas, so it has to honour the same gesture instead of sitting on
+    // top of the cards the operator just made room for.
+    renderTab()
+    expect(await screen.findByTestId('snapshot-chip')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Collapse cluster pane'))
+    await waitFor(() => expect(screen.queryByTestId('snapshot-chip')).not.toBeInTheDocument())
+
+    fireEvent.click(screen.getByLabelText('Expand cluster pane'))
+    expect(await screen.findByTestId('snapshot-chip')).toBeInTheDocument()
+  })
+})
+
+// ─── collapsible TIME VIEW (sub-project 12, defect 3) ───────────────────────
+
+describe('TIME VIEW collapse', () => {
+  it('frees the whole bar when hidden, and names the active snapshot in a toolbar chip', async () => {
+    renderTab()
+    expect(await screen.findByTestId('time-view-bar')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Hide time view'))
+    await waitFor(() => expect(screen.queryByTestId('time-view-bar')).not.toBeInTheDocument())
+
+    // The active snapshot must never become invisible just because the bar is closed.
+    const chip = screen.getByTestId('time-view-chip')
+    expect(chip).toHaveTextContent(/\d{4}-\d{2}-\d{2}/)
+
+    fireEvent.click(chip)
+    expect(await screen.findByTestId('time-view-bar')).toBeInTheDocument()
+    expect(screen.queryByTestId('time-view-chip')).not.toBeInTheDocument()
+  })
+
+  it('takes the date picker and the calendar with it', async () => {
+    const { container } = renderTab()
+    await screen.findByTestId('time-view-bar')
+    expect(container.querySelector('input[type="date"]')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Hide time view'))
+    await waitFor(() => expect(container.querySelector('input[type="date"]')).toBeNull())
+  })
+})
+
+// ─── related navigation history (sub-project 12, defect 6) ──────────────────
+
+describe('Related back/forward', () => {
+  it('starts with both controls inert and walks back through the hops it recorded', async () => {
+    renderTab()
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+
+    // First selection: nowhere to go in either direction.
+    expect(screen.getByLabelText('Back to previous node')).toBeDisabled()
+    expect(screen.getByLabelText('Forward to next node')).toBeDisabled()
+
+    const related = await screen.findAllByTestId('related-card')
+    expect(related.length).toBeGreaterThan(0)
+    fireEvent.click(related[0]!)
+
+    const back = screen.getByLabelText('Back to previous node')
+    expect(back).toBeEnabled()
+    fireEvent.click(back)
+
+    // Back at the start: back inert again, forward now live.
+    await waitFor(() => expect(screen.getByLabelText('Back to previous node')).toBeDisabled())
+    expect(screen.getByLabelText('Forward to next node')).toBeEnabled()
+  })
+
+  it('a Related hop no longer discards where you came from', async () => {
+    renderTab()
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+    // Scoped to the details panel: `operational-card` also matches every card on the canvas.
+    const shown = () => within(screen.getByTestId('details-panel'))
+      .getAllByTestId('operational-card')[0]!.textContent
+    const firstTitle = shown()
+
+    fireEvent.click((await screen.findAllByTestId('related-card'))[0]!)
+    await waitFor(() => expect(shown()).not.toBe(firstTitle))
+
+    fireEvent.click(screen.getByLabelText('Back to previous node'))
+    await waitFor(() => expect(shown()).toBe(firstTitle))
+  })
+})
+
+// ─── Show All Related (sub-project 12, defect 6) ────────────────────────────
+
+describe('Show all related', () => {
+  const openLink = async () => {
+    renderTab()
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+    return screen.getByRole('link', { name: /show all related/i })
+  }
+
+  it('is a real link, so the browser can open it in a new tab unaided', async () => {
+    // No window.open and no synthetic mouse-button handling: an <a href> gets ⌘-click,
+    // middle-click and "Open link in new tab" from the platform, all three correct for free.
+    const link = await openLink()
+    expect(link.getAttribute('href')).toMatch(/^\?related=.+&clusters=/)
+  })
+
+  it('opens the in-app overlay on a plain left click', async () => {
+    const link = await openLink()
+    fireEvent.click(link)
+    expect(await screen.findByTestId('related-overlay')).toBeInTheDocument()
+  })
+
+  it('leaves a modified click entirely to the browser', async () => {
+    const link = await openLink()
+    const ev = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true })
+    link.dispatchEvent(ev)
+    expect(ev.defaultPrevented).toBe(false)
+    expect(screen.queryByTestId('related-overlay')).not.toBeInTheDocument()
+  })
+
+  it('closes on its ✕', async () => {
+    const link = await openLink()
+    fireEvent.click(link)
+    fireEvent.click(await screen.findByLabelText('Close related overlay'))
+    await waitFor(() => expect(screen.queryByTestId('related-overlay')).not.toBeInTheDocument())
+  })
+
+  it('keeps the canvas selection in sync with the overlay focus', async () => {
+    // Closing must leave the operator where they navigated, not snap back to where they started.
+    const link = await openLink()
+    const before = within(screen.getByTestId('details-panel'))
+      .getAllByTestId('operational-card')[0]!.textContent
+    fireEvent.click(link)
+
+    // The overlay body is a lineage flow now, not a neighbour list.
+    const others = await screen.findAllByTestId('lineage-node')
+    expect(others.length).toBeGreaterThan(0)
+    fireEvent.click(others[0]!)
+    fireEvent.click(screen.getByLabelText('Close related overlay'))
+
+    await waitFor(() => expect(within(screen.getByTestId('details-panel'))
+      .getAllByTestId('operational-card')[0]!.textContent).not.toBe(before))
+    // And that hop is on the same trail as a canvas click.
+    expect(screen.getByLabelText('Back to previous node')).toBeEnabled()
+  })
+})
+
+// ─── global search reaches Tab 3 (sub-project 12, defect 8) ─────────────────
+
+describe('global search', () => {
+  const renderWithQuery = (q: string, clusters: string[] = ['cl-a']) => {
+    setOperationalView({ selectedClusters: clusters })
+    return render(<ETLOperational searchQuery={q} />, { wrapper })
+  }
+
+  it('renders nothing for an empty query', async () => {
+    renderWithQuery('')
+    await screen.findByText('_ETL_m_CAS_T.json')
+    expect(screen.queryByTestId('operational-search')).not.toBeInTheDocument()
+  })
+
+  it('shows results over the no-cluster state — the state you are in when you need it', async () => {
+    // Tab 3's own toolbar input can only filter cards already loaded, and loading them requires
+    // already knowing which cluster to pick. This is the escape from that circle.
+    renderWithQuery('CAS', [])
+    expect(await screen.findByTestId('operational-search')).toBeInTheDocument()
+    expect(screen.getByTestId('cluster-prompt')).toBeInTheDocument()
+  })
+
+  it('finds TABLES, which the b15 index alone cannot see', async () => {
+    renderWithQuery('CAS_T_TGT', [])
+    expect(await screen.findByTestId('search-hit-table')).toHaveTextContent('stg_dwhes.CAS_T_TGT')
+  })
+
+  it('picking a hit selects its clusters and then the node itself', async () => {
+    renderWithQuery('CAS_T_TGT', [])
+    fireEvent.click(await screen.findByTestId('search-hit-table'))
+
+    await waitFor(() => expect(readOperationalView().selectedClusters).toEqual(['cl-a']))
+    // The node cannot be selected until the scoped graph carrying it resolves; it must not be
+    // dropped in the meantime.
+    await waitFor(() => expect(readOperationalView().selectedNode).toBe('t_tgt'))
+  })
+
+  it('says so when a hit has no runs, rather than offering a dead click', async () => {
+    renderWithQuery('ORPHAN', [])
+    expect(await screen.findByTestId('search-hit-table')).toHaveTextContent('no runs')
+    fireEvent.click(screen.getByTestId('search-hit-table'))
+    expect(readOperationalView().selectedClusters).toEqual([])
+  })
+})
+
+// ─── multi-select filters (sub-project 12, defect 10) ───────────────────────
+
+describe('multi-select Layer and Status filters', () => {
+  // jsdom does not implement innerText, so count the cards rather than reading their names.
+  const names = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>('[data-card="1"]')]
+
+  it('holds more than one Layer at once', async () => {
+    // Single-select forced all-or-nothing on exactly the dimension an operator narrows by.
+    const { container } = renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const all = names(container).length
+
+    fireEvent.click(screen.getByRole('button', { name: 'STG' }))
+    const stgOnly = names(container).length
+    expect(stgOnly).toBeGreaterThan(0)
+
+    fireEvent.click(screen.getByRole('button', { name: 'DWH' }))
+    const both = names(container).length
+    expect(both).toBeGreaterThanOrEqual(stgOnly)
+    expect(both).toBeLessThanOrEqual(all)
+  })
+
+  it('deselects a chip on a second click', async () => {
+    const { container } = renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const before = names(container).length
+
+    fireEvent.click(screen.getByRole('button', { name: 'STG' }))
+    expect(names(container).length).toBeLessThanOrEqual(before)
+    fireEvent.click(screen.getByRole('button', { name: 'STG' }))
+    expect(names(container).length).toBe(before)     // empty set filters nothing
+  })
+
+  it('ALL clears the whole set rather than being a value in it', async () => {
+    const { container } = renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const before = names(container).length
+
+    fireEvent.click(screen.getByRole('button', { name: 'STG' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'ALL' })[0]!)
+    expect(names(container).length).toBe(before)
+  })
+
+  it('holds more than one Status at once', async () => {
+    const { container } = renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    const okOnly = names(container).length
+    fireEvent.click(screen.getByRole('button', { name: 'PENDING' }))
+    expect(names(container).length).toBeGreaterThanOrEqual(okOnly)
+  })
+
+  it('marks every selected chip as selected, not just the last one', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const stg = screen.getByRole('button', { name: 'STG' })
+    const dwh = screen.getByRole('button', { name: 'DWH' })
+    fireEvent.click(stg)
+    fireEvent.click(dwh)
+    expect(stg).toHaveAttribute('aria-pressed', 'true')
+    expect(dwh).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('renders ALL first, as the clear control rather than a value', async () => {
+    renderTab()
+    await screen.findByText('_ETL_m_CAS_T.json')
+    const labels = [...document.querySelectorAll('[data-testid="layer-filter"] button')]
+      .map(b => b.textContent)
+    expect(labels[0]).toBe('ALL')
+    // Chip ORDER is asserted in relationshipsAdapter.test.ts, against a multi-layer fixture —
+    // this tab's graph has a single layer, which made an order assertion here vacuous.
   })
 })

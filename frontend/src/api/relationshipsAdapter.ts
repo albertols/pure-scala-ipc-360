@@ -19,21 +19,72 @@ export interface OperationalGraphView {
   layers: string[]
 }
 
+/**
+ * The layer sequence, and the ONE ordering of it.
+ *
+ * Read in two places — `layoutCards`'s column assignment and the `graph.layers` list that feeds
+ * Tab 3's filter chips — so this constant is what keeps the canvas and the toolbar telling the
+ * same story. Giving one dimension two orderings depending on where you look is the class of
+ * problem ADR-0017 exists to remove.
+ *
+ * `ETL` sits third, between `ODS` and `DWH`: it is a refined-tier layer (ADR-0017 pairs it with
+ * `DWH` as silver), not a post-QDM one. It ranked 7th until sub-project 12, which put the chips
+ * and the canvas columns in the operator's actual pipeline order.
+ */
 export const LAYER_RANK: Record<string, number> = {
-  STG: 0, ODS: 1, DWH: 2, CDM: 3, RDM: 4, QDM: 5, ETL: 6, OUTPUT: 7, UNKNOWN: 8,
+  STG: 0, ODS: 1, ETL: 2, DWH: 3, CDM: 4, RDM: 5, QDM: 6, OUTPUT: 7, UNKNOWN: 8,
 }
 
 // Layout constants (adapter-local; mirrors canvasLayout.ts's 40px margin idiom,
 // wider pitch to fit the operational card's larger footprint).
 //
-// Task 15: column/row pitch and card footprint per density — collapsing has to
-// genuinely re-pack the layout at a tighter pitch, not just shrink the boxes at
-// the SAME pitch (which is what a naive "smaller card" change would produce).
-export const DENSITY_PITCH: Record<CardDensity, { col: number; row: number; width: number; height: number }> = {
-  detailed: { col: 320, row: 190, width: 252, height: 150 },
-  compact:  { col: 230, row: 80,  width: 200, height: 56 },
-  minimal:  { col: 200, row: 36,  width: 180, height: 26 },
+// Task 15 introduced a per-density pitch so that collapsing genuinely re-packs the layout rather
+// than shrinking boxes at the same pitch. Sub-project 12 fixes what that table got WRONG: it was
+// hand-maintained, and its `detailed` row pitch (190) was smaller than the card it was spacing
+// really is (~280), so every detailed card overlapped the one below it by ~90px on a real corpus.
+// The pitch is now DERIVED from a declared footprint, which makes that arithmetic impossible to
+// get wrong again.
+
+/**
+ * The card's real on-screen box, per density.
+ *
+ * `detailed`'s 280 is the height of the TALLEST detailed card — a recipe with a stats grid and
+ * both GCP links (`OperationalCard.tsx`). It is deliberately NOT asserted in vitest: jsdom has no
+ * layout engine and reports every height as 0, so a unit test claiming to verify it would be
+ * measuring nothing. It is verified in the browser acceptance walk instead, and the invariant
+ * test guards only what is actually checkable — that the pitch clears whatever this says.
+ */
+export const DENSITY_FOOTPRINT: Record<CardDensity, { width: number; height: number }> = {
+  detailed: { width: 260, height: 280 },
+  compact:  { width: 240, height: 56 },
+  minimal:  { width: 210, height: 26 },
 }
+
+/** Empty space BETWEEN footprints — the room the edges are drawn in, so arrows stay readable. */
+export const DENSITY_GUTTER: Record<CardDensity, { col: number; row: number }> = {
+  detailed: { col: 80, row: 50 },
+  compact:  { col: 60, row: 40 },
+  minimal:  { col: 40, row: 20 },
+}
+
+/** The floor the invariant test enforces, independent of the gutters chosen above. */
+export const MIN_GUTTER = 16
+
+/**
+ * DERIVED, never hand-maintained: `pitch = footprint + gutter`.
+ *
+ * Keeps its name and its `{ col, row, width, height }` shape so `fitToViewport` and `layoutCards`
+ * read unchanged — the fix is that the numbers are now computed from the box they space.
+ */
+export const DENSITY_PITCH: Record<CardDensity, { col: number; row: number; width: number; height: number }> =
+  Object.fromEntries(
+    (Object.keys(DENSITY_FOOTPRINT) as CardDensity[]).map(d => [d, {
+      col: DENSITY_FOOTPRINT[d].width + DENSITY_GUTTER[d].col,
+      row: DENSITY_FOOTPRINT[d].height + DENSITY_GUTTER[d].row,
+      width: DENSITY_FOOTPRINT[d].width,
+      height: DENSITY_FOOTPRINT[d].height,
+    }]),
+  ) as Record<CardDensity, { col: number; row: number; width: number; height: number }>
 
 const X0 = 40, Y0 = 40
 
@@ -276,11 +327,21 @@ export function toOperationalGraph(
   // gets bands, bandless). So: meta order first, untouched, then every OTHER layer actually
   // present on the returned cards appended in band order. Subsumes the old UNKNOWN special case,
   // which was the same bug seen from one angle only.
-  const metaLayers = graph.meta?.layers ?? []
-  const layers = [...metaLayers]
-  const extras = [...new Set(orderedCards.map(c => c.layer))].filter(l => !layers.includes(l))
-  extras.sort((a, b) => rankOf(a) - rankOf(b) || a.localeCompare(b))
-  layers.push(...extras)
+  // Two guarantees, and they are separate:
+  //
+  // COMPLETENESS — every layer that can reach a card must have a chip. `meta.layers` is derived
+  // from the CORE entries of a scoped request (RelationshipService.java:135), so a 1-hop
+  // neighbour whose layer sits outside the selection is simply missing from it; feeding the chips
+  // straight from `meta.layers` would leave those cards with no chip that can reach them. Hence
+  // the union with the layers actually present on the returned cards.
+  //
+  // ORDER — the union is then sorted by LAYER_RANK, whole. It used to be "meta order first, then
+  // extras sorted", which quietly made `meta`'s arrival order the chip order: reordering
+  // LAYER_RANK moved the canvas columns and left the toolbar alone, giving one dimension two
+  // orderings — the exact thing ADR-0017 exists to prevent. Caught in a browser walk, not by a
+  // unit test, because the fixture had a single layer.
+  const layers = [...new Set([...(graph.meta?.layers ?? []), ...orderedCards.map(c => c.layer)])]
+  layers.sort((a, b) => rankOf(a) - rankOf(b) || a.localeCompare(b))
 
   return { cards: orderedCards, edges, layers }
 }

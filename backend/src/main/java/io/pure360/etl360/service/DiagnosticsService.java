@@ -42,14 +42,19 @@ public class DiagnosticsService {
     private final CorpusService corpus;
     private final OperationalService operational;
     private final LayerToLayerService layerToLayer;
+    private final B15Reader b15;
+    private final ClusterIndexService clusterIndex;
 
     public DiagnosticsService(Etl360Properties props, DataRoots roots, CorpusService corpus,
-                              OperationalService operational, LayerToLayerService layerToLayer) {
+                              OperationalService operational, LayerToLayerService layerToLayer,
+                              B15Reader b15, ClusterIndexService clusterIndex) {
         this.props = props;
         this.roots = roots;
         this.corpus = corpus;
         this.operational = operational;
         this.layerToLayer = layerToLayer;
+        this.b15 = b15;
+        this.clusterIndex = clusterIndex;
     }
 
     public DiagnosticsDto report() {
@@ -59,7 +64,8 @@ public class DiagnosticsService {
         boolean allOk = "ok".equals(corpusStatus.status())
             && "ok".equals(controlSchema.status())
             && "ok".equals(composerStatus.status());
-        return new DiagnosticsDto(allOk ? "ok" : "ko", corpusStatus, controlSchema, composerStatus);
+        return new DiagnosticsDto(allOk ? "ok" : "ko", corpusStatus, controlSchema, composerStatus,
+            b15Vocabulary());
     }
 
     // --- corpus -------------------------------------------------------------------------------
@@ -106,6 +112,27 @@ public class DiagnosticsService {
         }
         return new DiagnosticsDto.RootStatus("composer", props.composerRoot(), resolved.toString(), exists,
             DataRoots.COMPOSER_INPUTS, tier, ok ? "ok" : "ko", hint, Map.of("dates", dates));
+    }
+
+    // --- b15 status vocabulary (ADR-0018) -----------------------------------------------------
+
+    /**
+     * Forces the index build before reading the counts, so the report is self-sufficient: an
+     * operator opens diagnostics precisely when they have NOT got the tab working, and a report
+     * that said "nothing unrecognized" only because nothing had been parsed yet would be exactly
+     * the kind of confident-and-empty answer this endpoint exists to eliminate.
+     *
+     * <p>Not wasted work in the normal case — {@link ClusterIndexService} is fingerprint-cached
+     * and Tab 3 builds it first thing anyway, so this is a cache read whenever the tab has been
+     * opened, and pays for one parse otherwise.
+     */
+    private DiagnosticsDto.B15Vocabulary b15Vocabulary() {
+        int rows = clusterIndex.index().totals().rows();
+        List<DiagnosticsDto.StatusToken> unrecognized = b15.status().unrecognized().entrySet().stream()
+            .map(e -> new DiagnosticsDto.StatusToken(e.getKey(), e.getValue()))
+            .toList();
+        return new DiagnosticsDto.B15Vocabulary(props.b15().statusOk(), props.b15().statusKo(),
+            rows, unrecognized);
     }
 
     // --- control schema (relationships) -------------------------------------------------------

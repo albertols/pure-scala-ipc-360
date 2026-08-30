@@ -7,6 +7,7 @@ import { ETLDag } from './components/tab4/ETLDag'
 import { InfoTooltip } from './components/shared/InfoTooltip'
 import { TopProgressBar } from './components/shared/Spinner'
 import { Landing } from './components/landing/Landing'
+import { RelatedOverlay, readRelatedParam } from './components/tab3/RelatedOverlay'
 import { TABS, FUTURE_TABS } from './tabs'
 
 // ─── Top Bar ─────────────────────────────────────────────────────────────────
@@ -173,6 +174,10 @@ function prefersReducedMotion(): boolean {
 
 export default function App() {
   const [focusRecipe] = useState<string | null>(readFocusRecipe)
+  // `?related=` is the second URL mode, read exactly like `?focus=` above: no router, no new
+  // dependency, and it renders the SAME RelatedOverlay the in-app window does, so a link opened
+  // in a new tab and the hovering window cannot drift.
+  const [related] = useState(readRelatedParam)
   const [view, setView] = useState<ViewState>('landing')
   const [activeTab, setActiveTab] = useState<TabId>('viewer')
   const [searchQuery, setSearchQuery] = useState('')
@@ -215,6 +220,15 @@ export default function App() {
 
     setView('leaving')
     transitionTimer.current = window.setTimeout(() => setView('tabs'), LANDING_TRANSITION_MS)
+  }
+
+  if (related) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+        <TopProgressBar />
+        <RelatedOverlay nodeId={related.nodeId} clusters={related.clusters} standalone />
+      </div>
+    )
   }
 
   if (!focusRecipe && view !== 'tabs') {
@@ -266,7 +280,7 @@ export default function App() {
             )}
             {visited.has('operational') && (
               <div style={{ display: activeTab === 'operational' ? 'contents' : 'none' }}>
-                <ETLOperational />
+                <ETLOperational searchQuery={activeTab === 'operational' ? searchQuery : ''} />
               </div>
             )}
             {visited.has('dag') && (

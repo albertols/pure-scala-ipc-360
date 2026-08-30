@@ -19,7 +19,7 @@ class ClusterIndexServiceTest {
         Etl360Properties props = new Etl360Properties(
             "parser/src/main/resources/xmltobq", "does/not/exist",
             "does/not/exist-mock", composerRoot.toString(), null);
-        return new ClusterIndexService(new B15Reader(new DataRoots(props)));
+        return new ClusterIndexService(new B15Reader(new DataRoots(props), props));
     }
 
     private static void day(Path root, String date, String... rows) throws Exception {

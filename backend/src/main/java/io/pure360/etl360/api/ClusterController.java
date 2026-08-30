@@ -3,10 +3,15 @@ package io.pure360.etl360.api;
 import io.pure360.etl360.api.dto.ClusterDetailDto;
 import io.pure360.etl360.api.dto.ClusterIndexDto;
 import io.pure360.etl360.api.dto.LayerToLayerEntryDto;
+import io.pure360.etl360.api.dto.RelationshipsDto;
 import io.pure360.etl360.api.dto.RunsDto;
+import io.pure360.etl360.api.dto.LineageDto;
+import io.pure360.etl360.api.dto.SearchHitsDto;
 import io.pure360.etl360.config.DataRoots;
 import io.pure360.etl360.service.ClusterIndexService;
 import io.pure360.etl360.service.LayerToLayerService;
+import io.pure360.etl360.service.LineageService;
+import io.pure360.etl360.service.RelationshipService;
 import io.pure360.etl360.service.support.InvalidRequestException;
 import io.pure360.etl360.service.support.NotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +24,12 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Serves the b15 cluster index. Holds no logic beyond DTO assembly and the one join
@@ -35,11 +44,17 @@ public class ClusterController {
 
     private final ClusterIndexService index;
     private final LayerToLayerService layerToLayer;
+    private final RelationshipService relationships;
+    private final LineageService lineage;
     private final DataRoots roots;
 
-    public ClusterController(ClusterIndexService index, LayerToLayerService layerToLayer, DataRoots roots) {
+    public ClusterController(ClusterIndexService index, LayerToLayerService layerToLayer,
+                             RelationshipService relationships, LineageService lineage,
+                             DataRoots roots) {
         this.index = index;
         this.layerToLayer = layerToLayer;
+        this.relationships = relationships;
+        this.lineage = lineage;
         this.roots = roots;
     }
 
@@ -132,6 +147,113 @@ public class ClusterController {
             out.put(recipe, List.copyOf(newestFirst));
         }
         return new RunsDto(limit, out);
+    }
+
+    static final int LINEAGE_DEFAULT_LIMIT = 150;
+    static final int LINEAGE_MAX_LIMIT = 600;
+
+    /**
+     * One node's transitive upstream AND downstream closure — see {@link LineageDto} and ADR-0020.
+     *
+     * <p>Unlike {@code /search}, an unknown {@code node} IS a 404: the caller here has a node id
+     * in hand (it came from a graph this server served), so a miss means something is genuinely
+     * wrong rather than that the user is still typing.
+     */
+    @GetMapping("/lineage")
+    public LineageDto lineage(@RequestParam("node") String node,
+                              @RequestParam(name = "limit", defaultValue = "" + LINEAGE_DEFAULT_LIMIT) int limit) {
+        if (limit < 1 || limit > LINEAGE_MAX_LIMIT) {
+            throw new InvalidRequestException(
+                "limit must be between 1 and " + LINEAGE_MAX_LIMIT + ", got " + limit);
+        }
+        return lineage.lineage(node, limit);
+    }
+
+    static final int SEARCH_MIN_Q = 2;
+    static final int SEARCH_DEFAULT_LIMIT = 50;
+    static final int SEARCH_MAX_LIMIT = 200;
+
+    /**
+     * Substring search over b15 recipe names AND relationship-graph table names, each hit carrying
+     * the clusters that reach it.
+     *
+     * <p>Exists because the client cannot do this join: table names are only in the L2L graph,
+     * which ADR-0014 never fetches unscoped, so Tab 3's own toolbar search can only see cards
+     * already loaded — and loading them requires already knowing which cluster to pick. See
+     * {@link SearchHitsDto} and ADR-0019.
+     *
+     * <p>A query shorter than {@link #SEARCH_MIN_Q} returns an EMPTY result rather than a 400: the
+     * caller is a search box, and erroring on the first keystroke would flash it red on every use.
+     * An over-range {@code limit}, by contrast, is a caller bug and does get a 400.
+     */
+    @GetMapping("/search")
+    public SearchHitsDto search(@RequestParam("q") String q,
+                                @RequestParam(name = "limit", defaultValue = "" + SEARCH_DEFAULT_LIMIT) int limit) {
+        if (limit < 1 || limit > SEARCH_MAX_LIMIT) {
+            throw new InvalidRequestException(
+                "limit must be between 1 and " + SEARCH_MAX_LIMIT + ", got " + limit);
+        }
+        String needle = q == null ? "" : q.trim().toLowerCase(Locale.ROOT);
+        if (needle.length() < SEARCH_MIN_Q) return new SearchHitsDto(List.of(), false);
+
+        ClusterIndexService.Index idx = index.index();
+        Map<String, List<String>> clustersByRecipe = idx.clustersByRecipe();
+        Map<String, String> layerByRecipe = layerByRecipe();
+
+        // Recipes first, then tables; each name-ascending. Deterministic ordering is not cosmetic
+        // — the same query must answer identically across restarts, the same guarantee
+        // ClusterIndexService.clustersOf() makes for its own list.
+        List<SearchHitsDto.HitDto> hits = new ArrayList<>();
+        for (String recipe : new TreeSet<>(idx.runsByRecipe().keySet())) {
+            if (!recipe.toLowerCase(Locale.ROOT).contains(needle)) continue;
+            hits.add(new SearchHitsDto.HitDto("recipe", recipe,
+                layerByRecipe.getOrDefault(recipe, UNKNOWN_LAYER),
+                clustersByRecipe.getOrDefault(recipe, List.of())));
+        }
+        hits.addAll(tableHits(needle, clustersByRecipe));
+
+        boolean truncated = hits.size() > limit;
+        return new SearchHitsDto(List.copyOf(truncated ? hits.subList(0, limit) : hits), truncated);
+    }
+
+    /**
+     * Table matches, each carrying the clusters of every recipe joined to it by an edge in either
+     * direction — a table is reachable both from the recipe that writes it and from the ones that
+     * read it, and an operator troubleshooting it wants all of them.
+     */
+    private List<SearchHitsDto.HitDto> tableHits(String needle, Map<String, List<String>> clustersByRecipe) {
+        RelationshipsDto graph = relationships.graph();
+        Map<String, RelationshipsDto.NodeDto> byId = new LinkedHashMap<>();
+        for (RelationshipsDto.NodeDto n : graph.nodes()) if (n.id() != null) byId.put(n.id(), n);
+
+        Map<String, Set<String>> recipeIdsByTableId = new LinkedHashMap<>();
+        for (RelationshipsDto.EdgeDto e : graph.edges()) {
+            RelationshipsDto.NodeDto from = byId.get(e.from());
+            RelationshipsDto.NodeDto to = byId.get(e.to());
+            if (from == null || to == null) continue;
+            if ("recipe".equals(from.kind()) && "table".equals(to.kind())) {
+                recipeIdsByTableId.computeIfAbsent(to.id(), x -> new LinkedHashSet<>()).add(from.id());
+            } else if ("table".equals(from.kind()) && "recipe".equals(to.kind())) {
+                recipeIdsByTableId.computeIfAbsent(from.id(), x -> new LinkedHashSet<>()).add(to.id());
+            }
+        }
+
+        Map<String, SearchHitsDto.HitDto> matched = new java.util.TreeMap<>();
+        for (RelationshipsDto.NodeDto node : graph.nodes()) {
+            if (!"table".equals(node.kind()) || node.name() == null) continue;
+            if (!node.name().toLowerCase(Locale.ROOT).contains(needle)) continue;
+            Set<String> clusters = new TreeSet<>();
+            for (String recipeId : recipeIdsByTableId.getOrDefault(node.id(), Set.of())) {
+                RelationshipsDto.NodeDto recipe = byId.get(recipeId);
+                if (recipe != null && recipe.name() != null) {
+                    clusters.addAll(clustersByRecipe.getOrDefault(recipe.name(), List.of()));
+                }
+            }
+            matched.putIfAbsent(node.name(), new SearchHitsDto.HitDto("table", node.name(),
+                node.layer() == null || node.layer().isEmpty() ? UNKNOWN_LAYER : node.layer(),
+                List.copyOf(clusters)));
+        }
+        return List.copyOf(matched.values());
     }
 
     private Map<String, String> layerByRecipe() {

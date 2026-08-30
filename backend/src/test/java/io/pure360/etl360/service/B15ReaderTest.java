@@ -18,7 +18,7 @@ class B15ReaderTest {
         Etl360Properties props = new Etl360Properties(
             "parser/src/main/resources/xmltobq", "does/not/exist",
             "backend/src/main/resources/mock", composerRoot.toString(), null);
-        return new B15Reader(new DataRoots(props));
+        return new B15Reader(new DataRoots(props), props);
     }
 
     private static Path writeCsv(Path dir, String date, String body) throws Exception {

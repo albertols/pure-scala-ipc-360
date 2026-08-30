@@ -4,16 +4,20 @@ import type { ApiError } from '../../api/client'
 import { useOperationalSummary, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
 import type { AppConfig, RelationshipGraph } from '../../api/queries'
 import { useClusterIndex, useScopedRelationships, useRuns, type RunT } from '../../api/clusterQueries'
-import { setOperationalView, useOperationalView } from '../../state/operationalView'
-import { toOperationalGraph, summarizeSnapshot, fitToViewport, type OperationalEdge } from '../../api/relationshipsAdapter'
+import { setOperationalView, useOperationalView, visitNode, stepHistory } from '../../state/operationalView'
+import { toOperationalGraph, summarizeSnapshot, fitToViewport, DENSITY_FOOTPRINT, type OperationalEdge } from '../../api/relationshipsAdapter'
 import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../../api/gcpLinks'
 import { OperationalCard } from '../shared/OperationalCard'
 import { pickDefaultRun } from '../shared/RunPicker'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
+import { layerColor, kindPalette } from '../../theme/semanticColors'
+import { MultiFilterChips } from '../shared/MultiFilterChips'
 import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
 import { PreviewOverlay } from './PreviewOverlay'
+import { RelatedOverlay } from './RelatedOverlay'
+import { OperationalSearch } from './OperationalSearch'
 import { ClusterPane } from './ClusterPane'
 import { SelectionStrip, type SelectionSummary } from './SelectionStrip'
 import { OperationalProgress, type ProgressStage } from './OperationalProgress'
@@ -81,6 +85,7 @@ const RelationshipGraph = memo(function RelationshipGraph({
   pan,
   onPan,
   summaryItems,
+  summaryVisible,
   runsByRecipe,
   selectedRunDate,
   onSelectRun,
@@ -102,6 +107,8 @@ const RelationshipGraph = memo(function RelationshipGraph({
    * footer (spec §7.1's Tab 3 row). Empty when there's no selected-date
    * snapshot loaded yet. */
   summaryItems: SummaryItem[]
+  /** False while the cluster pane is collapsed — see the chip's own comment below. */
+  summaryVisible: boolean
   /** Task 14: chunked `/api/operational/runs` result, keyed by recipe filename. */
   runsByRecipe: Record<string, RunT[]>
   selectedRunDate: string | null
@@ -148,8 +155,11 @@ const RelationshipGraph = memo(function RelationshipGraph({
 
   // Computed maxima from card coordinates + margins (was a static 1200x700;
   // real layouts can exceed that, and floor stays for small/empty graphs).
-  const CANVAS_W = Math.max(1200, ...cards.map(c => (c.x ?? 0) + 280))
-  const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + 220))
+  // Canvas extent = furthest card plus its OWN footprint, not two hardcoded numbers that only
+  // ever matched the `detailed` density they were written for.
+  const foot = DENSITY_FOOTPRINT[density]
+  const CANVAS_W = Math.max(1200, ...cards.map(c => (c.x ?? 0) + foot.width))
+  const CANVAS_H = Math.max(700, ...cards.map(c => (c.y ?? 0) + foot.height))
 
   const detachDrag = useCallback(() => {
     const listeners = activeDragListeners.current
@@ -279,7 +289,10 @@ const RelationshipGraph = memo(function RelationshipGraph({
               position: 'absolute',
               left: card.x ?? 0,
               top: card.y ?? 0,
-              width: density === 'detailed' ? 252 : 'auto',
+              // Fixed, never 'auto': an auto-width card grows to its longest name and overruns
+              // the very column pitch that was computed for its declared width — which is what
+              // made long real-corpus names overlap horizontally (sub-project 12, defect 1).
+              width: DENSITY_FOOTPRINT[density].width,
               zIndex: selected === card.id ? 10 : 1,
               // A 1-hop neighbour is context, not scope: readable, visibly not what you asked for.
               opacity: card.neighbor ? 0.45 : 1,
@@ -315,9 +328,13 @@ const RelationshipGraph = memo(function RelationshipGraph({
       )}
 
       {/* Task 16: view-aware corpus summary — floating bottom-left chip (no
-          left rail to dock into, unlike Tabs 1/2/4). */}
-      {summaryItems.length > 0 && (
-        <div style={{
+          left rail to dock into, unlike Tabs 1/2/4).
+          Sub-project 12: gated on the pane, because collapsing the pane is the "maximum canvas"
+          gesture and this chip floats over the very cards it just made room for. An explicit
+          PROP rather than a store read inside this component, which is memo'd over its props —
+          a store read would slip past that memo boundary. */}
+      {summaryVisible && summaryItems.length > 0 && (
+        <div data-testid="snapshot-chip" style={{
           position: 'absolute', bottom: 14, left: 14,
           padding: '5px 10px', background: 'var(--surface)', border: '1px solid var(--border)',
           borderRadius: 5,
@@ -350,7 +367,7 @@ const RelationshipGraph = memo(function RelationshipGraph({
  * the entire unscoped graph's 20 984 B, and it grows as recipes x dates — tens of megabytes at
  * ~7 000 recipes and 90 dated exports. It now carries the same `clusters=` scope the graph does.
  */
-export function ETLOperational() {
+export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?: string } = {}) {
   const view = useOperationalView()
   const hasSelection = view.selectedClusters.length > 0
 
@@ -381,15 +398,26 @@ export function ETLOperational() {
     precision: 'hour',
     isNow: true,
   })
-  const [layerFilter, setLayerFilter] = useState<string>('ALL')
+  // Layer and Status are SETS: an operator narrows by "CDM and DWH" or "KO and PENDING", which
+  // single-select made inexpressible. Empty means no filter — `ALL` clears the set rather than
+  // being a value in it. Kind stays single: it has two real values, so a set adds a state
+  // (`{recipe, table}`) whose meaning is already `ALL`.
+  const [layerFilter, setLayerFilter] = useState<string[]>([])
   const [kindFilter, setKindFilter] = useState<string>('ALL')
-  const [statusFilter, setStatusFilter] = useState<string>('ALL')
+  const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   // Task 9: snapshot the resolved path when "Open preview" is clicked, rather
   // than re-deriving from `selected` on every render — so the overlay keeps
   // showing the recipe it was opened for even if the selection changes or
   // clears underneath it while it's open.
   const [preview, setPreview] = useState<{ recipePath: string | null; mappingPath: string | null } | null>(null)
+  /** Node id whose neighbourhood the hovering "Show all related" window is focused on. */
+  const [relatedNode, setRelatedNode] = useState<string | null>(null)
+  /**
+   * A node picked from the GLOBAL search that cannot be selected yet, because its clusters were
+   * only just added and the scoped graph has not resolved. Held until it can be honoured.
+   */
+  const [pendingNode, setPendingNode] = useState<string | null>(null)
 
   // Task 16: the raw b15 rows for the selected date — distinct from `summary` above (the all-time
   // per-recipe aggregate), needed for the floating chip's exact row count/OK-KO split. Gated on
@@ -422,6 +450,20 @@ export function ETLOperational() {
     for (const n of rel.data?.nodes ?? []) if (n.id) m.set(n.id, n)
     return m
   }, [rel.data])
+
+  /**
+   * A global-search pick. Selecting the hit's clusters triggers a scoped fetch, so the node it
+   * names does not exist yet — `pendingNode` holds it until the graph that contains it arrives.
+   * A hit with no clusters cannot be navigated to at all; the panel already says so.
+   */
+  const handleSearchPick = (hit: { name: string; clusters: string[] }) => {
+    if (hit.clusters.length === 0) return
+    setOperationalView({ selectedClusters: hit.clusters, selectedNode: null })
+    setPendingNode(hit.name)
+  }
+
+  /** One element, rendered by every branch that can be on screen while the operator types. */
+  const searchPanel = <OperationalSearch query={globalQuery} onPick={handleSearchPick} />
 
   // Task 16: `index.data.dates` is now the single source of the date list.
   // `OperationalService#dates()` returns `b15.dates()`, and `ClusterIndexService.build()` opens
@@ -479,6 +521,17 @@ export function ETLOperational() {
     [rel.data, scopedSummary, view.selectedDate, view.density],
   )
 
+  // Honour a pending global-search pick as soon as the scoped graph carrying it resolves.
+  // Matched on NAME, not id: the search endpoint returns names, and node-id shape is a backend
+  // detail this component has no reason to depend on.
+  useEffect(() => {
+    if (pendingNode === null || !graph) return
+    const card = graph.cards.find(c => c.name === pendingNode)
+    if (!card) return
+    visitNode({ nodeId: card.id, zoom: view.zoom, pan: view.pan })
+    setPendingNode(null)
+  }, [pendingNode, graph])
+
   // Task 15: cycling density re-lays out at the new pitch AND refits the viewport in one store
   // update — otherwise a Compact re-layout could leave the view panned/zoomed for the OLD
   // (wider) Detailed extent, defeating the point of "fitting more flow on screen".
@@ -495,9 +548,9 @@ export function ETLOperational() {
   // the edges that touched them. Because `recipeNames` is derived from this list, an unchecked
   // recipe also stops costing a slot in the run-history request.
   const cards = useMemo(() => withoutDeselectedRecipes(graph?.cards ?? [], view.deselectedRecipes).filter(c => {
-    if (layerFilter !== 'ALL' && c.layer !== layerFilter) return false
+    if (layerFilter.length > 0 && !layerFilter.includes(c.layer)) return false
     if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
-    if (statusFilter !== 'ALL' && c.status !== statusFilter) return false
+    if (statusFilter.length > 0 && !statusFilter.includes(c.status)) return false
     if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
     return true
   }), [graph, view.deselectedRecipes, layerFilter, kindFilter, statusFilter, searchQuery])
@@ -628,7 +681,8 @@ export function ETLOperational() {
   // has been made and none will be until a cluster is checked.
   if (!hasSelection) {
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {searchPanel}
         <ClusterPane />
         <div
           data-testid="cluster-prompt"
@@ -661,7 +715,8 @@ export function ETLOperational() {
   const scopeError = (rel.error ?? summary.error) as ApiError | null
   if (scopeError) {
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {searchPanel}
         <ClusterPane />
         <div style={{ flex: 1, background: 'var(--bg)' }}>
           <ApiErrorBlock error={scopeError} />
@@ -675,7 +730,8 @@ export function ETLOperational() {
   // than a named stage.
   if (!graph || summary.isLoading) {
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {searchPanel}
         <ClusterPane />
         <div style={{ flex: 1, background: 'var(--bg)' }}>
           <OperationalProgress stages={stages} />
@@ -695,7 +751,8 @@ export function ETLOperational() {
   // The pane stays mounted: changing the selection must not require a reload.
   if (graph.cards.length === 0) {
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {searchPanel}
         <ClusterPane />
         <div style={{ flex: 1, overflow: 'auto', padding: 16, background: 'var(--bg)' }}>
           <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No relationship entries</div>
@@ -736,8 +793,9 @@ export function ETLOperational() {
   const bigQueryHref = buildBigQueryUrl(cfg.data)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
 
+      {searchPanel}
       <SelectionStrip summary={selectionSummary} />
 
       {/* toolbar */}
@@ -760,7 +818,7 @@ export function ETLOperational() {
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search tables / recipes…"
+            placeholder="Filter this canvas…"
             style={{
               background: 'var(--surface-2)', border: '1px solid var(--border)',
               borderRadius: 5, color: '#c8d3e8', fontSize: 11, padding: '5px 10px 5px 26px',
@@ -770,11 +828,18 @@ export function ETLOperational() {
         </div>
 
         {/* filters — options are data-driven from the real graph */}
-        <FilterChips label="Layer" options={['ALL', ...graph.layers]} value={layerFilter} onChange={setLayerFilter} />
-        <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter} />
+        {/* The toolbar IS the legend (ADR-0017): the control you filter a dimension with carries
+            that dimension's colour, so there is no separate legend block that can drift from the
+            cards it describes. `ALL` stays neutral in every group — it is not a value. */}
+        <MultiFilterChips testId="layer-filter" label="Layer" options={graph.layers}
+          selected={layerFilter} onToggle={setLayerFilter}
+          colors={Object.fromEntries(graph.layers.map(l => [l, layerColor(l)]))} />
+        <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter}
+          colors={{ recipe: kindPalette('recipe').accent, table: kindPalette('table').accent }} />
         {/* RUNNING isn't a real operational state (mock/real history only ever
             resolves OK/KO/PENDING) — swapped for PENDING per the plan's ledger note. */}
-        <FilterChips label="Status" options={['ALL', 'OK', 'KO', 'PENDING']} value={statusFilter} onChange={setStatusFilter}
+        <MultiFilterChips testId="status-filter" label="Status" options={['OK', 'KO', 'PENDING']}
+          selected={statusFilter} onToggle={setStatusFilter}
           colors={{ OK: '#34d399', KO: '#f87171', PENDING: '#4a5570' }} />
 
         <div style={{ flex: 1 }} />
@@ -807,6 +872,21 @@ export function ETLOperational() {
             error={diagnostics.error as ApiError | null} />
         <StatusSummary cards={shownCards} />
 
+        {/* The collapsed TIME VIEW's stand-in. Carries the snapshot the canvas is showing, so
+            hiding the bar never costs the operator sight of WHICH snapshot that is. */}
+        {view.timeViewCollapsed && (
+          <button
+            data-testid="time-view-chip"
+            aria-label="Show time view"
+            title="Show the time view"
+            onClick={() => setOperationalView({ timeViewCollapsed: false })}
+            style={{ ...zoomBtn, width: 'auto', padding: '0 10px', fontSize: 10,
+                     fontFamily: 'JetBrains Mono, monospace' }}
+          >
+            {`⏱ ${view.selectedDate ?? '—'} · ${timeMeta.hour}h ▾`}
+          </button>
+        )}
+
         {/* density — Task 15: an explicit control, not something zoom implies. Cycling re-lays
             out at the new pitch AND refits the viewport (onCycleDensity), so "fitting more flow
             on screen" is a real re-pack rather than a re-scale of the same layout. */}
@@ -832,19 +912,31 @@ export function ETLOperational() {
       </div>
 
       {/* time picker + availability calendar (Task 16): additive sibling — TimePicker itself is
-          untouched, so only this wrapper gains the flex row it takes to sit them side by side. */}
-      <div style={{
-        padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)',
-        display: 'flex', alignItems: 'center', gap: 8,
-      }}>
-        <TimePicker value={timeVal} onChange={handleTimeChange} />
-        <AvailabilityCalendar
-          availableDates={availableDates}
-          selectionDates={selectionDates}
-          selectedDate={view.selectedDate}
-          onSelect={d => setOperationalView({ selectedDate: d })}
-        />
-      </div>
+          untouched, so only this wrapper gains the flex row it takes to sit them side by side.
+          Sub-project 12: collapsible. When hidden the WRAPPER AND ITS BORDER are gone, so the
+          whole bar is returned to the canvas rather than leaving a residual strip; the toolbar
+          chip above keeps the active snapshot named. */}
+      {!view.timeViewCollapsed && (
+        <div data-testid="time-view-bar" style={{
+          padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <TimePicker value={timeVal} onChange={handleTimeChange} />
+          <AvailabilityCalendar
+            availableDates={availableDates}
+            selectionDates={selectionDates}
+            selectedDate={view.selectedDate}
+            onSelect={d => setOperationalView({ selectedDate: d })}
+          />
+          <div style={{ flex: 1 }} />
+          <button
+            aria-label="Hide time view"
+            title="Hide the time view and give the bar back to the canvas"
+            onClick={() => setOperationalView({ timeViewCollapsed: true })}
+            style={{ ...zoomBtn, width: 22, height: 22, fontSize: 11 }}
+          >{'✕'}</button>
+        </div>
+      )}
 
       {/* main area */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -854,11 +946,16 @@ export function ETLOperational() {
           cards={cards}
           edges={graph.edges}
           selected={view.selectedNode}
-          onSelect={id => setOperationalView({ selectedNode: id })}
+          // Every selection joins the navigation trail, so ◀ unwinds canvas clicks and Related
+          // hops through the same stack. Deselection (null) is not a stop on a trail.
+          onSelect={id => id === null
+            ? setOperationalView({ selectedNode: null })
+            : visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan })}
           zoom={view.zoom}
           pan={view.pan}
           onPan={onPan}
           summaryItems={summaryItems}
+          summaryVisible={!view.paneCollapsed}
           runsByRecipe={runsByRecipe}
           density={view.density}
           containerRef={graphContainerRef}
@@ -869,7 +966,7 @@ export function ETLOperational() {
 
         {/* detail side panel */}
         {selectedCard && (
-          <div style={{
+          <div data-testid="details-panel" style={{
             width: 300, flexShrink: 0,
             background: 'var(--surface)', borderLeft: '1px solid var(--border)',
             overflow: 'auto', padding: '16px',
@@ -897,15 +994,52 @@ export function ETLOperational() {
             {/* related cards */}
             <div>
               <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-                Related ({selectedCard.relations.length})
+                {/* Following a lineage used to be a one-way trip: each Related click replaced the
+                    selection with no record of where you came from. */}
+                <button
+                  aria-label="Back to previous node"
+                  title="Back to the previous node and the view you left it at"
+                  disabled={view.historyIndex <= 0}
+                  onClick={() => stepHistory(-1)}
+                  style={historyBtn(view.historyIndex > 0)}
+                >{'◀'}</button>
+                <button
+                  aria-label="Forward to next node"
+                  title="Forward"
+                  disabled={view.historyIndex >= view.nodeHistory.length - 1}
+                  onClick={() => stepHistory(1)}
+                  style={historyBtn(view.historyIndex < view.nodeHistory.length - 1)}
+                >{'▶'}</button>
+                <span style={{ marginLeft: 2 }}>Related ({selectedCard.relations.length})</span>
                 <InfoTooltip text="Tables and recipes that directly exchange data with this node." placement="right" />
+                <div style={{ flex: 1 }} />
+                {/* An ANCHOR, never a button. Left-click opens the in-app window; ⌘/Ctrl-click,
+                    middle-click and "Open link in new tab" all fall through to the browser, which
+                    already implements every one of those gestures correctly. Nothing here
+                    reimplements them, and there is no window.open. */}
+                <a
+                  href={relatedHref(selectedCard.id, view.selectedClusters)}
+                  onClick={e => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+                    e.preventDefault()
+                    setRelatedNode(selectedCard.id)
+                  }}
+                  title="Show all related — click to open here, ⌘/middle-click for a new tab"
+                  style={{
+                    fontSize: 10, color: 'var(--blue)', textDecoration: 'none',
+                    padding: '1px 6px', borderRadius: 4,
+                    border: '1px solid rgba(79,156,249,0.25)', background: 'rgba(79,156,249,0.1)',
+                  }}
+                >Show all related ↗</a>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {selectedCard.relations.map(rid => {
                   const relCard = graph.cards.find(c => c.id === rid)
                   if (!relCard) return null
                   return (
-                    <div key={rid} onClick={() => setOperationalView({ selectedNode: rid })} style={{ cursor: 'pointer' }}>
+                    <div key={rid} data-testid="related-card"
+                      onClick={() => visitNode({ nodeId: rid, zoom: view.zoom, pan: view.pan })}
+                      style={{ cursor: 'pointer' }}>
                       <OperationalCard card={relCard} density="compact" />
                     </div>
                   )
@@ -934,6 +1068,23 @@ export function ETLOperational() {
           </div>
         )}
       </div>
+
+      {relatedNode && (
+        <RelatedOverlay
+          nodeId={relatedNode}
+          clusters={view.selectedClusters}
+          selectedDate={view.selectedDate}
+          // The canvas behind stays in sync with the overlay's focus (spec §6.3), so closing
+          // leaves the operator where they navigated to rather than snapping back — and every
+          // overlay hop joins the same ◀/▶ trail as a canvas click.
+          // Click selects: the canvas behind tracks the lineage focus, and the hop joins the
+          // same back/forward trail as a canvas click — but the flow itself stays put.
+          onFocus={id => visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan })}
+          // Double click re-seeds the flow on that node.
+          onReseed={id => { visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan }); setRelatedNode(id) }}
+          onClose={() => setRelatedNode(null)}
+        />
+      )}
 
       {preview && (
         <PreviewOverlay
@@ -1021,14 +1172,35 @@ function FilterChips({
           <button key={o} onClick={() => onChange(o)} style={{
             padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
             fontFamily: 'JetBrains Mono, monospace',
+            // An unselected chip keeps its palette COLOUR (that is what makes the row a legend)
+            // but not its background or border — so "which filter is on?" survives the tinting.
             background: value === o ? (c ? `${c}22` : 'var(--surface-3)') : 'transparent',
             border: `1px solid ${value === o ? (c ?? 'var(--border)') : 'transparent'}`,
-            color: value === o ? (c ?? '#e2e8f8') : '#4a5570',
+            color: value === o ? (c ?? '#e2e8f8') : (c ?? '#4a5570'),
           }}>{o}</button>
         )
       })}
     </div>
   )
+}
+
+/** The standalone-tab URL for one node's neighbourhood — the `href` that makes ⌘/middle-click
+ * work without a line of JavaScript. Mirrors `readRelatedParam()` in `RelatedOverlay.tsx`. */
+export function relatedHref(nodeId: string, clusters: string[]): string {
+  return `?related=${encodeURIComponent(nodeId)}&clusters=${encodeURIComponent(clusters.join(','))}`
+}
+
+/** ◀ / ▶ — visibly inert at the ends rather than merely unresponsive. */
+function historyBtn(enabled: boolean): React.CSSProperties {
+  return {
+    width: 18, height: 18, padding: 0, borderRadius: 4,
+    background: enabled ? 'var(--surface-3)' : 'transparent',
+    border: `1px solid ${enabled ? 'var(--border)' : 'transparent'}`,
+    color: enabled ? 'var(--text)' : '#2a3050',
+    cursor: enabled ? 'pointer' : 'default',
+    fontSize: 9, lineHeight: 1,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }
 }
 
 const zoomBtn: React.CSSProperties = {
