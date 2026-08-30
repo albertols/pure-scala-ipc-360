@@ -1953,15 +1953,15 @@ Spec §15.6.
 
 ## Task 17: merge
 
-- [ ] **Step 1: Final full gate from a clean build**
+- [x] **Step 1: Final full gate from a clean build**
 
 Run: `mvn -q -am -pl backend clean test && cd frontend && pnpm test && npx tsc --noEmit && cd .. && make validate-loop`
 
-- [ ] **Step 2: Confirm the constraints held**
+- [x] **Step 2: Confirm the constraints held**
 
 Run: `git diff --stat main...HEAD -- parser/ backend/src/main/resources/mock/`
 Expected: **empty**. Any output is a Global Constraint violation.
 
-- [ ] **Step 3: Merge**
+- [x] **Step 3: Merge**
 
 Use superpowers:finishing-a-development-branch. Merge `feat/etl360-operational-clarity` into `main`.
