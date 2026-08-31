@@ -165,7 +165,7 @@ public class ClusterController {
             throw new InvalidRequestException(
                 "limit must be between 1 and " + LINEAGE_MAX_LIMIT + ", got " + limit);
         }
-        return lineage.lineage(node, limit);
+        return lineage.lineage(node, limit, null, List.of());
     }
 
     static final int SEARCH_MIN_Q = 2;

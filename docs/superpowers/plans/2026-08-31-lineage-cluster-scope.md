@@ -307,7 +307,7 @@ existing contract tests keep passing untouched.
 - Produces: `LineageService.lineage(String seed, int limit, String clusterSpec, List<String> prefer)` → `LineageDto`; the 2-arg `lineage(String, int)` overload delegating with `(null, List.of())`. `LineageDto.ClusterOptionDto(String name, int recipes)`. `LineageDto.LineageNodeDto` gains a trailing `boolean gateway`. Constant `LineageService.AUTO = "auto"`.
 - Consumed by: Task 3 (controller), Task 10 (TS types mirror this shape).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -439,12 +439,12 @@ class LineageScopeTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=LineageScopeTest`
 Expected: compile failure — `lineage(String,int,String,List)` and `activeCluster()` do not exist.
 
-- [ ] **Step 3: Widen `LineageDto`**
+- [x] **Step 3: Widen `LineageDto`**
 
 Replace `backend/src/main/java/io/pure360/etl360/api/dto/LineageDto.java` with:
 
@@ -496,7 +496,7 @@ public record LineageDto(String seed, List<LineageNodeDto> nodes,
 }
 ```
 
-- [ ] **Step 4: Rewrite `LineageService`**
+- [x] **Step 4: Rewrite `LineageService`**
 
 Replace `backend/src/main/java/io/pure360/etl360/service/LineageService.java` with:
 
@@ -725,13 +725,13 @@ public class LineageService {
 }
 ```
 
-- [ ] **Step 5: Run the new tests and the untouched contract tests**
+- [x] **Step 5: Run the new tests and the untouched contract tests**
 
 Run: `mvn -q -am -pl backend test -Dtest='LineageScopeTest,LineageContractTest'`
 Expected: PASS. `LineageContractTest` is **unedited** — that is the proof the unscoped default
 did not move.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/dto/LineageDto.java \
