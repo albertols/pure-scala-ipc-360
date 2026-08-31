@@ -1076,7 +1076,7 @@ Defect 3, part 2. Wiring only — the geometry is already proven.
 - Consumes: `applyOffsets` (Task 4).
 - Produces: nothing new; `LineageFlow`'s props are unchanged.
 
-- [ ] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
 
 ```ts
 describe('dragging keeps the arrows attached', () => {
@@ -1107,13 +1107,13 @@ describe('dragging keeps the arrows attached', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: FAIL — the edge `d` attributes are unchanged after the drag, because edges are drawn
 from `layout.edges` and never see the offsets.
 
-- [ ] **Step 3: Render from the offset layout**
+- [x] **Step 3: Render from the offset layout**
 
 In `LineageFlow.tsx`, immediately after the existing `layout` memo, add:
 
@@ -1134,17 +1134,17 @@ Delete the `at()` helper (`LineageFlow.tsx:114-117`). Then:
 
 Import `applyOffsets` alongside `layoutLineage` from `./lineageLayout`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: PASS.
 
-- [ ] **Step 5: Type-check**
+- [x] **Step 5: Type-check**
 
 Run: `cd frontend && npx tsc --noEmit`
 Expected: no output.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..

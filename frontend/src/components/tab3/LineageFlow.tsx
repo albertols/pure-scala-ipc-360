@@ -8,7 +8,7 @@ import {
 import { OperationalCard } from '../shared/OperationalCard'
 import { MultiFilterChips } from '../shared/MultiFilterChips'
 import { layerColor, kindPalette, statusColor } from '../../theme/semanticColors'
-import { layoutLineage, LINEAGE_FOOTPRINT, type PlacedNode } from './lineageLayout'
+import { layoutLineage, applyOffsets, LINEAGE_FOOTPRINT } from './lineageLayout'
 import type { ApiError } from '../../api/client'
 import type { OperationalCard as CardData } from '../../types'
 
@@ -103,6 +103,9 @@ export function LineageFlow({
     () => (lineage.data ? layoutLineage(lineage.data.nodes, lineage.data.edges) : null),
     [lineage.data],
   )
+  // Cards AND edges are drawn from the OFFSET layout, so an arrow stays attached to the card it
+  // points at. `applyOffsets({})` is identity, so `reset layout` is exactly `layoutLineage`.
+  const view = useMemo(() => (layout ? applyOffsets(layout, offsets) : null), [layout, offsets])
 
   // Reset manual arrangement whenever the lineage itself changes — offsets are keyed by node id
   // and would otherwise land on unrelated nodes after a re-seed.
@@ -110,11 +113,6 @@ export function LineageFlow({
     setOffsets({})
     setSelected(null)
   }, [nodeId])
-
-  const at = (p: PlacedNode) => {
-    const o = offsets[p.id]
-    return { x: p.x + (o?.dx ?? 0), y: p.y + (o?.dy ?? 0) }
-  }
 
   // Ancestors + descendants of the traced node, over the ORIGINAL edges (not the routed chains,
   // whose dummies are not nodes anyone can trace to).
@@ -194,7 +192,7 @@ export function LineageFlow({
   }
 
   const data = lineage.data!
-  if (data.nodes.length === 0 || !layout) {
+  if (data.nodes.length === 0 || !layout || !view) {
     return (
       <div
         data-testid="lineage-empty"
@@ -331,11 +329,9 @@ export function LineageFlow({
           data-testid="lineage-scroll"
           style={{ flex: 1, overflow: 'auto', minHeight: 0, position: 'relative' }}
         >
-          <div
-            style={{ position: 'relative', width: layout.width + RAIL_W, height: layout.height }}
-          >
+          <div style={{ position: 'relative', width: view.width + RAIL_W, height: view.height }}>
             {/* tier rails — sticky so the band a node sits in stays named while scrolling */}
-            {layout.bands.map(b => (
+            {view.bands.map(b => (
               <div
                 key={b.tier}
                 data-testid="lineage-band"
@@ -343,7 +339,7 @@ export function LineageFlow({
                   position: 'absolute',
                   left: 0,
                   top: b.y - 8,
-                  width: layout.width + RAIL_W,
+                  width: view.width + RAIL_W,
                   height: b.height + 16,
                   background: BAND_TINT[b.tier],
                   borderRadius: 8,
@@ -354,8 +350,8 @@ export function LineageFlow({
             ))}
 
             <svg
-              width={layout.width + RAIL_W}
-              height={layout.height}
+              width={view.width + RAIL_W}
+              height={view.height}
               style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
             >
               <defs>
@@ -380,7 +376,7 @@ export function LineageFlow({
                   <path d="M0 1 L6 3.5 L0 6 Z" fill="#4f9cf9" />
                 </marker>
               </defs>
-              {layout.edges.map((e, i) => {
+              {view.edges.map((e, i) => {
                 const hot = traced !== null && traced.has(e.from) && traced.has(e.to)
                 const dim = traced !== null && !hot
                 const shifted = e.points.map(p => ({
@@ -405,11 +401,11 @@ export function LineageFlow({
               })}
             </svg>
 
-            {layout.nodes
+            {view.nodes
               .filter(p => !p.isDummy)
               .map(p => {
                 const n = p.node!
-                const pos = at(p)
+                const pos = p
                 const isSeed = p.id === data.seed
                 const dim = isDim(n)
                 const hot = traced !== null && traced.has(n.id)
@@ -456,14 +452,14 @@ export function LineageFlow({
             {/* Tier labels, painted above the cards. They are sticky, so once the flow is
                 scrolled they travel over whatever card is beneath — hence the opaque backing
                 rather than bare text. */}
-            {layout.bands.map(b => (
+            {view.bands.map(b => (
               <div
                 key={`${b.tier}-label`}
                 style={{
                   position: 'absolute',
                   left: 0,
                   top: b.y - 6,
-                  width: layout.width + RAIL_W,
+                  width: view.width + RAIL_W,
                   height: 16,
                   pointerEvents: 'none',
                   zIndex: 5,
@@ -491,7 +487,7 @@ export function LineageFlow({
             ))}
 
             {/* hop ruler */}
-            {[...new Map(layout.nodes.filter(p => !p.isDummy).map(p => [p.node!.hop, p])).entries()]
+            {[...new Map(view.nodes.filter(p => !p.isDummy).map(p => [p.node!.hop, p])).entries()]
               .sort((a, b) => a[0] - b[0])
               .map(([hop, p]) => (
                 <div
@@ -499,7 +495,7 @@ export function LineageFlow({
                   style={{
                     position: 'absolute',
                     left: p.x + RAIL_W,
-                    top: layout.height - 4,
+                    top: view.height - 4,
                     width: LINEAGE_FOOTPRINT.width,
                     textAlign: 'center',
                     fontSize: 9,

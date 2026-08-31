@@ -291,6 +291,31 @@ describe('LineageFlow — manual arrangement', () => {
   })
 })
 
+describe('dragging keeps the arrows attached', () => {
+  it('moves an edge endpoint with the card it is anchored to', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    const seed = await screen.findByTestId('lineage-seed')
+
+    const edgeD = () =>
+      Array.from(document.querySelectorAll('path[data-lineage-edge]')).map(p => p.getAttribute('d'))
+    const before = edgeD()
+
+    fireEvent.pointerDown(seed, { clientX: 100, clientY: 100 })
+    fireEvent.pointerMove(window, { clientX: 190, clientY: 160 })
+    fireEvent.pointerUp(window)
+
+    await waitFor(() => expect(edgeD()).not.toEqual(before))
+
+    // Precise claim, not merely "something changed": the outgoing edge starts at the card's
+    // new right-edge anchor.
+    const base = layoutLineage(NODES, EDGES)
+    const p = base.nodes.find(x => x.id === 'seed')!
+    const x = p.x + 90 + RAIL_W + LINEAGE_FOOTPRINT.width
+    const y = p.y + 60 + LINEAGE_FOOTPRINT.height / 2
+    expect(edgeD().some(d => d?.startsWith(`M${x} ${y}`))).toBe(true)
+  })
+})
+
 describe('LineageFlow — the trace survives reaching for the dock', () => {
   it('pins the trace to the selected node, not just the hovered one', async () => {
     // Hover alone drops the highlight the moment the pointer moves toward the Details dock —
