@@ -59,7 +59,11 @@ function walkRefs(t: RecipeTransformationJson | undefined, visit: (source: strin
 
 /** Mutating rewrite: every leaf `source` "OLD.field" -> "NEW.field", exact
  * table-token match only (never a substring/prefix match). */
-function rewriteRefs(t: RecipeTransformationJson | undefined, oldName: string, newName: string): void {
+function rewriteRefs(
+  t: RecipeTransformationJson | undefined,
+  oldName: string,
+  newName: string,
+): void {
   if (!t) return
   if (!isBlank(t.source) && t.source!.includes('.')) {
     const dot = t.source!.indexOf('.')
@@ -137,10 +141,14 @@ export function renameNode(d: RecipeJson, oldName: string, newName: string): Rec
   }
 
   if (draft.table?.targetTableNames) {
-    draft.table.targetTableNames = draft.table.targetTableNames.map(n => (n === oldName ? newName : n))
+    draft.table.targetTableNames = draft.table.targetTableNames.map(n =>
+      n === oldName ? newName : n,
+    )
   }
   if (draft.table?.sourceTableNames) {
-    draft.table.sourceTableNames = draft.table.sourceTableNames.map(n => (n === oldName ? newName : n))
+    draft.table.sourceTableNames = draft.table.sourceTableNames.map(n =>
+      n === oldName ? newName : n,
+    )
   }
 
   for (const step of draft.steps ?? []) {
@@ -163,7 +171,12 @@ export function renameNode(d: RecipeJson, oldName: string, newName: string): Rec
  * leave the draft untouched. Reading via `readFields` (non-mutating) for the
  * lookup, and only touching the field object itself once found, means a miss
  * truly changes nothing. */
-export function editFieldDataType(d: RecipeJson, stepName: string, fieldName: string, dataType: string): RecipeJson {
+export function editFieldDataType(
+  d: RecipeJson,
+  stepName: string,
+  fieldName: string,
+  dataType: string,
+): RecipeJson {
   const draft = structuredClone(d)
   const step = draft.steps?.find(s => s.target?.name === stepName)
   if (!step?.target) return draft
@@ -326,7 +339,10 @@ export function buildStep(
   mappedFields: MappedField[],
 ): RecipeStepJson {
   const target = {
-    name, type: kind, ...props, fields: mappedFields.map(mappedFieldToRecipeField),
+    name,
+    type: kind,
+    ...props,
+    fields: mappedFields.map(mappedFieldToRecipeField),
   } as unknown as RecipeTargetJson
   const sources: RecipeSourceJson[] = fedBy.map(f => ({ name: f.name, type: f.kind }))
   const step: RecipeStepJson = { target, sources }
@@ -361,11 +377,11 @@ export function insertConfiguredStep(d: RecipeJson, step: RecipeStepJson): Recip
   }
 
   if (name && kind && feeds.length > 0) {
-    draft.steps = draft.steps.map(s => (
+    draft.steps = draft.steps.map(s =>
       feeds.includes(s.target?.name ?? '')
         ? { ...s, sources: [...(s.sources ?? []), { name, type: kind }] }
-        : s
-    ))
+        : s,
+    )
   }
 
   return draft
@@ -396,11 +412,11 @@ export function insertSourceTable(
   const draft = structuredClone(d)
   const source = { name, type: 'table', ...props } as unknown as RecipeSourceJson
 
-  draft.steps = (draft.steps ?? []).map(s => (
+  draft.steps = (draft.steps ?? []).map(s =>
     feeds.includes(s.target?.name ?? '')
       ? { ...s, sources: [...(s.sources ?? []), structuredClone(source)] }
-      : s
-  ))
+      : s,
+  )
 
   draft.table = draft.table ?? {}
   draft.table.sourceTableNames = [...(draft.table.sourceTableNames ?? []), name]
@@ -426,7 +442,12 @@ export function insertSourceTable(
  * `toField` is always non-blank) are unaffected; omitting it for a blank
  * `toField` is a safe no-op (nothing to identify which sources[] entry to drop).
  * No-op if the step doesn't exist, or (field case) the field doesn't exist. */
-export function deleteEdge(d: RecipeJson, toStep: string, toField: string, fromNode?: string): RecipeJson {
+export function deleteEdge(
+  d: RecipeJson,
+  toStep: string,
+  toField: string,
+  fromNode?: string,
+): RecipeJson {
   const draft = structuredClone(d)
   const step = draft.steps?.find(s => s.target?.name === toStep)
   if (!step) return draft
@@ -459,7 +480,12 @@ export function deleteEdge(d: RecipeJson, toStep: string, toField: string, fromN
 
 /** Sets an arbitrary key on the named step's target (resolved by `target.name`).
  * No-op (unchanged clone) if `stepName` doesn't resolve to a step target. */
-export function setTargetProperty(d: RecipeJson, stepName: string, key: string, value: unknown): RecipeJson {
+export function setTargetProperty(
+  d: RecipeJson,
+  stepName: string,
+  key: string,
+  value: unknown,
+): RecipeJson {
   const draft = structuredClone(d)
   const step = draft.steps?.find(s => s.target?.name === stepName)
   if (!step?.target) return draft

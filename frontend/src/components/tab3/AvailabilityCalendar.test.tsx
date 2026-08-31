@@ -27,7 +27,7 @@ describe('dayState', () => {
 
 describe('monthGrid', () => {
   it('pads to whole weeks and covers every day of the month', () => {
-    const grid = monthGrid(2026, 6)                 // July 2026, 0-indexed month
+    const grid = monthGrid(2026, 6) // July 2026, 0-indexed month
     expect(grid.length % 7).toBe(0)
     expect(grid.filter(Boolean)).toHaveLength(31)
     expect(grid.filter(Boolean)[0]).toBe('2026-07-01')
@@ -41,11 +41,13 @@ describe('monthGrid', () => {
 
 describe('AvailabilityCalendar', () => {
   const props = {
-    availableDates: AVAILABLE, selectionDates: IN_SELECTION,
-    selectedDate: '2026-07-18', onSelect: vi.fn(),
+    availableDates: AVAILABLE,
+    selectionDates: IN_SELECTION,
+    selectedDate: '2026-07-18',
+    onSelect: vi.fn(),
   }
 
-  it('opens on the selected date\'s month and names it', () => {
+  it("opens on the selected date's month and names it", () => {
     render(<AvailabilityCalendar {...props} />)
     fireEvent.click(screen.getByRole('button', { name: /Show calendar/ }))
     expect(screen.getByText(/July 2026/)).toBeInTheDocument()
@@ -56,7 +58,9 @@ describe('AvailabilityCalendar', () => {
     fireEvent.click(screen.getByRole('button', { name: /Show calendar/ }))
 
     expect(screen.getByRole('button', { name: '2026-07-16, has data' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '2026-07-17, has data in selection' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '2026-07-17, has data in selection' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '2026-07-18, selected' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '2026-07-20, no data' })).toBeInTheDocument()
   })
@@ -118,7 +122,7 @@ describe('AvailabilityCalendar', () => {
       <div>
         <div data-testid="outside">elsewhere</div>
         <AvailabilityCalendar {...props} />
-      </div>
+      </div>,
     )
     fireEvent.click(screen.getByRole('button', { name: /Show calendar/ }))
     expect(screen.getByText(/July 2026/)).toBeInTheDocument()
@@ -138,8 +142,9 @@ describe('AvailabilityCalendar — palette hygiene', () => {
   it('uses only alpha steps the base palette already uses', async () => {
     // cwd is `frontend/` under vitest; `import.meta.url` is an http URL in the jsdom env.
     const source = await readFile('src/components/tab3/AvailabilityCalendar.tsx', 'utf8')
-    const alphas = [...source.matchAll(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d.]+)\s*\)/g)]
-      .map(m => m[1]!)
+    const alphas = [
+      ...source.matchAll(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d.]+)\s*\)/g),
+    ].map(m => m[1]!)
     expect(alphas.length).toBeGreaterThan(0)
     expect([...new Set(alphas)].filter(a => !ALLOWED_ALPHAS.includes(a))).toEqual([])
   })

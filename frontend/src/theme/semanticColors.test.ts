@@ -1,14 +1,19 @@
 import { describe, it, expect } from 'vitest'
 import {
-  LAYER_COLOR, KIND_PALETTE, layerColor, kindPalette, statusColor, statusBg,
+  LAYER_COLOR,
+  KIND_PALETTE,
+  layerColor,
+  kindPalette,
+  statusColor,
+  statusBg,
 } from './semanticColors'
 import { LAYER_RANK } from '../api/relationshipsAdapter'
 
 describe('layer palette', () => {
   it('groups the layers into the medallion tiers', () => {
-    expect(layerColor('STG')).toBe(layerColor('ODS'))                 // bronze — raw
-    expect(layerColor('DWH')).toBe(layerColor('ETL'))                 // silver — refined
-    expect(layerColor('CDM')).toBe(layerColor('QDM'))                 // gold — curated
+    expect(layerColor('STG')).toBe(layerColor('ODS')) // bronze — raw
+    expect(layerColor('DWH')).toBe(layerColor('ETL')) // silver — refined
+    expect(layerColor('CDM')).toBe(layerColor('QDM')) // gold — curated
     expect(layerColor('CDM')).toBe(layerColor('RDM'))
   })
 

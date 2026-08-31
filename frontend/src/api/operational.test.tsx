@@ -7,45 +7,57 @@ import React from 'react'
 import { useOperationalDates, useOperational, useOperationalSummary } from './queries'
 
 const server = setupServer(
-  http.get('/api/operational/dates', () => HttpResponse.json({
-    dates: ['2026-07-29'], mode: 'mock',
-  })),
-  http.get('/api/operational/2026-07-29', () => HttpResponse.json({
-    date: '2026-07-29',
-    rows: [{
-      clusterName: 'cluster-wf-syn-orders-01',
-      recipeFilename: '_ETL_m_SYN_ODS_ORDERS.json',
-      jobId: 'application_1774840000001_0001',
-      appStartIso: '2026-07-29T04:12:22.644Z',
-      avgJobDurationInMinsSec: '14m 05sec',
-      status: 'SUCCESS',
-      message: '',
-    }],
-  })),
+  http.get('/api/operational/dates', () =>
+    HttpResponse.json({
+      dates: ['2026-07-29'],
+      mode: 'mock',
+    }),
+  ),
+  http.get('/api/operational/2026-07-29', () =>
+    HttpResponse.json({
+      date: '2026-07-29',
+      rows: [
+        {
+          clusterName: 'cluster-wf-syn-orders-01',
+          recipeFilename: '_ETL_m_SYN_ODS_ORDERS.json',
+          jobId: 'application_1774840000001_0001',
+          appStartIso: '2026-07-29T04:12:22.644Z',
+          avgJobDurationInMinsSec: '14m 05sec',
+          status: 'SUCCESS',
+          message: '',
+        },
+      ],
+    }),
+  ),
   http.get('/api/operational/summary', ({ request }) => {
     seenSummaryUrls.push(request.url)
     return HttpResponse.json({
-    dates: ['2026-07-29'],
-    recipes: [{
-      recipeFilename: '_ETL_m_SYN_ODS_ORDERS.json',
-      layer: 'ODS',
-      latestDate: '2026-07-29',
-      latestStatus: 'SUCCESS',
-      okCount: 1,
-      koCount: 0,
-      history: [{ date: '2026-07-29', status: 'SUCCESS', durationMin: 14.083333333333334 }],
-      avgDurationMin: 14.083333333333334,
-      p50DurationMin: 14.083333333333334,
-      p95DurationMin: 14.083333333333334,
-      lastJobId: 'application_1774840000001_0001',
-      lastClusterName: 'cluster-wf-syn-orders-01',
-    }],
+      dates: ['2026-07-29'],
+      recipes: [
+        {
+          recipeFilename: '_ETL_m_SYN_ODS_ORDERS.json',
+          layer: 'ODS',
+          latestDate: '2026-07-29',
+          latestStatus: 'SUCCESS',
+          okCount: 1,
+          koCount: 0,
+          history: [{ date: '2026-07-29', status: 'SUCCESS', durationMin: 14.083333333333334 }],
+          avgDurationMin: 14.083333333333334,
+          p50DurationMin: 14.083333333333334,
+          p95DurationMin: 14.083333333333334,
+          lastJobId: 'application_1774840000001_0001',
+          lastClusterName: 'cluster-wf-syn-orders-01',
+        },
+      ],
     })
   }),
 )
 const seenSummaryUrls: string[] = []
 beforeAll(() => server.listen())
-afterEach(() => { server.resetHandlers(); seenSummaryUrls.length = 0 })
+afterEach(() => {
+  server.resetHandlers()
+  seenSummaryUrls.length = 0
+})
 afterAll(() => server.close())
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -63,7 +75,9 @@ describe('operational hooks', () => {
     const firstDate = dates.result.current.data!.dates![0]!
     const snapshot = renderHook(() => useOperational(firstDate), { wrapper })
     await waitFor(() => expect(snapshot.result.current.isSuccess).toBe(true))
-    expect(snapshot.result.current.data?.rows?.[0]?.recipeFilename).toBe('_ETL_m_SYN_ODS_ORDERS.json')
+    expect(snapshot.result.current.data?.rows?.[0]?.recipeFilename).toBe(
+      '_ETL_m_SYN_ODS_ORDERS.json',
+    )
   })
 
   it('resolves the operational summary with per-recipe aggregates', async () => {

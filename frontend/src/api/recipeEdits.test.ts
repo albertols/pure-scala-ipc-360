@@ -70,8 +70,12 @@ describe('setFieldTransformation', () => {
   })
 
   it('on a weststone-keyed clone writes into weststone, not fields', () => {
-    const damaged = JSON.parse(JSON.stringify(MINI).replaceAll('"fields":', '"weststone":')) as RecipeJson & {
-      steps: { target: { weststone: { name?: string; transformation?: unknown }[]; fields?: unknown } }[]
+    const damaged = JSON.parse(
+      JSON.stringify(MINI).replaceAll('"fields":', '"weststone":'),
+    ) as RecipeJson & {
+      steps: {
+        target: { weststone: { name?: string; transformation?: unknown }[]; fields?: unknown }
+      }[]
     }
     const out = setFieldTransformation(damaged, 'T', 'A', { value: '9' }) as typeof damaged
     const target = out.steps[0].target
@@ -105,7 +109,9 @@ describe('renameNode', () => {
     expect(out.table!.sourceTableNames).toEqual(['S2'])
     // S is never a step target in MINI, so no target rename happens; the dot-ref
     // "S.B" IS a reference into S, so it moves too.
-    expect(out.steps![0].target!.fields!.find(f => f.name === 'B')!.transformation).toEqual({ source: 'S2.B' })
+    expect(out.steps![0].target!.fields!.find(f => f.name === 'B')!.transformation).toEqual({
+      source: 'S2.B',
+    })
   })
 
   it('does not touch a longer name that merely starts with the same token', () => {
@@ -113,20 +119,28 @@ describe('renameNode', () => {
       steps: [
         {
           target: {
-            name: 'T', type: 'table',
+            name: 'T',
+            type: 'table',
             fields: [
               { name: 'A', dataType: 'String', transformation: { source: 'S.A' } },
               { name: 'B', dataType: 'String', transformation: { source: 'S2.B' } },
             ],
           },
-          sources: [{ name: 'S', type: 'table' }, { name: 'S2', type: 'table' }],
+          sources: [
+            { name: 'S', type: 'table' },
+            { name: 'S2', type: 'table' },
+          ],
         },
       ],
       table: { targetTableNames: ['T'], sourceTableNames: ['S', 'S2'] },
     }
     const out = renameNode(withDecoy, 'S', 'S_RENAMED')
-    expect(out.steps![0].target!.fields!.find(f => f.name === 'A')!.transformation).toEqual({ source: 'S_RENAMED.A' })
-    expect(out.steps![0].target!.fields!.find(f => f.name === 'B')!.transformation).toEqual({ source: 'S2.B' })
+    expect(out.steps![0].target!.fields!.find(f => f.name === 'A')!.transformation).toEqual({
+      source: 'S_RENAMED.A',
+    })
+    expect(out.steps![0].target!.fields!.find(f => f.name === 'B')!.transformation).toEqual({
+      source: 'S2.B',
+    })
     expect(out.steps![0].sources!.map(s => s.name).sort()).toEqual(['S2', 'S_RENAMED'])
   })
 })
@@ -167,7 +181,10 @@ describe('buildStep / insertConfiguredStep', () => {
       [],
     )
     expect(step.target).toEqual({
-      name: 'FLT2', type: 'filter', filterCondition: { source: 'S.A' }, fields: [],
+      name: 'FLT2',
+      type: 'filter',
+      filterCondition: { source: 'S.A' },
+      fields: [],
     })
     expect(step.sources).toEqual([{ name: 'SQ1', type: 'sourceQualifier' }])
   })
@@ -183,7 +200,10 @@ describe('buildStep / insertConfiguredStep', () => {
       {},
       [],
       [],
-      [{ name: 'A', dataType: 'String', source: 'SQ1.A' }, { name: 'B_RENAMED', dataType: 'Long', source: 'SQ1.B' }],
+      [
+        { name: 'A', dataType: 'String', source: 'SQ1.A' },
+        { name: 'B_RENAMED', dataType: 'Long', source: 'SQ1.B' },
+      ],
     )
     expect(step.target!.fields).toEqual([
       { name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } },
@@ -203,7 +223,10 @@ describe('buildStep / insertConfiguredStep', () => {
       {},
       [],
       [],
-      [{ name: 'ORDER_ID', dataType: 'String', source: '' }, { name: 'A', dataType: 'Long', source: 'SQ1.A' }],
+      [
+        { name: 'ORDER_ID', dataType: 'String', source: '' },
+        { name: 'A', dataType: 'Long', source: 'SQ1.A' },
+      ],
     )
     expect(step.target!.fields).toEqual([
       { name: 'ORDER_ID', dataType: 'String' },
@@ -221,12 +244,21 @@ describe('buildStep / insertConfiguredStep', () => {
       [],
       [{ name: 'A', dataType: 'String', source: 'SQ1.A' }],
     )
-    expect(step.target!.fields).toEqual([{ name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } }])
+    expect(step.target!.fields).toEqual([
+      { name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } },
+    ])
   })
 
   it('insertConfiguredStep appends the step immutably and never mutates its inputs', () => {
     const before = JSON.stringify(MINI)
-    const step = buildStep('filter', 'FLT2', {}, [], [{ name: 'T', kind: 'table' }], [{ name: 'X', dataType: 'String', source: 'T.X' }])
+    const step = buildStep(
+      'filter',
+      'FLT2',
+      {},
+      [],
+      [{ name: 'T', kind: 'table' }],
+      [{ name: 'X', dataType: 'String', source: 'T.X' }],
+    )
     const stepBefore = JSON.stringify(step)
 
     const out = insertConfiguredStep(MINI, step)
@@ -236,7 +268,11 @@ describe('buildStep / insertConfiguredStep', () => {
     expect(JSON.stringify(step)).toBe(stepBefore)
     expect(out.steps).toHaveLength(2)
     expect(out.steps![1]).toEqual({
-      target: { name: 'FLT2', type: 'filter', fields: [{ name: 'X', dataType: 'String', transformation: { source: 'T.X' } }] },
+      target: {
+        name: 'FLT2',
+        type: 'filter',
+        fields: [{ name: 'X', dataType: 'String', transformation: { source: 'T.X' } }],
+      },
       sources: [{ name: 'T', type: 'table' }],
     })
   })
@@ -275,7 +311,7 @@ describe('buildStep / insertConfiguredStep', () => {
 // is `NodeConfigDialog`'s write path for that one kind, never touching
 // `d.steps` at all (unlike `insertConfiguredStep`, which always appends one).
 describe('insertSourceTable', () => {
-  it('appends {name, type: table, ...props} into every feeds step\'s sources[], plus table.sourceTableNames', () => {
+  it("appends {name, type: table, ...props} into every feeds step's sources[], plus table.sourceTableNames", () => {
     const out = insertSourceTable(MINI, 'NEWSRC', { primaryKeys: ['ID'] }, ['T'])
     const step = out.steps!.find(s => s.target?.name === 'T')!
     const added = step.sources!.find(s => s.name === 'NEWSRC')!
@@ -342,12 +378,17 @@ describe('addField', () => {
   })
 
   it('on a weststone-keyed clone writes into weststone, not fields', () => {
-    const damaged = JSON.parse(JSON.stringify(MINI).replaceAll('"fields":', '"weststone":')) as RecipeJson & {
+    const damaged = JSON.parse(
+      JSON.stringify(MINI).replaceAll('"fields":', '"weststone":'),
+    ) as RecipeJson & {
       steps: { target: { weststone: { name?: string; dataType?: string }[]; fields?: unknown } }[]
     }
     const out = addField(damaged, { stepName: 'T', fieldName: 'C' }) as typeof damaged
     expect(out.steps[0].target.fields).toBeUndefined()
-    expect(out.steps[0].target.weststone.find(f => f.name === 'C')).toEqual({ name: 'C', dataType: 'String' })
+    expect(out.steps[0].target.weststone.find(f => f.name === 'C')).toEqual({
+      name: 'C',
+      dataType: 'String',
+    })
   })
 
   it('no-ops when stepName does not resolve to a step target', () => {
@@ -446,7 +487,9 @@ describe('deleteEdge', () => {
   it('clears just that field transformation, leaving siblings alone', () => {
     const out = deleteEdge(MINI, 'T', 'B')
     expect(out.steps![0].target!.fields!.find(f => f.name === 'B')!.transformation).toBeUndefined()
-    expect(out.steps![0].target!.fields!.find(f => f.name === 'A')!.transformation).toEqual({ value: '1' })
+    expect(out.steps![0].target!.fields!.find(f => f.name === 'A')!.transformation).toEqual({
+      value: '1',
+    })
   })
 
   it('no-ops when the step or field does not exist', () => {
@@ -465,7 +508,11 @@ describe('deleteEdge — center-anchor (blank toPort) edges', () => {
   const centerAnchor: RecipeJson = {
     steps: [
       {
-        target: { name: 'T', type: 'table', fields: [{ name: 'A', dataType: 'String', transformation: { value: '1' } }] },
+        target: {
+          name: 'T',
+          type: 'table',
+          fields: [{ name: 'A', dataType: 'String', transformation: { value: '1' } }],
+        },
         sources: [{ name: 'S', type: 'table' }],
       },
     ],
@@ -494,11 +541,17 @@ describe('deleteEdge — center-anchor (blank toPort) edges', () => {
     expect(deleteEdge(centerAnchor, 'T', '')).toEqual(centerAnchor)
   })
 
-  it('only removes the target step\'s own sources[] entry — a sibling step referencing the same table is untouched', () => {
+  it("only removes the target step's own sources[] entry — a sibling step referencing the same table is untouched", () => {
     const shared: RecipeJson = {
       steps: [
-        { target: { name: 'T1', type: 'table', fields: [] }, sources: [{ name: 'S', type: 'table' }] },
-        { target: { name: 'T2', type: 'table', fields: [] }, sources: [{ name: 'S', type: 'table' }] },
+        {
+          target: { name: 'T1', type: 'table', fields: [] },
+          sources: [{ name: 'S', type: 'table' }],
+        },
+        {
+          target: { name: 'T2', type: 'table', fields: [] },
+          sources: [{ name: 'S', type: 'table' }],
+        },
       ],
       table: { targetTableNames: ['T1', 'T2'], sourceTableNames: ['S'] },
     }
@@ -545,7 +598,8 @@ const PROPS = {
   steps: [
     {
       target: {
-        name: 'RTR', type: 'router',
+        name: 'RTR',
+        type: 'router',
         fields: [{ name: 'X', dataType: 'String' }],
         groups: [{ name: 'A', filterCondition: 'X=1', default: false }],
       },
@@ -573,23 +627,30 @@ describe('setTargetProperty / deleteTargetProperty / setSourceProperty — every
 })
 
 describe('setTargetProperty', () => {
-  it('sets a scalar (boolean) on the named step\'s target', () => {
+  it("sets a scalar (boolean) on the named step's target", () => {
     const out = setTargetProperty(PROPS, 'T2', 'selectDistinct', true)
     expect(out.steps![1].target).toMatchObject({ selectDistinct: true })
   })
 
-  it('sets an array on the named step\'s target', () => {
+  it("sets an array on the named step's target", () => {
     const out = setTargetProperty(PROPS, 'RTR', 'groupByFields', ['A', 'B'])
-    expect((out.steps![0].target as unknown as Record<string, unknown>).groupByFields).toEqual(['A', 'B'])
+    expect((out.steps![0].target as unknown as Record<string, unknown>).groupByFields).toEqual([
+      'A',
+      'B',
+    ])
   })
 
-  it('sets a nested object on the named step\'s target', () => {
+  it("sets a nested object on the named step's target", () => {
     const out = setTargetProperty(PROPS, 'RTR', 'filterCondition', { source: 'S.A' })
-    expect((out.steps![0].target as unknown as Record<string, unknown>).filterCondition).toEqual({ source: 'S.A' })
+    expect((out.steps![0].target as unknown as Record<string, unknown>).filterCondition).toEqual({
+      source: 'S.A',
+    })
   })
 
   it('replaces an existing key without touching sibling keys', () => {
-    const out = setTargetProperty(PROPS, 'RTR', 'groups', [{ name: 'B', filterCondition: 'X=2', default: true }])
+    const out = setTargetProperty(PROPS, 'RTR', 'groups', [
+      { name: 'B', filterCondition: 'X=2', default: true },
+    ])
     expect((out.steps![0].target as unknown as Record<string, unknown>).groups).toEqual([
       { name: 'B', filterCondition: 'X=2', default: true },
     ])
@@ -604,7 +665,7 @@ describe('setTargetProperty', () => {
 })
 
 describe('deleteTargetProperty', () => {
-  it('removes a key from the named step\'s target', () => {
+  it("removes a key from the named step's target", () => {
     const out = deleteTargetProperty(PROPS, 'RTR', 'groups')
     expect((out.steps![0].target as unknown as Record<string, unknown>).groups).toBeUndefined()
     expect('groups' in (out.steps![0].target as unknown as Record<string, unknown>)).toBe(false)

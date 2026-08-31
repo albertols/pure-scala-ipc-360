@@ -45,7 +45,13 @@ export interface ValidationState {
   failed: boolean
 }
 
-const EMPTY_STATE: ValidationState = { checks: [], errors: [], warnings: [], isValidating: false, failed: false }
+const EMPTY_STATE: ValidationState = {
+  checks: [],
+  errors: [],
+  warnings: [],
+  isValidating: false,
+  failed: false,
+}
 
 /** Mirrors `ETLModifier.tsx`'s `reportLayoutSaveError` idiom: log-and-swallow,
  * since a validate failure must not throw into the render tree — the caller
@@ -198,7 +204,9 @@ export function useFanIn(pairings: FanInPairing[]): Record<string, FanInVerdict>
         // vouches for nothing, and an unanswered candidate is never blocked.
         setVerdicts({})
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [payload])
 
   return verdicts
@@ -214,7 +222,10 @@ export function useFanIn(pairings: FanInPairing[]): Record<string, FanInVerdict>
  * out-of-range index, or a missing graph resolves to `undefined` rather than
  * a wrong or crashing lookup.
  */
-export function nodeIdFromPath(path: string | undefined, graph: CanvasGraph | null): string | undefined {
+export function nodeIdFromPath(
+  path: string | undefined,
+  graph: CanvasGraph | null,
+): string | undefined {
   if (!path || !graph) return undefined
   const match = /^\$\.steps\[(\d+)\]/.exec(path)
   if (!match) return undefined
@@ -228,7 +239,10 @@ export function nodeIdFromPath(path: string | undefined, graph: CanvasGraph | nu
  * an 'ok' dot on every node). When a node has both an error- and a
  * warning-severity failure, error wins regardless of check order.
  */
-export function nodeStatusFrom(checks: IpcCheck[], graph: CanvasGraph | null): Record<string, 'ok' | 'warn' | 'error'> {
+export function nodeStatusFrom(
+  checks: IpcCheck[],
+  graph: CanvasGraph | null,
+): Record<string, 'ok' | 'warn' | 'error'> {
   const result: Record<string, 'ok' | 'warn' | 'error'> = {}
   for (const check of checks) {
     if (check.status !== 'fail') continue

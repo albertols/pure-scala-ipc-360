@@ -18,9 +18,7 @@ const READY = {
   progress: { tasksDone: 596, tasksTotal: 601, adrs: 16 },
 }
 
-const server = setupServer(
-  http.get('*/api/readiness', () => HttpResponse.json(READY)),
-)
+const server = setupServer(http.get('*/api/readiness', () => HttpResponse.json(READY)))
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
@@ -49,7 +47,9 @@ describe('useReadiness', () => {
   })
 
   it('tolerates a payload with no progress (a deployment without docs/)', async () => {
-    server.use(http.get('*/api/readiness', () => HttpResponse.json({ ...READY, progress: undefined })))
+    server.use(
+      http.get('*/api/readiness', () => HttpResponse.json({ ...READY, progress: undefined })),
+    )
 
     const { result } = renderHook(() => useReadiness(), { wrapper })
     await waitFor(() => expect(result.current.data).toBeDefined())

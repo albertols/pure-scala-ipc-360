@@ -9,29 +9,50 @@ afterEach(cleanup)
 const HEALTHY: Diagnostics = {
   status: 'ok',
   corpus: {
-    name: 'corpus', configured: 'parser/src/main/resources/xmltobq',
-    resolved: '/repo/parser/src/main/resources/xmltobq', exists: true,
-    tier: 'real', status: 'ok', hint: '', counts: { xml: 81, recipes: 86 },
+    name: 'corpus',
+    configured: 'parser/src/main/resources/xmltobq',
+    resolved: '/repo/parser/src/main/resources/xmltobq',
+    exists: true,
+    tier: 'real',
+    status: 'ok',
+    hint: '',
+    counts: { xml: 81, recipes: 86 },
   },
   dwhControl: {
     configured: 'parser/src/main/resources/DWH_CONTROL',
-    resolvedReal: '/repo/parser/src/main/resources/DWH_CONTROL', realExists: false,
-    requiredChild: 'LAYER_TO_LAYER', realUsable: false,
-    mockPath: '/repo/backend/src/main/resources/mock/DWH_CONTROL', mockUsable: true,
-    tier: 'mock', status: 'ok', hint: '',
+    resolvedReal: '/repo/parser/src/main/resources/DWH_CONTROL',
+    realExists: false,
+    requiredChild: 'LAYER_TO_LAYER',
+    realUsable: false,
+    mockPath: '/repo/backend/src/main/resources/mock/DWH_CONTROL',
+    mockUsable: true,
+    tier: 'mock',
+    status: 'ok',
+    hint: '',
     scan: {
       anchorTable: 'CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG',
       anchor: 'INSERT INTO CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG VALUES',
-      expectedLayerDirs: ['STG', 'ODS'], presentDirs: ['ODS', 'STG'], unexpectedDirs: [],
-      filesRead: 2, anchorHits: 33, rowsParsed: 33, rowsSkipped: 0,
-      files: [], insertTargetsFound: [],
+      expectedLayerDirs: ['STG', 'ODS'],
+      presentDirs: ['ODS', 'STG'],
+      unexpectedDirs: [],
+      filesRead: 2,
+      anchorHits: 33,
+      rowsParsed: 33,
+      rowsSkipped: 0,
+      files: [],
+      insertTargetsFound: [],
     },
   },
   composer: {
-    name: 'composer', configured: 'parser/src/main/resources/composer',
-    resolved: '/repo/parser/src/main/resources/composer', exists: false,
+    name: 'composer',
+    configured: 'parser/src/main/resources/composer',
+    resolved: '/repo/parser/src/main/resources/composer',
+    exists: false,
     requiredChild: 'dwh/config/cluster_tuning/inputs',
-    tier: 'mock', status: 'ok', hint: '', counts: { dates: 14 },
+    tier: 'mock',
+    status: 'ok',
+    hint: '',
+    counts: { dates: 14 },
   },
 }
 
@@ -41,13 +62,20 @@ const ANCHOR_MISMATCH: Diagnostics = {
   status: 'ko',
   dwhControl: {
     ...HEALTHY.dwhControl!,
-    resolvedReal: '/corp/exports/DWH_CONTROL', realExists: true, realUsable: true,
-    tier: 'real', status: 'ko',
-    hint: 'Read 2 statements.sql but no statement matched the configured anchor. '
-      + 'The files INSERT INTO: CTL.CORP_L2L_CONFIG (×412) — set layerToLayerTable in config.json to the one your control schema uses.',
+    resolvedReal: '/corp/exports/DWH_CONTROL',
+    realExists: true,
+    realUsable: true,
+    tier: 'real',
+    status: 'ko',
+    hint:
+      'Read 2 statements.sql but no statement matched the configured anchor. ' +
+      'The files INSERT INTO: CTL.CORP_L2L_CONFIG (×412) — set layerToLayerTable in config.json to the one your control schema uses.',
     scan: {
       ...HEALTHY.dwhControl!.scan!,
-      filesRead: 2, anchorHits: 0, rowsParsed: 0, rowsSkipped: 0,
+      filesRead: 2,
+      anchorHits: 0,
+      rowsParsed: 0,
+      rowsSkipped: 0,
       insertTargetsFound: [{ table: 'CTL.CORP_L2L_CONFIG', count: 412 }],
     },
   },
@@ -61,8 +89,12 @@ const controlRow = () => within(screen.getByTestId('data-root-dwhControl'))
 // exists to abolish, now applied to the explainer itself.
 describe('DataRootsPanel — when the report itself does not resolve', () => {
   it('says the report failed, and why, instead of rendering nothing', () => {
-    render(<DataRootsPanel diagnostics={undefined}
-      error={new ApiError(500, 'Internal Server Error', 'DiagnosticsService blew up')} />)
+    render(
+      <DataRootsPanel
+        diagnostics={undefined}
+        error={new ApiError(500, 'Internal Server Error', 'DiagnosticsService blew up')}
+      />,
+    )
 
     expect(screen.getByTestId('data-roots-unavailable')).toBeTruthy()
     expect(screen.getByText(/Internal Server Error/)).toBeTruthy()
@@ -87,7 +119,9 @@ describe('DataRootsPanel — when the report itself does not resolve', () => {
 
 describe('DataRootsChip — when the report itself does not resolve', () => {
   it('reports an unknown tier rather than vanishing', () => {
-    render(<DataRootsChip diagnostics={undefined} error={new ApiError(503, 'Service Unavailable')} />)
+    render(
+      <DataRootsChip diagnostics={undefined} error={new ApiError(503, 'Service Unavailable')} />,
+    )
 
     const chip = screen.getByTestId('data-roots-chip')
     expect(chip.textContent).toContain('data: unknown')
@@ -147,7 +181,9 @@ describe('DataRootsPanel', () => {
 
   it('shows the vocabulary it scanned WITH, not only what it found', () => {
     render(<DataRootsPanel diagnostics={ANCHOR_MISMATCH} />)
-    expect(controlRow().getByText('anchor table: CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG')).toBeTruthy()
+    expect(
+      controlRow().getByText('anchor table: CONTROL.SCALAMATICA_LAYER_TO_LAYER_CONFIG'),
+    ).toBeTruthy()
     expect(controlRow().getByText('layer dirs: STG, ODS')).toBeTruthy()
   })
 

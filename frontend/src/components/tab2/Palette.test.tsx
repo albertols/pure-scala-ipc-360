@@ -38,9 +38,7 @@ const RULES = ipcRulesJson as unknown as {
 
 /** Every kind on the right-hand side of some `mayFeed` — i.e. every kind that
  * something is permitted to feed. */
-const FEEDABLE = new Set(
-  Object.values(RULES.connections ?? {}).flatMap(c => c?.mayFeed ?? []),
-)
+const FEEDABLE = new Set(Object.values(RULES.connections ?? {}).flatMap(c => c?.mayFeed ?? []))
 
 /** The palette's own `type` strings, minus the source-table sentinel — a root
  * that deliberately has no upstream, is gated on "feeds" instead, and whose

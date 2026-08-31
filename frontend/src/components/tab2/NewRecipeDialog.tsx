@@ -33,13 +33,22 @@ const inputStyle: React.CSSProperties = {
 }
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontSize: 10, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6,
+  fontSize: 10,
+  color: '#4a5570',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  marginBottom: 6,
 }
 
 const layerButtonStyle = (active: boolean): React.CSSProperties => ({
-  display: 'inline-flex', alignItems: 'center',
-  padding: '4px 10px', borderRadius: 4, fontSize: 11,
-  fontFamily: 'JetBrains Mono, monospace', marginRight: 6, marginBottom: 6,
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '4px 10px',
+  borderRadius: 4,
+  fontSize: 11,
+  fontFamily: 'JetBrains Mono, monospace',
+  marginRight: 6,
+  marginBottom: 6,
   cursor: 'pointer',
   background: active ? 'rgba(79,156,249,0.15)' : 'var(--surface-2)',
   border: `1px solid ${active ? '#4f9cf9' : 'var(--border)'}`,
@@ -63,18 +72,23 @@ export function NewRecipeDialog({
   const [layer, setLayer] = useState('')
   const [mapping, setMapping] = useState('')
 
-  useEffect(() => { mappingInputRef.current?.focus() }, [])
+  useEffect(() => {
+    mappingInputRef.current?.focus()
+  }, [])
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel()
+    }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [onCancel])
 
   const trimmedMapping = mapping.trim()
-  const path = layer !== '' && trimmedMapping !== ''
-    ? `${layer}/${trimmedMapping}/_ETL_${trimmedMapping}.json`
-    : ''
+  const path =
+    layer !== '' && trimmedMapping !== ''
+      ? `${layer}/${trimmedMapping}/_ETL_${trimmedMapping}.json`
+      : ''
   const canCreate = path !== ''
 
   const layers = registry.data?.layers ?? []
@@ -84,16 +98,28 @@ export function NewRecipeDialog({
       data-testid="new-recipe-scrim"
       onClick={onCancel}
       style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: 460, maxHeight: '85vh', overflowY: 'auto',
-          background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8,
-          padding: 20, display: 'flex', flexDirection: 'column', gap: 16,
+          width: 460,
+          maxHeight: '85vh',
+          overflowY: 'auto',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 8,
+          padding: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
         }}
       >
         <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f8' }}>New recipe</div>
@@ -114,14 +140,18 @@ export function NewRecipeDialog({
                   type="button"
                   onClick={() => setLayer(l)}
                   style={layerButtonStyle(layer === l)}
-                >{l}</button>
+                >
+                  {l}
+                </button>
               ))}
             </div>
           )}
         </div>
 
         <div>
-          <label htmlFor="new-recipe-mapping" style={labelStyle}>Mapping name</label>
+          <label htmlFor="new-recipe-mapping" style={labelStyle}>
+            Mapping name
+          </label>
           <input
             id="new-recipe-mapping"
             ref={mappingInputRef}
@@ -133,28 +163,43 @@ export function NewRecipeDialog({
 
         <div>
           <div style={sectionTitleStyle}>Path</div>
-          <div style={{
-            padding: '8px 10px',
-            background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 5,
-            fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
-            color: path ? '#c8d3e8' : '#4a5570',
-            wordBreak: 'break-all',
-          }}>{path || 'Pick a layer and enter a mapping name…'}</div>
+          <div
+            style={{
+              padding: '8px 10px',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 5,
+              fontSize: 11,
+              fontFamily: 'JetBrains Mono, monospace',
+              color: path ? '#c8d3e8' : '#4a5570',
+              wordBreak: 'break-all',
+            }}
+          >
+            {path || 'Pick a layer and enter a mapping name…'}
+          </div>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <button onClick={onCancel} style={ghostButtonStyle}>Cancel</button>
+          <button onClick={onCancel} style={ghostButtonStyle}>
+            Cancel
+          </button>
           <button
             onClick={() => canCreate && onCreate(path)}
             disabled={!canCreate}
             style={{
-              padding: '5px 16px', borderRadius: 5,
-              background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-              color: '#4f9cf9', fontSize: 12, fontWeight: 600,
+              padding: '5px 16px',
+              borderRadius: 5,
+              background: 'rgba(79,156,249,0.15)',
+              border: '1px solid #4f9cf9',
+              color: '#4f9cf9',
+              fontSize: 12,
+              fontWeight: 600,
               cursor: canCreate ? 'pointer' : 'default',
               opacity: canCreate ? 1 : 0.5,
             }}
-          >Create</button>
+          >
+            Create
+          </button>
         </div>
       </div>
     </div>

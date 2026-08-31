@@ -10,7 +10,8 @@ const READY = {
   corpus: { xml: 81, recipes: 86, ddl: 212, dirs: 119, layers: ['CDM', 'DWH', 'ODS'] },
   operational: { clusters: 1284, recipes: 7012, days: 365, rows: 1842000, mode: 'real' },
   dags: { workflows: 23 },
-  roots: [], progress: { tasksDone: 596, tasksTotal: 601, adrs: 16 },
+  roots: [],
+  progress: { tasksDone: 596, tasksTotal: 601, adrs: 16 },
 } as unknown as ReadinessT
 
 describe('StatsGrid', () => {

@@ -9,16 +9,52 @@ afterEach(cleanup)
 // Fixture spans all three bands: a source, an expression (falls into
 // "transformations" — bandOf never special-cases individual transform
 // kinds), and a target — plus one connection wiring source -> expression.
-const SOURCE: ETLNode = { id: 'src1', type: 'source', label: 'SRC', name: 'SourceOne', x: 40, y: 40, ports: [], properties: {}, file: 'a.xml' }
-const EXPR: ETLNode = { id: 'exp1', type: 'expression', label: 'EXP', name: 'ExprOne', x: 300, y: 40, ports: [], properties: {}, file: 'a.xml' }
-const TARGET: ETLNode = { id: 'tgt1', type: 'target', label: 'TGT', name: 'TargetOne', x: 560, y: 40, ports: [], properties: {}, file: 'a.xml' }
+const SOURCE: ETLNode = {
+  id: 'src1',
+  type: 'source',
+  label: 'SRC',
+  name: 'SourceOne',
+  x: 40,
+  y: 40,
+  ports: [],
+  properties: {},
+  file: 'a.xml',
+}
+const EXPR: ETLNode = {
+  id: 'exp1',
+  type: 'expression',
+  label: 'EXP',
+  name: 'ExprOne',
+  x: 300,
+  y: 40,
+  ports: [],
+  properties: {},
+  file: 'a.xml',
+}
+const TARGET: ETLNode = {
+  id: 'tgt1',
+  type: 'target',
+  label: 'TGT',
+  name: 'TargetOne',
+  x: 560,
+  y: 40,
+  ports: [],
+  properties: {},
+  file: 'a.xml',
+}
 /** A node that actually carries a port — the three above are portless, so they
  * can't exercise the row-vs-dot split. IN/OUT means it is both a valid
  * wire-start and a valid completion target. */
 const PORTED: ETLNode = {
-  id: 'p1', type: 'sq', label: 'SQ', name: 'PortedOne', x: 40, y: 200,
+  id: 'p1',
+  type: 'sq',
+  label: 'SQ',
+  name: 'PortedOne',
+  x: 40,
+  y: 200,
   ports: [{ name: 'AMOUNT', dataType: 'String', direction: 'IN/OUT' }],
-  properties: {}, file: 'a.xml',
+  properties: {},
+  file: 'a.xml',
 }
 const NODES = [SOURCE, EXPR, TARGET]
 const CONNECTIONS: Connection[] = [{ fromNode: 'src1', fromPort: '', toNode: 'exp1', toPort: '' }]
@@ -56,7 +92,9 @@ describe('IpcCanvas', () => {
     const { container } = renderCanvas({ offsets: { exp1: { x: 50, y: 5 } } })
     // NodeBox renders a drop-shadow rect (x = node.x + 2) THEN the body rect
     // (x = node.x) — both width === NODE_WIDTH === 195; the second is the body.
-    const bodyRect = container.querySelectorAll('[data-testid="ipc-node-exp1"] rect[width="195"]')[1]!
+    const bodyRect = container.querySelectorAll(
+      '[data-testid="ipc-node-exp1"] rect[width="195"]',
+    )[1]!
     expect(bodyRect).toHaveAttribute('x', String(300 + 50))
     expect(bodyRect).toHaveAttribute('y', String(40 + 5))
   })
@@ -117,7 +155,12 @@ describe('IpcCanvas', () => {
   it('a click on the connector dot arms the wire, and its hit circle is wider than the painted 4px dot', () => {
     const onPortClick = vi.fn()
     const onPortRowClick = vi.fn()
-    const { container } = renderCanvas({ nodes: [PORTED], connections: [], onPortClick, onPortRowClick })
+    const { container } = renderCanvas({
+      nodes: [PORTED],
+      connections: [],
+      onPortClick,
+      onPortRowClick,
+    })
 
     const handle = container.querySelector('[data-testid="ipc-port-out-p1-AMOUNT"]')!
     expect(Number(handle.getAttribute('r'))).toBeGreaterThan(4)
@@ -185,12 +228,19 @@ describe('IpcCanvas — hover highlight (UX round 4)', () => {
 describe('revealPan (UX round 4)', () => {
   it('returns null when the node is fully inside the view', async () => {
     const { revealPan } = await import('./IpcCanvas')
-    expect(revealPan({ w: 800, h: 600 }, { x: 30, y: 30 }, 1, { x: 100, y: 100, w: 195, h: 120 })).toBeNull()
+    expect(
+      revealPan({ w: 800, h: 600 }, { x: 30, y: 30 }, 1, { x: 100, y: 100, w: 195, h: 120 }),
+    ).toBeNull()
   })
 
   it('shifts pan to pull a right/bottom-clipped node back inside the margin', async () => {
     const { revealPan } = await import('./IpcCanvas')
-    const pan = revealPan({ w: 500, h: 300 }, { x: 30, y: 30 }, 1, { x: 400, y: 250, w: 195, h: 120 })!
+    const pan = revealPan({ w: 500, h: 300 }, { x: 30, y: 30 }, 1, {
+      x: 400,
+      y: 250,
+      w: 195,
+      h: 120,
+    })!
     expect(pan).toEqual({ x: 30 - 141, y: 30 - 116 })
   })
 
@@ -204,7 +254,12 @@ describe('revealPan (UX round 4)', () => {
     const { revealPan } = await import('./IpcCanvas')
     // At zoom 2 the node (x=300, w=195) spans screen 630→1020 with pan.x=30 —
     // clipped by an 800px view: dx = (800-16) - 1020 = -236.
-    const pan = revealPan({ w: 800, h: 600 }, { x: 30, y: 30 }, 2, { x: 300, y: 40, w: 195, h: 120 })!
+    const pan = revealPan({ w: 800, h: 600 }, { x: 30, y: 30 }, 2, {
+      x: 300,
+      y: 40,
+      w: 195,
+      h: 120,
+    })!
     expect(pan.x).toBe(30 - 236)
   })
 })

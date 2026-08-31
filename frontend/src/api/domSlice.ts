@@ -37,11 +37,17 @@ function findByTagAndName(node: XmlNode, tag: string, name: string): XmlNode | n
  * this lookup is scoped to the same `<MAPPING NAME={mappingName}>` subtree,
  * falling back to the whole folder subtree if that mapping isn't found.
  */
-export function findElementForNode(dom: XmlNode, nodeName: string, nodeType: NodeType, mappingName: string): XmlNode | null {
+export function findElementForNode(
+  dom: XmlNode,
+  nodeName: string,
+  nodeType: NodeType,
+  mappingName: string,
+): XmlNode | null {
   const tag = TAG_FOR_TYPE[nodeType] ?? 'TRANSFORMATION'
   const mappingScope = findByTagAndName(dom, 'MAPPING', mappingName) ?? dom
 
-  const direct = findByTagAndName(mappingScope, tag, nodeName) ?? findByTagAndName(dom, tag, nodeName)
+  const direct =
+    findByTagAndName(mappingScope, tag, nodeName) ?? findByTagAndName(dom, tag, nodeName)
   if (direct) return direct
 
   const instance = findByTagAndName(mappingScope, 'INSTANCE', nodeName)

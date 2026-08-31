@@ -7,10 +7,11 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "format": "oxfmt",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "generate:api": "openapi-typescript http://localhost:8080/v3/api-docs -o src/api/types.gen.ts"
+    "generate:api": "openapi-typescript http://localhost:8080/v3/api-docs -o src/api/types.gen.ts",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"*.ts\""
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
@@ -28,7 +29,7 @@
     "jsdom": "^30.0.1",
     "msw": "^2.15.0",
     "openapi-typescript": "^7.13.0",
-    "oxfmt": "^0.2.0",
+    "prettier": "3.9.6",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
     "vite": "^8.0.0",

@@ -1,6 +1,11 @@
 import { renderHook, act } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useResizableLayout, LAYOUT_DEFAULT, LAYOUT_MIN, LAYOUT_STORAGE_KEY } from './useResizableLayout'
+import {
+  useResizableLayout,
+  LAYOUT_DEFAULT,
+  LAYOUT_MIN,
+  LAYOUT_STORAGE_KEY,
+} from './useResizableLayout'
 
 describe('useResizableLayout', () => {
   beforeEach(() => localStorage.clear())

@@ -9,8 +9,14 @@ import { useValidation, nodeStatusFrom, nodeIdFromPath } from './ipcRules'
 // Plain .ts (not .tsx) file per the plan's Files list — React.createElement/
 // renderHook only, no JSX syntax.
 
-const DRAFT_A: RecipeJson = { steps: [{ target: { name: 'A', type: 'table', fields: [] }, sources: [] }], table: {} }
-const DRAFT_B: RecipeJson = { steps: [{ target: { name: 'B', type: 'table', fields: [] }, sources: [] }], table: {} }
+const DRAFT_A: RecipeJson = {
+  steps: [{ target: { name: 'A', type: 'table', fields: [] }, sources: [] }],
+  table: {},
+}
+const DRAFT_B: RecipeJson = {
+  steps: [{ target: { name: 'B', type: 'table', fields: [] }, sources: [] }],
+  table: {},
+}
 
 let posts: RecipeJson[] = []
 const server = setupServer(
@@ -52,7 +58,15 @@ describe('useValidation', () => {
           valid: false,
           errors: [{ path: '$.steps[0]', message: 'bad' }],
           warnings: [],
-          checks: [{ ruleId: 'IPC-STR-001', severity: 'error', status: 'fail', path: '$.steps[0]', message: 'bad' }],
+          checks: [
+            {
+              ruleId: 'IPC-STR-001',
+              severity: 'error',
+              status: 'fail',
+              path: '$.steps[0]',
+              message: 'bad',
+            },
+          ],
         }),
       ),
     )
@@ -74,7 +88,13 @@ describe('useValidation', () => {
     await waitFor(() => expect(posts).toHaveLength(1), { timeout: 2000 })
 
     rerender({ draft: null })
-    expect(result.current).toEqual({ checks: [], errors: [], warnings: [], isValidating: false, failed: false })
+    expect(result.current).toEqual({
+      checks: [],
+      errors: [],
+      warnings: [],
+      isValidating: false,
+      failed: false,
+    })
   })
 
   // BLOCKER 2 (final whole-branch review): a failed validate must not settle
@@ -82,9 +102,7 @@ describe('useValidation', () => {
   // actually unknown. `failed: true` is the caller's (ConformanceChip's)
   // signal to render neutral rather than green.
   it('sets failed:true and clears isValidating when the validate POST rejects (500/network)', async () => {
-    server.use(
-      http.post('/api/recipes/validate', () => new HttpResponse(null, { status: 500 })),
-    )
+    server.use(http.post('/api/recipes/validate', () => new HttpResponse(null, { status: 500 })))
     const { result } = renderHook(
       ({ draft }: { draft: RecipeJson | null }) => useValidation(draft),
       { initialProps: { draft: DRAFT_A as RecipeJson | null } },
@@ -99,9 +117,34 @@ describe('useValidation', () => {
   })
 })
 
-const NODE_A: ETLNode = { id: 'A', type: 'source', label: 'SRC', name: 'A', x: 0, y: 0, ports: [], properties: {}, file: 'x.json' }
-const NODE_B: ETLNode = { id: 'B', type: 'target', label: 'TGT', name: 'B', x: 0, y: 0, ports: [], properties: {}, file: 'x.json' }
-const GRAPH = { nodes: [NODE_A, NODE_B], connections: [], mappingNames: ['x'], renderedMapping: 'x' }
+const NODE_A: ETLNode = {
+  id: 'A',
+  type: 'source',
+  label: 'SRC',
+  name: 'A',
+  x: 0,
+  y: 0,
+  ports: [],
+  properties: {},
+  file: 'x.json',
+}
+const NODE_B: ETLNode = {
+  id: 'B',
+  type: 'target',
+  label: 'TGT',
+  name: 'B',
+  x: 0,
+  y: 0,
+  ports: [],
+  properties: {},
+  file: 'x.json',
+}
+const GRAPH = {
+  nodes: [NODE_A, NODE_B],
+  connections: [],
+  mappingNames: ['x'],
+  renderedMapping: 'x',
+}
 
 describe('nodeIdFromPath', () => {
   it('resolves $.steps[N]… to the Nth canvas node id', () => {
@@ -120,7 +163,15 @@ describe('nodeIdFromPath', () => {
 describe('nodeStatusFrom', () => {
   it('maps $.steps[1].target.name to the second step target node id', () => {
     const status = nodeStatusFrom(
-      [{ ruleId: 'IPC-STR-001', severity: 'warning', status: 'fail', path: '$.steps[1].target.name', message: 'x' }],
+      [
+        {
+          ruleId: 'IPC-STR-001',
+          severity: 'warning',
+          status: 'fail',
+          path: '$.steps[1].target.name',
+          message: 'x',
+        },
+      ],
       GRAPH,
     )
     expect(status).toEqual({ B: 'warn' })
@@ -129,8 +180,20 @@ describe('nodeStatusFrom', () => {
   it('picks error over warn when a node has both', () => {
     const status = nodeStatusFrom(
       [
-        { ruleId: 'IPC-STR-001', severity: 'warning', status: 'fail', path: '$.steps[0].target.name', message: 'w' },
-        { ruleId: 'IPC-STR-002', severity: 'error', status: 'fail', path: '$.steps[0].target.type', message: 'e' },
+        {
+          ruleId: 'IPC-STR-001',
+          severity: 'warning',
+          status: 'fail',
+          path: '$.steps[0].target.name',
+          message: 'w',
+        },
+        {
+          ruleId: 'IPC-STR-002',
+          severity: 'error',
+          status: 'fail',
+          path: '$.steps[0].target.type',
+          message: 'e',
+        },
       ],
       GRAPH,
     )
@@ -140,8 +203,20 @@ describe('nodeStatusFrom', () => {
     // later warning on the same node.
     const status2 = nodeStatusFrom(
       [
-        { ruleId: 'IPC-STR-002', severity: 'error', status: 'fail', path: '$.steps[0].target.type', message: 'e' },
-        { ruleId: 'IPC-STR-001', severity: 'warning', status: 'fail', path: '$.steps[0].target.name', message: 'w' },
+        {
+          ruleId: 'IPC-STR-002',
+          severity: 'error',
+          status: 'fail',
+          path: '$.steps[0].target.type',
+          message: 'e',
+        },
+        {
+          ruleId: 'IPC-STR-001',
+          severity: 'warning',
+          status: 'fail',
+          path: '$.steps[0].target.name',
+          message: 'w',
+        },
       ],
       GRAPH,
     )
@@ -150,7 +225,15 @@ describe('nodeStatusFrom', () => {
 
   it('ignores passing checks', () => {
     const status = nodeStatusFrom(
-      [{ ruleId: 'IPC-STR-001', severity: 'error', status: 'pass', path: '$.steps[0].target.name', message: 'ok' }],
+      [
+        {
+          ruleId: 'IPC-STR-001',
+          severity: 'error',
+          status: 'pass',
+          path: '$.steps[0].target.name',
+          message: 'ok',
+        },
+      ],
       GRAPH,
     )
     expect(status).toEqual({})

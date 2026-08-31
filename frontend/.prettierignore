@@ -1,0 +1,12 @@
+# The `format` script globs src/**/*.{ts,tsx} and the root *.ts configs, so this file only has
+# to cover exceptions INSIDE that set. Everything else in the repo is deliberately unformatted:
+#
+#   *.md   — CLAUDE.md, AGENTS.md and docs/ are hand-wrapped at ~90 chars and use wide tables;
+#            prettier reflows each table row onto one enormous line.
+#   *.json — src/api/__fixtures__/ are captured API responses and must stay byte-identical to
+#            what the backend emits, or they stop being faithful fixtures.
+#   *.css  — index.css is the Figma visual contract's token file (ADR-0005); left alone.
+
+# Generated and committed. `make generate-api` rewrites it from a running backend, so formatting
+# it here would break the format check every time the API types are regenerated.
+src/api/types.gen.ts

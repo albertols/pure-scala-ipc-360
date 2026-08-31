@@ -10,24 +10,40 @@ import { layerColor, kindPalette, statusColor, STATUS_EDGE_PX } from '../../them
 afterEach(cleanup)
 
 const CARD: CardData = {
-  id: 'recipe:_ETL_m_CAS_ODS_EVENTS.json', kind: 'recipe', name: '_ETL_m_CAS_ODS_EVENTS.json',
-  layer: 'ODS', status: 'OK', lastRun: '2026-07-29T04:52:00.000Z',
+  id: 'recipe:_ETL_m_CAS_ODS_EVENTS.json',
+  kind: 'recipe',
+  name: '_ETL_m_CAS_ODS_EVENTS.json',
+  layer: 'ODS',
+  status: 'OK',
+  lastRun: '2026-07-29T04:52:00.000Z',
   history: ['OK', 'OK', 'KO', 'OK'],
   stats: { avg_time_s: 90, p50: 80, p95: 120, p99: 120, avg_count: 0 },
-  jobId: 'application_1_0001', relations: [],
+  jobId: 'application_1_0001',
+  relations: [],
 }
 
 const CONFIG: AppConfig = {
-  gcpProjectId: 'example-project', region: 'europe-southwest1',
-  dataprocJobUrl: 'https://console.cloud.google.com/dataproc/jobs/{jobId}?project={project}&region={region}',
-  dataprocClusterUrl: 'https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}',
-  loggingUrl: DEFAULT_LOGGING_URL, loggingDuration: 'P31D',
-  dwhControlMode: 'mock', composerMode: 'mock', corpusRoot: '/mock',
+  gcpProjectId: 'example-project',
+  region: 'europe-southwest1',
+  dataprocJobUrl:
+    'https://console.cloud.google.com/dataproc/jobs/{jobId}?project={project}&region={region}',
+  dataprocClusterUrl:
+    'https://console.cloud.google.com/dataproc/clusters/{clusterName}?project={project}&region={region}',
+  loggingUrl: DEFAULT_LOGGING_URL,
+  loggingDuration: 'P31D',
+  dwhControlMode: 'mock',
+  composerMode: 'mock',
+  corpusRoot: '/mock',
 }
 
 const RUNS: RunT[] = ['2026-07-29', '2026-07-28', '2026-07-27'].map(date => ({
-  date, clusterName: 'cluster-wf-cas-load-4001', jobId: `application_1_${date.slice(-2)}`,
-  appStartIso: `${date}T04:52:00.000Z`, durationMin: 1.5, status: 'SUCCESS', message: '',
+  date,
+  clusterName: 'cluster-wf-cas-load-4001',
+  jobId: `application_1_${date.slice(-2)}`,
+  appStartIso: `${date}T04:52:00.000Z`,
+  durationMin: 1.5,
+  status: 'SUCCESS',
+  message: '',
 }))
 
 describe('OperationalCard — link row', () => {
@@ -55,27 +71,43 @@ describe('OperationalCard — link row', () => {
     const href = screen.getByRole('link', { name: /Logging/ }).getAttribute('href')!
     expect(href).toContain('application_1_27')
     expect(href).toContain(';cursorTimestamp=2026-07-27T04:52:00.000Z')
-    expect(href).not.toContain('%3A00%3A00')       // colons survive in the matrix segment
+    expect(href).not.toContain('%3A00%3A00') // colons survive in the matrix segment
   })
 
   it('still produces a working Logging link when no runs are available', () => {
     render(<OperationalCard card={CARD} config={CONFIG} />)
 
     const href = screen.getByRole('link', { name: /Logging/ }).getAttribute('href')!
-    expect(href).toContain('application_1_0001')   // falls back to card.jobId
+    expect(href).toContain('application_1_0001') // falls back to card.jobId
     expect(href).not.toContain('cursorTimestamp')
   })
 })
 
 describe('OperationalCard — density', () => {
   it('detailed shows stats and the run history', () => {
-    render(<OperationalCard card={CARD} density="detailed" runs={RUNS} selectedRunDate="2026-07-29" config={CONFIG} />)
+    render(
+      <OperationalCard
+        card={CARD}
+        density="detailed"
+        runs={RUNS}
+        selectedRunDate="2026-07-29"
+        config={CONFIG}
+      />,
+    )
     expect(screen.getByText('p95')).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /^Run 2026-07-/ })).toHaveLength(3)
   })
 
   it('compact keeps identity and status but drops stats and history', () => {
-    render(<OperationalCard card={CARD} density="compact" runs={RUNS} selectedRunDate="2026-07-29" config={CONFIG} />)
+    render(
+      <OperationalCard
+        card={CARD}
+        density="compact"
+        runs={RUNS}
+        selectedRunDate="2026-07-29"
+        config={CONFIG}
+      />,
+    )
     expect(screen.getByText('_ETL_m_CAS_ODS_EVENTS.json')).toBeInTheDocument()
     expect(screen.getByText('ODS')).toBeInTheDocument()
     expect(screen.queryByText('p95')).not.toBeInTheDocument()
@@ -111,9 +143,13 @@ describe('OperationalCard — RunPicker click isolation (Task 9 review, Ruling 1
     const onSelectRun = vi.fn()
     render(
       <OperationalCard
-        card={CARD} config={CONFIG} runs={RUNS} selectedRunDate="2026-07-29"
-        onClick={onClick} onSelectRun={onSelectRun}
-      />
+        card={CARD}
+        config={CONFIG}
+        runs={RUNS}
+        selectedRunDate="2026-07-29"
+        onClick={onClick}
+        onSelectRun={onSelectRun}
+      />,
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Run 2026-07-28' }))
@@ -186,20 +222,23 @@ describe('OperationalCard — semantic palette', () => {
 
   it.each(DENSITIES)('tints a recipe body Spark orange at %s', d => {
     render(<OperationalCard card={CARD} density={d} />)
-    expect(screen.getByTestId('operational-card'))
-      .toHaveStyle({ background: kindPalette('recipe').body })
+    expect(screen.getByTestId('operational-card')).toHaveStyle({
+      background: kindPalette('recipe').body,
+    })
   })
 
   it.each(DENSITIES)('tints a table body BigQuery blue at %s', d => {
     render(<OperationalCard card={asTable} density={d} />)
-    expect(screen.getByTestId('operational-card'))
-      .toHaveStyle({ background: kindPalette('table').body })
+    expect(screen.getByTestId('operational-card')).toHaveStyle({
+      background: kindPalette('table').body,
+    })
   })
 
   it('carries the KO status colour on the same edge as OK', () => {
     render(<OperationalCard card={{ ...CARD, status: 'KO' }} />)
-    expect(screen.getByTestId('operational-card'))
-      .toHaveStyle({ borderLeftColor: statusColor('KO') })
+    expect(screen.getByTestId('operational-card')).toHaveStyle({
+      borderLeftColor: statusColor('KO'),
+    })
   })
 
   it('gives an unresolved layer the neutral colour, not a tier colour', () => {

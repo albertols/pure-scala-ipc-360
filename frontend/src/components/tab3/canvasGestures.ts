@@ -1,4 +1,7 @@
-export interface CanvasView { zoom: number; pan: { x: number; y: number } }
+export interface CanvasView {
+  zoom: number
+  pan: { x: number; y: number }
+}
 
 export interface WheelInput {
   deltaX: number
@@ -10,7 +13,7 @@ export interface WheelInput {
   cursor: { x: number; y: number }
 }
 
-const MIN_ZOOM = 0.3  // matches the +/- buttons and fitToViewport's clamp — one floor, everywhere.
+const MIN_ZOOM = 0.3 // matches the +/- buttons and fitToViewport's clamp — one floor, everywhere.
 const MAX_ZOOM = 2
 const ZOOM_RATE = 0.002
 
@@ -41,7 +44,10 @@ export function applyWheel(view: CanvasView, input: WheelInput): CanvasView {
     }
   }
   if (input.shiftKey) {
-    return { zoom: view.zoom, pan: { x: view.pan.x - (input.deltaY || input.deltaX), y: view.pan.y } }
+    return {
+      zoom: view.zoom,
+      pan: { x: view.pan.x - (input.deltaY || input.deltaX), y: view.pan.y },
+    }
   }
   return {
     zoom: view.zoom,

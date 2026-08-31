@@ -34,9 +34,13 @@ export type Tier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'unresolved'
 
 /** Layer → medallion tier. Mirrors ADR-0017's palette groupings exactly; a band IS a tier. */
 export const TIER_OF: Record<string, number> = {
-  STG: 0, ODS: 0,
-  DWH: 1, ETL: 1,
-  CDM: 2, RDM: 2, QDM: 2,
+  STG: 0,
+  ODS: 0,
+  DWH: 1,
+  ETL: 1,
+  CDM: 2,
+  RDM: 2,
+  QDM: 2,
   OUTPUT: 3,
   UNKNOWN: 4,
 }
@@ -113,32 +117,43 @@ export function layoutLineage(
   const bandById = new Map(nodes.map(n => [n.id, bandOf(n.layer)]))
 
   const cells: Cell[] = nodes.map(n => ({
-    id: n.id, col: colOf.get(n.id)!, band: bandById.get(n.id)!,
-    isDummy: false, sortName: n.name, node: n,
+    id: n.id,
+    col: colOf.get(n.id)!,
+    band: bandById.get(n.id)!,
+    isDummy: false,
+    sortName: n.name,
+    node: n,
   }))
 
   // ── 2. Dummy chains for every edge spanning more than one column ──────────
   // Only edges whose endpoints are both present are routed; the endpoint check also drops the
   // self-loop a cyclic graph can produce, which would otherwise create a zero-length chain.
-  const chains = new Map<string, string[]>()   // edge key -> [from, ...dummies, to]
+  const chains = new Map<string, string[]>() // edge key -> [from, ...dummies, to]
   edges.forEach((edge, i) => {
-    const a = colOf.get(edge.from), b = colOf.get(edge.to)
+    const a = colOf.get(edge.from),
+      b = colOf.get(edge.to)
     if (a === undefined || b === undefined) return
     const key = `${edge.from}|${edge.to}|${edge.kind}|${i}`
-    if (Math.abs(b - a) <= 1) { chains.set(key, [edge.from, edge.to]); return }
+    if (Math.abs(b - a) <= 1) {
+      chains.set(key, [edge.from, edge.to])
+      return
+    }
 
     const step = b > a ? 1 : -1
     const span = Math.abs(b - a)
-    const ba = bandById.get(edge.from)!, bb = bandById.get(edge.to)!
+    const ba = bandById.get(edge.from)!,
+      bb = bandById.get(edge.to)!
     const chain: string[] = [edge.from]
     for (let k = 1, c = a + step; c !== b; k++, c += step) {
       const id = `__lin${i}_${c}`
       cells.push({
-        id, col: c,
+        id,
+        col: c,
         // Interpolated so a long edge travels in a straight-ish lane rather than jinking
         // across bands at its first hop.
         band: Math.round(ba + (bb - ba) * (k / span)),
-        isDummy: true, sortName: id,
+        isDummy: true,
+        sortName: id,
       })
       chain.push(id)
     }
@@ -151,7 +166,8 @@ export function layoutLineage(
   const pred = new Map<string, string[]>()
   for (const chain of chains.values()) {
     for (let i = 0; i + 1 < chain.length; i++) {
-      const u = chain[i]!, v = chain[i + 1]!
+      const u = chain[i]!,
+        v = chain[i + 1]!
       if (!succ.has(u)) succ.set(u, [])
       if (!pred.has(v)) pred.set(v, [])
       succ.get(u)!.push(v)
@@ -161,7 +177,8 @@ export function layoutLineage(
 
   const columns: Cell[][] = hops.map(() => [])
   for (const c of cells) columns[c.col]!.push(c)
-  for (const col of columns) col.sort((a, b) => a.band - b.band || a.sortName.localeCompare(b.sortName))
+  for (const col of columns)
+    col.sort((a, b) => a.band - b.band || a.sortName.localeCompare(b.sortName))
 
   const slot = new Map<string, number>()
   const reindex = (col: Cell[]) => col.forEach((c, i) => slot.set(c.id, i))
@@ -171,25 +188,35 @@ export function layoutLineage(
     const forward = s % 2 === 0
     const order = forward
       ? columns.map((_, i) => i).slice(1)
-      : columns.map((_, i) => i).slice(0, -1).reverse()
+      : columns
+          .map((_, i) => i)
+          .slice(0, -1)
+          .reverse()
     const neighbours = forward ? pred : succ
     for (const ci of order) {
       const col = columns[ci]!
       const bary = new Map<string, number>()
       for (const c of col) {
-        const ns = (neighbours.get(c.id) ?? []).map(id => slot.get(id)).filter((v): v is number => v !== undefined)
+        const ns = (neighbours.get(c.id) ?? [])
+          .map(id => slot.get(id))
+          .filter((v): v is number => v !== undefined)
         bary.set(c.id, ns.length ? median(ns) : slot.get(c.id)!)
       }
       // `band` first, always: ordering optimises WITHIN a tier and can never move a node out
       // of one. `sortName` last keeps the result deterministic when barycentres tie.
-      col.sort((a, b) => a.band - b.band || bary.get(a.id)! - bary.get(b.id)! || a.sortName.localeCompare(b.sortName))
+      col.sort(
+        (a, b) =>
+          a.band - b.band ||
+          bary.get(a.id)! - bary.get(b.id)! ||
+          a.sortName.localeCompare(b.sortName),
+      )
       reindex(col)
     }
   }
 
   // ── 4. Coordinates: bands stacked, slots packed within a band ─────────────
   const presentBands = [...new Set(cells.map(c => c.band))].sort((a, b) => a - b)
-  const heightOf = (c: Cell) => c.isDummy ? DUMMY_HEIGHT : LINEAGE_FOOTPRINT.height
+  const heightOf = (c: Cell) => (c.isDummy ? DUMMY_HEIGHT : LINEAGE_FOOTPRINT.height)
 
   // A band is as tall as the fullest column within it, so the same tier occupies the same
   // vertical range in EVERY column — which is what makes the banding readable at all.
@@ -198,7 +225,8 @@ export function layoutLineage(
     let tallest = 0
     for (const col of columns) {
       const inBand = col.filter(c => c.band === b)
-      const h = inBand.reduce((sum, c) => sum + heightOf(c), 0) + Math.max(0, inBand.length - 1) * ROW_GAP
+      const h =
+        inBand.reduce((sum, c) => sum + heightOf(c), 0) + Math.max(0, inBand.length - 1) * ROW_GAP
       tallest = Math.max(tallest, h)
     }
     bandHeight.set(b, tallest)
@@ -250,7 +278,8 @@ export function layoutLineage(
     const chain = chains.get(key)
     if (!chain) return
     const points = chain.map((id, idx) =>
-      anchor(id, idx === 0 ? 'out' : idx === chain.length - 1 ? 'in' : 'out'))
+      anchor(id, idx === 0 ? 'out' : idx === chain.length - 1 ? 'in' : 'out'),
+    )
     routed.push({ from: edge.from, to: edge.to, kind: edge.kind, points })
   })
 
@@ -276,7 +305,8 @@ export function countCrossings(layout: LineageLayout): number {
   const segments: { x1: number; y1: number; x2: number; y2: number }[] = []
   for (const e of layout.edges) {
     for (let i = 0; i + 1 < e.points.length; i++) {
-      const a = e.points[i]!, b = e.points[i + 1]!
+      const a = e.points[i]!,
+        b = e.points[i + 1]!
       segments.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y })
     }
   }
@@ -284,7 +314,8 @@ export function countCrossings(layout: LineageLayout): number {
   let crossings = 0
   for (let i = 0; i < segments.length; i++) {
     for (let j = i + 1; j < segments.length; j++) {
-      const a = segments[i]!, b = segments[j]!
+      const a = segments[i]!,
+        b = segments[j]!
       // Same column gap, and their endpoints are ordered oppositely => they cross.
       if (a.x1 !== b.x1 || a.x2 !== b.x2) continue
       if ((a.y1 - b.y1) * (a.y2 - b.y2) < 0) crossings++

@@ -9,7 +9,12 @@
  * look different but mean the same thing.
  */
 export function MultiFilterChips({
-  testId, label, options, selected, onToggle, colors,
+  testId,
+  label,
+  options,
+  selected,
+  onToggle,
+  colors,
 }: {
   testId: string
   label: string
@@ -28,26 +33,41 @@ export function MultiFilterChips({
         onClick={() => onToggle([])}
         aria-pressed={selected.length === 0}
         style={{
-          padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
+          padding: '2px 8px',
+          borderRadius: 4,
+          fontSize: 10,
+          cursor: 'pointer',
           fontFamily: 'JetBrains Mono, monospace',
           background: selected.length === 0 ? 'var(--surface-3)' : 'transparent',
           border: `1px solid ${selected.length === 0 ? 'var(--border)' : 'transparent'}`,
           color: selected.length === 0 ? '#e2e8f8' : '#4a5570',
         }}
-      >ALL</button>
+      >
+        ALL
+      </button>
       {options.map(o => {
         const c = colors?.[o]
         const on = selected.includes(o)
         return (
-          <button key={o} onClick={() => toggle(o)} aria-pressed={on} style={{
-            padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
-            fontFamily: 'JetBrains Mono, monospace',
-            background: on ? (c ? `${c}22` : 'var(--surface-3)') : 'transparent',
-            border: `1px solid ${on ? (c ?? 'var(--border)') : 'transparent'}`,
-            // Unselected chips keep their palette colour — the row is the legend (ADR-0017).
-            color: on ? (c ?? '#e2e8f8') : (c ?? '#4a5570'),
-            fontWeight: on ? 700 : 400,
-          }}>{o}</button>
+          <button
+            key={o}
+            onClick={() => toggle(o)}
+            aria-pressed={on}
+            style={{
+              padding: '2px 8px',
+              borderRadius: 4,
+              fontSize: 10,
+              cursor: 'pointer',
+              fontFamily: 'JetBrains Mono, monospace',
+              background: on ? (c ? `${c}22` : 'var(--surface-3)') : 'transparent',
+              border: `1px solid ${on ? (c ?? 'var(--border)') : 'transparent'}`,
+              // Unselected chips keep their palette colour — the row is the legend (ADR-0017).
+              color: on ? (c ?? '#e2e8f8') : (c ?? '#4a5570'),
+              fontWeight: on ? 700 : 400,
+            }}
+          >
+            {o}
+          </button>
         )
       })}
     </div>

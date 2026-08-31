@@ -24,7 +24,9 @@ describe('useDraftHistory', () => {
     expect(result.current.canUndo).toBe(true)
 
     let popped: RecipeJson | null = null
-    act(() => { popped = result.current.undo(recipe(2)) })
+    act(() => {
+      popped = result.current.undo(recipe(2))
+    })
 
     expect(popped).toEqual(recipe(1))
     expect(result.current.canUndo).toBe(false)
@@ -58,11 +60,15 @@ describe('useDraftHistory', () => {
     act(() => result.current.push(recipe(1)))
 
     let current = recipe(2)
-    act(() => { current = result.current.undo(current)! })
+    act(() => {
+      current = result.current.undo(current)!
+    })
     expect(current).toEqual(recipe(1))
 
     let redone: RecipeJson | null = null
-    act(() => { redone = result.current.redo(current) })
+    act(() => {
+      redone = result.current.redo(current)
+    })
 
     expect(redone).toEqual(recipe(2))
     expect(result.current.canRedo).toBe(false)
@@ -74,7 +80,9 @@ describe('useDraftHistory', () => {
     act(() => result.current.push(recipe(1)))
 
     let current = recipe(2)
-    act(() => { current = result.current.undo(current)! })
+    act(() => {
+      current = result.current.undo(current)!
+    })
     expect(result.current.canRedo).toBe(true)
 
     act(() => result.current.push(current))
@@ -113,7 +121,9 @@ describe('useDraftHistory', () => {
     const { result } = renderHook(() => useDraftHistory())
     act(() => result.current.push(recipe(1)))
     let current = recipe(2)
-    act(() => { current = result.current.undo(current)! })
+    act(() => {
+      current = result.current.undo(current)!
+    })
     expect(result.current.canRedo).toBe(true)
 
     act(() => result.current.reset())

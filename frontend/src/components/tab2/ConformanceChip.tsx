@@ -47,12 +47,18 @@ export function ConformanceChip({
 
   const color = failed
     ? 'var(--text-dim)'
-    : errors.length > 0 ? 'var(--red)' : warnings.length > 0 ? '#fbbf24' : 'var(--green)'
+    : errors.length > 0
+      ? 'var(--red)'
+      : warnings.length > 0
+        ? '#fbbf24'
+        : 'var(--green)'
   const bg = failed
     ? 'transparent'
     : errors.length > 0
       ? 'rgba(248,113,113,0.15)'
-      : warnings.length > 0 ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)'
+      : warnings.length > 0
+        ? 'rgba(251,191,36,0.15)'
+        : 'rgba(52,211,153,0.15)'
   const border = failed ? 'var(--border)' : color
 
   const failing = checks.filter(c => c.status === 'fail')
@@ -68,30 +74,54 @@ export function ConformanceChip({
 
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={() => setOpen(o => !o)} style={{
-        padding: '5px 12px', borderRadius: 5,
-        background: bg, border: `1px solid ${border}`,
-        color, fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-        display: 'flex', alignItems: 'center', gap: 6,
-      }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          padding: '5px 12px',
+          borderRadius: 5,
+          background: bg,
+          border: `1px solid ${border}`,
+          color,
+          fontSize: 11,
+          cursor: 'pointer',
+          fontFamily: 'JetBrains Mono, monospace',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
         <span style={{ width: 6, height: 6, borderRadius: 3, background: color, flexShrink: 0 }} />
-        {failed
-          ? 'conformance unavailable'
-          : <>
-              {`${errors.length} error${s(errors.length)}`}
-              {warnings.length > 0 && ` · ${warnings.length} warning${s(warnings.length)}`}
-            </>}
+        {failed ? (
+          'conformance unavailable'
+        ) : (
+          <>
+            {`${errors.length} error${s(errors.length)}`}
+            {warnings.length > 0 && ` · ${warnings.length} warning${s(warnings.length)}`}
+          </>
+        )}
         {isValidating && ' …'}
       </button>
 
       {open && (
-        <div style={{
-          position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 20,
-          width: 320, maxHeight: 360, overflowY: 'auto',
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 6, padding: 10,
-          display: 'flex', flexDirection: 'column', gap: 6,
-        }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            right: 0,
+            marginTop: 6,
+            zIndex: 20,
+            width: 320,
+            maxHeight: 360,
+            overflowY: 'auto',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 6,
+            padding: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+          }}
+        >
           {failed ? (
             <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>
               Conformance check failed to run. Try again shortly.
@@ -104,18 +134,43 @@ export function ConformanceChip({
               const rowColor = check.severity === 'error' ? 'var(--red)' : '#fbbf24'
               return (
                 // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-                <div key={i} onClick={() => handleRowClick(check)} style={{
-                  border: '1px solid var(--border-subtle)', borderRadius: 5, padding: '6px 8px',
-                  cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3,
-                }}>
+                <div
+                  key={i}
+                  onClick={() => handleRowClick(check)}
+                  style={{
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 5,
+                    padding: '6px 8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: rowColor, fontWeight: 600 }}>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontFamily: 'JetBrains Mono, monospace',
+                        color: rowColor,
+                        fontWeight: 600,
+                      }}
+                    >
                       {check.ruleId}
                     </span>
-                    <span style={{
-                      fontSize: 9, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace',
-                      flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>{check.path}</span>
+                    <span
+                      style={{
+                        fontSize: 9,
+                        color: '#4a5570',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        flex: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {check.path}
+                    </span>
                   </div>
                   <div style={{ fontSize: 10, color: '#c8d3e8' }}>{check.message}</div>
                   {rule?.statement && (

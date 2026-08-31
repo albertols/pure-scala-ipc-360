@@ -32,7 +32,15 @@ export interface OperationalGraphView {
  * and the canvas columns in the operator's actual pipeline order.
  */
 export const LAYER_RANK: Record<string, number> = {
-  STG: 0, ODS: 1, ETL: 2, DWH: 3, CDM: 4, RDM: 5, QDM: 6, OUTPUT: 7, UNKNOWN: 8,
+  STG: 0,
+  ODS: 1,
+  ETL: 2,
+  DWH: 3,
+  CDM: 4,
+  RDM: 5,
+  QDM: 6,
+  OUTPUT: 7,
+  UNKNOWN: 8,
 }
 
 // Layout constants (adapter-local; mirrors canvasLayout.ts's 40px margin idiom,
@@ -56,15 +64,15 @@ export const LAYER_RANK: Record<string, number> = {
  */
 export const DENSITY_FOOTPRINT: Record<CardDensity, { width: number; height: number }> = {
   detailed: { width: 260, height: 280 },
-  compact:  { width: 240, height: 56 },
-  minimal:  { width: 210, height: 26 },
+  compact: { width: 240, height: 56 },
+  minimal: { width: 210, height: 26 },
 }
 
 /** Empty space BETWEEN footprints — the room the edges are drawn in, so arrows stay readable. */
 export const DENSITY_GUTTER: Record<CardDensity, { col: number; row: number }> = {
   detailed: { col: 80, row: 50 },
-  compact:  { col: 60, row: 40 },
-  minimal:  { col: 40, row: 20 },
+  compact: { col: 60, row: 40 },
+  minimal: { col: 40, row: 20 },
 }
 
 /** The floor the invariant test enforces, independent of the gutters chosen above. */
@@ -76,17 +84,23 @@ export const MIN_GUTTER = 16
  * Keeps its name and its `{ col, row, width, height }` shape so `fitToViewport` and `layoutCards`
  * read unchanged — the fix is that the numbers are now computed from the box they space.
  */
-export const DENSITY_PITCH: Record<CardDensity, { col: number; row: number; width: number; height: number }> =
-  Object.fromEntries(
-    (Object.keys(DENSITY_FOOTPRINT) as CardDensity[]).map(d => [d, {
+export const DENSITY_PITCH: Record<
+  CardDensity,
+  { col: number; row: number; width: number; height: number }
+> = Object.fromEntries(
+  (Object.keys(DENSITY_FOOTPRINT) as CardDensity[]).map(d => [
+    d,
+    {
       col: DENSITY_FOOTPRINT[d].width + DENSITY_GUTTER[d].col,
       row: DENSITY_FOOTPRINT[d].height + DENSITY_GUTTER[d].row,
       width: DENSITY_FOOTPRINT[d].width,
       height: DENSITY_FOOTPRINT[d].height,
-    }]),
-  ) as Record<CardDensity, { col: number; row: number; width: number; height: number }>
+    },
+  ]),
+) as Record<CardDensity, { col: number; row: number; width: number; height: number }>
 
-const X0 = 40, Y0 = 40
+const X0 = 40,
+  Y0 = 40
 
 /**
  * Fits every card into `viewport`, never magnifying past 1 and never shrinking
@@ -102,7 +116,10 @@ export function fitToViewport(
   const { width, height } = DENSITY_PITCH[density]
   const maxX = Math.max(...cards.map(c => (c.x ?? 0) + width))
   const maxY = Math.max(...cards.map(c => (c.y ?? 0) + height))
-  const zoom = Math.max(0.3, Math.min(1, Math.min(viewport.width / (maxX + X0), viewport.height / (maxY + Y0))))
+  const zoom = Math.max(
+    0.3,
+    Math.min(1, Math.min(viewport.width / (maxX + X0), viewport.height / (maxY + Y0))),
+  )
   return { zoom, pan: { x: X0, y: Y0 } }
 }
 
@@ -120,13 +137,19 @@ function isEdgeKind(k: string | undefined): k is 'source' | 'lookup' | 'writes' 
 }
 
 /** The history entry governing state at `selectedDate` — exact-date match only, no carry-forward. */
-function governingEntry(entry: RecipeSummaryDto | undefined, selectedDate: string | null): HistoryEntryDto | undefined {
+function governingEntry(
+  entry: RecipeSummaryDto | undefined,
+  selectedDate: string | null,
+): HistoryEntryDto | undefined {
   if (!entry || selectedDate === null) return undefined
   return (entry.history ?? []).find(h => h.date === selectedDate)
 }
 
 /** A recipe's status at `selectedDate`: exact-date history match; `latestStatus` when no date is selected; else PENDING. */
-function recipeStatus(entry: RecipeSummaryDto | undefined, selectedDate: string | null): StatusType {
+function recipeStatus(
+  entry: RecipeSummaryDto | undefined,
+  selectedDate: string | null,
+): StatusType {
   if (!entry) return 'PENDING'
   if (selectedDate === null) return mapStatus(entry.latestStatus)
   const gov = governingEntry(entry, selectedDate)
@@ -182,7 +205,11 @@ function rankOf(layer: string): number {
  * discipline is mirrored here: process columns left-to-right, order within a
  * column by (average predecessor y, then name), stack top-down.
  */
-function layoutCards(cards: OperationalCard[], edges: OperationalEdge[], density: CardDensity): void {
+function layoutCards(
+  cards: OperationalCard[],
+  edges: OperationalEdge[],
+  density: CardDensity,
+): void {
   if (cards.length === 0) return
   const { col: colPitch, row: rowPitch } = DENSITY_PITCH[density]
 
@@ -207,7 +234,9 @@ function layoutCards(cards: OperationalCard[], edges: OperationalEdge[], density
 
   const yById = new Map<string, number>()
   const avgPredY = (c: OperationalCard): number => {
-    const ys = (preds.get(c.id) ?? []).map(p => yById.get(p)).filter((y): y is number => y !== undefined)
+    const ys = (preds.get(c.id) ?? [])
+      .map(p => yById.get(p))
+      .filter((y): y is number => y !== undefined)
     if (ys.length === 0) return 0
     return ys.reduce((a, b) => a + b, 0) / ys.length
   }
@@ -305,11 +334,19 @@ export function toOperationalGraph(
       card.jobId = entry?.lastJobId
     } else {
       const writerIds = writersByTable.get(card.id) ?? []
-      const writerStatuses = writerIds.map(rid => recipeStatus(byFilename.get(cardsById.get(rid)?.name ?? ''), selectedDate))
-      card.status = writerStatuses.includes('KO') ? 'KO' : writerStatuses.includes('OK') ? 'OK' : 'PENDING'
+      const writerStatuses = writerIds.map(rid =>
+        recipeStatus(byFilename.get(cardsById.get(rid)?.name ?? ''), selectedDate),
+      )
+      card.status = writerStatuses.includes('KO')
+        ? 'KO'
+        : writerStatuses.includes('OK')
+          ? 'OK'
+          : 'PENDING'
 
       const firstWriterId = firstWriterByTable.get(card.id)
-      const firstWriterEntry = firstWriterId ? byFilename.get(cardsById.get(firstWriterId)?.name ?? '') : undefined
+      const firstWriterEntry = firstWriterId
+        ? byFilename.get(cardsById.get(firstWriterId)?.name ?? '')
+        : undefined
       card.history = toHistory(firstWriterEntry)
       card.stats = toStats(firstWriterEntry)
       card.lastRun = toLastRun(firstWriterEntry, selectedDate)
@@ -372,7 +409,8 @@ export function summarizeSnapshot(
   const recipeIdByName = new Map(cards.filter(c => c.kind === 'recipe').map(c => [c.name, c.id]))
 
   const recipeNames = new Set<string>()
-  let ok = 0, ko = 0
+  let ok = 0,
+    ko = 0
   for (const row of rows) {
     if (row.recipeFilename) recipeNames.add(row.recipeFilename)
     // Through STATUS_MAP, never raw 'SUCCESS'/'FAILED' literals: the map at the top of this file

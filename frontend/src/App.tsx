@@ -26,17 +26,23 @@ function TopBar({
   const active = TABS.find(t => t.id === activeTab)!
 
   return (
-    <div style={{
-      flexShrink: 0,
-      background: 'var(--surface)',
-      borderBottom: '1px solid var(--border)',
-    }}>
+    <div
+      style={{
+        flexShrink: 0,
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
+      }}
+    >
       {/* top row */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 0,
-        padding: '0 16px',
-        height: 48,
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0,
+          padding: '0 16px',
+          height: 48,
+        }}
+      >
         {/* logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginRight: 24 }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -47,31 +53,77 @@ function TopBar({
             <path d="M10 6h4M12 10v4M14 18h-4" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
           </svg>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#e2e8f8', letterSpacing: '-0.02em', lineHeight: 1 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: '#e2e8f8',
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+              }}
+            >
               ETL <span style={{ color: active.accent }}>360</span>
             </div>
-            <div style={{ fontSize: 9, color: '#3a4560', fontFamily: 'JetBrains Mono, monospace', lineHeight: 1 }}>xmltobq · GCP Suite</div>
+            <div
+              style={{
+                fontSize: 9,
+                color: '#3a4560',
+                fontFamily: 'JetBrains Mono, monospace',
+                lineHeight: 1,
+              }}
+            >
+              xmltobq · GCP Suite
+            </div>
           </div>
         </div>
 
         {/* search */}
         <div style={{ position: 'relative', marginRight: 20 }}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
-            style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 13 13"
+            fill="none"
+            style={{
+              position: 'absolute',
+              left: 9,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+            }}
+          >
             <circle cx="5.5" cy="5.5" r="4" stroke="#4a5570" strokeWidth="1.4" />
-            <line x1="8.5" y1="8.5" x2="11.5" y2="11.5" stroke="#4a5570" strokeWidth="1.4" strokeLinecap="round" />
+            <line
+              x1="8.5"
+              y1="8.5"
+              x2="11.5"
+              y2="11.5"
+              stroke="#4a5570"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
           </svg>
           <input
             value={searchQuery}
             onChange={e => onSearchChange(e.target.value)}
             placeholder="Search files, mappings…"
             style={{
-              width: 260, background: 'var(--surface-2)', border: '1px solid var(--border)',
-              borderRadius: 6, color: '#c8d3e8', fontSize: 12,
-              padding: '6px 10px 6px 28px', outline: 'none', fontFamily: 'Inter, sans-serif',
+              width: 260,
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 6,
+              color: '#c8d3e8',
+              fontSize: 12,
+              padding: '6px 10px 6px 28px',
+              outline: 'none',
+              fontFamily: 'Inter, sans-serif',
             }}
-            onFocus={e => { (e.target as HTMLInputElement).style.borderColor = active.accent }}
-            onBlur={e => { (e.target as HTMLInputElement).style.borderColor = 'var(--border)' }}
+            onFocus={e => {
+              ;(e.target as HTMLInputElement).style.borderColor = active.accent
+            }}
+            onBlur={e => {
+              ;(e.target as HTMLInputElement).style.borderColor = 'var(--border)'
+            }}
           />
         </div>
 
@@ -80,17 +132,28 @@ function TopBar({
         {/* future tabs */}
         <div style={{ display: 'flex', gap: 6, marginRight: 12 }}>
           {FUTURE_TABS.map(ft => (
-            <div key={ft.label} title={ft.desc} style={{
-              padding: '3px 10px', borderRadius: 4,
-              border: '1px solid var(--border-subtle)',
-              color: '#2a3050', fontSize: 11, cursor: 'not-allowed',
-              fontFamily: 'JetBrains Mono, monospace',
-            }}>{ft.label}</div>
+            <div
+              key={ft.label}
+              title={ft.desc}
+              style={{
+                padding: '3px 10px',
+                borderRadius: 4,
+                border: '1px solid var(--border-subtle)',
+                color: '#2a3050',
+                fontSize: 11,
+                cursor: 'not-allowed',
+                fontFamily: 'JetBrains Mono, monospace',
+              }}
+            >
+              {ft.label}
+            </div>
           ))}
         </div>
 
         {/* suite info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#4a5570' }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#4a5570' }}
+        >
           <InfoTooltip
             text={TABS.map(t => `${t.label}: ${t.description}`).join('\n\n')}
             placement="bottom"
@@ -108,7 +171,9 @@ function TopBar({
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 7,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
                 padding: '9px 16px',
                 background: 'transparent',
                 border: 'none',
@@ -122,7 +187,9 @@ function TopBar({
                 whiteSpace: 'nowrap',
               }}
             >
-              <span style={{ color: isActive ? tab.accent : '#4a5570', display: 'flex' }}>{tab.icon}</span>
+              <span style={{ color: isActive ? tab.accent : '#4a5570', display: 'flex' }}>
+                {tab.icon}
+              </span>
               {tab.label}
             </button>
           )
@@ -187,14 +254,17 @@ export default function App() {
   const [visited, setVisited] = useState<Set<TabId>>(() => new Set<TabId>(['viewer']))
   const transitionTimer = useRef<number | null>(null)
 
-  useEffect(() => () => {
-    if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current)
-  }, [])
+  useEffect(
+    () => () => {
+      if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current)
+    },
+    [],
+  )
 
   const showTab = (tab: TabId) => {
     setActiveTab(tab)
     setSearchQuery('')
-    setVisited(prev => prev.has(tab) ? prev : new Set(prev).add(tab))
+    setVisited(prev => (prev.has(tab) ? prev : new Set(prev).add(tab)))
   }
 
   // Entry via the primary button, `Esc`, a tab-preview card or an architecture-diagram region
@@ -224,7 +294,15 @@ export default function App() {
 
   if (related) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          background: 'var(--bg)',
+          overflow: 'hidden',
+        }}
+      >
         <TopProgressBar />
         <RelatedOverlay nodeId={related.nodeId} clusters={related.clusters} standalone />
       </div>
@@ -233,9 +311,20 @@ export default function App() {
 
   if (!focusRecipe && view !== 'tabs') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          background: 'var(--bg)',
+          overflow: 'hidden',
+        }}
+      >
         <TopProgressBar />
-        <div className={view === 'leaving' ? 'landing-exit' : undefined} style={{ flex: 1, overflow: 'hidden' }}>
+        <div
+          className={view === 'leaving' ? 'landing-exit' : undefined}
+          style={{ flex: 1, overflow: 'hidden' }}
+        >
           <Landing onEnter={enterApp} />
         </div>
       </div>
@@ -245,7 +334,13 @@ export default function App() {
   return (
     <div
       className={!focusRecipe ? 'shell-enter' : undefined}
-      style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        background: 'var(--bg)',
+        overflow: 'hidden',
+      }}
     >
       {/* Task 17: fetch-driven progress bar — mounted once here, above the
           tab shell (and focus mode), so every corner of the app gets the

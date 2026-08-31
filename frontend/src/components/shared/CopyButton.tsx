@@ -30,12 +30,31 @@ export function CopyButton({ value, size = 13 }: { value: string; size?: number 
     >
       {copied ? (
         <svg width={size} height={size} viewBox="0 0 13 13" fill="none">
-          <path d="M2 7l3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M2 7l3 3 6-6"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       ) : (
         <svg width={size} height={size} viewBox="0 0 13 13" fill="none">
-          <rect x="4.5" y="4.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-          <path d="M8.5 4.5V3a1 1 0 00-1-1h-5a1 1 0 00-1 1v5a1 1 0 001 1h1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          <rect
+            x="4.5"
+            y="4.5"
+            width="7"
+            height="7"
+            rx="1.5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M8.5 4.5V3a1 1 0 00-1-1h-5a1 1 0 00-1 1v5a1 1 0 001 1h1.5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
         </svg>
       )}
     </button>

@@ -33,20 +33,36 @@ function firstProblem(d: Diagnostics): string {
 function StatusBadge({ status }: { status: string | undefined }) {
   const ko = isKo(status)
   return (
-    <span style={{
-      fontSize: 10, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace',
-      color: ko ? KO_RED : OK_GREEN, border: `1px solid ${ko ? KO_RED : OK_GREEN}33`,
-      background: `${ko ? KO_RED : OK_GREEN}14`, borderRadius: 4, padding: '1px 5px',
-    }}>{ko ? 'KO' : 'OK'}</span>
+    <span
+      style={{
+        fontSize: 10,
+        fontWeight: 700,
+        fontFamily: 'JetBrains Mono, monospace',
+        color: ko ? KO_RED : OK_GREEN,
+        border: `1px solid ${ko ? KO_RED : OK_GREEN}33`,
+        background: `${ko ? KO_RED : OK_GREEN}14`,
+        borderRadius: 4,
+        padding: '1px 5px',
+      }}
+    >
+      {ko ? 'KO' : 'OK'}
+    </span>
   )
 }
 
 function Path({ children }: { children: string }) {
   return (
-    <div style={{
-      fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: TEXT,
-      wordBreak: 'break-all', marginTop: 3,
-    }}>{children}</div>
+    <div
+      style={{
+        fontSize: 11,
+        fontFamily: 'JetBrains Mono, monospace',
+        color: TEXT,
+        wordBreak: 'break-all',
+        marginTop: 3,
+      }}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -54,7 +70,10 @@ function Facts({ items }: { items: string[] }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 12px', marginTop: 4 }}>
       {items.map(item => (
-        <span key={item} style={{ fontSize: 10, color: DIM, fontFamily: 'JetBrains Mono, monospace' }}>
+        <span
+          key={item}
+          style={{ fontSize: 10, color: DIM, fontFamily: 'JetBrains Mono, monospace' }}
+        >
           {item}
         </span>
       ))}
@@ -69,7 +88,14 @@ function Hint({ text }: { text: string }) {
   )
 }
 
-function Row({ id, label, status, path, facts, hint }: {
+function Row({
+  id,
+  label,
+  status,
+  path,
+  facts,
+  hint,
+}: {
   id: string
   label: string
   status: string | undefined
@@ -78,11 +104,17 @@ function Row({ id, label, status, path, facts, hint }: {
   hint: string
 }) {
   return (
-    <div data-testid={`data-root-${id}`} style={{
-      padding: '9px 11px', borderTop: '1px solid var(--border)',
-    }}>
+    <div
+      data-testid={`data-root-${id}`}
+      style={{
+        padding: '9px 11px',
+        borderTop: '1px solid var(--border)',
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#e2e8f8', minWidth: 92 }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#e2e8f8', minWidth: 92 }}>
+          {label}
+        </span>
         <StatusBadge status={status} />
       </div>
       <Path>{path}</Path>
@@ -132,14 +164,28 @@ function rootFacts(root: RootStatus): string[] {
 /** Panel/chip chrome shared by the resolved report and its two unresolved states. */
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
-      marginTop: 12, maxWidth: 720, background: 'var(--surface)',
-      border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden',
-    }}>
-      <div style={{
-        padding: '7px 11px', fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase',
-        color: DIM, background: 'var(--surface-2)',
-      }}>Data roots</div>
+    <div
+      style={{
+        marginTop: 12,
+        maxWidth: 720,
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 6,
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          padding: '7px 11px',
+          fontSize: 10,
+          letterSpacing: 0.5,
+          textTransform: 'uppercase',
+          color: DIM,
+          background: 'var(--surface-2)',
+        }}
+      >
+        Data roots
+      </div>
       {children}
     </div>
   )
@@ -153,7 +199,11 @@ function Frame({ children }: { children: React.ReactNode }) {
  *        sign that an explanation was even attempted, i.e. exactly the unexplained empty Tab 3
  *        ADR-0013 exists to abolish, reintroduced through the explainer.
  */
-export function DataRootsPanel({ diagnostics, isLoading, error }: {
+export function DataRootsPanel({
+  diagnostics,
+  isLoading,
+  error,
+}: {
   diagnostics: Diagnostics | undefined
   isLoading?: boolean
   error?: ApiError | null
@@ -162,7 +212,10 @@ export function DataRootsPanel({ diagnostics, isLoading, error }: {
     if (isLoading) {
       return (
         <Frame>
-          <div data-testid="data-roots-loading" style={{ padding: '9px 11px', fontSize: 11, color: DIM }}>
+          <div
+            data-testid="data-roots-loading"
+            style={{ padding: '9px 11px', fontSize: 11, color: DIM }}
+          >
             Checking data roots…
           </div>
         </Frame>
@@ -177,8 +230,12 @@ export function DataRootsPanel({ diagnostics, isLoading, error }: {
           {error?.detail && (
             <div style={{ fontSize: 11, color: TEXT, marginTop: 3 }}>{error.detail}</div>
           )}
-          <Hint text={'GET /api/diagnostics did not answer, so the cause of an empty view cannot be '
-            + 'named here. Check that the backend is running and reachable, then reload.'} />
+          <Hint
+            text={
+              'GET /api/diagnostics did not answer, so the cause of an empty view cannot be ' +
+              'named here. Check that the backend is running and reachable, then reload.'
+            }
+          />
         </div>
       </Frame>
     )
@@ -187,16 +244,34 @@ export function DataRootsPanel({ diagnostics, isLoading, error }: {
   return (
     <Frame>
       {corpus && (
-        <Row id="corpus" label="corpus" status={corpus.status} path={corpus.resolved ?? ''}
-          facts={rootFacts(corpus)} hint={corpus.hint ?? ''} />
+        <Row
+          id="corpus"
+          label="corpus"
+          status={corpus.status}
+          path={corpus.resolved ?? ''}
+          facts={rootFacts(corpus)}
+          hint={corpus.hint ?? ''}
+        />
       )}
       {dwhControl && (
-        <Row id="dwhControl" label="DWH_CONTROL" status={dwhControl.status} path={servingPath(dwhControl)}
-          facts={controlFacts(dwhControl)} hint={dwhControl.hint ?? ''} />
+        <Row
+          id="dwhControl"
+          label="DWH_CONTROL"
+          status={dwhControl.status}
+          path={servingPath(dwhControl)}
+          facts={controlFacts(dwhControl)}
+          hint={dwhControl.hint ?? ''}
+        />
       )}
       {composer && (
-        <Row id="composer" label="composer" status={composer.status} path={composer.resolved ?? ''}
-          facts={rootFacts(composer)} hint={composer.hint ?? ''} />
+        <Row
+          id="composer"
+          label="composer"
+          status={composer.status}
+          path={composer.resolved ?? ''}
+          facts={rootFacts(composer)}
+          hint={composer.hint ?? ''}
+        />
       )}
     </Frame>
   )
@@ -207,7 +282,11 @@ export function DataRootsPanel({ diagnostics, isLoading, error }: {
  * exactly like a canvas full of real ones, so the tier belongs on screen even when nothing is
  * wrong; the ⚠ appears only when a section reports KO.
  */
-export function DataRootsChip({ diagnostics, isLoading, error }: {
+export function DataRootsChip({
+  diagnostics,
+  isLoading,
+  error,
+}: {
   diagnostics: Diagnostics | undefined
   isLoading?: boolean
   error?: ApiError | null
@@ -221,11 +300,18 @@ export function DataRootsChip({ diagnostics, isLoading, error }: {
   const ko = failed || isKo(diagnostics.status)
   const title = failed
     ? `Data-root report unavailable${error ? `: ${error.title}` : ''} — the tier serving this view could not be determined.`
-    : (ko ? firstProblem(diagnostics) : 'All data roots resolved.')
+    : ko
+      ? firstProblem(diagnostics)
+      : 'All data roots resolved.'
   return (
-    <div data-testid="data-roots-chip" title={title}
-      style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: ko ? 'help' : 'default' }}>
-      <div style={{ width: 7, height: 7, borderRadius: '50%', background: ko ? KO_RED : OK_GREEN }} />
+    <div
+      data-testid="data-roots-chip"
+      title={title}
+      style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: ko ? 'help' : 'default' }}
+    >
+      <div
+        style={{ width: 7, height: 7, borderRadius: '50%', background: ko ? KO_RED : OK_GREEN }}
+      />
       <span style={{ fontSize: 11, color: TEXT, fontFamily: 'JetBrains Mono, monospace' }}>
         {`data: ${tier}`}
       </span>

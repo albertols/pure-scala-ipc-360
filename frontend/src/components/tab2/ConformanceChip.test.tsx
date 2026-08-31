@@ -5,12 +5,31 @@ import { ConformanceChip } from './ConformanceChip'
 
 afterEach(cleanup)
 
-const NODE_A: ETLNode = { id: 'A', type: 'source', label: 'SRC', name: 'A', x: 0, y: 0, ports: [], properties: {}, file: 'x.json' }
+const NODE_A: ETLNode = {
+  id: 'A',
+  type: 'source',
+  label: 'SRC',
+  name: 'A',
+  x: 0,
+  y: 0,
+  ports: [],
+  properties: {},
+  file: 'x.json',
+}
 const GRAPH = { nodes: [NODE_A], connections: [], mappingNames: ['x'], renderedMapping: 'x' }
 
 describe('ConformanceChip', () => {
   it('renders green with "0 errors" for a clean validate response', () => {
-    render(<ConformanceChip errors={[]} warnings={[]} checks={[]} rules={[]} graph={GRAPH} onSelectNode={vi.fn()} />)
+    render(
+      <ConformanceChip
+        errors={[]}
+        warnings={[]}
+        checks={[]}
+        rules={[]}
+        graph={GRAPH}
+        onSelectNode={vi.fn()}
+      />,
+    )
 
     const chip = screen.getByRole('button', { name: /0 errors/ })
     expect(chip).toHaveStyle({ color: 'var(--green)' })
@@ -21,7 +40,15 @@ describe('ConformanceChip', () => {
       <ConformanceChip
         errors={[]}
         warnings={[{ path: '$.steps[0]', message: 'warn' }]}
-        checks={[{ ruleId: 'IPC-STR-003', severity: 'warning', status: 'fail', path: '$.steps[0]', message: 'warn' }]}
+        checks={[
+          {
+            ruleId: 'IPC-STR-003',
+            severity: 'warning',
+            status: 'fail',
+            path: '$.steps[0]',
+            message: 'warn',
+          },
+        ]}
         rules={[]}
         graph={GRAPH}
         onSelectNode={vi.fn()}
@@ -35,11 +62,26 @@ describe('ConformanceChip', () => {
   it('renders red with the error count when validate returns errors', () => {
     render(
       <ConformanceChip
-        errors={[{ path: '$.steps[0]', message: 'bad' }, { path: '$.steps[1]', message: 'bad2' }]}
+        errors={[
+          { path: '$.steps[0]', message: 'bad' },
+          { path: '$.steps[1]', message: 'bad2' },
+        ]}
         warnings={[]}
         checks={[
-          { ruleId: 'IPC-STR-001', severity: 'error', status: 'fail', path: '$.steps[0]', message: 'bad' },
-          { ruleId: 'IPC-STR-002', severity: 'error', status: 'fail', path: '$.steps[1]', message: 'bad2' },
+          {
+            ruleId: 'IPC-STR-001',
+            severity: 'error',
+            status: 'fail',
+            path: '$.steps[0]',
+            message: 'bad',
+          },
+          {
+            ruleId: 'IPC-STR-002',
+            severity: 'error',
+            status: 'fail',
+            path: '$.steps[1]',
+            message: 'bad2',
+          },
         ]}
         rules={[]}
         graph={GRAPH}
@@ -56,7 +98,15 @@ describe('ConformanceChip', () => {
       <ConformanceChip
         errors={[{ path: '$.steps[0]', message: 'bad thing' }]}
         warnings={[]}
-        checks={[{ ruleId: 'IPC-STR-001', severity: 'error', status: 'fail', path: '$.steps[0]', message: 'bad thing' }]}
+        checks={[
+          {
+            ruleId: 'IPC-STR-001',
+            severity: 'error',
+            status: 'fail',
+            path: '$.steps[0]',
+            message: 'bad thing',
+          },
+        ]}
         rules={[]}
         graph={GRAPH}
         onSelectNode={vi.fn()}
@@ -77,10 +127,15 @@ describe('ConformanceChip', () => {
       <ConformanceChip
         errors={[{ path: '$.steps[0].target.fields[0].transformation', message: 'bad thing' }]}
         warnings={[]}
-        checks={[{
-          ruleId: 'IPC-STR-001', severity: 'error', status: 'fail',
-          path: '$.steps[0].target.fields[0].transformation', message: 'bad thing',
-        }]}
+        checks={[
+          {
+            ruleId: 'IPC-STR-001',
+            severity: 'error',
+            status: 'fail',
+            path: '$.steps[0].target.fields[0].transformation',
+            message: 'bad thing',
+          },
+        ]}
         rules={[]}
         graph={GRAPH}
         onSelectNode={onSelectNode}
@@ -99,7 +154,15 @@ describe('ConformanceChip', () => {
       <ConformanceChip
         errors={[{ path: '$.table.targetTableNames', message: 'bad table' }]}
         warnings={[]}
-        checks={[{ ruleId: 'IPC-STR-002', severity: 'error', status: 'fail', path: '$.table.targetTableNames', message: 'bad table' }]}
+        checks={[
+          {
+            ruleId: 'IPC-STR-002',
+            severity: 'error',
+            status: 'fail',
+            path: '$.table.targetTableNames',
+            message: 'bad table',
+          },
+        ]}
         rules={[]}
         graph={GRAPH}
         onSelectNode={onSelectNode}
@@ -139,7 +202,15 @@ describe('ConformanceChip', () => {
       <ConformanceChip
         errors={[{ path: '$.steps[0]', message: 'bad' }]}
         warnings={[]}
-        checks={[{ ruleId: 'IPC-STR-001', severity: 'error', status: 'fail', path: '$.steps[0]', message: 'bad' }]}
+        checks={[
+          {
+            ruleId: 'IPC-STR-001',
+            severity: 'error',
+            status: 'fail',
+            path: '$.steps[0]',
+            message: 'bad',
+          },
+        ]}
         rules={[]}
         failed
         graph={GRAPH}
@@ -156,8 +227,25 @@ describe('ConformanceChip', () => {
       <ConformanceChip
         errors={[{ path: '$.steps[0]', message: 'bad thing' }]}
         warnings={[]}
-        checks={[{ ruleId: 'IPC-STR-001', severity: 'error', status: 'fail', path: '$.steps[0]', message: 'bad thing' }]}
-        rules={[{ id: 'IPC-STR-001', severity: 'error', statement: 'Every step target needs a name.', parserRef: '', ipcRef: '', wikiRef: '' }]}
+        checks={[
+          {
+            ruleId: 'IPC-STR-001',
+            severity: 'error',
+            status: 'fail',
+            path: '$.steps[0]',
+            message: 'bad thing',
+          },
+        ]}
+        rules={[
+          {
+            id: 'IPC-STR-001',
+            severity: 'error',
+            statement: 'Every step target needs a name.',
+            parserRef: '',
+            ipcRef: '',
+            wikiRef: '',
+          },
+        ]}
         graph={GRAPH}
         onSelectNode={vi.fn()}
       />,

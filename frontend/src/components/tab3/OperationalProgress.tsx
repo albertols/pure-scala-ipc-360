@@ -36,14 +36,24 @@ function Marker({ done, active }: { done: boolean; active: boolean }) {
       <span
         data-testid="stage-marker-done"
         aria-hidden="true"
-        style={{ fontSize: 11, color: 'var(--green)', lineHeight: '12px', width: 12, textAlign: 'center' }}
+        style={{
+          fontSize: 11,
+          color: 'var(--green)',
+          lineHeight: '12px',
+          width: 12,
+          textAlign: 'center',
+        }}
       >
         {'✓'}
       </span>
     )
   }
   return (
-    <span data-testid="stage-marker-idle" aria-hidden="true" style={{ width: 12, display: 'flex', justifyContent: 'center' }}>
+    <span
+      data-testid="stage-marker-idle"
+      aria-hidden="true"
+      style={{ width: 12, display: 'flex', justifyContent: 'center' }}
+    >
       <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--border)' }} />
     </span>
   )

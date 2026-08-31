@@ -17,7 +17,13 @@ const KEY_SCHEMA: Record<string, IpcKeySpec[]> = {
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'selectDistinct', parserType: 'Boolean', required: true, widget: 'toggle', ruleId: 'IPC-TYP-SOURCEQUALIFIER-001' },
+    {
+      key: 'selectDistinct',
+      parserType: 'Boolean',
+      required: true,
+      widget: 'toggle',
+      ruleId: 'IPC-TYP-SOURCEQUALIFIER-001',
+    },
     { key: 'sourceFilter', parserType: 'Option[String]', required: false, widget: 'textarea' },
     { key: 'sqlQuery', parserType: 'Option[String]', required: false, widget: 'textarea' },
     { key: 'userDefinedJoin', parserType: 'Option[String]', required: false, widget: 'textarea' },
@@ -26,43 +32,88 @@ const KEY_SCHEMA: Record<string, IpcKeySpec[]> = {
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'groupByFields', parserType: 'List[String]', required: true, widget: 'stringList', ruleId: 'IPC-TYP-AGGREGATOR-001' },
+    {
+      key: 'groupByFields',
+      parserType: 'List[String]',
+      required: true,
+      widget: 'stringList',
+      ruleId: 'IPC-TYP-AGGREGATOR-001',
+    },
   ],
   'target:router': [
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'groups', parserType: 'List[RouterGroup]', required: true, widget: 'rowTable', ruleId: 'IPC-TYP-ROUTER-001' },
+    {
+      key: 'groups',
+      parserType: 'List[RouterGroup]',
+      required: true,
+      widget: 'rowTable',
+      ruleId: 'IPC-TYP-ROUTER-001',
+    },
   ],
   'target:java': [
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'javaCode', parserType: 'String', required: true, widget: 'textarea', ruleId: 'IPC-TYP-JAVA-001' },
+    {
+      key: 'javaCode',
+      parserType: 'String',
+      required: true,
+      widget: 'textarea',
+      ruleId: 'IPC-TYP-JAVA-001',
+    },
   ],
   'target:filter': [
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'filterCondition', parserType: 'RecipeTransformation', required: false, widget: 'formula' },
+    {
+      key: 'filterCondition',
+      parserType: 'RecipeTransformation',
+      required: false,
+      widget: 'formula',
+    },
   ],
   'target:normalizer': [
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'normalizedFields', parserType: 'List[NormalizedField]', required: true, widget: 'rowTable', ruleId: 'IPC-TYP-NORMALIZER-001' },
+    {
+      key: 'normalizedFields',
+      parserType: 'List[NormalizedField]',
+      required: true,
+      widget: 'rowTable',
+      ruleId: 'IPC-TYP-NORMALIZER-001',
+    },
   ],
   'source:union': [
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
-    { key: 'unionTables', parserType: 'List[UnionTable]', required: true, widget: 'rowTable', ruleId: 'IPC-TYP-UNION-001' },
+    {
+      key: 'unionTables',
+      parserType: 'List[UnionTable]',
+      required: true,
+      widget: 'rowTable',
+      ruleId: 'IPC-TYP-UNION-001',
+    },
   ],
 }
 
 const KEY_ALIASES = { greencliff: 'groups', weststone: 'fields' }
 
 function node(id: string, type: ETLNode['type']): ETLNode {
-  return { id, type, label: type.toUpperCase(), name: id, x: 0, y: 0, ports: [], properties: {}, file: 'f.xml' }
+  return {
+    id,
+    type,
+    label: type.toUpperCase(),
+    name: id,
+    x: 0,
+    y: 0,
+    ports: [],
+    properties: {},
+    file: 'f.xml',
+  }
 }
 
 function emptyTable() {
@@ -92,9 +143,14 @@ function renderInspector(overrides: {
 }
 
 describe('Inspector — widget class per key (Task 12)', () => {
-  it('target:sourceQualifier renders a toggle for selectDistinct; flipping it calls onChange with setTargetProperty\'s result', () => {
+  it("target:sourceQualifier renders a toggle for selectDistinct; flipping it calls onChange with setTargetProperty's result", () => {
     const draft = {
-      steps: [{ target: { name: 'SQ1', type: 'sourceQualifier', fields: [], selectDistinct: false }, sources: [] }],
+      steps: [
+        {
+          target: { name: 'SQ1', type: 'sourceQualifier', fields: [], selectDistinct: false },
+          sources: [],
+        },
+      ],
       table: emptyTable(),
     }
     const { onChange } = renderInspector({ draft, node: node('SQ1', 'sq') })
@@ -109,7 +165,12 @@ describe('Inspector — widget class per key (Task 12)', () => {
 
   it('target:aggregator renders a string list for groupByFields; adding an entry appends', () => {
     const draft = {
-      steps: [{ target: { name: 'AGG1', type: 'aggregator', fields: [], groupByFields: ['A'] }, sources: [] }],
+      steps: [
+        {
+          target: { name: 'AGG1', type: 'aggregator', fields: [], groupByFields: ['A'] },
+          sources: [],
+        },
+      ],
       table: emptyTable(),
     }
     const { onChange } = renderInspector({ draft, node: node('AGG1', 'aggregator') })
@@ -127,13 +188,17 @@ describe('Inspector — widget class per key (Task 12)', () => {
 
   it('target:router renders a row table for groups with columns name, filterCondition, default', () => {
     const draft = {
-      steps: [{
-        target: {
-          name: 'RTR1', type: 'router', fields: [],
-          groups: [{ name: 'A', filterCondition: 'X=1', default: false }],
+      steps: [
+        {
+          target: {
+            name: 'RTR1',
+            type: 'router',
+            fields: [],
+            groups: [{ name: 'A', filterCondition: 'X=1', default: false }],
+          },
+          sources: [],
         },
-        sources: [],
-      }],
+      ],
       table: emptyTable(),
     }
     renderInspector({ draft, node: node('RTR1', 'router') })
@@ -149,7 +214,9 @@ describe('Inspector — widget class per key (Task 12)', () => {
 
   it('target:java renders a textarea for javaCode', () => {
     const draft = {
-      steps: [{ target: { name: 'JAV1', type: 'java', fields: [], javaCode: 'return 1;' }, sources: [] }],
+      steps: [
+        { target: { name: 'JAV1', type: 'java', fields: [], javaCode: 'return 1;' }, sources: [] },
+      ],
       table: emptyTable(),
     }
     renderInspector({ draft, node: node('JAV1', 'expression') })
@@ -160,7 +227,12 @@ describe('Inspector — widget class per key (Task 12)', () => {
 
   it('target:filter renders a formula field for filterCondition', () => {
     const draft = {
-      steps: [{ target: { name: 'FLT1', type: 'filter', fields: [], filterCondition: { source: 'S.A' } }, sources: [] }],
+      steps: [
+        {
+          target: { name: 'FLT1', type: 'filter', fields: [], filterCondition: { source: 'S.A' } },
+          sources: [],
+        },
+      ],
       table: emptyTable(),
     }
     renderInspector({ draft, node: node('FLT1', 'filter') })
@@ -171,10 +243,12 @@ describe('Inspector — widget class per key (Task 12)', () => {
 
   it('a key present on the node but absent from the schema renders read-only in an "Unrecognized keys" group', () => {
     const draft = {
-      steps: [{
-        target: { name: 'FLT1', type: 'filter', fields: [], someAnonymizedKey: 42 },
-        sources: [],
-      }],
+      steps: [
+        {
+          target: { name: 'FLT1', type: 'filter', fields: [], someAnonymizedKey: 42 },
+          sources: [],
+        },
+      ],
       table: emptyTable(),
     }
     renderInspector({ draft, node: node('FLT1', 'filter') })
@@ -186,13 +260,17 @@ describe('Inspector — widget class per key (Task 12)', () => {
 
   it('a router node whose groups live under the anonymized greencliff key still renders the row table via keyAliases', () => {
     const draft = {
-      steps: [{
-        target: {
-          name: 'RTR2', type: 'router', fields: [],
-          greencliff: [{ name: 'A', filterCondition: 'X=1', default: true }],
+      steps: [
+        {
+          target: {
+            name: 'RTR2',
+            type: 'router',
+            fields: [],
+            greencliff: [{ name: 'A', filterCondition: 'X=1', default: true }],
+          },
+          sources: [],
         },
-        sources: [],
-      }],
+      ],
       table: emptyTable(),
     }
     renderInspector({ draft, node: node('RTR2', 'router'), keyAliases: KEY_ALIASES })
@@ -214,17 +292,22 @@ describe('Inspector — widget class per key (Task 12)', () => {
   // report). Rendered read-only, same label/value idiom as the unrecognized-keys
   // group, so the actual origin/union values are real text nodes, not just a
   // column header.
-  it('a source:union node renders unionTables\' nested fieldMapping pairs read-only — the origin/union VALUES are visible, not just the column label', () => {
+  it("a source:union node renders unionTables' nested fieldMapping pairs read-only — the origin/union VALUES are visible, not just the column label", () => {
     const draft = {
-      steps: [{
-        target: { name: 'TGT', type: 'table', fields: [] },
-        sources: [{
-          name: 'UNI1', type: 'union',
-          unionTables: [
-            { name: 'T1', fieldMapping: [{ origin: 'SRC_A.COL1', union: 'COL_OUT' }] },
+      steps: [
+        {
+          target: { name: 'TGT', type: 'table', fields: [] },
+          sources: [
+            {
+              name: 'UNI1',
+              type: 'union',
+              unionTables: [
+                { name: 'T1', fieldMapping: [{ origin: 'SRC_A.COL1', union: 'COL_OUT' }] },
+              ],
+            },
           ],
-        }],
-      }],
+        },
+      ],
       table: { targetTableNames: ['TGT'], sourceTableNames: [] },
     }
     renderInspector({ draft, node: node('UNI1', 'source') })
@@ -239,15 +322,21 @@ describe('Inspector — widget class per key (Task 12)', () => {
 
   // Coordinator follow-up: refSource is a plain List[String] — reuse
   // StringListWidget inside the row cell rather than leaving it read-only.
-  it('target:normalizer\'s normalizedFields row table renders refSource as an EDITABLE string list; adding an entry commits via setTargetProperty', () => {
+  it("target:normalizer's normalizedFields row table renders refSource as an EDITABLE string list; adding an entry commits via setTargetProperty", () => {
     const draft = {
-      steps: [{
-        target: {
-          name: 'NRM1', type: 'normalizer', fields: [],
-          normalizedFields: [{ name: 'N', refSource: ['N_in'], generatedColumnId: false, generatedKey: false }],
+      steps: [
+        {
+          target: {
+            name: 'NRM1',
+            type: 'normalizer',
+            fields: [],
+            normalizedFields: [
+              { name: 'N', refSource: ['N_in'], generatedColumnId: false, generatedKey: false },
+            ],
+          },
+          sources: [],
         },
-        sources: [],
-      }],
+      ],
       table: emptyTable(),
     }
     const { onChange } = renderInspector({ draft, node: node('NRM1', 'expression') })
@@ -261,14 +350,16 @@ describe('Inspector — widget class per key (Task 12)', () => {
 
     expect(onChange).toHaveBeenCalledTimes(1)
     const [next] = onChange.mock.calls[0]
-    expect(next).toEqual(setTargetProperty(draft, 'NRM1', 'normalizedFields', [
-      { name: 'N', refSource: ['N_in', 'N_in2'], generatedColumnId: false, generatedKey: false },
-    ]))
+    expect(next).toEqual(
+      setTargetProperty(draft, 'NRM1', 'normalizedFields', [
+        { name: 'N', refSource: ['N_in', 'N_in2'], generatedColumnId: false, generatedKey: false },
+      ]),
+    )
   })
 })
 
 describe('Inspector — name (rename) and delete', () => {
-  it('renaming commits via renameNode and reports the new id back through onChange\'s second argument', () => {
+  it("renaming commits via renameNode and reports the new id back through onChange's second argument", () => {
     const draft = {
       steps: [{ target: { name: 'FLT1', type: 'filter', fields: [] }, sources: [] }],
       table: { targetTableNames: ['FLT1'], sourceTableNames: [] },
@@ -359,7 +450,12 @@ describe('Inspector — declared source table', () => {
 
 describe('Inspector — close affordance (UX round 4)', () => {
   const draft = {
-    steps: [{ target: { name: 'SQ1', type: 'sourceQualifier', fields: [], selectDistinct: false }, sources: [] }],
+    steps: [
+      {
+        target: { name: 'SQ1', type: 'sourceQualifier', fields: [], selectDistinct: false },
+        sources: [],
+      },
+    ],
     table: emptyTable(),
   }
 

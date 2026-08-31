@@ -1,12 +1,22 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import {
-  useOperationalView, setOperationalView, resetOperationalView, PERSISTED_KEYS,
-  visitNode, stepHistory, HISTORY_CAP,
+  useOperationalView,
+  setOperationalView,
+  resetOperationalView,
+  PERSISTED_KEYS,
+  visitNode,
+  stepHistory,
+  HISTORY_CAP,
 } from './operationalView'
 
-beforeEach(() => { localStorage.clear(); resetOperationalView() })
-afterEach(() => { localStorage.clear() })
+beforeEach(() => {
+  localStorage.clear()
+  resetOperationalView()
+})
+afterEach(() => {
+  localStorage.clear()
+})
 
 describe('operationalView', () => {
   it('starts with an empty selection and detailed density', () => {
@@ -36,7 +46,9 @@ describe('operationalView', () => {
   // The point of the store: unmounting Tab 3 must not lose the view.
   it('survives an unmount and remount', () => {
     const first = renderHook(() => useOperationalView())
-    act(() => setOperationalView({ selectedClusters: ['cl-a'], zoom: 1.4, selectedNode: 'recipe:x' }))
+    act(() =>
+      setOperationalView({ selectedClusters: ['cl-a'], zoom: 1.4, selectedNode: 'recipe:x' }),
+    )
     first.unmount()
 
     const second = renderHook(() => useOperationalView())
@@ -47,7 +59,9 @@ describe('operationalView', () => {
 
   it('persists only the durable preference keys', () => {
     renderHook(() => useOperationalView())
-    act(() => setOperationalView({ density: 'minimal', paneWidth: 320, selectedClusters: ['cl-a'] }))
+    act(() =>
+      setOperationalView({ density: 'minimal', paneWidth: 320, selectedClusters: ['cl-a'] }),
+    )
 
     const stored = JSON.parse(localStorage.getItem('etl360.tab3.view') ?? '{}')
     expect(Object.keys(stored).sort()).toEqual([...PERSISTED_KEYS].sort())
@@ -56,7 +70,10 @@ describe('operationalView', () => {
   })
 
   it('rehydrates persisted preferences on first read', () => {
-    localStorage.setItem('etl360.tab3.view', JSON.stringify({ density: 'compact', paneWidth: 300, paneCollapsed: true }))
+    localStorage.setItem(
+      'etl360.tab3.view',
+      JSON.stringify({ density: 'compact', paneWidth: 300, paneCollapsed: true }),
+    )
     resetOperationalView()
 
     const { result } = renderHook(() => useOperationalView())
@@ -93,7 +110,7 @@ describe('operationalView', () => {
     expect(result.current.paneCollapsed).toBe(false)
   })
 
-  it('clamps a persisted paneWidth to the pane\'s own drag bounds', () => {
+  it("clamps a persisted paneWidth to the pane's own drag bounds", () => {
     localStorage.setItem('etl360.tab3.view', JSON.stringify({ paneWidth: 9000 }))
     resetOperationalView()
     expect(renderHook(() => useOperationalView()).result.current.paneWidth).toBe(420)
@@ -112,8 +129,12 @@ describe('operationalView', () => {
   it('survives a localStorage accessor that throws, in both directions', () => {
     const getItem = Storage.prototype.getItem
     const setItem = Storage.prototype.setItem
-    Storage.prototype.getItem = () => { throw new DOMException('denied', 'SecurityError') }
-    Storage.prototype.setItem = () => { throw new DOMException('denied', 'SecurityError') }
+    Storage.prototype.getItem = () => {
+      throw new DOMException('denied', 'SecurityError')
+    }
+    Storage.prototype.setItem = () => {
+      throw new DOMException('denied', 'SecurityError')
+    }
     try {
       expect(() => resetOperationalView()).not.toThrow()
       expect(renderHook(() => useOperationalView()).result.current.density).toBe('detailed')
@@ -168,7 +189,11 @@ describe('node history', () => {
   it('steps back through the node AND the canvas view it was left at', () => {
     // Restoring only the selection would auto-pan somewhere subtly different from where the
     // operator left off, which is most of what "losing your place" actually is.
-    act(() => { visitNode(visit('a', 10)); visitNode(visit('b', 20)); visitNode(visit('c', 30)) })
+    act(() => {
+      visitNode(visit('a', 10))
+      visitNode(visit('b', 20))
+      visitNode(visit('c', 30))
+    })
     act(() => stepHistory(-1))
     expect(state().selectedNode).toBe('b')
     expect(state().pan).toEqual({ x: 20, y: 0 })
@@ -179,17 +204,22 @@ describe('node history', () => {
   })
 
   it('forks the history when a new hop starts from the middle of the stack', () => {
-    act(() => { visitNode(visit('a', 10)); visitNode(visit('b', 20)) })
+    act(() => {
+      visitNode(visit('a', 10))
+      visitNode(visit('b', 20))
+    })
     act(() => stepHistory(-1))
     act(() => visitNode(visit('z', 90)))
 
     expect(state().nodeHistory.map(v => v.nodeId)).toEqual(['a', 'z'])
     act(() => stepHistory(1))
-    expect(state().selectedNode).toBe('z')      // nothing forward of z
+    expect(state().selectedNode).toBe('z') // nothing forward of z
   })
 
   it('caps the stack, dropping the oldest', () => {
-    act(() => { for (let i = 0; i < HISTORY_CAP + 5; i++) visitNode(visit(`n${i}`, i)) })
+    act(() => {
+      for (let i = 0; i < HISTORY_CAP + 5; i++) visitNode(visit(`n${i}`, i))
+    })
     expect(state().nodeHistory).toHaveLength(HISTORY_CAP)
     expect(state().nodeHistory[0]!.nodeId).toBe('n5')
     expect(state().historyIndex).toBe(HISTORY_CAP - 1)
@@ -197,7 +227,10 @@ describe('node history', () => {
 
   it('is a no-op at either end', () => {
     act(() => visitNode(visit('a', 10)))
-    act(() => { stepHistory(-1); stepHistory(-1) })
+    act(() => {
+      stepHistory(-1)
+      stepHistory(-1)
+    })
     expect(state().selectedNode).toBe('a')
     act(() => stepHistory(1))
     expect(state().selectedNode).toBe('a')

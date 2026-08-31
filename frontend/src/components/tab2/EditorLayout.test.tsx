@@ -15,8 +15,16 @@ function renderLayout(overrides: Partial<React.ComponentProps<typeof EditorLayou
       canvas={<div data-testid="slot-canvas">canvas</div>}
       inspector={<div data-testid="slot-inspector">inspector</div>}
       drawer={[
-        { id: 'source', label: 'Source', content: <div data-testid="drawer-source">source content</div> },
-        { id: 'target', label: 'Target', content: <div data-testid="drawer-target">target content</div> },
+        {
+          id: 'source',
+          label: 'Source',
+          content: <div data-testid="drawer-source">source content</div>,
+        },
+        {
+          id: 'target',
+          label: 'Target',
+          content: <div data-testid="drawer-target">target content</div>,
+        },
       ]}
       {...overrides}
     />,
@@ -118,7 +126,7 @@ describe('EditorLayout', () => {
     expect(screen.queryByTestId('drawer-source')).not.toBeInTheDocument()
   })
 
-  it('switching drawer tabs shows only the newly-clicked tab\'s content', () => {
+  it("switching drawer tabs shows only the newly-clicked tab's content", () => {
     renderLayout()
     fireEvent.click(screen.getByText('Source'))
     expect(screen.getByTestId('drawer-source')).toBeInTheDocument()
@@ -178,11 +186,16 @@ describe('EditorLayout', () => {
   })
 
   it('closes the Task 2 finding: a corrupted, below-floor stored canvasH still renders at least LAYOUT_MIN.canvasH tall', () => {
-    localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify({ canvasH: 10, inspectorW: 340, drawerH: 0 }))
+    localStorage.setItem(
+      LAYOUT_STORAGE_KEY,
+      JSON.stringify({ canvasH: 10, inspectorW: 340, drawerH: 0 }),
+    )
     const { container } = renderLayout()
     const canvasRegion = container.querySelector('[data-region="canvas"]') as HTMLElement
     // useResizableLayout deliberately does not clamp on read (Task 2) — EditorLayout is the
     // safety net, so even though sizes.canvasH is 10px here, the rendered floor holds.
-    expect(Number(canvasRegion.style.minHeight.replace('px', ''))).toBeGreaterThanOrEqual(LAYOUT_MIN.canvasH)
+    expect(Number(canvasRegion.style.minHeight.replace('px', ''))).toBeGreaterThanOrEqual(
+      LAYOUT_MIN.canvasH,
+    )
   })
 })

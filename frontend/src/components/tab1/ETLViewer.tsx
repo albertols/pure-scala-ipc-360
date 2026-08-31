@@ -39,12 +39,14 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   // Task 16: view-aware corpus summary, Explorer footer — static counts,
   // same for every mapping (spec §7.1's Tab 1 row).
   const summary = useSummary()
-  const summaryItems: SummaryItem[] = summary.data ? [
-    { label: 'xml', value: summary.data.xmlCount ?? 0 },
-    { label: 'recipes', value: summary.data.recipeCount ?? 0 },
-    { label: 'ddl', value: summary.data.ddlCount ?? 0 },
-    { label: 'dirs', value: summary.data.dirCount ?? 0 },
-  ] : []
+  const summaryItems: SummaryItem[] = summary.data
+    ? [
+        { label: 'xml', value: summary.data.xmlCount ?? 0 },
+        { label: 'recipes', value: summary.data.recipeCount ?? 0 },
+        { label: 'ddl', value: summary.data.ddlCount ?? 0 },
+        { label: 'dirs', value: summary.data.dirCount ?? 0 },
+      ]
+    : []
 
   const graph = useMemo(
     () => (model.data ? toCanvas(model.data, mappingPath!) : null),
@@ -57,16 +59,23 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   // Tab 1): matches by node name OR any port name, trimmed/lowercased query.
   const q = searchQuery.trim().toLowerCase()
   const matchIds = useMemo(
-    () => (graph?.nodes ?? [])
-      .filter(n => q && (n.name.toLowerCase().includes(q) || n.ports.some(p => p.name.toLowerCase().includes(q))))
-      .map(n => n.id),
+    () =>
+      (graph?.nodes ?? [])
+        .filter(
+          n =>
+            q &&
+            (n.name.toLowerCase().includes(q) ||
+              n.ports.some(p => p.name.toLowerCase().includes(q))),
+        )
+        .map(n => n.id),
     [graph, q],
   )
 
   const domElement = useMemo(
-    () => (selectedNode && dom.data && graph
-      ? findElementForNode(dom.data, selectedNode.name, selectedNode.type, graph.renderedMapping)
-      : null),
+    () =>
+      selectedNode && dom.data && graph
+        ? findElementForNode(dom.data, selectedNode.name, selectedNode.type, graph.renderedMapping)
+        : null,
     [selectedNode, dom.data, graph],
   )
 
@@ -79,23 +88,38 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
   }
 
   const sidebarExtra = loading ? (
-    <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
+    <div style={{ padding: 12 }}>
+      <LoadingState label="Loading corpus…" />
+    </div>
   ) : error ? (
     <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
       <div>{error.title}</div>
       {error.detail && <div>{error.detail}</div>}
     </div>
   ) : mappingPath ? (
-    <div style={{ borderTop: '1px solid var(--border)', padding: '10px 12px', background: 'var(--surface-2)' }}>
+    <div
+      style={{
+        borderTop: '1px solid var(--border)',
+        padding: '10px 12px',
+        background: 'var(--surface-2)',
+      }}
+    >
       <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6 }}>Active Mapping</div>
-      <div style={{
-        padding: '4px 8px', borderRadius: 4, textAlign: 'left',
-        background: 'var(--surface-3)',
-        border: '1px solid var(--border)',
-        color: '#e2e8f8',
-        fontSize: 10, fontFamily: 'JetBrains Mono, monospace',
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-      }}>
+      <div
+        style={{
+          padding: '4px 8px',
+          borderRadius: 4,
+          textAlign: 'left',
+          background: 'var(--surface-3)',
+          border: '1px solid var(--border)',
+          color: '#e2e8f8',
+          fontSize: 10,
+          fontFamily: 'JetBrains Mono, monospace',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {mappingPath.split('/').pop()}
       </div>
     </div>
@@ -111,18 +135,63 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
         extraContent={sidebarExtra}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(c => !c)}
-        footer={<div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 12px' }}>
-          <CorpusSummary items={summaryItems} />
-        </div>}
+        footer={
+          <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 12px' }}>
+            <CorpusSummary items={summaryItems} />
+          </div>
+        }
       />
 
       {!mappingPath ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#4a5570',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+        >
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect x="8" y="4" width="24" height="32" rx="3" stroke="#2a3050" strokeWidth="1.5" fill="none" />
-            <line x1="13" y1="12" x2="27" y2="12" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="13" y1="18" x2="27" y2="18" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+            <rect
+              x="8"
+              y="4"
+              width="24"
+              height="32"
+              rx="3"
+              stroke="#2a3050"
+              strokeWidth="1.5"
+              fill="none"
+            />
+            <line
+              x1="13"
+              y1="12"
+              x2="27"
+              y2="12"
+              stroke="#2a3050"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <line
+              x1="13"
+              y1="18"
+              x2="27"
+              y2="18"
+              stroke="#2a3050"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <line
+              x1="13"
+              y1="24"
+              x2="20"
+              y2="24"
+              stroke="#2a3050"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
           <span style={{ fontSize: 12 }}>Select an .xml mapping to view</span>
         </div>
@@ -131,7 +200,18 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
           <LoadingState label="Loading mapping…" />
         </div>
       ) : modelError ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            gap: 4,
+            color: 'var(--red)',
+            fontSize: 12,
+          }}
+        >
           <div>{modelError.title}</div>
           {modelError.detail && <div>{modelError.detail}</div>}
         </div>
@@ -146,15 +226,30 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
       ) : null}
 
       {selectedNode && (
-        <DetailPanel node={selectedNode} domElement={domElement} onClose={() => setSelectedNodeId(null)} />
+        <DetailPanel
+          node={selectedNode}
+          domElement={domElement}
+          onClose={() => setSelectedNodeId(null)}
+        />
       )}
 
       {/* status bar */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: sidebarCollapsed ? 28 : 240, right: selectedNode ? 310 : 0,
-        height: 24, display: 'flex', alignItems: 'center', gap: 12, padding: '0 14px',
-        background: 'var(--surface)', borderTop: '1px solid var(--border)', pointerEvents: 'none',
-      }}>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: sidebarCollapsed ? 28 : 240,
+          right: selectedNode ? 310 : 0,
+          height: 24,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '0 14px',
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
+          pointerEvents: 'none',
+        }}
+      >
         {LEGEND.map(({ type, label }) => {
           const s = NODE_STYLES[type]
           return (
@@ -166,7 +261,8 @@ export function ETLViewer({ searchQuery }: { searchQuery: string }) {
         })}
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: 9, color: '#2a3050', fontFamily: 'JetBrains Mono, monospace' }}>
-          {graph && `${graph.nodes.length} nodes · ${graph.connections.length} connections · Informatica PowerCenter${graph.mappingNames.length > 1 ? ` · mapping 1 of ${graph.mappingNames.length}: ${graph.renderedMapping}` : ''}`}
+          {graph &&
+            `${graph.nodes.length} nodes · ${graph.connections.length} connections · Informatica PowerCenter${graph.mappingNames.length > 1 ? ` · mapping 1 of ${graph.mappingNames.length}: ${graph.renderedMapping}` : ''}`}
         </span>
       </div>
     </div>

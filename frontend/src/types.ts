@@ -1,8 +1,15 @@
 // ─── Core ETL ────────────────────────────────────────────────────────────────
 
 export type NodeType =
-  | 'source' | 'sq' | 'expression' | 'lookup'
-  | 'joiner' | 'aggregator' | 'router' | 'filter' | 'target'
+  | 'source'
+  | 'sq'
+  | 'expression'
+  | 'lookup'
+  | 'joiner'
+  | 'aggregator'
+  | 'router'
+  | 'filter'
+  | 'target'
 
 export type TabId = 'viewer' | 'modifier' | 'operational' | 'dag'
 

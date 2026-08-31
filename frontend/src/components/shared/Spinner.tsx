@@ -32,7 +32,9 @@ export function Spinner({ size = 14 }: { size?: number }) {
       className="spinner-arc"
     >
       <circle
-        cx="12" cy="12" r="9"
+        cx="12"
+        cy="12"
+        r="9"
         stroke="var(--text-dim)"
         strokeWidth="2.5"
         strokeLinecap="round"
@@ -44,7 +46,15 @@ export function Spinner({ size = 14 }: { size?: number }) {
 
 export function LoadingState({ label }: { label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)', fontSize: 12 }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        color: 'var(--text-dim)',
+        fontSize: 12,
+      }}
+    >
       <Spinner size={14} />
       <span>{label}</span>
     </div>
@@ -71,7 +81,12 @@ export function TopProgressBar() {
       role="progressbar"
       aria-label="Loading"
       style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 2, zIndex: 1000,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 2,
+        zIndex: 1000,
         background: '#4f9cf9',
         boxShadow: '0 0 6px rgba(79,156,249,0.6)',
       }}

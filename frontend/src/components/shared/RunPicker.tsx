@@ -39,7 +39,7 @@ export function pickDefaultRun(runs: RunT[], preferredDate: string | null): RunT
     const onDate = runs.find(r => r.date === preferredDate)
     if (onDate) return onDate
   }
-  return runs[0]!   // served newest-first
+  return runs[0]! // served newest-first
 }
 
 /**
@@ -49,7 +49,13 @@ export function pickDefaultRun(runs: RunT[], preferredDate: string | null): RunT
  * `runs` arrives newest-first (as `/api/operational/runs` serves it) and is rendered oldest-to-newest
  * left to right, matching the direction the previous read-only history strip used.
  */
-export function RunPicker({ runs, selectedDate, onSelect, accent = '#4f9cf9', limit = 10 }: {
+export function RunPicker({
+  runs,
+  selectedDate,
+  onSelect,
+  accent = '#4f9cf9',
+  limit = 10,
+}: {
   runs: RunT[]
   selectedDate: string | null
   onSelect: (run: RunT) => void
@@ -63,7 +69,9 @@ export function RunPicker({ runs, selectedDate, onSelect, accent = '#4f9cf9', li
   // its own toggle can't be the only way to dismiss it. Escape and an outside click both close it.
   useEffect(() => {
     if (!open) return
-    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
     const onMouseDown = (e: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
     }
@@ -92,9 +100,16 @@ export function RunPicker({ runs, selectedDate, onSelect, accent = '#4f9cf9', li
               aria-label={`Run ${run.date}`}
               aria-pressed={isSelected}
               title={formatRunLabel(run)}
-              onClick={e => { e.stopPropagation(); onSelect(run) }}
+              onClick={e => {
+                e.stopPropagation()
+                onSelect(run)
+              }}
               style={{
-                width: 7, height: 16, borderRadius: 1.5, padding: 0, cursor: 'pointer',
+                width: 7,
+                height: 16,
+                borderRadius: 1.5,
+                padding: 0,
+                cursor: 'pointer',
                 background: statusColor(run.status),
                 border: isSelected ? `1px solid ${accent}` : '1px solid transparent',
                 opacity: isSelected ? 1 : DIMMED,
@@ -110,16 +125,38 @@ export function RunPicker({ runs, selectedDate, onSelect, accent = '#4f9cf9', li
           aria-label="Choose run"
           aria-haspopup="menu"
           aria-expanded={open}
-          onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
+          onClick={e => {
+            e.stopPropagation()
+            setOpen(o => !o)
+          }}
           style={{
-            display: 'flex', alignItems: 'center', gap: 6, width: '100%',
-            background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4,
-            color: 'var(--text-muted)', fontSize: 10, padding: '3px 7px', cursor: 'pointer',
-            fontFamily: 'JetBrains Mono, monospace', textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            width: '100%',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
+            borderRadius: 4,
+            color: 'var(--text-muted)',
+            fontSize: 10,
+            padding: '3px 7px',
+            cursor: 'pointer',
+            fontFamily: 'JetBrains Mono, monospace',
+            textAlign: 'left',
           }}
         >
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor(selected.status), flexShrink: 0 }} />
-          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: statusColor(selected.status),
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
             {formatRunLabel(selected)}
           </span>
           <span aria-hidden="true">{open ? '▴' : '▾'}</span>
@@ -129,24 +166,52 @@ export function RunPicker({ runs, selectedDate, onSelect, accent = '#4f9cf9', li
           <div
             role="menu"
             style={{
-              position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: 2,
-              background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4,
-              maxHeight: 190, overflowY: 'auto',
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              zIndex: 20,
+              marginTop: 2,
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 4,
+              maxHeight: 190,
+              overflowY: 'auto',
             }}
           >
             {shown.map(run => (
               <button
                 key={run.date}
                 role="menuitem"
-                onClick={e => { e.stopPropagation(); onSelect(run); setOpen(false) }}
+                onClick={e => {
+                  e.stopPropagation()
+                  onSelect(run)
+                  setOpen(false)
+                }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 6, width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  width: '100%',
                   background: run.date === selected.date ? 'var(--surface-3)' : 'transparent',
-                  border: 'none', color: 'var(--text-muted)', fontSize: 10, padding: '4px 7px',
-                  cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', textAlign: 'left',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: 10,
+                  padding: '4px 7px',
+                  cursor: 'pointer',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  textAlign: 'left',
                 }}
               >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor(run.status), flexShrink: 0 }} />
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: statusColor(run.status),
+                    flexShrink: 0,
+                  }}
+                />
                 {formatRunLabel(run)}
               </button>
             ))}

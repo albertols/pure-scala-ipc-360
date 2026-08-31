@@ -6,12 +6,18 @@ import type { RunT } from '../../api/clusterQueries'
 afterEach(cleanup)
 
 const run = (date: string, status = 'SUCCESS', hour = '04'): RunT => ({
-  date, clusterName: 'cl-a', jobId: `job-${date}`,
-  appStartIso: `${date}T${hour}:52:00.000Z`, durationMin: 44.62, status, message: '',
+  date,
+  clusterName: 'cl-a',
+  jobId: `job-${date}`,
+  appStartIso: `${date}T${hour}:52:00.000Z`,
+  durationMin: 44.62,
+  status,
+  message: '',
 })
 
-const TEN = Array.from({ length: 10 }, (_, i) => run(`2026-07-${String(20 + i).padStart(2, '0')}`))
-  .reverse()   // served newest-first
+const TEN = Array.from({ length: 10 }, (_, i) =>
+  run(`2026-07-${String(20 + i).padStart(2, '0')}`),
+).reverse() // served newest-first
 
 describe('formatRunLabel', () => {
   it('reads date, UTC time, duration and outcome', () => {
@@ -24,8 +30,12 @@ describe('formatRunLabel', () => {
   })
 
   it('survives a missing duration and a missing timestamp', () => {
-    expect(formatRunLabel({ ...run('2026-07-29'), durationMin: undefined })).toBe('2026-07-29 · 04:52 UTC · — · OK')
-    expect(formatRunLabel({ ...run('2026-07-29'), appStartIso: '' })).toBe('2026-07-29 · 44m 37s · OK')
+    expect(formatRunLabel({ ...run('2026-07-29'), durationMin: undefined })).toBe(
+      '2026-07-29 · 04:52 UTC · — · OK',
+    )
+    expect(formatRunLabel({ ...run('2026-07-29'), appStartIso: '' })).toBe(
+      '2026-07-29 · 44m 37s · OK',
+    )
   })
 })
 
@@ -64,8 +74,14 @@ describe('RunPicker', () => {
 
   it('marks the selected bar with aria-pressed', () => {
     render(<RunPicker runs={TEN} selectedDate="2026-07-25" onSelect={() => {}} />)
-    expect(screen.getByRole('button', { name: 'Run 2026-07-25' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Run 2026-07-24' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Run 2026-07-25' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'Run 2026-07-24' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
   })
 
   it('emits the clicked run', () => {
@@ -90,7 +106,9 @@ describe('RunPicker', () => {
 
   it('renders bars oldest to newest, left to right', () => {
     render(<RunPicker runs={TEN} selectedDate="2026-07-29" onSelect={() => {}} />)
-    const names = screen.getAllByRole('button', { name: /^Run 2026-07-/ }).map(b => b.getAttribute('aria-label'))
+    const names = screen
+      .getAllByRole('button', { name: /^Run 2026-07-/ })
+      .map(b => b.getAttribute('aria-label'))
     expect(names[0]).toBe('Run 2026-07-20')
     expect(names.at(-1)).toBe('Run 2026-07-29')
   })
@@ -117,7 +135,7 @@ describe('RunPicker', () => {
       <div>
         <div data-testid="outside">elsewhere</div>
         <RunPicker runs={TEN} selectedDate="2026-07-29" onSelect={() => {}} />
-      </div>
+      </div>,
     )
     fireEvent.click(screen.getByRole('button', { name: /Choose run/ }))
     expect(screen.getAllByRole('menuitem')).toHaveLength(10)

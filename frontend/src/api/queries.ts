@@ -26,10 +26,20 @@ export const useTree = () =>
   useQuery({ queryKey: ['tree'], queryFn: () => apiGet<TreeNode>('/tree'), staleTime: STALE_MS })
 
 export const useMappingDom = (path: string) =>
-  useQuery({ queryKey: ['dom', path], queryFn: () => apiGet<XmlNode>(`/mappings/dom/${path}`), staleTime: STALE_MS, enabled: !!path })
+  useQuery({
+    queryKey: ['dom', path],
+    queryFn: () => apiGet<XmlNode>(`/mappings/dom/${path}`),
+    staleTime: STALE_MS,
+    enabled: !!path,
+  })
 
 export const useMappingModel = (path: string) =>
-  useQuery({ queryKey: ['model', path], queryFn: () => apiGet<MappingModel>(`/mappings/model/${path}`), staleTime: STALE_MS, enabled: !!path })
+  useQuery({
+    queryKey: ['model', path],
+    queryFn: () => apiGet<MappingModel>(`/mappings/model/${path}`),
+    staleTime: STALE_MS,
+    enabled: !!path,
+  })
 
 // Task 15: `enabled` defaults to `true` for every existing caller — a SECOND
 // gate ANDed with the existing `!!path` one, not a replacement for it. Lets
@@ -38,23 +48,45 @@ export const useMappingModel = (path: string) =>
 // that doesn't exist yet: "Create opens the editor with an empty draft and no
 // recipe fetch."
 export const useRecipe = (path: string, enabled = true) =>
-  useQuery({ queryKey: ['recipe', path], queryFn: () => apiGet<RecipeFile>(`/recipes/${path}`), staleTime: STALE_MS, enabled: !!path && enabled })
+  useQuery({
+    queryKey: ['recipe', path],
+    queryFn: () => apiGet<RecipeFile>(`/recipes/${path}`),
+    staleTime: STALE_MS,
+    enabled: !!path && enabled,
+  })
 
 export const useDdl = (path: string) =>
-  useQuery({ queryKey: ['ddl', path], queryFn: () => apiGet<Record<string, unknown>>(`/ddl/${path}`), staleTime: STALE_MS, enabled: !!path })
+  useQuery({
+    queryKey: ['ddl', path],
+    queryFn: () => apiGet<Record<string, unknown>>(`/ddl/${path}`),
+    staleTime: STALE_MS,
+    enabled: !!path,
+  })
 
 export const useExpressions = () =>
-  useQuery({ queryKey: ['expressions'], queryFn: () => apiGet<ExpressionEntry[]>('/expressions'), staleTime: STALE_MS })
+  useQuery({
+    queryKey: ['expressions'],
+    queryFn: () => apiGet<ExpressionEntry[]>('/expressions'),
+    staleTime: STALE_MS,
+  })
 
 export const useAppConfig = () =>
-  useQuery({ queryKey: ['config'], queryFn: () => apiGet<AppConfig>('/config'), staleTime: Infinity })
+  useQuery({
+    queryKey: ['config'],
+    queryFn: () => apiGet<AppConfig>('/config'),
+    staleTime: Infinity,
+  })
 
 // Task 16: static corpus counts (xml/recipe/ddl/dir totals, layers) for the
 // view-aware corpus summary Tabs 1/2/4 dock into their left rail (spec §7.1).
 export type Summary = components['schemas']['SummaryDto']
 
 export const useSummary = () =>
-  useQuery({ queryKey: ['summary'], queryFn: () => apiGet<Summary>('/summary'), staleTime: STALE_MS })
+  useQuery({
+    queryKey: ['summary'],
+    queryFn: () => apiGet<Summary>('/summary'),
+    staleTime: STALE_MS,
+  })
 
 export type RelationshipGraph = components['schemas']['RelationshipsDto']
 export type OperationalSnapshot = components['schemas']['OperationalSnapshotDto']
@@ -63,16 +95,30 @@ export type OperationalDates = components['schemas']['OperationalDatesDto']
 export type OperationalSummary = components['schemas']['OperationalSummaryDto']
 
 export const useRelationships = () =>
-  useQuery({ queryKey: ['relationships'], queryFn: () => apiGet<RelationshipGraph>('/relationships'), staleTime: STALE_MS })
+  useQuery({
+    queryKey: ['relationships'],
+    queryFn: () => apiGet<RelationshipGraph>('/relationships'),
+    staleTime: STALE_MS,
+  })
 
 // `enabled` defaults to true so the pre-existing call sites are untouched. Tab 3 passes `false`
 // while nothing is selected: with ~7000 recipes indexed, "open the tab" must cost exactly the
 // cluster index and nothing else (spec §11 criterion 1).
 export const useOperationalDates = (enabled = true) =>
-  useQuery({ queryKey: ['operationalDates'], queryFn: () => apiGet<OperationalDates>('/operational/dates'), staleTime: STALE_MS, enabled })
+  useQuery({
+    queryKey: ['operationalDates'],
+    queryFn: () => apiGet<OperationalDates>('/operational/dates'),
+    staleTime: STALE_MS,
+    enabled,
+  })
 
 export const useOperational = (date: string) =>
-  useQuery({ queryKey: ['operational', date], queryFn: () => apiGet<OperationalSnapshot>(`/operational/${date}`), staleTime: STALE_MS, enabled: !!date })
+  useQuery({
+    queryKey: ['operational', date],
+    queryFn: () => apiGet<OperationalSnapshot>(`/operational/${date}`),
+    staleTime: STALE_MS,
+    enabled: !!date,
+  })
 
 /**
  * `enabled` defaults to true and `clusters` to none, so the pre-existing call sites are untouched
@@ -89,9 +135,8 @@ export const useOperational = (date: string) =>
  */
 export const useOperationalSummary = (enabled = true, clusters: string[] = []) => {
   const key = [...clusters].sort()
-  const query = key.length > 0
-    ? `?${key.map(c => `clusters=${encodeURIComponent(c)}`).join('&')}`
-    : ''
+  const query =
+    key.length > 0 ? `?${key.map(c => `clusters=${encodeURIComponent(c)}`).join('&')}` : ''
   return useQuery({
     queryKey: ['operationalSummary', key.join(',')],
     queryFn: () => apiGet<OperationalSummary>(`/operational/summary${query}`),
@@ -106,7 +151,11 @@ export const useOperationalSummary = (enabled = true, clusters: string[] = []) =
 export type Diagnostics = components['schemas']['DiagnosticsDto']
 
 export const useDiagnostics = () =>
-  useQuery({ queryKey: ['diagnostics'], queryFn: () => apiGet<Diagnostics>('/diagnostics'), staleTime: STALE_MS })
+  useQuery({
+    queryKey: ['diagnostics'],
+    queryFn: () => apiGet<Diagnostics>('/diagnostics'),
+    staleTime: STALE_MS,
+  })
 
 export type IpcRules = components['schemas']['IpcRulesDto']
 export type IpcRuleMeta = components['schemas']['IpcRuleMetaDto']
@@ -119,4 +168,8 @@ export type IpcCheck = components['schemas']['IpcCheckDto']
 export type IpcConnections = IpcRules['connections']
 
 export const useIpcRules = () =>
-  useQuery({ queryKey: ['ipcRules'], queryFn: () => apiGet<IpcRules>('/ipc/rules'), staleTime: Infinity })
+  useQuery({
+    queryKey: ['ipcRules'],
+    queryFn: () => apiGet<IpcRules>('/ipc/rules'),
+    staleTime: Infinity,
+  })

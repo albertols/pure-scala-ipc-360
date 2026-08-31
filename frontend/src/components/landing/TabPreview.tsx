@@ -84,7 +84,9 @@ export function TabPreview({ onEnter }: TabPreviewProps) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>{ft.label}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>
+              {ft.label}
+            </span>
             <span
               style={{
                 fontSize: 9,

@@ -10,7 +10,12 @@ const DOC = serializeRecipe({ steps: [], table: { targetTableNames: [], sourceTa
 /** The panel's edit text is CONTROLLED by its parent (so toggling the `{ raw
  * JSON }` dropdown shut can't discard a half-written document). This host
  * stands in for `ETLModifier`'s own `rawText` state. */
-function Host({ onApply, json = DOC, readOnly = false, metadata = null }: {
+function Host({
+  onApply,
+  json = DOC,
+  readOnly = false,
+  metadata = null,
+}: {
   onApply: (next: unknown) => void
   json?: string
   readOnly?: boolean
@@ -18,12 +23,20 @@ function Host({ onApply, json = DOC, readOnly = false, metadata = null }: {
 }) {
   const [text, setText] = useState<string | null>(null)
   return (
-    <RawJsonPanel json={json} readOnly={readOnly} onApply={onApply as never}
-      metadata={metadata} text={text} onTextChange={setText} />
+    <RawJsonPanel
+      json={json}
+      readOnly={readOnly}
+      onApply={onApply as never}
+      metadata={metadata}
+      text={text}
+      onTextChange={setText}
+    />
   )
 }
 
-function renderPanel(overrides: { json?: string; readOnly?: boolean; metadata?: React.ReactNode } = {}) {
+function renderPanel(
+  overrides: { json?: string; readOnly?: boolean; metadata?: React.ReactNode } = {},
+) {
   const onApply = vi.fn()
   const utils = render(<Host onApply={onApply} {...overrides} />)
   return { ...utils, onApply }
@@ -36,7 +49,7 @@ describe('parseRecipeText', () => {
     expect(parseRecipeText('{"steps":[]}')).toEqual({ ok: true, value: { steps: [] } })
   })
 
-  it('rejects malformed JSON with the parser\'s own message', () => {
+  it("rejects malformed JSON with the parser's own message", () => {
     const r = parseRecipeText('{"steps":')
     expect(r.ok).toBe(false)
     expect((r as { message: string }).message).toBeTruthy()
@@ -44,12 +57,16 @@ describe('parseRecipeText', () => {
 
   // JSON.parse accepts all four of these; every one would break the adapters
   // downstream in a much less legible place than this panel.
-  it.each([['[]', 'an array'], ['null', 'null'], ['42', 'number'], ['"x"', 'string']])(
-    'rejects %s — a recipe document must be an object', (text, description) => {
-      const r = parseRecipeText(text)
-      expect(r.ok).toBe(false)
-      expect((r as { message: string }).message).toContain(description)
-    })
+  it.each([
+    ['[]', 'an array'],
+    ['null', 'null'],
+    ['42', 'number'],
+    ['"x"', 'string'],
+  ])('rejects %s — a recipe document must be an object', (text, description) => {
+    const r = parseRecipeText(text)
+    expect(r.ok).toBe(false)
+    expect((r as { message: string }).message).toContain(description)
+  })
 })
 
 describe('RawJsonPanel', () => {
@@ -120,8 +137,14 @@ describe('RawJsonPanel', () => {
         <>
           <button onClick={() => setOpen(o => !o)}>toggle</button>
           {open && (
-            <RawJsonPanel json={DOC} readOnly={false} onApply={onApply}
-              metadata={null} text={text} onTextChange={setText} />
+            <RawJsonPanel
+              json={DOC}
+              readOnly={false}
+              onApply={onApply}
+              metadata={null}
+              text={text}
+              onTextChange={setText}
+            />
           )}
         </>
       )
@@ -129,9 +152,9 @@ describe('RawJsonPanel', () => {
     render(<Toggler />)
 
     fireEvent.change(editor(), { target: { value: '{"wip":1}' } })
-    fireEvent.click(screen.getByText('toggle'))   // panel unmounts
+    fireEvent.click(screen.getByText('toggle')) // panel unmounts
     expect(screen.queryByTestId('raw-json-editor')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByText('toggle'))   // and back
+    fireEvent.click(screen.getByText('toggle')) // and back
 
     expect(editor().value).toBe('{"wip":1}')
     expect(screen.getByText('unapplied edits')).toBeInTheDocument()

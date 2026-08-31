@@ -25,28 +25,51 @@ import { LoadingState } from '../shared/Spinner'
 // constant shared by both capped lists, not two that can drift.
 
 const registryFilterInputStyle: React.CSSProperties = {
-  background: 'var(--surface-2)', border: '1px solid var(--border)',
-  borderRadius: 5, color: '#c8d3e8', fontSize: 11, padding: '4px 9px',
-  outline: 'none', width: '100%', fontFamily: 'Inter, sans-serif',
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border)',
+  borderRadius: 5,
+  color: '#c8d3e8',
+  fontSize: 11,
+  padding: '4px 9px',
+  outline: 'none',
+  width: '100%',
+  fontFamily: 'Inter, sans-serif',
 }
 
 const rowStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 8,
-  padding: '5px 8px', borderRadius: 4,
-  background: 'var(--surface-2)', border: '1px solid var(--border)',
-  color: '#c8d3e8', fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
-  cursor: 'pointer', textAlign: 'left', width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  padding: '5px 8px',
+  borderRadius: 4,
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border)',
+  color: '#c8d3e8',
+  fontSize: 11,
+  fontFamily: 'JetBrains Mono, monospace',
+  cursor: 'pointer',
+  textAlign: 'left',
+  width: '100%',
 }
 
 function tablesForKind(
-  registry: { sourceTables?: RegistryTable[]; targetTables?: RegistryTable[]; ddlTables?: RegistryTable[] } | undefined,
+  registry:
+    | {
+        sourceTables?: RegistryTable[]
+        targetTables?: RegistryTable[]
+        ddlTables?: RegistryTable[]
+      }
+    | undefined,
   kind: 'source' | 'target' | 'ddl',
 ): RegistryTable[] {
   if (!registry) return []
   switch (kind) {
-    case 'source': return registry.sourceTables ?? []
-    case 'target': return registry.targetTables ?? []
-    case 'ddl': return registry.ddlTables ?? []
+    case 'source':
+      return registry.sourceTables ?? []
+    case 'target':
+      return registry.targetTables ?? []
+    case 'ddl':
+      return registry.ddlTables ?? []
   }
 }
 
@@ -63,7 +86,8 @@ function columnCountLabel(table: RegistryTable): string {
   if (variants.length > 1) {
     return `${variants.length} defs · ${variants.map(v => (v.columns ?? []).length).join('/')} cols`
   }
-  const count = variants.length === 1 ? (variants[0].columns ?? []).length : (table.columns?.length ?? 0)
+  const count =
+    variants.length === 1 ? (variants[0].columns ?? []).length : (table.columns?.length ?? 0)
   return count > 0 ? `${count} cols` : ''
 }
 
@@ -97,7 +121,15 @@ export function RegistrySearch({
         placeholder="Filter tables or columns…"
         style={registryFilterInputStyle}
       />
-      <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div
+        style={{
+          maxHeight: 220,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+        }}
+      >
         {isLoading ? (
           <LoadingState label="Loading registry…" />
         ) : apiError ? (
@@ -108,9 +140,20 @@ export function RegistrySearch({
           <>
             {shown.map(t => (
               <button key={t.name} type="button" onClick={() => onPick(t)} style={rowStyle}>
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
+                <span
+                  style={{
+                    flex: 1,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {t.name}
+                </span>
                 {columnCountLabel(t) && (
-                  <span style={{ fontSize: 9, color: '#4a5570', flexShrink: 0 }}>{columnCountLabel(t)}</span>
+                  <span style={{ fontSize: 9, color: '#4a5570', flexShrink: 0 }}>
+                    {columnCountLabel(t)}
+                  </span>
                 )}
                 <span
                   title={(t.usedByRecipes ?? []).join('\n')}
@@ -119,7 +162,14 @@ export function RegistrySearch({
               </button>
             ))}
             {filtered.length > shown.length && (
-              <div style={{ fontSize: 9, color: '#4a5570', padding: '4px 2px', fontFamily: 'JetBrains Mono, monospace' }}>
+              <div
+                style={{
+                  fontSize: 9,
+                  color: '#4a5570',
+                  padding: '4px 2px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                }}
+              >
                 {`showing ${shown.length} of ${filtered.length} · refine the filter`}
               </div>
             )}

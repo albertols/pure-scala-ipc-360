@@ -62,15 +62,28 @@ export const PALETTE: { type: string; label: string; color: string }[] = [
 
 export function Palette({ onAdd }: { onAdd: (type: string) => void }) {
   return (
-    <div style={{
-      width: 132, flexShrink: 0,
-      background: 'var(--surface)',
-      borderLeft: '1px solid var(--border)',
-      display: 'flex', flexDirection: 'column',
-      padding: 8, gap: 4,
-      overflowY: 'auto',
-    }}>
-      <div style={{ fontSize: 9, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 4px 4px' }}>
+    <div
+      style={{
+        width: 132,
+        flexShrink: 0,
+        background: 'var(--surface)',
+        borderLeft: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: 8,
+        gap: 4,
+        overflowY: 'auto',
+      }}
+    >
+      <div
+        style={{
+          fontSize: 9,
+          color: '#4a5570',
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          padding: '2px 4px 4px',
+        }}
+      >
         Add node
       </div>
       {PALETTE.map(entry => (
@@ -81,17 +94,32 @@ export function Palette({ onAdd }: { onAdd: (type: string) => void }) {
           onDragStart={e => e.dataTransfer.setData('text/etl-type', entry.type)}
           onClick={() => onAdd(entry.type)}
           style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '6px 8px', borderRadius: 5,
-            background: 'transparent', border: '1px solid var(--border)',
-            cursor: 'grab', textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 8px',
+            borderRadius: 5,
+            background: 'transparent',
+            border: '1px solid var(--border)',
+            cursor: 'grab',
+            textAlign: 'left',
           }}
         >
-          <span style={{ width: 6, height: 6, borderRadius: 3, background: entry.color, flexShrink: 0 }} />
-          <span style={{
-            fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>{entry.label}</span>
+          <span
+            style={{ width: 6, height: 6, borderRadius: 3, background: entry.color, flexShrink: 0 }}
+          />
+          <span
+            style={{
+              fontSize: 10,
+              fontFamily: 'JetBrains Mono, monospace',
+              color: '#c8d3e8',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {entry.label}
+          </span>
         </button>
       ))}
     </div>

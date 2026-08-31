@@ -27,8 +27,14 @@ export function CorpusSummary({ items }: { items: SummaryItem[] }) {
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
       {items.map((item, i) => (
         <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {i > 0 && <span aria-hidden="true" style={{ ...itemStyle, opacity: 0.6 }}>·</span>}
-          <span style={itemStyle}>{item.value} {item.label}</span>
+          {i > 0 && (
+            <span aria-hidden="true" style={{ ...itemStyle, opacity: 0.6 }}>
+              ·
+            </span>
+          )}
+          <span style={itemStyle}>
+            {item.value} {item.label}
+          </span>
         </span>
       ))}
     </div>

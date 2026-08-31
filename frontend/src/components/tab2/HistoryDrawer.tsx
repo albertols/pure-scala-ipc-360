@@ -20,15 +20,25 @@ import type { RecipeHistoryEntry } from '../../api/queries'
 import { LoadingState } from '../shared/Spinner'
 
 const viewButtonStyle: React.CSSProperties = {
-  padding: '3px 10px', borderRadius: 4,
-  background: 'transparent', border: '1px solid var(--border)',
-  color: '#7b88aa', fontSize: 10, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+  padding: '3px 10px',
+  borderRadius: 4,
+  background: 'transparent',
+  border: '1px solid var(--border)',
+  color: '#7b88aa',
+  fontSize: 10,
+  cursor: 'pointer',
+  fontFamily: 'JetBrains Mono, monospace',
 }
 
 const restoreButtonStyle: React.CSSProperties = {
-  padding: '5px 12px', borderRadius: 5,
-  background: 'rgba(251,191,36,0.15)', border: '1px solid var(--yellow)',
-  color: 'var(--yellow)', fontSize: 11, cursor: 'pointer', fontWeight: 600,
+  padding: '5px 12px',
+  borderRadius: 5,
+  background: 'rgba(251,191,36,0.15)',
+  border: '1px solid var(--yellow)',
+  color: 'var(--yellow)',
+  fontSize: 11,
+  cursor: 'pointer',
+  fontWeight: 600,
 }
 
 export function HistoryDrawer({
@@ -79,24 +89,43 @@ export function HistoryDrawer({
   const entries = history.data ?? []
 
   return (
-    <div style={{
-      width: 220, flexShrink: 0,
-      background: 'var(--surface)',
-      borderLeft: '1px solid var(--border)',
-      display: 'flex', flexDirection: 'column',
-      padding: 10, gap: 10,
-      overflowY: 'auto',
-    }}>
-      <div style={{ fontSize: 9, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 2px 0' }}>
+    <div
+      style={{
+        width: 220,
+        flexShrink: 0,
+        background: 'var(--surface)',
+        borderLeft: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: 10,
+        gap: 10,
+        overflowY: 'auto',
+      }}
+    >
+      <div
+        style={{
+          fontSize: 9,
+          color: '#4a5570',
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          padding: '2px 2px 0',
+        }}
+      >
         History
       </div>
 
       {viewingVersion && (
-        <div style={{
-          padding: '8px 10px', borderRadius: 5,
-          background: 'rgba(251,191,36,0.1)', border: '1px solid var(--yellow)',
-          display: 'flex', flexDirection: 'column', gap: 8,
-        }}>
+        <div
+          style={{
+            padding: '8px 10px',
+            borderRadius: 5,
+            background: 'rgba(251,191,36,0.1)',
+            border: '1px solid var(--yellow)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+        >
           <span style={{ fontSize: 10, color: 'var(--yellow)' }}>
             {`Viewing archived version ${viewingVersion} — read-only`}
           </span>
@@ -122,18 +151,38 @@ export function HistoryDrawer({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {entries.map((entry, i) => (
-            <div key={entry.version ?? i} style={{
-              border: '1px solid var(--border-subtle)', borderRadius: 5, padding: '6px 8px',
-              display: 'flex', flexDirection: 'column', gap: 4,
-            }}>
-              <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}>
+            <div
+              key={entry.version ?? i}
+              style={{
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 5,
+                padding: '6px 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+              }}
+            >
+              <span
+                style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}
+              >
                 {entry.timestamp}
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                <span style={{ fontSize: 9, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 6,
+                }}
+              >
+                <span
+                  style={{ fontSize: 9, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}
+                >
                   {`${entry.sizeBytes ?? 0} bytes`}
                 </span>
-                <button onClick={() => handleView(entry.version ?? '')} style={viewButtonStyle}>View</button>
+                <button onClick={() => handleView(entry.version ?? '')} style={viewButtonStyle}>
+                  View
+                </button>
               </div>
             </div>
           ))}

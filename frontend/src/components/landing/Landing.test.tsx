@@ -15,15 +15,18 @@ const READY = {
   progress: { tasksDone: 596, tasksTotal: 601, adrs: 16 },
 }
 const DEGRADED = {
-  ...READY, status: 'degraded',
-  roots: [{ name: 'composer', tier: 'absent', status: 'ko',
-            hint: 'set composerRoot in config.json' }],
+  ...READY,
+  status: 'degraded',
+  roots: [
+    { name: 'composer', tier: 'absent', status: 'ko', hint: 'set composerRoot in config.json' },
+  ],
 }
 // The real backend vocabulary (`DiagnosticsService`, ADR-0013) is `"ok"`/`"ko"` — it has never
 // emitted the literal string `"degraded"`. `DEGRADED` above exercises the mapping with a value it
 // does NOT actually produce; this fixture exercises the value it does.
 const KO = {
-  ...READY, status: 'ko',
+  ...READY,
+  status: 'ko',
   roots: [
     { name: 'dwhControl', tier: 'absent', status: 'ko', hint: 'set ETL360_DWH_CONTROL_ROOT' },
     { name: 'composer', tier: 'absent', status: 'ko', hint: 'set ETL360_MOCK_ROOT' },
@@ -32,10 +35,15 @@ const KO = {
 
 const server = setupServer(
   http.get('*/api/readiness', () => HttpResponse.json(READY)),
-  http.get('*/api/config', () => HttpResponse.json({ gcpProjectId: 'example-project', region: 'eu' })),
+  http.get('*/api/config', () =>
+    HttpResponse.json({ gcpProjectId: 'example-project', region: 'eu' }),
+  ),
 )
 beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
-afterEach(() => { server.resetHandlers(); cleanup() })
+afterEach(() => {
+  server.resetHandlers()
+  cleanup()
+})
 afterAll(() => server.close())
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -52,7 +60,9 @@ describe('Landing', () => {
 
   it('shows the relaxed mascot when everything resolved', async () => {
     render(<Landing onEnter={() => {}} />, { wrapper })
-    await waitFor(() => expect(screen.getByTestId('mascot-scene')).toHaveAttribute('data-mood', 'ok'))
+    await waitFor(() =>
+      expect(screen.getByTestId('mascot-scene')).toHaveAttribute('data-mood', 'ok'),
+    )
   })
 
   it('shows the pruning mascot and names the failing root when degraded', async () => {
@@ -60,11 +70,15 @@ describe('Landing', () => {
 
     render(<Landing onEnter={() => {}} />, { wrapper })
 
-    await waitFor(() => expect(screen.getByTestId('mascot-scene')).toHaveAttribute('data-mood', 'degraded'))
+    await waitFor(() =>
+      expect(screen.getByTestId('mascot-scene')).toHaveAttribute('data-mood', 'degraded'),
+    )
     // Scoped to the mascot's own callout: `EnvironmentPanel` (composed lower on the same page,
     // spec §6.4) surfaces the identical `hint` string for its own audience — by design, not a
     // collision to hide — so an unscoped `getByText` here would be ambiguous between the two.
-    expect(within(screen.getByTestId('mascot-scene')).getByText(/set composerRoot in config.json/)).toBeInTheDocument()
+    expect(
+      within(screen.getByTestId('mascot-scene')).getByText(/set composerRoot in config.json/),
+    ).toBeInTheDocument()
   })
 
   // Regression for the acceptance-walk defect: the backend never actually sends "degraded" — it

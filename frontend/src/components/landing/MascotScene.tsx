@@ -34,7 +34,8 @@ const GRADE: Record<ReadinessStatus, string> = {
 // second, driftable `rgba(11,13,20,…)` literal.
 const VIGNETTE: Record<ReadinessStatus, string> = {
   ok: 'radial-gradient(ellipse at 50% 45%, transparent 45%, color-mix(in srgb, var(--bg) 25%, transparent) 100%)',
-  degraded: 'radial-gradient(ellipse at 50% 45%, transparent 30%, color-mix(in srgb, var(--bg) 60%, transparent) 100%)',
+  degraded:
+    'radial-gradient(ellipse at 50% 45%, transparent 30%, color-mix(in srgb, var(--bg) 60%, transparent) 100%)',
 }
 
 /** Bubble positions, staggered so they don't rise in lockstep — viewBox 0 0 600 600. */
@@ -100,14 +101,25 @@ export function MascotScene({ status, failingRoot }: MascotSceneProps) {
         />
         <div
           aria-hidden="true"
-          style={{ position: 'absolute', inset: 0, background: VIGNETTE[status], pointerEvents: 'none' }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: VIGNETTE[status],
+            pointerEvents: 'none',
+          }}
         />
         {ok ? (
           <svg
             data-testid="overlay-bubbles"
             aria-hidden="true"
             viewBox="0 0 600 600"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+            }}
           >
             {BUBBLES.map((b, i) => (
               <circle
@@ -143,7 +155,13 @@ export function MascotScene({ status, failingRoot }: MascotSceneProps) {
             data-testid="overlay-twigs"
             aria-hidden="true"
             viewBox="0 0 600 600"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+            }}
           >
             {TWIGS.map((t, i) => (
               <path
@@ -179,7 +197,13 @@ export function MascotScene({ status, failingRoot }: MascotSceneProps) {
         // one match.
         <div
           data-testid="mascot-callout"
-          style={{ padding: '10px 14px', borderTop: '1px solid var(--border)', fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}
+          style={{
+            padding: '10px 14px',
+            borderTop: '1px solid var(--border)',
+            fontSize: 12,
+            color: 'var(--text)',
+            lineHeight: 1.5,
+          }}
         >
           {`${failingRoot.name} needs attention`}
           {failingRoot.hint ? ` — ${failingRoot.hint}` : null}

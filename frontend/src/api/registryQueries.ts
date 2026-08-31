@@ -31,4 +31,8 @@ export type RegistryTable = components['schemas']['RegistryTableDto']
 export type RegistryVariant = components['schemas']['RegistryVariantDto']
 
 export const useRegistry = () =>
-  useQuery({ queryKey: ['registry'], queryFn: () => apiGet<Registry>('/registry'), staleTime: Infinity })
+  useQuery({
+    queryKey: ['registry'],
+    queryFn: () => apiGet<Registry>('/registry'),
+    staleTime: Infinity,
+  })

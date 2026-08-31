@@ -20,26 +20,20 @@ const MODEL = {
       sources: [
         {
           name: 'SRC_FIX',
-          sourceFields: [
-            { name: 'ID', dataType: 'string', precision: '10', scale: '0' },
-          ],
+          sourceFields: [{ name: 'ID', dataType: 'string', precision: '10', scale: '0' }],
         },
       ],
       targets: [
         {
           name: 'TGT_FIX',
-          targetFields: [
-            { name: 'ID', dataType: 'string', precision: '10', scale: '0' },
-          ],
+          targetFields: [{ name: 'ID', dataType: 'string', precision: '10', scale: '0' }],
         },
       ],
       transformations: [
         {
           name: 'EXP_FIX',
           typ: 'Expression',
-          transformFields: [
-            { name: 'ID', dataType: 'string', portType: 'INPUT/OUTPUT' },
-          ],
+          transformFields: [{ name: 'ID', dataType: 'string', portType: 'INPUT/OUTPUT' }],
         },
       ],
       mappings: [
@@ -84,30 +78,46 @@ const DOM = {
                 // Non-field sibling — proves Fields(n) counts only *FIELD tags,
                 // not every child (corpus-verified: TABLEATTRIBUTE/METADATAEXTENSION
                 // routinely sit alongside SOURCEFIELD/TARGETFIELD/TRANSFORMFIELD).
-                { name: 'TABLEATTRIBUTE', attributes: { NAME: 'Owner Name', VALUE: 'FIX' }, children: [] },
+                {
+                  name: 'TABLEATTRIBUTE',
+                  attributes: { NAME: 'Owner Name', VALUE: 'FIX' },
+                  children: [],
+                },
               ],
             },
             {
               name: 'TARGET',
               attributes: { NAME: 'TGT_FIX', DATABASETYPE: 'Oracle' },
-              children: [
-                { name: 'TARGETFIELD', attributes: { NAME: 'ID' }, children: [] },
-              ],
+              children: [{ name: 'TARGETFIELD', attributes: { NAME: 'ID' }, children: [] }],
             },
             {
               name: 'TRANSFORMATION',
               attributes: { NAME: 'EXP_FIX', TYPE: 'Expression' },
-              children: [
-                { name: 'TRANSFORMFIELD', attributes: { NAME: 'ID' }, children: [] },
-              ],
+              children: [{ name: 'TRANSFORMFIELD', attributes: { NAME: 'ID' }, children: [] }],
             },
             {
               name: 'MAPPING',
               attributes: { NAME: 'm_FIX' },
               children: [
-                { name: 'INSTANCE', attributes: { NAME: 'SRC_FIX', TRANSFORMATION_NAME: 'SRC_FIX', TYPE: 'SOURCE' }, children: [] },
-                { name: 'INSTANCE', attributes: { NAME: 'EXP_FIX', TRANSFORMATION_NAME: 'EXP_FIX', TYPE: 'TRANSFORMATION' }, children: [] },
-                { name: 'INSTANCE', attributes: { NAME: 'TGT_FIX', TRANSFORMATION_NAME: 'TGT_FIX', TYPE: 'TARGET' }, children: [] },
+                {
+                  name: 'INSTANCE',
+                  attributes: { NAME: 'SRC_FIX', TRANSFORMATION_NAME: 'SRC_FIX', TYPE: 'SOURCE' },
+                  children: [],
+                },
+                {
+                  name: 'INSTANCE',
+                  attributes: {
+                    NAME: 'EXP_FIX',
+                    TRANSFORMATION_NAME: 'EXP_FIX',
+                    TYPE: 'TRANSFORMATION',
+                  },
+                  children: [],
+                },
+                {
+                  name: 'INSTANCE',
+                  attributes: { NAME: 'TGT_FIX', TRANSFORMATION_NAME: 'TGT_FIX', TYPE: 'TARGET' },
+                  children: [],
+                },
               ],
             },
           ],
@@ -118,10 +128,16 @@ const DOM = {
 }
 
 const TREE = {
-  name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
+  name: 'xmltobq',
+  path: '',
+  kind: 'dir',
+  layer: 'root',
   children: [
     {
-      name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
+      name: 'CDM',
+      path: 'CDM',
+      kind: 'dir',
+      layer: 'CDM',
       children: [
         { name: 'm_FIX.xml', path: 'xmltobq/CDM/m_FIX.xml', kind: 'xml', mappingPath: 'CDM/m_FIX' },
       ],
@@ -130,7 +146,13 @@ const TREE = {
 }
 
 // Task 16: static corpus counts for the Explorer footer's corpus summary.
-const SUMMARY = { xmlCount: 81, recipeCount: 86, ddlCount: 212, dirCount: 119, layers: ['CDM', 'DWH'] }
+const SUMMARY = {
+  xmlCount: 81,
+  recipeCount: 86,
+  ddlCount: 212,
+  dirCount: 119,
+  layers: ['CDM', 'DWH'],
+}
 
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),

@@ -13,16 +13,28 @@ import { ETLDag } from './ETLDag'
 afterEach(() => cleanup())
 
 // Task-2 ROWS shapes, inlined (b15 rows for the two REL fixture dates).
-const ROWS_28 = [{
-  clusterName: 'cluster-wf-fix-00-1234', recipeFilename: '_ETL_m_FIX_ODS_A.json',
-  jobId: 'application_1774840360_11000', appStartIso: '2026-07-28T04:00:00.000Z',
-  avgJobDurationInMinsSec: '10m 00sec', status: 'SUCCESS', message: '',
-}]
-const ROWS_29 = [{
-  clusterName: 'cluster-wf-fix-00-1234', recipeFilename: '_ETL_m_FIX_ODS_A.json',
-  jobId: 'application_1774840360_11000', appStartIso: '2026-07-29T04:12:00.000Z',
-  avgJobDurationInMinsSec: '5m 30sec', status: 'FAILED', message: 'Stage failure (synthetic)',
-}]
+const ROWS_28 = [
+  {
+    clusterName: 'cluster-wf-fix-00-1234',
+    recipeFilename: '_ETL_m_FIX_ODS_A.json',
+    jobId: 'application_1774840360_11000',
+    appStartIso: '2026-07-28T04:00:00.000Z',
+    avgJobDurationInMinsSec: '10m 00sec',
+    status: 'SUCCESS',
+    message: '',
+  },
+]
+const ROWS_29 = [
+  {
+    clusterName: 'cluster-wf-fix-00-1234',
+    recipeFilename: '_ETL_m_FIX_ODS_A.json',
+    jobId: 'application_1774840360_11000',
+    appStartIso: '2026-07-29T04:12:00.000Z',
+    avgJobDurationInMinsSec: '5m 30sec',
+    status: 'FAILED',
+    message: 'Stage failure (synthetic)',
+  },
+]
 const ROWS_BY_DATE: Record<string, typeof ROWS_28> = {
   '2026-07-28': ROWS_28,
   '2026-07-29': ROWS_29,
@@ -32,16 +44,32 @@ const ROWS_BY_DATE: Record<string, typeof ROWS_28> = {
 // ROWS_28/ROWS_29 above, translated into the RunDto shape (durationMin, not the
 // "Xm Ysec" b15 text), served newest-first as the real endpoint does.
 const RUNS_ODS_A: RunT[] = [
-  { date: '2026-07-29', clusterName: 'cluster-wf-fix-00-1234', jobId: 'application_1774840360_11000',
-    appStartIso: '2026-07-29T04:12:00.000Z', durationMin: 5.5, status: 'FAILED', message: 'Stage failure (synthetic)' },
-  { date: '2026-07-28', clusterName: 'cluster-wf-fix-00-1234', jobId: 'application_1774840360_11000',
-    appStartIso: '2026-07-28T04:00:00.000Z', durationMin: 10, status: 'SUCCESS', message: '' },
+  {
+    date: '2026-07-29',
+    clusterName: 'cluster-wf-fix-00-1234',
+    jobId: 'application_1774840360_11000',
+    appStartIso: '2026-07-29T04:12:00.000Z',
+    durationMin: 5.5,
+    status: 'FAILED',
+    message: 'Stage failure (synthetic)',
+  },
+  {
+    date: '2026-07-28',
+    clusterName: 'cluster-wf-fix-00-1234',
+    jobId: 'application_1774840360_11000',
+    appStartIso: '2026-07-28T04:00:00.000Z',
+    durationMin: 10,
+    status: 'SUCCESS',
+    message: '',
+  },
 ]
 const RUNS_BY_RECIPE: Record<string, RunT[]> = { '_ETL_m_FIX_ODS_A.json': RUNS_ODS_A }
 
 const server = setupServer(
   http.get('/api/relationships', () => HttpResponse.json(REL)),
-  http.get('/api/operational/dates', () => HttpResponse.json({ dates: ['2026-07-28', '2026-07-29'], mode: 'mock' })),
+  http.get('/api/operational/dates', () =>
+    HttpResponse.json({ dates: ['2026-07-28', '2026-07-29'], mode: 'mock' }),
+  ),
   // Registered BEFORE the parameterized `:date` handler below — MSW matches in
   // registration order, and `:date` would otherwise swallow "runs" as a date.
   http.get('*/api/operational/runs', ({ request }) => {
@@ -82,9 +110,14 @@ describe('ETLDag — errors that used to read as "nothing ran"', () => {
   it('says the run state for the date could not be loaded, rather than painting a grey DAG', async () => {
     // Scoped to the literal date: a `:date` override would also swallow `/dates` and `/runs`,
     // and a failed date list disables the snapshot query entirely (that is SF4, below).
-    server.use(http.get('*/api/operational/2026-07-29', () =>
-      HttpResponse.json({ title: 'Internal Server Error', detail: 'boom' },
-        { status: 500, headers: { 'Content-Type': 'application/problem+json' } })))
+    server.use(
+      http.get('*/api/operational/2026-07-29', () =>
+        HttpResponse.json(
+          { title: 'Internal Server Error', detail: 'boom' },
+          { status: 500, headers: { 'Content-Type': 'application/problem+json' } },
+        ),
+      ),
+    )
 
     renderDag()
     fireEvent.click(await screen.findByText('wf_FIX_ODS'))
@@ -94,9 +127,14 @@ describe('ETLDag — errors that used to read as "nothing ran"', () => {
   })
 
   it('distinguishes a date with no snapshot (404) from a snapshot that failed to load', async () => {
-    server.use(http.get('*/api/operational/2026-07-29', () =>
-      HttpResponse.json({ title: 'Not Found', detail: 'No operational snapshot for 2026-07-29' },
-        { status: 404, headers: { 'Content-Type': 'application/problem+json' } })))
+    server.use(
+      http.get('*/api/operational/2026-07-29', () =>
+        HttpResponse.json(
+          { title: 'Not Found', detail: 'No operational snapshot for 2026-07-29' },
+          { status: 404, headers: { 'Content-Type': 'application/problem+json' } },
+        ),
+      ),
+    )
 
     renderDag()
     fireEvent.click(await screen.findByText('wf_FIX_ODS'))
@@ -106,9 +144,14 @@ describe('ETLDag — errors that used to read as "nothing ran"', () => {
   })
 
   it('never states a run count it did not resolve', async () => {
-    server.use(http.get('/api/operational/dates', () =>
-      HttpResponse.json({ title: 'Internal Server Error', detail: 'boom' },
-        { status: 500, headers: { 'Content-Type': 'application/problem+json' } })))
+    server.use(
+      http.get('/api/operational/dates', () =>
+        HttpResponse.json(
+          { title: 'Internal Server Error', detail: 'boom' },
+          { status: 500, headers: { 'Content-Type': 'application/problem+json' } },
+        ),
+      ),
+    )
 
     renderDag()
     await screen.findByText('wf_FIX_ODS')
@@ -150,7 +193,9 @@ describe('ETLDag — real clusters/canvas', () => {
     // Both fixture recipe filenames are 21 chars, over TaskNode's 20-char cutoff
     // (`task.task_id.slice(0, 19) + '…'`), so the rendered <text> label truncates —
     // the <title> alone carries the untruncated id.
-    expect(await screen.findByText('_ETL_m_FIX_ODS_A.js…', { selector: 'text' })).toBeInTheDocument()
+    expect(
+      await screen.findByText('_ETL_m_FIX_ODS_A.js…', { selector: 'text' }),
+    ).toBeInTheDocument()
     expect(screen.getByText('_ETL_m_FIX_ODS_B.js…', { selector: 'text' })).toBeInTheDocument()
   })
 
@@ -160,7 +205,8 @@ describe('ETLDag — real clusters/canvas', () => {
         HttpResponse.json(
           { title: 'Internal Server Error', detail: 'boom' },
           { status: 500, headers: { 'Content-Type': 'application/problem+json' } },
-        )),
+        ),
+      ),
     )
 
     renderDag()
@@ -172,7 +218,12 @@ describe('ETLDag — real clusters/canvas', () => {
   it('renders the empty hint when the relationships graph has no recipes', async () => {
     server.use(
       http.get('/api/relationships', () =>
-        HttpResponse.json({ nodes: [], edges: [], meta: { entryCount: 0, skippedRows: 0, layers: [] } })),
+        HttpResponse.json({
+          nodes: [],
+          edges: [],
+          meta: { entryCount: 0, skippedRows: 0, layers: [] },
+        }),
+      ),
     )
 
     renderDag()
@@ -186,10 +237,12 @@ describe('ETLDag — real clusters/canvas', () => {
   // separate, chunked /api/operational/runs call instead.
   it('fetches one snapshot, not one per available date', async () => {
     const dateRequests: string[] = []
-    server.use(http.get('*/api/operational/:date', ({ params }) => {
-      dateRequests.push(String(params.date))
-      return HttpResponse.json({ date: params.date, rows: [] })
-    }))
+    server.use(
+      http.get('*/api/operational/:date', ({ params }) => {
+        dateRequests.push(String(params.date))
+        return HttpResponse.json({ date: params.date, rows: [] })
+      }),
+    )
 
     renderDag()
     await screen.findByText('wf_FIX_ODS')
@@ -295,20 +348,34 @@ describe('ETLDag — real run selector, per-date coloring, GCP links, replay-moc
   // that may well have run.
   it('(g) the run-history strip renders only the fetched window (10), oldest-fetched first — not every available date', async () => {
     // 14 available dates, oldest first — more than the 10-run fetch window.
-    const allDates = Array.from({ length: 14 }, (_, i) => `2026-07-${String(16 + i).padStart(2, '0')}`)
-    const fetchedDates = allDates.slice(-10)   // what useRuns(taskIds, 10) actually gets back
+    const allDates = Array.from(
+      { length: 14 },
+      (_, i) => `2026-07-${String(16 + i).padStart(2, '0')}`,
+    )
+    const fetchedDates = allDates.slice(-10) // what useRuns(taskIds, 10) actually gets back
 
     server.use(
-      http.get('*/api/operational/dates', () => HttpResponse.json({ dates: allDates, mode: 'mock' })),
+      http.get('*/api/operational/dates', () =>
+        HttpResponse.json({ dates: allDates, mode: 'mock' }),
+      ),
       http.get('*/api/operational/runs', ({ request }) => {
         const recipes = new URL(request.url).searchParams.getAll('recipe')
-        const runsForA: RunT[] = fetchedDates.map(date => ({
-          date, clusterName: 'cluster-wf-fix-00-1234', jobId: `job-${date}`,
-          appStartIso: `${date}T04:00:00.000Z`, durationMin: 1, status: 'SUCCESS', message: '',
-        })).reverse()   // newest-first, as served
+        const runsForA: RunT[] = fetchedDates
+          .map(date => ({
+            date,
+            clusterName: 'cluster-wf-fix-00-1234',
+            jobId: `job-${date}`,
+            appStartIso: `${date}T04:00:00.000Z`,
+            durationMin: 1,
+            status: 'SUCCESS',
+            message: '',
+          }))
+          .reverse() // newest-first, as served
         return HttpResponse.json({
           limit: 10,
-          byRecipe: Object.fromEntries(recipes.map(r => [r, r === '_ETL_m_FIX_ODS_A.json' ? runsForA : []])),
+          byRecipe: Object.fromEntries(
+            recipes.map(r => [r, r === '_ETL_m_FIX_ODS_A.json' ? runsForA : []]),
+          ),
         })
       }),
     )
@@ -322,8 +389,8 @@ describe('ETLDag — real run selector, per-date coloring, GCP links, replay-moc
     const rows = await screen.findAllByText(/^2026-07-\d\d$/)
     expect(rows).toHaveLength(10)
     const rendered = rows.map(r => r.textContent).sort()
-    expect(rendered[0]).toBe(fetchedDates[0])       // oldest FETCHED (2026-07-20)
-    expect(rendered[0]).not.toBe(allDates[0])       // never the oldest AVAILABLE (2026-07-16)
+    expect(rendered[0]).toBe(fetchedDates[0]) // oldest FETCHED (2026-07-20)
+    expect(rendered[0]).not.toBe(allDates[0]) // never the oldest AVAILABLE (2026-07-16)
   })
 })
 
@@ -332,8 +399,13 @@ describe('ETLDag — flow hardening (UNGROUPED, no-data recipes, cross-workflow 
   // other describe blocks' REL-derived expectations stay untouched.
   const REL_WITH_LONER = structuredClone(REL) as RelationshipsT
   REL_WITH_LONER.nodes!.push({
-    id: 'recipe:_ETL_m_FIX_LONER.json', kind: 'recipe', name: '_ETL_m_FIX_LONER.json',
-    layer: 'QDM', mappingPath: 'QDM/m_FIX_LONER', hasRecipe: true, workflow: '',
+    id: 'recipe:_ETL_m_FIX_LONER.json',
+    kind: 'recipe',
+    name: '_ETL_m_FIX_LONER.json',
+    layer: 'QDM',
+    mappingPath: 'QDM/m_FIX_LONER',
+    hasRecipe: true,
+    workflow: '',
   })
 
   it('(4) recipe with workflow "" lands in UNGROUPED; selecting it renders no-data (skipped) on every served date', async () => {
@@ -391,13 +463,13 @@ describe('ETLDag — flow hardening (UNGROUPED, no-data recipes, cross-workflow 
     const { container } = renderDag()
 
     fireEvent.click(await screen.findByText('wf_FIX_ODS'))
-    expect(await screen.findByText(/^failed/)).toBeInTheDocument()   // sanity: A is failed at "Now"
+    expect(await screen.findByText(/^failed/)).toBeInTheDocument() // sanity: A is failed at "Now"
 
     const dateInput = container.querySelector('input[type="date"]') as HTMLInputElement
     fireEvent.change(dateInput, { target: { value: '2001-01-01' } })
 
     const skipped = await screen.findAllByText('skipped')
-    expect(skipped).toHaveLength(2)   // both ODS tasks, no-data at an unserved date
+    expect(skipped).toHaveLength(2) // both ODS tasks, no-data at an unserved date
     expect(screen.queryByText(/^failed/)).not.toBeInTheDocument()
   })
 })

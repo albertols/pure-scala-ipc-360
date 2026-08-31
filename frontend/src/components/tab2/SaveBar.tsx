@@ -9,12 +9,21 @@
  * delete control and `EditorToolbar`'s own Discard button still import them
  * directly, so this file stays. */
 export const dangerButtonStyle: React.CSSProperties = {
-  padding: '5px 14px', borderRadius: 5,
-  background: 'rgba(248,113,113,0.15)', border: '1px solid var(--red)',
-  color: 'var(--red)', fontSize: 12, cursor: 'pointer', fontWeight: 600,
+  padding: '5px 14px',
+  borderRadius: 5,
+  background: 'rgba(248,113,113,0.15)',
+  border: '1px solid var(--red)',
+  color: 'var(--red)',
+  fontSize: 12,
+  cursor: 'pointer',
+  fontWeight: 600,
 }
 export const ghostButtonStyle: React.CSSProperties = {
-  padding: '5px 14px', borderRadius: 5,
-  background: 'transparent', border: '1px solid var(--border)',
-  color: '#7b88aa', fontSize: 12, cursor: 'pointer',
+  padding: '5px 14px',
+  borderRadius: 5,
+  background: 'transparent',
+  border: '1px solid var(--border)',
+  color: '#7b88aa',
+  fontSize: 12,
+  cursor: 'pointer',
 }

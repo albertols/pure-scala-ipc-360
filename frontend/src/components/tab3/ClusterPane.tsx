@@ -36,22 +36,48 @@ export function visibleRange(scrollTop: number, viewportH: number, count: number
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0, cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  flex: 1,
+  minWidth: 0,
+  cursor: 'pointer',
 }
 const nameStyle: React.CSSProperties = {
-  flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-  fontSize: 11, color: 'var(--text)', fontFamily: 'JetBrains Mono, monospace',
+  flex: 1,
+  minWidth: 0,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  fontSize: 11,
+  color: 'var(--text)',
+  fontFamily: 'JetBrains Mono, monospace',
 }
 const countStyle: React.CSSProperties = {
-  fontSize: 10, color: 'var(--text-dim)', fontFamily: 'JetBrains Mono, monospace',
+  fontSize: 10,
+  color: 'var(--text-dim)',
+  fontFamily: 'JetBrains Mono, monospace',
 }
 const chevronButtonStyle: React.CSSProperties = {
-  background: 'transparent', border: 'none', cursor: 'pointer', padding: 2,
-  color: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace',
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  padding: 2,
+  color: 'var(--text-muted)',
+  fontSize: 10,
+  fontFamily: 'JetBrains Mono, monospace',
 }
 
 function ClusterRow({
-  name, recipeCount, ok, ko, top, checked, expanded, onToggle, onExpand,
+  name,
+  recipeCount,
+  ok,
+  ko,
+  top,
+  checked,
+  expanded,
+  onToggle,
+  onExpand,
 }: {
   name: string
   recipeCount: number
@@ -66,8 +92,15 @@ function ClusterRow({
   return (
     <div
       style={{
-        position: 'absolute', top, left: 0, right: 0, height: ROW_H,
-        display: 'flex', alignItems: 'center', gap: 4, padding: '0 8px',
+        position: 'absolute',
+        top,
+        left: 0,
+        right: 0,
+        height: ROW_H,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        padding: '0 8px',
         background: expanded ? 'var(--surface-3)' : 'transparent',
       }}
     >
@@ -87,12 +120,21 @@ function ClusterRow({
 
 export function ClusterPane() {
   const {
-    paneWidth, paneCollapsed, selectedClusters, expandedCluster, deselectedRecipes, selectedDates,
+    paneWidth,
+    paneCollapsed,
+    selectedClusters,
+    expandedCluster,
+    deselectedRecipes,
+    selectedDates,
   } = useOperationalView()
   const { data: index } = useClusterIndex()
   // `error`/`isLoading` are read, not discarded: rendering `(detail?.recipes ?? [])` alone made a
   // 500 or a dropped connection look exactly like a cluster with no recipes.
-  const { data: detail, error: detailError, isLoading: detailLoading } = useClusterDetail(expandedCluster)
+  const {
+    data: detail,
+    error: detailError,
+    isLoading: detailLoading,
+  } = useClusterDetail(expandedCluster)
 
   const [search, setSearch] = useState('')
   const [scrollTop, setScrollTop] = useState(0)
@@ -103,7 +145,9 @@ export function ClusterPane() {
   // lets the unmount effect below detach them even when the gesture never
   // reaches its own mouseup (e.g. a tab switch unmounts ClusterPane while the
   // resize handle is still held). Mirrors EditorLayout.tsx's `activeDragListeners`.
-  const activeDragListeners = useRef<{ onMove: (e: MouseEvent) => void; onUp: () => void } | null>(null)
+  const activeDragListeners = useRef<{ onMove: (e: MouseEvent) => void; onUp: () => void } | null>(
+    null,
+  )
 
   useEffect(() => {
     const el = scrollRef.current
@@ -128,7 +172,8 @@ export function ClusterPane() {
 
   const clusters = index?.clusters ?? []
   const q = search.trim().toLowerCase()
-  const filtered = q === '' ? clusters : clusters.filter(c => (c.name ?? '').toLowerCase().includes(q))
+  const filtered =
+    q === '' ? clusters : clusters.filter(c => (c.name ?? '').toLowerCase().includes(q))
 
   const { start, end } = visibleRange(scrollTop, viewportH, filtered.length, ROW_H)
   const visible = filtered.slice(start, end)
@@ -160,7 +205,10 @@ export function ClusterPane() {
     // second, functionally-identical-but-different-looking spelling of "all
     // selected" — otherwise a round-trip toggle (uncheck, recheck) would leave
     // `selectedDates` non-empty forever.
-    const isFullSet = allDates.length > 0 && next.length === allDates.length && allDates.every(d => next.includes(d))
+    const isFullSet =
+      allDates.length > 0 &&
+      next.length === allDates.length &&
+      allDates.every(d => next.includes(d))
     setOperationalView({ selectedDates: isFullSet ? [] : next })
   }
 
@@ -198,10 +246,15 @@ export function ClusterPane() {
       <div
         data-testid="cluster-pane"
         style={{
-          width: 36, flexShrink: 0, background: 'var(--surface)',
+          width: 36,
+          flexShrink: 0,
+          background: 'var(--surface)',
           borderRight: '1px solid var(--border)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          paddingTop: 8, gap: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          paddingTop: 8,
+          gap: 8,
         }}
       >
         <button
@@ -220,14 +273,35 @@ export function ClusterPane() {
     <div
       data-testid="cluster-pane"
       style={{
-        width: paneWidth, flexShrink: 0, position: 'relative',
-        background: 'var(--surface)', borderRight: '1px solid var(--border)',
-        display: 'flex', flexDirection: 'column', minHeight: 0,
+        width: paneWidth,
+        flexShrink: 0,
+        position: 'relative',
+        background: 'var(--surface)',
+        borderRight: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
       }}
     >
-      <div style={{ padding: 8, borderBottom: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div
+        style={{
+          padding: 8,
+          borderBottom: '1px solid var(--border-subtle)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: 'var(--text-dim)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}
+          >
             Clusters
           </span>
           <div style={{ flex: 1 }} />
@@ -241,7 +315,13 @@ export function ClusterPane() {
           </button>
         </div>
         {index?.totals && (
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
+          <div
+            style={{
+              fontSize: 10,
+              color: 'var(--text-muted)',
+              fontFamily: 'JetBrains Mono, monospace',
+            }}
+          >
             {`${nf.format(index.totals.clusters ?? 0)} clusters · ${nf.format(index.totals.recipes ?? 0)} recipes · ${nf.format(index.totals.dates ?? 0)} days indexed`}
           </div>
         )}
@@ -250,9 +330,15 @@ export function ClusterPane() {
           onChange={e => onSearchChange(e.target.value)}
           placeholder="Search clusters…"
           style={{
-            background: 'var(--surface-2)', border: '1px solid var(--border)',
-            borderRadius: 5, color: 'var(--text)', fontSize: 11, padding: '4px 9px',
-            outline: 'none', width: '100%', fontFamily: 'Inter, sans-serif',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
+            borderRadius: 5,
+            color: 'var(--text)',
+            fontSize: 11,
+            padding: '4px 9px',
+            outline: 'none',
+            width: '100%',
+            fontFamily: 'Inter, sans-serif',
           }}
         />
       </div>
@@ -288,11 +374,23 @@ export function ClusterPane() {
       {expandedCluster && (
         <div
           style={{
-            borderTop: '1px solid var(--border-subtle)', padding: 8,
-            maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6,
+            borderTop: '1px solid var(--border-subtle)',
+            padding: 8,
+            maxHeight: 200,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
           }}
         >
-          <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div
+            style={{
+              fontSize: 9,
+              color: 'var(--text-dim)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}
+          >
             {expandedCluster}
           </div>
           {/* Three distinct outcomes, three distinct renderings. Only the third is "empty". */}
@@ -302,39 +400,69 @@ export function ClusterPane() {
             </div>
           )}
           {!detailError && detailLoading && (
-            <div data-testid="cluster-detail-loading" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+            <div
+              data-testid="cluster-detail-loading"
+              style={{ fontSize: 10, color: 'var(--text-muted)' }}
+            >
               Loading recipes and dates…
             </div>
           )}
-          {!detailError && !detailLoading && (detail?.recipes ?? []).length === 0
-            && (detail?.dates ?? []).length === 0 && (
-            <div data-testid="cluster-detail-empty" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-              No recipes recorded for this cluster.
-            </div>
-          )}
+          {!detailError &&
+            !detailLoading &&
+            (detail?.recipes ?? []).length === 0 &&
+            (detail?.dates ?? []).length === 0 && (
+              <div
+                data-testid="cluster-detail-empty"
+                style={{ fontSize: 10, color: 'var(--text-muted)' }}
+              >
+                No recipes recorded for this cluster.
+              </div>
+            )}
           {(detail?.recipes ?? []).map(r => {
             const filename = r.recipeFilename ?? ''
             return (
-              <label key={filename} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+              <label
+                key={filename}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+              >
                 <input
                   type="checkbox"
                   aria-label={filename}
                   checked={!deselectedRecipes.includes(filename)}
                   onChange={() => toggleRecipe(filename)}
                 />
-                <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>{filename}</span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: 'var(--text-muted)',
+                    fontFamily: 'JetBrains Mono, monospace',
+                  }}
+                >
+                  {filename}
+                </span>
               </label>
             )
           })}
           {(detail?.dates ?? []).map(d => (
-            <label key={d} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <label
+              key={d}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+            >
               <input
                 type="checkbox"
                 aria-label={d}
                 checked={selectedDates.length === 0 || selectedDates.includes(d)}
                 onChange={() => toggleDate(d, detail?.dates ?? [])}
               />
-              <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>{d}</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  color: 'var(--text-muted)',
+                  fontFamily: 'JetBrains Mono, monospace',
+                }}
+              >
+                {d}
+              </span>
             </label>
           ))}
         </div>
@@ -344,7 +472,11 @@ export function ClusterPane() {
         data-testid="cluster-pane-resize-handle"
         onMouseDown={startDrag}
         style={{
-          position: 'absolute', top: 0, right: -2, bottom: 0, width: 4,
+          position: 'absolute',
+          top: 0,
+          right: -2,
+          bottom: 0,
+          width: 4,
           cursor: 'col-resize',
         }}
       />

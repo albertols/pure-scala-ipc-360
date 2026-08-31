@@ -5,8 +5,15 @@ import type { RunT } from '../../api/clusterQueries'
 import { withoutDeselectedRecipes, narrowSummaryToDates, narrowRunsToDates } from './viewScope'
 
 const card = (id: string, kind: 'recipe' | 'table', name: string): OperationalCard => ({
-  id, kind, name, layer: 'STG', status: 'OK', lastRun: '1970-01-01T00:00:00Z',
-  history: [], stats: { avg_time_s: 0, p50: 0, p95: 0, p99: 0, avg_count: 0 }, relations: [],
+  id,
+  kind,
+  name,
+  layer: 'STG',
+  status: 'OK',
+  lastRun: '1970-01-01T00:00:00Z',
+  history: [],
+  stats: { avg_time_s: 0, p50: 0, p95: 0, p99: 0, avg_count: 0 },
+  relations: [],
 })
 
 const CARDS = [
@@ -38,15 +45,22 @@ const SUMMARY: OperationalSummary = {
   dates: ['2026-07-27', '2026-07-28', '2026-07-29'],
   recipes: [
     {
-      recipeFilename: '_ETL_a.json', layer: 'STG',
-      latestDate: '2026-07-29', latestStatus: 'FAILED', okCount: 2, koCount: 1,
+      recipeFilename: '_ETL_a.json',
+      layer: 'STG',
+      latestDate: '2026-07-29',
+      latestStatus: 'FAILED',
+      okCount: 2,
+      koCount: 1,
       history: [
         { date: '2026-07-27', status: 'SUCCESS', durationMin: 1 },
         { date: '2026-07-28', status: 'SUCCESS', durationMin: 2 },
         { date: '2026-07-29', status: 'FAILED', durationMin: 3 },
       ],
-      avgDurationMin: 2, p50DurationMin: 2, p95DurationMin: 3,
-      lastJobId: 'app-29', lastClusterName: 'cl-a',
+      avgDurationMin: 2,
+      p50DurationMin: 2,
+      p95DurationMin: 3,
+      lastJobId: 'app-29',
+      lastClusterName: 'cl-a',
     },
   ],
 }
@@ -90,8 +104,24 @@ describe('narrowSummaryToDates', () => {
 
 const RUNS: Record<string, RunT[]> = {
   '_ETL_a.json': [
-    { date: '2026-07-29', clusterName: 'cl-a', jobId: 'app-29', appStartIso: '', durationMin: 1, status: 'FAILED', message: '' },
-    { date: '2026-07-28', clusterName: 'cl-a', jobId: 'app-28', appStartIso: '', durationMin: 1, status: 'SUCCESS', message: '' },
+    {
+      date: '2026-07-29',
+      clusterName: 'cl-a',
+      jobId: 'app-29',
+      appStartIso: '',
+      durationMin: 1,
+      status: 'FAILED',
+      message: '',
+    },
+    {
+      date: '2026-07-28',
+      clusterName: 'cl-a',
+      jobId: 'app-28',
+      appStartIso: '',
+      durationMin: 1,
+      status: 'SUCCESS',
+      message: '',
+    },
   ],
 }
 
@@ -101,7 +131,9 @@ describe('narrowRunsToDates', () => {
   })
 
   it('keeps only the runs on checked dates, and keeps the recipe key when none survive', () => {
-    expect(narrowRunsToDates(RUNS, ['2026-07-28'])['_ETL_a.json']!.map(r => r.jobId)).toEqual(['app-28'])
+    expect(narrowRunsToDates(RUNS, ['2026-07-28'])['_ETL_a.json']!.map(r => r.jobId)).toEqual([
+      'app-28',
+    ])
     // Absent means [], never missing — the same shape rule /api/operational/runs itself keeps.
     expect(narrowRunsToDates(RUNS, ['2026-01-01'])['_ETL_a.json']).toEqual([])
   })

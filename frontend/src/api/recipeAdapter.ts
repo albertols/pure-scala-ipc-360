@@ -116,7 +116,10 @@ const ABBR: Record<NodeType, string> = {
  * (mirrors mappingAdapter.ts:52-54 — anonymizer-damaged type values like
  * "BERYLFALLS" resolve here). */
 function fallbackLabel(typ: string): string {
-  return typ.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase()
+  return typ
+    .replace(/[^A-Za-z]/g, '')
+    .slice(0, 3)
+    .toUpperCase()
 }
 
 function isBlank(s: string | undefined | null): boolean {
@@ -130,7 +133,10 @@ export function fieldsOf(t: RecipeTargetJson | undefined): RecipeFieldJson[] {
 }
 
 /** Add every non-blank scalar string field of an object into a properties bag. */
-function collectScalarProps(props: Record<string, string>, obj: Record<string, unknown> | undefined | null): void {
+function collectScalarProps(
+  props: Record<string, string>,
+  obj: Record<string, unknown> | undefined | null,
+): void {
   if (!obj) return
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value !== 'string') continue
@@ -145,13 +151,19 @@ function collectScalarProps(props: Record<string, string>, obj: Record<string, u
  * source branch below (Task 6) so both take the exact same resolution path — never a
  * parallel, hardcoded one. Defaults to `{}`, so a type with no matching alias resolves
  * to itself, unchanged. */
-function resolveCanonicalType(typ: string | undefined, typeAliases: Record<string, string>): string {
-  return typeAliases[typ ?? ''] ?? (typ ?? '')
+function resolveCanonicalType(
+  typ: string | undefined,
+  typeAliases: Record<string, string>,
+): string {
+  return typeAliases[typ ?? ''] ?? typ ?? ''
 }
 
 /** Kind + label for a step target/source `type` string. See `resolveCanonicalType` for
  * the alias resolution this builds on. */
-function kindAndLabel(typ: string | undefined, typeAliases: Record<string, string>): { type: NodeType; label: string } {
+function kindAndLabel(
+  typ: string | undefined,
+  typeAliases: Record<string, string>,
+): { type: NodeType; label: string } {
   const t = resolveCanonicalType(typ, typeAliases)
   const kind = RECIPE_KIND[t]
   if (kind) return { type: kind, label: ABBR[kind] }
@@ -168,7 +180,12 @@ function isFieldShaped(param: unknown): param is RecipeFieldJson {
   return typeof param === 'object' && param !== null && 'transformation' in param
 }
 
-function walkTransformation(t: RecipeTransformationJson | undefined, toStep: string, toField: string, out: RecipeRef[]): void {
+function walkTransformation(
+  t: RecipeTransformationJson | undefined,
+  toStep: string,
+  toField: string,
+  out: RecipeRef[],
+): void {
   if (!t) return
   const source = t.source
   if (!isBlank(source) && source!.includes('.')) {
@@ -241,7 +258,12 @@ function portFor(field: RecipeFieldJson, direction: Port['direction']): Port {
 
 // ─── Node construction ─────────────────────────────────────────────────────────
 
-function toStepNode(step: RecipeStepJson, isTarget: boolean, file: string, typeAliases: Record<string, string>): ETLNode {
+function toStepNode(
+  step: RecipeStepJson,
+  isTarget: boolean,
+  file: string,
+  typeAliases: Record<string, string>,
+): ETLNode {
   const target = step.target
   const id = target?.name ?? ''
   const name = id
@@ -267,7 +289,10 @@ function toSourceNode(source: RecipeSourceJson, refs: RecipeRef[], file: string)
 
   const fieldNames = new Set<string>()
   const exactMatches = refs.filter(r => r.table === id)
-  const matches = exactMatches.length > 0 ? exactMatches : refs.filter(r => r.table.toLowerCase() === id.toLowerCase())
+  const matches =
+    exactMatches.length > 0
+      ? exactMatches
+      : refs.filter(r => r.table.toLowerCase() === id.toLowerCase())
   for (const ref of matches) fieldNames.add(ref.field)
 
   const ports: Port[] = [...fieldNames].map(fieldName => ({
@@ -284,7 +309,11 @@ function toSourceNode(source: RecipeSourceJson, refs: RecipeRef[], file: string)
  * downstream — matches the `Union.<field>` dot-refs a consuming step's transformations
  * already carry, so those edges fall out of the existing `deriveConnections` ref walk
  * once this node exists; no new edge-derivation code needed for them). */
-function toUnionNode(source: RecipeSourceJson, file: string, typeAliases: Record<string, string>): ETLNode {
+function toUnionNode(
+  source: RecipeSourceJson,
+  file: string,
+  typeAliases: Record<string, string>,
+): ETLNode {
   const { type, label } = kindAndLabel(source.type, typeAliases)
   const id = source.name ?? ''
   const properties: Record<string, string> = {}
@@ -296,7 +325,11 @@ function toUnionNode(source: RecipeSourceJson, file: string, typeAliases: Record
       if (!isBlank(mapping.union)) fieldNames.add(mapping.union!)
     }
   }
-  const ports: Port[] = [...fieldNames].map(fieldName => ({ name: fieldName, dataType: '', direction: 'OUT' as const }))
+  const ports: Port[] = [...fieldNames].map(fieldName => ({
+    name: fieldName,
+    dataType: '',
+    direction: 'OUT' as const,
+  }))
   return { id, type, label, name: id, x: 0, y: 0, ports, properties, file }
 }
 
@@ -307,13 +340,21 @@ function toUnionNode(source: RecipeSourceJson, file: string, typeAliases: Record
  * `joinerInput` step names), direction OUT. `joinerType`/`joinerCondition` are lifted
  * into `properties` by `collectScalarProps`; `joinerTables` (array-valued) stays on the
  * raw JSON for the Inspector, which resolves it independently by node id. */
-function toJoinerNode(source: RecipeSourceJson, file: string, typeAliases: Record<string, string>): ETLNode {
+function toJoinerNode(
+  source: RecipeSourceJson,
+  file: string,
+  typeAliases: Record<string, string>,
+): ETLNode {
   const { type, label } = kindAndLabel(source.type, typeAliases)
   const id = source.name ?? ''
   const properties: Record<string, string> = {}
   collectScalarProps(properties, source as unknown as Record<string, unknown>)
 
-  const ports: Port[] = (source.joinerTables ?? []).map(tableName => ({ name: tableName, dataType: '', direction: 'OUT' as const }))
+  const ports: Port[] = (source.joinerTables ?? []).map(tableName => ({
+    name: tableName,
+    dataType: '',
+    direction: 'OUT' as const,
+  }))
   return { id, type, label, name: id, x: 0, y: 0, ports, properties, file }
 }
 
@@ -407,11 +448,13 @@ function deriveConnections(
     const canonical = resolveCanonicalType(step.target?.type, typeAliases)
     if (canonical === 'unionInput') {
       const unionId = unionInputOwner.get(stepName!)
-      if (unionId && nodeIds.has(unionId)) add({ fromNode: stepName!, fromPort: '', toNode: unionId, toPort: '' })
+      if (unionId && nodeIds.has(unionId))
+        add({ fromNode: stepName!, fromPort: '', toNode: unionId, toPort: '' })
     } else if (canonical === 'joinerInput') {
       const dot = stepName!.lastIndexOf('.')
       const joinerId = dot >= 0 ? stepName!.slice(0, dot) : stepName!
-      if (nodeIds.has(joinerId)) add({ fromNode: stepName!, fromPort: '', toNode: joinerId, toPort: '' })
+      if (nodeIds.has(joinerId))
+        add({ fromNode: stepName!, fromPort: '', toNode: joinerId, toPort: '' })
     }
   }
 
@@ -429,7 +472,11 @@ function deriveConnections(
  * pre-Task-19) keeps working unchanged — the frontend never hardcodes a second copy
  * of this map; it must be threaded in from the backend-served catalogue.
  */
-export function recipeToCanvas(recipe: RecipeJson, recipePath: string, typeAliases: Record<string, string> = {}): CanvasGraph {
+export function recipeToCanvas(
+  recipe: RecipeJson,
+  recipePath: string,
+  typeAliases: Record<string, string> = {},
+): CanvasGraph {
   const steps = recipe.steps ?? []
   const basename = recipePath.split('/').pop() ?? recipePath
   const targetTableNames = new Set(recipe.table?.targetTableNames ?? [])
@@ -506,7 +553,14 @@ export function recipeToCanvas(recipe: RecipeJson, recipePath: string, typeAlias
   }
 
   const nodeById = new Map(nodes.map(n => [n.id, n]))
-  const connections = deriveConnections(steps, refs, nodeIds, nodeById, typeAliases, unionInputOwner)
+  const connections = deriveConnections(
+    steps,
+    refs,
+    nodeIds,
+    nodeById,
+    typeAliases,
+    unionInputOwner,
+  )
 
   layoutNodes(nodes, connections)
 

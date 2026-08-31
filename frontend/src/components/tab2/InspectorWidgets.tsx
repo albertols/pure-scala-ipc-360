@@ -31,7 +31,9 @@ function inputStyle(mono: boolean): React.CSSProperties {
 
 function focusHandlers() {
   return {
-    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.target.style.borderColor = '#4f9cf9' },
+    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      e.target.style.borderColor = '#4f9cf9'
+    },
   }
 }
 
@@ -52,7 +54,9 @@ export function TextWidget({
   mono?: boolean
 }) {
   const [local, setLocal] = useState(value)
-  useEffect(() => { setLocal(value) }, [value])
+  useEffect(() => {
+    setLocal(value)
+  }, [value])
 
   return (
     <div>
@@ -90,18 +94,28 @@ export function ToggleWidget({
       <button
         onClick={() => onChange(!value)}
         style={{
-          display: 'flex', alignItems: 'center', gap: 7,
-          padding: '5px 10px', borderRadius: 12, cursor: 'pointer', width: 'fit-content',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 7,
+          padding: '5px 10px',
+          borderRadius: 12,
+          cursor: 'pointer',
+          width: 'fit-content',
           background: value ? 'rgba(52,211,153,0.12)' : 'var(--surface-2)',
           border: `1px solid ${value ? 'var(--green)' : 'var(--border)'}`,
           color: value ? 'var(--green)' : '#7b88aa',
-          fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
+          fontSize: 11,
+          fontFamily: 'JetBrains Mono, monospace',
         }}
       >
-        <span style={{
-          width: 8, height: 8, borderRadius: '50%',
-          background: value ? 'var(--green)' : '#4a5570',
-        }} />
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: value ? 'var(--green)' : '#4a5570',
+          }}
+        />
         {value ? 'On' : 'Off'}
       </button>
     </div>
@@ -123,7 +137,9 @@ export function TextareaWidget({
   onChange: (v: string) => void
 }) {
   const [local, setLocal] = useState(value)
-  useEffect(() => { setLocal(value) }, [value])
+  useEffect(() => {
+    setLocal(value)
+  }, [value])
 
   return (
     <div>
@@ -131,13 +147,21 @@ export function TextareaWidget({
       <textarea
         value={local}
         onChange={e => setLocal(e.target.value)}
-        onBlur={() => { if (local !== value) onChange(local) }}
+        onBlur={() => {
+          if (local !== value) onChange(local)
+        }}
         rows={3}
         style={{
-          width: '100%', resize: 'vertical',
-          background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4,
-          color: '#c8d3e8', fontSize: 11, padding: '5px 8px',
-          fontFamily: 'JetBrains Mono, monospace', outline: 'none',
+          width: '100%',
+          resize: 'vertical',
+          background: 'var(--surface-2)',
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          color: '#c8d3e8',
+          fontSize: 11,
+          padding: '5px 8px',
+          fontFamily: 'JetBrains Mono, monospace',
+          outline: 'none',
         }}
       />
     </div>
@@ -171,7 +195,9 @@ export function FormulaWidget({
 }) {
   const original = renderFormula(value)
   const [text, setText] = useState(original)
-  useEffect(() => { setText(original) }, [original])
+  useEffect(() => {
+    setText(original)
+  }, [original])
 
   return (
     <div>
@@ -180,19 +206,30 @@ export function FormulaWidget({
         value={text}
         onChange={e => setText(e.target.value)}
         onFocus={onFocus}
-        onBlur={() => { if (text !== original) onChange(parseFormulaText(text)) }}
+        onBlur={() => {
+          if (text !== original) onChange(parseFormulaText(text))
+        }}
         onDragOver={e => e.preventDefault()}
         onDrop={e => {
           e.preventDefault()
           const formula = e.dataTransfer.getData('text/etl-formula')
-          if (formula) { setText(formula); onChange(parseFormulaText(formula)) }
+          if (formula) {
+            setText(formula)
+            onChange(parseFormulaText(formula))
+          }
         }}
         rows={2}
         style={{
-          width: '100%', resize: 'vertical',
-          background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4,
-          color: '#c8d3e8', fontSize: 11, padding: '5px 8px',
-          fontFamily: 'JetBrains Mono, monospace', outline: 'none',
+          width: '100%',
+          resize: 'vertical',
+          background: 'var(--surface-2)',
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          color: '#c8d3e8',
+          fontSize: 11,
+          padding: '5px 8px',
+          fontFamily: 'JetBrains Mono, monospace',
+          outline: 'none',
         }}
       />
     </div>
@@ -202,21 +239,37 @@ export function FormulaWidget({
 // ─── StringListWidget ────────────────────────────────────────────────────────
 
 const rowInputStyle: React.CSSProperties = {
-  flex: 1, background: 'var(--surface-2)', border: '1px solid var(--border)',
-  borderRadius: 4, color: '#c8d3e8', fontSize: 11, padding: '5px 8px',
-  fontFamily: 'JetBrains Mono, monospace', outline: 'none',
+  flex: 1,
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border)',
+  borderRadius: 4,
+  color: '#c8d3e8',
+  fontSize: 11,
+  padding: '5px 8px',
+  fontFamily: 'JetBrains Mono, monospace',
+  outline: 'none',
 }
 
 const xButtonStyle: React.CSSProperties = {
-  padding: '5px 9px', borderRadius: 4,
-  background: 'rgba(248,113,113,0.1)', border: '1px solid var(--border)',
-  color: '#7b88aa', fontSize: 11, cursor: 'pointer',
+  padding: '5px 9px',
+  borderRadius: 4,
+  background: 'rgba(248,113,113,0.1)',
+  border: '1px solid var(--border)',
+  color: '#7b88aa',
+  fontSize: 11,
+  cursor: 'pointer',
 }
 
 const addButtonStyle: React.CSSProperties = {
-  padding: '5px 10px', borderRadius: 4,
-  background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-  color: '#4f9cf9', fontSize: 11, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
+  padding: '5px 10px',
+  borderRadius: 4,
+  background: 'rgba(79,156,249,0.15)',
+  border: '1px solid #4f9cf9',
+  color: '#4f9cf9',
+  fontSize: 11,
+  cursor: 'pointer',
+  fontWeight: 600,
+  whiteSpace: 'nowrap',
 }
 
 /** A column of string rows (joinerTables/groupByFields/primaryKeys/… — and, nested
@@ -252,18 +305,24 @@ export function StringListWidget({
               onChange={e => onChange(value.map((x, j) => (j === i ? e.target.value : x)))}
               style={rowInputStyle}
             />
-            <button onClick={() => onChange(value.filter((_, j) => j !== i))} style={xButtonStyle}>×</button>
+            <button onClick={() => onChange(value.filter((_, j) => j !== i))} style={xButtonStyle}>
+              ×
+            </button>
           </div>
         ))}
         <div style={{ display: 'flex', gap: 4 }}>
           <input
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') commitAdd() }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') commitAdd()
+            }}
             placeholder="add…"
             style={rowInputStyle}
           />
-          <button onClick={commitAdd} style={addButtonStyle}>+ add</button>
+          <button onClick={commitAdd} style={addButtonStyle}>
+            + add
+          </button>
         </div>
       </div>
     </div>
@@ -301,17 +360,26 @@ function formatRawValue(v: unknown): string {
 function NestedArrayCell({ items }: { items: unknown[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <span style={{ fontSize: 9, color: '#4a5570' }}>{`${items.length} ${items.length === 1 ? 'entry' : 'entries'}`}</span>
+      <span
+        style={{ fontSize: 9, color: '#4a5570' }}
+      >{`${items.length} ${items.length === 1 ? 'entry' : 'entries'}`}</span>
       {items.map((item, i) => (
         <div key={i} style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {item !== null && typeof item === 'object' ? (
             Object.entries(item as Record<string, unknown>).map(([k, v]) => (
-              <span key={k} style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#7b88aa' }}>
+              <span
+                key={k}
+                style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#7b88aa' }}
+              >
                 {k}: <span style={{ color: '#c8d3e8' }}>{formatRawValue(v)}</span>
               </span>
             ))
           ) : (
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}>{formatRawValue(item)}</span>
+            <span
+              style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8' }}
+            >
+              {formatRawValue(item)}
+            </span>
           )}
         </div>
       ))}
@@ -349,39 +417,68 @@ export function RowTableWidget({
         <div style={{ color: '#4a5570', fontSize: 11 }}>No rows.</div>
       ) : (
         <div style={{ border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-          <div style={{
-            display: 'grid', gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
-            background: 'var(--surface-2)', padding: '6px 10px',
-            borderBottom: '1px solid var(--border)',
-            fontSize: 9, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.06em',
-          }}>
-            {columns.map(c => <span key={c.key}>{c.label}</span>)}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
+              background: 'var(--surface-2)',
+              padding: '6px 10px',
+              borderBottom: '1px solid var(--border)',
+              fontSize: 9,
+              color: '#4a5570',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}
+          >
+            {columns.map(c => (
+              <span key={c.key}>{c.label}</span>
+            ))}
           </div>
           {value.map((row, i) => (
-            <div key={i} style={{
-              display: 'grid', gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
-              padding: '6px 10px', borderBottom: i < value.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-              alignItems: 'start', gap: 6,
-            }}>
+            <div
+              key={i}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
+                padding: '6px 10px',
+                borderBottom: i < value.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                alignItems: 'start',
+                gap: 6,
+              }}
+            >
               {columns.map(c => {
                 const cell = row[c.key]
                 if (c.widget === 'toggle') {
                   const on = Boolean(cell)
                   return (
-                    <button key={c.key} onClick={() => setCell(i, c.key, !on)} style={{
-                      padding: '3px 8px', borderRadius: 10, cursor: 'pointer', width: 'fit-content',
-                      background: on ? 'rgba(52,211,153,0.12)' : 'var(--surface-2)',
-                      border: `1px solid ${on ? 'var(--green)' : 'var(--border)'}`,
-                      color: on ? 'var(--green)' : '#7b88aa',
-                      fontSize: 9, fontFamily: 'JetBrains Mono, monospace',
-                    }}>{on ? 'On' : 'Off'}</button>
+                    <button
+                      key={c.key}
+                      onClick={() => setCell(i, c.key, !on)}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: 10,
+                        cursor: 'pointer',
+                        width: 'fit-content',
+                        background: on ? 'rgba(52,211,153,0.12)' : 'var(--surface-2)',
+                        border: `1px solid ${on ? 'var(--green)' : 'var(--border)'}`,
+                        color: on ? 'var(--green)' : '#7b88aa',
+                        fontSize: 9,
+                        fontFamily: 'JetBrains Mono, monospace',
+                      }}
+                    >
+                      {on ? 'On' : 'Off'}
+                    </button>
                   )
                 }
                 if (c.widget === 'stringList') {
-                  const items = Array.isArray(cell) ? cell as string[] : []
+                  const items = Array.isArray(cell) ? (cell as string[]) : []
                   return (
                     <div key={c.key}>
-                      <StringListWidget label="" value={items} onChange={v => setCell(i, c.key, v)} />
+                      <StringListWidget
+                        label=""
+                        value={items}
+                        onChange={v => setCell(i, c.key, v)}
+                      />
                     </div>
                   )
                 }
@@ -395,9 +492,15 @@ export function RowTableWidget({
                     value={String(cell ?? '')}
                     onChange={e => setCell(i, c.key, e.target.value)}
                     style={{
-                      background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4,
-                      color: '#c8d3e8', fontSize: 10, padding: '3px 6px',
-                      fontFamily: 'JetBrains Mono, monospace', outline: 'none', width: '100%',
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 4,
+                      color: '#c8d3e8',
+                      fontSize: 10,
+                      padding: '3px 6px',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      outline: 'none',
+                      width: '100%',
                     }}
                   />
                 )

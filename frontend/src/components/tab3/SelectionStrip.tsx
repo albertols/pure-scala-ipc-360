@@ -19,14 +19,26 @@ export interface SelectionSummary {
 const nf = new Intl.NumberFormat('en-US')
 
 const chipStyle: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 4,
-  background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: 999,
-  padding: '2px 8px', fontSize: 11, color: 'var(--text)', fontFamily: 'JetBrains Mono, monospace',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 4,
+  background: 'var(--surface-3)',
+  border: '1px solid var(--border)',
+  borderRadius: 999,
+  padding: '2px 8px',
+  fontSize: 11,
+  color: 'var(--text)',
+  fontFamily: 'JetBrains Mono, monospace',
 }
 
 const removeButtonStyle: React.CSSProperties = {
-  background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-  color: 'var(--text-muted)', fontSize: 10, lineHeight: 1,
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  padding: 0,
+  color: 'var(--text-muted)',
+  fontSize: 10,
+  lineHeight: 1,
 }
 
 export function SelectionStrip({ summary }: { summary: SelectionSummary | null }) {
@@ -43,32 +55,53 @@ export function SelectionStrip({ summary }: { summary: SelectionSummary | null }
     <div
       data-testid="selection-strip"
       style={{
-        display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        flexWrap: 'wrap',
         // Shorter, and DARKER than the surface it used to share with the toolbar: the stats sat
         // at --text-dim on --surface-2 and all but vanished beside the cluster chips.
-        padding: '4px 10px', background: 'var(--bg)', borderBottom: '1px solid var(--border-subtle)',
+        padding: '4px 10px',
+        background: 'var(--bg)',
+        borderBottom: '1px solid var(--border-subtle)',
       }}
     >
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {selectedClusters.map(name => (
           <span key={name} style={chipStyle}>
             <span>{name}</span>
-            <button aria-label={`Remove ${name}`} onClick={() => removeCluster(name)} style={removeButtonStyle}>
+            <button
+              aria-label={`Remove ${name}`}
+              onClick={() => removeCluster(name)}
+              style={removeButtonStyle}
+            >
               {'✕'}
             </button>
           </span>
         ))}
       </div>
-      <div data-testid="selection-stats"
-        style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
+      <div
+        data-testid="selection-stats"
+        style={{
+          fontSize: 11,
+          color: 'var(--text-muted)',
+          fontFamily: 'JetBrains Mono, monospace',
+        }}
+      >
         {`${nf.format(selectedClusters.length)} clusters · ${nf.format(s.recipes)} recipes · ${nf.format(s.dates)} dates · ${nf.format(s.ok)} OK · ${nf.format(s.ko)} KO · ${nf.format(s.nodes)} nodes · ${nf.format(s.neighbors)} from neighbours`}
       </div>
       <button
         aria-label="Clear clusters"
         onClick={clearSelection}
         style={{
-          marginLeft: 'auto', background: 'transparent', border: '1px solid var(--border)',
-          borderRadius: 5, color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', padding: '2px 8px',
+          marginLeft: 'auto',
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          borderRadius: 5,
+          color: 'var(--text-muted)',
+          fontSize: 11,
+          cursor: 'pointer',
+          padding: '2px 8px',
         }}
       >
         {/* NOT "Clear selection": the graph's own floating button (pre-existing Figma copy)
