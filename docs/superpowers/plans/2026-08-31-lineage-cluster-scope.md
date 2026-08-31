@@ -82,7 +82,7 @@ Pure extraction. `/search` behaviour must not change — that is what the existi
 - Produces: `TableClusters.of(RelationshipsDto graph)` → instance; `Set<String> recipeIdsFor(String tableId)`; `Set<String> tableIds()`; `List<String> clustersFor(String tableId, Map<String, List<String>> clustersByRecipe)` (name-ascending).
 - Consumed by: Task 2 (`LineageService`), and `ClusterController.tableHits` in this task.
 
-- [ ] **Step 0: Branch**
+- [x] **Step 0: Branch**
 
 ```bash
 git checkout -b feat/etl360-lineage-cluster-scope
@@ -90,7 +90,7 @@ git checkout -b feat/etl360-lineage-cluster-scope
 
 Task 15 merges this branch; every task below commits onto it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -161,12 +161,12 @@ class TableClustersTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=TableClustersTest`
 Expected: compile failure — `package io.pure360.etl360.service.support.TableClusters does not exist`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```java
 package io.pure360.etl360.service.support;
@@ -248,12 +248,12 @@ public final class TableClusters {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `mvn -q -am -pl backend test -Dtest=TableClustersTest`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Rewrite `ClusterController.tableHits` to read it**
+- [x] **Step 5: Rewrite `ClusterController.tableHits` to read it**
 
 Replace the body of `tableHits` (`ClusterController.java:224-256`) with:
 
@@ -276,12 +276,12 @@ Replace the body of `tableHits` (`ClusterController.java:224-256`) with:
 
 Add `import io.pure360.etl360.service.support.TableClusters;`. Remove the now-unused `LinkedHashSet` / `TreeSet` imports **only if** no other method in the file still uses them (`search` uses `TreeSet`, so keep that one).
 
-- [ ] **Step 6: Prove `/search` did not change**
+- [x] **Step 6: Prove `/search` did not change**
 
 Run: `mvn -q -am -pl backend test -Dtest='OperationalSearchContractTest,TableClustersTest'`
 Expected: PASS, `OperationalSearchContractTest` **unedited**.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/support/TableClusters.java \
