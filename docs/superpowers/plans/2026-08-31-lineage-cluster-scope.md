@@ -755,7 +755,7 @@ Spec §3.4.
 - Consumes: `LineageService.lineage(seed, limit, clusterSpec, prefer)`, `LineageService.AUTO` (Task 2).
 - Produces: `GET /api/operational/lineage?node=&limit=&cluster=&prefer=`.
 
-- [ ] **Step 1: Write the failing test (append to `LineageContractTest`, edit nothing above it)**
+- [x] **Step 1: Write the failing test (append to `LineageContractTest`, edit nothing above it)**
 
 ```java
     // ── ADR-0021: cluster scope ───────────────────────────────────────────────
@@ -835,13 +835,13 @@ Spec §3.4.
     }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=LineageContractTest`
 Expected: FAIL — `activeCluster` is absent from the response because the controller never passes
 `cluster` through, and `cluster=nope` returns 200.
 
-- [ ] **Step 3: Widen the endpoint**
+- [x] **Step 3: Widen the endpoint**
 
 Replace the `lineage` handler (`ClusterController.java:162-170`) with:
 
@@ -876,17 +876,17 @@ Replace the `lineage` handler (`ClusterController.java:162-170`) with:
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `mvn -q -am -pl backend test -Dtest=LineageContractTest`
 Expected: PASS — all ten original tests plus the seven appended ones.
 
-- [ ] **Step 5: Run the whole backend suite**
+- [x] **Step 5: Run the whole backend suite**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/ClusterController.java \

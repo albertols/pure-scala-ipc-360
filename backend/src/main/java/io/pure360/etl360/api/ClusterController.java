@@ -152,20 +152,32 @@ public class ClusterController {
     static final int LINEAGE_MAX_LIMIT = 600;
 
     /**
-     * One node's transitive upstream AND downstream closure — see {@link LineageDto} and ADR-0020.
+     * One node's transitive upstream AND downstream closure — see {@link LineageDto}, ADR-0020 and
+     * ADR-0021.
      *
      * <p>Unlike {@code /search}, an unknown {@code node} IS a 404: the caller here has a node id
      * in hand (it came from a graph this server served), so a miss means something is genuinely
      * wrong rather than that the user is still typing.
+     *
+     * <p>{@code cluster} is absent for the unscoped closure (ADR-0020's contract, unchanged),
+     * {@code auto} to let the server resolve the seed's cluster, or a name. An unknown NAME is a
+     * 400 rather than a 404 because — unlike {@code node} — a cluster name can reach this endpoint
+     * from a URL an operator typed. {@code prefer} is the caller's current selection and is read
+     * only when {@code cluster=auto}.
      */
     @GetMapping("/lineage")
     public LineageDto lineage(@RequestParam("node") String node,
-                              @RequestParam(name = "limit", defaultValue = "" + LINEAGE_DEFAULT_LIMIT) int limit) {
+                              @RequestParam(name = "limit", defaultValue = "" + LINEAGE_DEFAULT_LIMIT) int limit,
+                              @RequestParam(name = "cluster", required = false) String cluster,
+                              @RequestParam(name = "prefer", required = false) String prefer) {
         if (limit < 1 || limit > LINEAGE_MAX_LIMIT) {
             throw new InvalidRequestException(
                 "limit must be between 1 and " + LINEAGE_MAX_LIMIT + ", got " + limit);
         }
-        return lineage.lineage(node, limit, null, List.of());
+        List<String> preferred = prefer == null || prefer.isBlank() ? List.of()
+            : java.util.Arrays.stream(prefer.split(",")).map(String::trim)
+                .filter(s -> !s.isEmpty()).toList();
+        return lineage.lineage(node, limit, cluster, preferred);
     }
 
     static final int SEARCH_MIN_Q = 2;
