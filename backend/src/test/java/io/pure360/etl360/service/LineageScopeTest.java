@@ -24,6 +24,18 @@ class LineageScopeTest {
     /** A CAS table with recipes on both sides of it in the committed mock. */
     private static final String SEED = "table:CAS_DWH_EVENTS_FACT";
 
+    /**
+     * A SYN recipe, scoped to a cluster it does NOT belong to. Every test above seeds on a TABLE,
+     * which is exactly why finding round 1 shipped a docs/code mismatch undetected: when the seed
+     * itself is a recipe outside the cluster, its own neighbour TABLES (not just recipes) can be
+     * gateways. This pair also happens to reach, one hop further, a raw graph edge
+     * (`table:ODS_SYN_ORDERS` -> `recipe:_ETL_m_SYN_DWH_ORDERS_FACT.json`, kind `source`) whose
+     * BOTH endpoints end up gateways of this scope — the "edge joins two gateways" case a
+     * both-endpoints-survived-the-budget filter alone does not catch.
+     */
+    private static final String RECIPE_SEED = "recipe:_ETL_m_SYN_ODS_ORDERS.json";
+    private static final String FOREIGN_CLUSTER = "cluster-wf-syn-08-5826";
+
     @Autowired LineageService lineage;
     @Autowired ClusterIndexService index;
 
@@ -123,5 +135,50 @@ class LineageScopeTest {
     void isDeterministicAcrossCalls() {
         String c = aClusterOfTheSeed();
         assertThat(scoped(c)).isEqualTo(scoped(c));
+    }
+
+    // --- Fix round 1: the seed itself can be a recipe outside the scoped cluster ---------------
+
+    @Test
+    void aRecipeSeedOutsideTheClusterIsPresentAndItsOutOfScopeTablesAreGateways() {
+        LineageDto d = lineage.lineage(RECIPE_SEED, 600, FOREIGN_CLUSTER, List.of());
+        assertThat(ids(d)).contains(RECIPE_SEED);
+
+        Set<String> gateways = d.nodes().stream().filter(LineageDto.LineageNodeDto::gateway)
+            .map(LineageDto.LineageNodeDto::id).collect(Collectors.toSet());
+        // A TABLE gateway: the divergent case finding 1 called out. The seed is a recipe outside
+        // FOREIGN_CLUSTER, so its own neighbour table (touching no recipe of FOREIGN_CLUSTER)
+        // falls outside scope too — "gateway" is not always a recipe.
+        assertThat(gateways).contains("table:ODS_SYN_ORDERS");
+    }
+
+    @Test
+    void noDrawnEdgeJoinsTwoGatewaysEvenWhenTheRawGraphHasOneBetweenThem() {
+        LineageDto d = lineage.lineage(RECIPE_SEED, 600, FOREIGN_CLUSTER, List.of());
+        Set<String> gateways = d.nodes().stream().filter(LineageDto.LineageNodeDto::gateway)
+            .map(LineageDto.LineageNodeDto::id).collect(Collectors.toSet());
+        // Both ends of this specific raw-graph edge are gateways here, reached via independent
+        // legitimate paths (not through each other) — the exact shape that a "both endpoints
+        // survived the budget" filter alone would still draw.
+        assertThat(gateways).contains("table:ODS_SYN_ORDERS", "recipe:_ETL_m_SYN_DWH_ORDERS_FACT.json");
+        d.edges().forEach(e -> assertThat(gateways.contains(e.from()) && gateways.contains(e.to()))
+            .as("edge %s -> %s joins two gateways", e.from(), e.to()).isFalse());
+    }
+
+    @Test
+    void gatewayTablesCarryTheirClustersButInteriorTablesDoNot() {
+        LineageDto d = lineage.lineage(RECIPE_SEED, 600, FOREIGN_CLUSTER, List.of());
+
+        LineageDto.LineageNodeDto gatewayTable = d.nodes().stream()
+            .filter(n -> "table:ODS_SYN_ORDERS".equals(n.id())).findFirst().orElseThrow();
+        assertThat(gatewayTable.gateway()).isTrue();
+        assertThat(gatewayTable.clusters()).as("a gateway table's `↳ <cluster>` stub needs a name")
+            .isNotEmpty();
+
+        LineageDto.LineageNodeDto interiorTable = d.nodes().stream()
+            .filter(n -> "table:DWH_SYN_ORDERS_FACT".equals(n.id())).findFirst().orElseThrow();
+        assertThat(interiorTable.gateway()).isFalse();
+        assertThat(interiorTable.clusters()).as("an interior table names no cluster, exactly as today")
+            .isEmpty();
     }
 }

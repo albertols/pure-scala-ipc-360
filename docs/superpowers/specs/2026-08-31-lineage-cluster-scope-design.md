@@ -140,9 +140,10 @@ the UI at exactly the moment the operator is lost, which is the state this view 
 
 ### 3.3 Gateway stubs
 
-A **gateway** is a recipe outside `scope(C)` that shares an edge with a table inside it. It is
-returned as a node with `gateway: true`, carrying its own `clusters[]`, and the BFS **terminates
-there** — its own neighbours are never walked.
+A **gateway** is a node outside `scope(C)` that shares an edge with one inside it — usually a
+recipe touching an in-scope table, but a table can be the gateway too when the seed itself is a
+recipe outside `C`. It is returned as a node with `gateway: true`, carrying its own `clusters[]`,
+and the BFS **terminates there** — its own neighbours are never walked.
 
 Gateways are what make this design compatible with ADR-0020's objection. The flow does not
 quietly stop at the cluster edge; it draws the edge, names the recipe on the far side, names the

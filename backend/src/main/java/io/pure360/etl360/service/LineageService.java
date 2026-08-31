@@ -33,9 +33,10 @@ import java.util.TreeSet;
  * reachable nodes, of which the operator's selected cluster contributed one. Scoping confines the
  * walk to {@code recipes(C) + the tables they touch}, so the budget is spent inside the cluster.
  * ADR-0020's objection to scoping — that it would draw a complete-looking flow that is not one —
- * is answered by GATEWAYS: a recipe outside C that touches an in-scope table is returned, marked,
- * and never walked through, so every crossing is visible and named. With no cluster the behaviour
- * is byte-identical to ADR-0020's.
+ * is answered by GATEWAYS: a node outside C's scope that touches one inside it is returned,
+ * marked, and never walked through, so every crossing is visible and named — usually a recipe
+ * touching an in-scope table, but a table can be the gateway too when the SEED itself is a recipe
+ * outside C. With no cluster the behaviour is byte-identical to ADR-0020's.
  *
  * <p>Cycle-safe by a visited set: the L2L graph is not guaranteed acyclic, and a lookup edge can
  * close a loop.
@@ -126,22 +127,37 @@ public class LineageService {
             if (!kept.contains(e.getKey())) continue;
             RelationshipsDto.NodeDto n = byId.get(e.getKey());
             String name = n.name() == null ? "" : n.name();
-            List<String> clusters = "recipe".equals(n.kind())
-                ? clusterIndex.clustersOf(name) : List.of();
+            boolean isGateway = gateways.contains(n.id());
+            // Recipes carry their OWN clusters always. A gateway TABLE carries the clusters it
+            // joins to (the same join Task 1 extracted) so its `↳ <cluster>` stub names something;
+            // an interior (non-gateway) table stays `[]` — it is inside the active cluster, so the
+            // field would be noise.
+            List<String> clusters;
+            if ("recipe".equals(n.kind())) {
+                clusters = clusterIndex.clustersOf(name);
+            } else if (isGateway) {
+                clusters = joins.clustersFor(n.id(), index.clustersByRecipe());
+            } else {
+                clusters = List.of();
+            }
             nodes.add(new LineageDto.LineageNodeDto(n.id(), n.kind(), name,
                 n.layer() == null || n.layer().isEmpty() ? "UNKNOWN" : n.layer(),
-                e.getValue(), clusters, gateways.contains(n.id())));
+                e.getValue(), clusters, isGateway));
         }
         nodes.sort(Comparator.comparingInt(LineageDto.LineageNodeDto::hop)
             .thenComparing(LineageDto.LineageNodeDto::name));
 
         // Only edges whose BOTH endpoints survived the budget — an edge into a cut node would
-        // draw an arrow into empty space.
+        // draw an arrow into empty space. WHEN SCOPED, additionally require at least one endpoint
+        // to be IN SCOPE: two gateways can both survive the budget and share an edge, and drawing
+        // it would render a path that leaves the cluster and comes back — exactly what "gateways
+        // are terminal" forbids. Unscoped (`scope == null`) this second check never fires, so
+        // unscoped behaviour is unchanged.
         List<RelationshipsDto.EdgeDto> edges = new ArrayList<>();
         for (RelationshipsDto.EdgeDto e : graph.edges()) {
-            if (kept.contains(e.from()) && kept.contains(e.to())) {
-                edges.add(new RelationshipsDto.EdgeDto(e.from(), e.to(), e.kind()));
-            }
+            if (!kept.contains(e.from()) || !kept.contains(e.to())) continue;
+            if (scope != null && !scope.contains(e.from()) && !scope.contains(e.to())) continue;
+            edges.add(new RelationshipsDto.EdgeDto(e.from(), e.to(), e.kind()));
         }
 
         return new LineageDto(seed, List.copyOf(nodes), List.copyOf(edges),

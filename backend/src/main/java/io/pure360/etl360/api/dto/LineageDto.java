@@ -20,7 +20,8 @@ import java.util.List;
  *                        touches": reaching a distant cluster is a gateway walk.
  * @param totalReachable  how many nodes the closure actually contains, whether or not they fit in
  *                        {@code nodes} — so the view can say how much it is NOT showing instead of
- *                        implying completeness.
+ *                        implying completeness. When scoped, this measures the SCOPED closure
+ *                        (seed + in-scope nodes + gateways), not the whole graph.
  */
 public record LineageDto(String seed, List<LineageNodeDto> nodes,
                          List<RelationshipsDto.EdgeDto> edges,
@@ -32,9 +33,11 @@ public record LineageDto(String seed, List<LineageNodeDto> nodes,
      *            positive downstream. This is the view's x-axis, which is why it is computed here
      *            (during the traversal that actually knows the direction) rather than re-derived
      *            client-side from the edges.
-     * @param gateway true for a recipe OUTSIDE the active cluster that touches a table inside it.
-     *            The traversal stops there; it is drawn as a stub naming its cluster, so the flow
-     *            never looks complete where it is not. Always {@code false} when unscoped.
+     * @param gateway true for a node OUTSIDE the active cluster's scope that touches one inside it
+     *            — a recipe touching an in-scope table, or (when the seed itself is a recipe not
+     *            in the cluster) a table touching no recipe of the cluster. The traversal stops
+     *            there; it is drawn as a stub naming its cluster, so the flow never looks complete
+     *            where it is not. Always {@code false} when unscoped.
      */
     public record LineageNodeDto(String id, String kind, String name, String layer, int hop,
                                  List<String> clusters, boolean gateway) {}

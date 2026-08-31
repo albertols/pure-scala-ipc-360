@@ -304,7 +304,7 @@ existing contract tests keep passing untouched.
 
 **Interfaces:**
 - Consumes: `TableClusters.of/recipeIdsFor/tableIds` (Task 1); `ClusterIndexService.index()` → `Index.clustersByRecipe()` (`Map<String,List<String>>`), `Index.byCluster()` (`Map<String,ClusterEntry>`, `ClusterEntry.recipes()` name-ascending).
-- Produces: `LineageService.lineage(String seed, int limit, String clusterSpec, List<String> prefer)` → `LineageDto`; the 2-arg `lineage(String, int)` overload delegating with `(null, List.of())`. `LineageDto.ClusterOptionDto(String name, int recipes)`. `LineageDto.LineageNodeDto` gains a trailing `boolean gateway`. Constant `LineageService.AUTO = "auto"`.
+- Produces: `LineageService.lineage(String seed, int limit, String clusterSpec, List<String> prefer)` → `LineageDto` — the ONLY `lineage` method; the 2-arg `lineage(String, int)` overload this bullet originally promised was dropped as dead code (its only caller, `ClusterController`, is rewritten by Task 3 to pass all four arguments, so it would ship with zero callers) — `ClusterController` instead passes `(node, limit, null, List.of())` for the unscoped default. `LineageDto.ClusterOptionDto(String name, int recipes)`. `LineageDto.LineageNodeDto` gains a trailing `boolean gateway`. Constant `LineageService.AUTO = "auto"`.
 - Consumed by: Task 3 (controller), Task 10 (TS types mirror this shape).
 
 - [x] **Step 1: Write the failing test**
