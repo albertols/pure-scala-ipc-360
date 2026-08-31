@@ -38,7 +38,10 @@ export function EditorLayout(props: {
   // lets the unmount effect below detach them even when the gesture never
   // reaches its own pointerup (e.g. a tab switch unmounts EditorLayout while
   // a splitter is still held).
-  const activeDragListeners = useRef<{ onMove: (ev: PointerEvent) => void; endDrag: () => void } | null>(null)
+  const activeDragListeners = useRef<{
+    onMove: (ev: PointerEvent) => void
+    endDrag: () => void
+  } | null>(null)
   // "Has the drawer ever been expanded", not "is sizes.drawerH currently at
   // its floor" — the latter would re-force-open a drawer the user just
   // dragged shut (once a later task wires up a drag control for drawerH).
@@ -64,7 +67,12 @@ export function EditorLayout(props: {
   // otherwise strand the gesture with the splitter stuck to the cursor.
   const beginDrag = useCallback(
     (kind: SplitterKind) => (e: React.PointerEvent) => {
-      dragStart.current = { clientX: e.clientX, clientY: e.clientY, canvasH: sizes.canvasH, inspectorW: sizes.inspectorW }
+      dragStart.current = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        canvasH: sizes.canvasH,
+        inspectorW: sizes.inspectorW,
+      }
       setDragging(kind)
 
       const onMove = (ev: PointerEvent) => {
@@ -97,7 +105,7 @@ export function EditorLayout(props: {
   )
 
   const toggleDrawerTab = (id: string) => {
-    setActiveTabId((current) => {
+    setActiveTabId(current => {
       if (current === id) return null
       if (!hasExpandedDrawer.current) {
         hasExpandedDrawer.current = true
@@ -107,7 +115,7 @@ export function EditorLayout(props: {
     })
   }
 
-  const activeDrawer = drawer.find((tab) => tab.id === activeTabId) ?? null
+  const activeDrawer = drawer.find(tab => tab.id === activeTabId) ?? null
 
   /** `kind` doubles as which axis this particular splitter drags (there is
    * exactly one splitter per axis; the corner grip drives both and has no
@@ -170,7 +178,11 @@ export function EditorLayout(props: {
 
         {inspector !== null && (
           <>
-            <div data-splitter="vertical" onPointerDown={beginDrag('vertical')} style={splitterStyle('vertical')} />
+            <div
+              data-splitter="vertical"
+              onPointerDown={beginDrag('vertical')}
+              style={splitterStyle('vertical')}
+            />
             <div
               style={{
                 width: sizes.inspectorW,
@@ -185,11 +197,23 @@ export function EditorLayout(props: {
         )}
       </div>
 
-      <div data-splitter="horizontal" onPointerDown={beginDrag('horizontal')} style={splitterStyle('horizontal')} />
+      <div
+        data-splitter="horizontal"
+        onPointerDown={beginDrag('horizontal')}
+        style={splitterStyle('horizontal')}
+      />
 
       <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-        <div style={{ display: 'flex', gap: 2, padding: '2px 6px', borderTop: '1px solid var(--border-subtle)', flexShrink: 0 }}>
-          {drawer.map((tab) => (
+        <div
+          style={{
+            display: 'flex',
+            gap: 2,
+            padding: '2px 6px',
+            borderTop: '1px solid var(--border-subtle)',
+            flexShrink: 0,
+          }}
+        >
+          {drawer.map(tab => (
             <button
               key={tab.id}
               onClick={() => toggleDrawerTab(tab.id)}

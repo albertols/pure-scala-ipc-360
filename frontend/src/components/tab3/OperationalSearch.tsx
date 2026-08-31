@@ -33,16 +33,31 @@ export function OperationalSearch({
     <div
       data-testid="operational-search"
       style={{
-        position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 50, width: 'min(620px, 92vw)', maxHeight: '60vh', overflow: 'auto',
-        background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8,
+        position: 'absolute',
+        top: 8,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 50,
+        width: 'min(620px, 92vw)',
+        maxHeight: '60vh',
+        overflow: 'auto',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 8,
         boxShadow: '0 18px 60px rgba(0,0,0,0.55)',
       }}
     >
-      <div style={{
-        padding: '8px 12px', borderBottom: '1px solid var(--border-subtle)',
-        fontSize: 10, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 6,
-      }}>
+      <div
+        style={{
+          padding: '8px 12px',
+          borderBottom: '1px solid var(--border-subtle)',
+          fontSize: 10,
+          color: 'var(--text-dim)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
         <span>{`Search across the whole history · "${needle}"`}</span>
         <div style={{ flex: 1 }} />
         {search.data?.truncated && (
@@ -53,20 +68,20 @@ export function OperationalSearch({
         )}
       </div>
 
-      {needle.length < SEARCH_MIN_Q
-        ? <Message text={`Type at least ${SEARCH_MIN_Q} characters.`} />
-        : search.isLoading
-          ? <Message text="Searching…" />
-          : search.error
-            ? <Message text={(search.error as ApiError).title ?? 'Search failed'} tone="var(--red)" />
-            : hits.length === 0
-              ? <Message text="Nothing in the b15 history or the relationships graph matches." />
-              : (
-                <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <Group label="Recipes" hits={recipes} onPick={onPick} />
-                  <Group label="Tables" hits={tables} onPick={onPick} />
-                </div>
-              )}
+      {needle.length < SEARCH_MIN_Q ? (
+        <Message text={`Type at least ${SEARCH_MIN_Q} characters.`} />
+      ) : search.isLoading ? (
+        <Message text="Searching…" />
+      ) : search.error ? (
+        <Message text={(search.error as ApiError).title ?? 'Search failed'} tone="var(--red)" />
+      ) : hits.length === 0 ? (
+        <Message text="Nothing in the b15 history or the relationships graph matches." />
+      ) : (
+        <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Group label="Recipes" hits={recipes} onPick={onPick} />
+          <Group label="Tables" hits={tables} onPick={onPick} />
+        </div>
+      )}
     </div>
   )
 }
@@ -75,12 +90,28 @@ function Message({ text, tone = 'var(--text-dim)' }: { text: string; tone?: stri
   return <div style={{ padding: '14px 12px', fontSize: 11, color: tone }}>{text}</div>
 }
 
-function Group({ label, hits, onPick }: { label: string; hits: SearchHitT[]; onPick: (h: SearchHitT) => void }) {
+function Group({
+  label,
+  hits,
+  onPick,
+}: {
+  label: string
+  hits: SearchHitT[]
+  onPick: (h: SearchHitT) => void
+}) {
   if (hits.length === 0) return null
   return (
     <div>
-      <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase',
-                    letterSpacing: '0.08em', marginBottom: 4, paddingLeft: 4 }}>
+      <div
+        style={{
+          fontSize: 9,
+          color: 'var(--text-dim)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          marginBottom: 4,
+          paddingLeft: 4,
+        }}
+      >
         {label} ({hits.length})
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -90,32 +121,61 @@ function Group({ label, hits, onPick }: { label: string; hits: SearchHitT[]; onP
             data-testid={`search-hit-${h.kind}`}
             onClick={() => onPick(h)}
             style={{
-              display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
-              padding: '6px 8px', borderRadius: 5, cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+              textAlign: 'left',
+              padding: '6px 8px',
+              borderRadius: 5,
+              cursor: 'pointer',
               background: 'var(--surface-2)',
               border: '1px solid var(--border)',
               borderLeft: `3px solid ${kindPalette(h.kind).accent}`,
             }}
           >
-            <span style={{
-              fontSize: 9, padding: '1px 5px', borderRadius: 3, flexShrink: 0,
-              background: `${layerColor(h.layer)}26`, color: layerColor(h.layer),
-              border: `1px solid ${layerColor(h.layer)}44`,
-              fontFamily: 'JetBrains Mono, monospace',
-            }}>{h.layer}</span>
-            <span style={{
-              fontSize: 11, color: 'var(--text)', flex: 1, minWidth: 0,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>{h.name}</span>
-            <span style={{
-              fontSize: 9, color: 'var(--text-muted)', flexShrink: 0,
-              fontFamily: 'JetBrains Mono, monospace',
-            }}>
+            <span
+              style={{
+                fontSize: 9,
+                padding: '1px 5px',
+                borderRadius: 3,
+                flexShrink: 0,
+                background: `${layerColor(h.layer)}26`,
+                color: layerColor(h.layer),
+                border: `1px solid ${layerColor(h.layer)}44`,
+                fontFamily: 'JetBrains Mono, monospace',
+              }}
+            >
+              {h.layer}
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                color: 'var(--text)',
+                flex: 1,
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {h.name}
+            </span>
+            <span
+              style={{
+                fontSize: 9,
+                color: 'var(--text-muted)',
+                flexShrink: 0,
+                fontFamily: 'JetBrains Mono, monospace',
+              }}
+            >
               {/* A hit nothing in b15 touches is real and worth showing — it just cannot be
                   navigated to, and says so rather than looking like a broken row. */}
               {h.clusters.length === 0
                 ? 'no runs'
-                : h.clusters.length === 1 ? h.clusters[0] : `${h.clusters.length} clusters`}
+                : h.clusters.length === 1
+                  ? h.clusters[0]
+                  : `${h.clusters.length} clusters`}
             </span>
           </button>
         ))}

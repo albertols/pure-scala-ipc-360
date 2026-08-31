@@ -66,14 +66,47 @@ export function Landing({ onEnter }: LandingProps) {
         background: 'var(--bg)',
       }}
     >
-      <div style={{ maxWidth: 980, margin: '0 auto', padding: '40px 24px 72px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <div
+        style={{
+          maxWidth: 980,
+          margin: '0 auto',
+          padding: '40px 24px 72px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 32,
+        }}
+      >
         <MascotScene status={status} failingRoot={failingRoot} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em', margin: 0 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 14,
+            textAlign: 'center',
+          }}
+        >
+          <h1
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+              margin: 0,
+            }}
+          >
             ETL <span style={{ color: 'var(--green)' }}>360</span>
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 560, lineHeight: 1.6, margin: 0 }}>
+          <p
+            style={{
+              fontSize: 13,
+              color: 'var(--text-muted)',
+              maxWidth: 560,
+              lineHeight: 1.6,
+              margin: 0,
+            }}
+          >
             Informatica PowerCenter (IPC) Powermart XML exports, made browsable and
             platform-agnostic — viewer, modifier, operational history and DAGs, over one corpus.
           </p>
@@ -105,21 +138,41 @@ export function Landing({ onEnter }: LandingProps) {
         {data && <StatsGrid readiness={data} />}
 
         <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <h2 style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-muted)', margin: 0 }}>
+          <h2
+            style={{
+              fontSize: 12,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              color: 'var(--text-muted)',
+              margin: 0,
+            }}
+          >
             Four tabs
           </h2>
           <TabPreview onEnter={onEnter} />
         </section>
 
         <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <h2 style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-muted)', margin: 0 }}>
+          <h2
+            style={{
+              fontSize: 12,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              color: 'var(--text-muted)',
+              margin: 0,
+            }}
+          >
             Architecture
           </h2>
           <ArchitectureDiagram onEnter={onEnter} />
         </section>
 
         <ProgressStrip progress={data?.progress} />
-        <EnvironmentPanel roots={data?.roots} gcpProjectId={config?.gcpProjectId} region={config?.region} />
+        <EnvironmentPanel
+          roots={data?.roots}
+          gcpProjectId={config?.gcpProjectId}
+          region={config?.region}
+        />
       </div>
     </div>
   )

@@ -13,13 +13,17 @@ import { REL } from './api/__fixtures__/relationships'
 // two recipes can sit side by side in separate browser tabs.
 
 const TREE = {
-  name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
+  name: 'xmltobq',
+  path: '',
+  kind: 'dir',
+  layer: 'root',
   children: [
     {
-      name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
-      children: [
-        { name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' },
-      ],
+      name: 'CDM',
+      path: 'CDM',
+      kind: 'dir',
+      layer: 'CDM',
+      children: [{ name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' }],
     },
   ],
 }
@@ -46,20 +50,36 @@ const CLUSTER_INDEX = {
   mode: 'mock',
   dates: OPERATIONAL_DATES.dates,
   totals: { clusters: 1, recipes: 1, dates: 2, rows: 2 },
-  clusters: [{ name: 'cl-a', recipeCount: 1, dateIdx: [0, 1], rows: 2, ok: 2, ko: 0,
-    lastDate: '2026-07-29', lastStatus: 'SUCCESS' }],
+  clusters: [
+    {
+      name: 'cl-a',
+      recipeCount: 1,
+      dateIdx: [0, 1],
+      rows: 2,
+      ok: 2,
+      ko: 0,
+      lastDate: '2026-07-29',
+      lastStatus: 'SUCCESS',
+    },
+  ],
 }
 const OPERATIONAL_SUMMARY = { dates: OPERATIONAL_DATES.dates, recipes: [] }
 const APP_CONFIG = { gcpProjectId: 'mock-project' }
 
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
-  http.get('/api/summary', () => HttpResponse.json({ xmlCount: 1, recipeCount: 1, ddlCount: 0, dirCount: 1, layers: ['CDM'] })),
+  http.get('/api/summary', () =>
+    HttpResponse.json({ xmlCount: 1, recipeCount: 1, ddlCount: 0, dirCount: 1, layers: ['CDM'] }),
+  ),
   http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json(RECIPE)),
   http.get('/api/ddl/CDM/m_FIX', () => HttpResponse.json({})),
   http.get('/api/expressions', () => HttpResponse.json([])),
-  http.get('/api/ipc/rules', () => HttpResponse.json({ rules: [], typeAliases: {}, keyAliases: {}, keySchema: {} })),
-  http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+  http.get('/api/ipc/rules', () =>
+    HttpResponse.json({ rules: [], typeAliases: {}, keyAliases: {}, keySchema: {} }),
+  ),
+  http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () =>
+    HttpResponse.json({ version: 1, nodes: {} }),
+  ),
   http.post('/api/recipes/validate', () => HttpResponse.json({ valid: true, errors: [] })),
   http.get('/api/relationships', () => HttpResponse.json(REL)),
   http.get('/api/operational/dates', () => HttpResponse.json(OPERATIONAL_DATES)),
@@ -67,21 +87,25 @@ const server = setupServer(
   http.get('/api/config', () => HttpResponse.json(APP_CONFIG)),
   http.get('/api/diagnostics', () => HttpResponse.json({ status: 'ok' })),
   // Sub-project 11 Task 10: the landing page (the app's initial view) fetches this once.
-  http.get('/api/readiness', () => HttpResponse.json({
-    status: 'ok',
-    corpus: { xml: 1, recipes: 1, ddl: 0, dirs: 1, layers: ['CDM'] },
-    operational: { clusters: 1, recipes: 1, days: 2, rows: 2, mode: 'mock' },
-    dags: { workflows: 1 },
-    roots: [{ name: 'corpus', resolved: '/mock/xmltobq', tier: 'real', status: 'ok' }],
-    progress: { tasksDone: 1, tasksTotal: 1, adrs: 1 },
-  })),
+  http.get('/api/readiness', () =>
+    HttpResponse.json({
+      status: 'ok',
+      corpus: { xml: 1, recipes: 1, ddl: 0, dirs: 1, layers: ['CDM'] },
+      operational: { clusters: 1, recipes: 1, days: 2, rows: 2, mode: 'mock' },
+      dags: { workflows: 1 },
+      roots: [{ name: 'corpus', resolved: '/mock/xmltobq', tier: 'real', status: 'ok' }],
+      progress: { tasksDone: 1, tasksTotal: 1, adrs: 1 },
+    }),
+  ),
   // Registered BEFORE the parameterized `:date` handler below — MSW matches in
   // registration order, and `:date` would otherwise swallow "runs" as a date
   // (same hazard ETLDag.test.tsx documents).
   http.get('*/api/operational/runs', () => HttpResponse.json({ limit: 10, byRecipe: {} })),
   // Same registration-order hazard: `:date` would otherwise swallow "clusters".
   http.get('*/api/operational/clusters', () => HttpResponse.json(CLUSTER_INDEX)),
-  http.get('*/api/operational/:date', ({ params }) => HttpResponse.json({ date: String(params.date), rows: [] })),
+  http.get('*/api/operational/:date', ({ params }) =>
+    HttpResponse.json({ date: String(params.date), rows: [] }),
+  ),
 )
 beforeAll(() => server.listen())
 afterEach(() => {
@@ -114,7 +138,11 @@ async function renderShell() {
 
 describe('App — focus mode (Task 15)', () => {
   it('?focus=<recipePath> renders only that recipe, full-viewport: no tab bar, no Explorer', async () => {
-    window.history.replaceState({}, '', '/?focus=' + encodeURIComponent('CDM/m_FIX/_ETL_m_FIX.json'))
+    window.history.replaceState(
+      {},
+      '',
+      '/?focus=' + encodeURIComponent('CDM/m_FIX/_ETL_m_FIX.json'),
+    )
     renderApp()
 
     // Recipe header renders the file name (as the <h2> title — the canvas
@@ -134,9 +162,16 @@ describe('App — focus mode (Task 15)', () => {
   })
 
   it('a ?focus= value that does not resolve to a real recipe degrades to the existing recipe-fetch error state, not a blank screen', async () => {
-    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_MISSING.json', () =>
-      HttpResponse.json({ title: 'Not found', detail: 'No such recipe.' }, { status: 404 })))
-    window.history.replaceState({}, '', '/?focus=' + encodeURIComponent('CDM/m_FIX/_ETL_MISSING.json'))
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_MISSING.json', () =>
+        HttpResponse.json({ title: 'Not found', detail: 'No such recipe.' }, { status: 404 }),
+      ),
+    )
+    window.history.replaceState(
+      {},
+      '',
+      '/?focus=' + encodeURIComponent('CDM/m_FIX/_ETL_MISSING.json'),
+    )
 
     renderApp()
 
@@ -178,10 +213,16 @@ describe('App — landing page (Task 10)', () => {
 
   // focus mode is a deep link into one recipe — it must not be interrupted by an intro screen.
   it('bypasses the landing page entirely in focus mode', async () => {
-    window.history.replaceState({}, '', '/?focus=' + encodeURIComponent('CDM/m_FIX/_ETL_m_FIX.json'))
+    window.history.replaceState(
+      {},
+      '',
+      '/?focus=' + encodeURIComponent('CDM/m_FIX/_ETL_m_FIX.json'),
+    )
     renderApp()
 
-    await waitFor(() => expect(screen.queryByRole('button', { name: /^enter/i })).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /^enter/i })).not.toBeInTheDocument(),
+    )
     // Positive half: the absent Enter button only proves the landing didn't render, not that
     // the recipe editor did — assert the editor itself is up, standalone (same marker the
     // "App — focus mode" describe block's own first test uses).
@@ -251,8 +292,14 @@ describe('App — related mode', () => {
   it('renders the related neighbourhood standalone, with no tab shell', async () => {
     // The second URL mode, read exactly like ?focus=. This is what makes ⌘/middle-clicking
     // "Show all related" open a genuine, shareable browser tab.
-    window.history.replaceState({}, '', '/?related=' + encodeURIComponent('table:CDM.LKP_PAIS')
-      + '&clusters=' + encodeURIComponent('cluster-a,cluster-b'))
+    window.history.replaceState(
+      {},
+      '',
+      '/?related=' +
+        encodeURIComponent('table:CDM.LKP_PAIS') +
+        '&clusters=' +
+        encodeURIComponent('cluster-a,cluster-b'),
+    )
     renderApp()
 
     expect(await screen.findByTestId('related-overlay')).toBeInTheDocument()

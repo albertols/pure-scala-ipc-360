@@ -13,11 +13,25 @@ const NODES: LineageNodeT[] = [
   { id: 't_src', kind: 'table', name: 'STG.SRC', layer: 'STG', hop: -2, clusters: [] },
   { id: 'r_up', kind: 'recipe', name: '_ETL_up.json', layer: 'ODS', hop: -1, clusters: ['cl-a'] },
   { id: 'seed', kind: 'table', name: 'ODS.MIDDLE', layer: 'ODS', hop: 0, clusters: [] },
-  { id: 'r_down', kind: 'recipe', name: '_ETL_down.json', layer: 'DWH', hop: 1, clusters: ['cl-a'] },
+  {
+    id: 'r_down',
+    kind: 'recipe',
+    name: '_ETL_down.json',
+    layer: 'DWH',
+    hop: 1,
+    clusters: ['cl-a'],
+  },
   { id: 't_out', kind: 'table', name: 'DWH.OUT', layer: 'DWH', hop: 2, clusters: [] },
   // Sibling branch: a descendant of the seed's ANCESTOR, so it is in the lineage but not on
   // any path through the seed — exactly what tracing should dim.
-  { id: 'r_side', kind: 'recipe', name: '_ETL_side.json', layer: 'CDM', hop: -1, clusters: ['cl-a'] },
+  {
+    id: 'r_side',
+    kind: 'recipe',
+    name: '_ETL_side.json',
+    layer: 'CDM',
+    hop: -1,
+    clusters: ['cl-a'],
+  },
   { id: 't_side', kind: 'table', name: 'CDM.SIDE', layer: 'CDM', hop: 0, clusters: [] },
 ]
 const EDGES: LineageT['edges'] = [
@@ -30,13 +44,25 @@ const EDGES: LineageT['edges'] = [
   { from: 't_src', to: 'r_side', kind: 'source' },
   { from: 'r_side', to: 't_side', kind: 'writes' },
 ]
-const LINEAGE: LineageT = { seed: 'seed', nodes: NODES, edges: EDGES, truncated: false, totalReachable: 7 }
+const LINEAGE: LineageT = {
+  seed: 'seed',
+  nodes: NODES,
+  edges: EDGES,
+  truncated: false,
+  totalReachable: 7,
+}
 
 const server = setupServer(
   http.get('/api/operational/lineage', ({ request }) => {
     const url = new URL(request.url)
     if (url.searchParams.get('node') === 'empty') {
-      return HttpResponse.json({ seed: 'empty', nodes: [], edges: [], truncated: false, totalReachable: 0 })
+      return HttpResponse.json({
+        seed: 'empty',
+        nodes: [],
+        edges: [],
+        truncated: false,
+        totalReachable: 0,
+      })
     }
     if (url.searchParams.get('node') === 'big') {
       return HttpResponse.json({ ...LINEAGE, seed: 'big', truncated: true, totalReachable: 312 })
@@ -46,7 +72,10 @@ const server = setupServer(
   http.get('/api/config', () => HttpResponse.json({})),
 )
 beforeAll(() => server.listen())
-afterEach(() => { server.resetHandlers(); cleanup() })
+afterEach(() => {
+  server.resetHandlers()
+  cleanup()
+})
 afterAll(() => server.close())
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -72,8 +101,9 @@ describe('LineageFlow', () => {
 
   it('counts upstream and downstream separately in the header', async () => {
     render(<LineageFlow nodeId="seed" />, { wrapper })
-    expect(await screen.findByTestId('lineage-summary'))
-      .toHaveTextContent(/3 upstream .* 2 downstream/)
+    expect(await screen.findByTestId('lineage-summary')).toHaveTextContent(
+      /3 upstream .* 2 downstream/,
+    )
   })
 
   it('states what it is not showing when the budget was spent', async () => {
@@ -120,7 +150,6 @@ describe('LineageFlow — opening position', () => {
     expect(scroller.scrollLeft).toBeLessThanOrEqual(seedX + LINEAGE_FOOTPRINT.width)
   })
 })
-
 
 // ─── banded layout, tracing, chrome and manual arrangement (spec §15) ───────
 
@@ -186,8 +215,11 @@ describe('LineageFlow — chrome', () => {
     await screen.findByText('ODS.MIDDLE')
     const before = container.querySelectorAll('[data-lineage-card]').length
 
-    fireEvent.click([...document.querySelectorAll('[data-testid="lineage-layer-filter"] button')]
-      .find(b => b.textContent === 'DWH')!)
+    fireEvent.click(
+      [...document.querySelectorAll('[data-testid="lineage-layer-filter"] button')].find(
+        b => b.textContent === 'DWH',
+      )!,
+    )
 
     expect(container.querySelectorAll('[data-lineage-card]').length).toBe(before)
     expect(container.querySelectorAll('[data-dimmed="true"]').length).toBeGreaterThan(0)
@@ -223,8 +255,9 @@ describe('LineageFlow — details and re-seeding', () => {
 
 describe('LineageFlow — manual arrangement', () => {
   const posOf = (id: string) => {
-    const el = [...document.querySelectorAll<HTMLElement>('[data-lineage-card]')]
-      .find(e => e.getAttribute('data-lineage-card') === id)!
+    const el = [...document.querySelectorAll<HTMLElement>('[data-lineage-card]')].find(
+      e => e.getAttribute('data-lineage-card') === id,
+    )!
     return { left: el.style.left, top: el.style.top }
   }
 
@@ -239,8 +272,9 @@ describe('LineageFlow — manual arrangement', () => {
     await screen.findByText('ODS.MIDDLE')
     const before = { seed: posOf('seed'), other: posOf('t_out') }
 
-    const card = [...document.querySelectorAll<HTMLElement>('[data-lineage-card]')]
-      .find(e => e.getAttribute('data-lineage-card') === 'seed')!
+    const card = [...document.querySelectorAll<HTMLElement>('[data-lineage-card]')].find(
+      e => e.getAttribute('data-lineage-card') === 'seed',
+    )!
     fireEvent.pointerDown(card, { clientX: 0, clientY: 0, pointerId: 1 })
     fireEvent.pointerMove(window, { clientX: 40, clientY: 25, pointerId: 1 })
     fireEvent.pointerUp(window, { pointerId: 1 })

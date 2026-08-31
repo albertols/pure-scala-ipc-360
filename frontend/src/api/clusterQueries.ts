@@ -100,8 +100,10 @@ export const useScopedRelationships = (clusters: string[]) => {
   const key = [...clusters].sort()
   return useQuery({
     queryKey: ['relationships', 'scoped', key.join(',')],
-    queryFn: () => apiGet<RelationshipGraph>(
-      `/relationships?${key.map(c => `clusters=${encodeURIComponent(c)}`).join('&')}`),
+    queryFn: () =>
+      apiGet<RelationshipGraph>(
+        `/relationships?${key.map(c => `clusters=${encodeURIComponent(c)}`).join('&')}`,
+      ),
     staleTime: STALE_MS,
     enabled: key.length > 0,
   })
@@ -170,8 +172,8 @@ export const LINEAGE_MAX_LIMIT = 600
 export const useLineage = (nodeId: string | null, limit: number = LINEAGE_DEFAULT_LIMIT) =>
   useQuery({
     queryKey: ['lineage', nodeId, limit],
-    queryFn: () => apiGet<LineageT>(
-      `/operational/lineage?node=${encodeURIComponent(nodeId!)}&limit=${limit}`),
+    queryFn: () =>
+      apiGet<LineageT>(`/operational/lineage?node=${encodeURIComponent(nodeId!)}&limit=${limit}`),
     staleTime: STALE_MS,
     enabled: !!nodeId,
   })
@@ -204,12 +206,15 @@ export function useRuns(recipes: string[], limit = 10): RunsResult {
   return useQueries({
     queries: groups.map(group => ({
       queryKey: ['runs', limit, group.join(',')] as const,
-      queryFn: () => apiGet<components['schemas']['RunsDto']>(
-        `/operational/runs?${runsQuery(group, limit)}`),
+      queryFn: () =>
+        apiGet<components['schemas']['RunsDto']>(`/operational/runs?${runsQuery(group, limit)}`),
       staleTime: STALE_MS,
     })),
     combine: results => ({
-      byRecipe: Object.assign({}, ...results.map(r => r.data?.byRecipe ?? {})) as Record<string, RunT[]>,
+      byRecipe: Object.assign({}, ...results.map(r => r.data?.byRecipe ?? {})) as Record<
+        string,
+        RunT[]
+      >,
       isLoading: results.some(r => r.isLoading),
       isError: results.some(r => r.isError),
     }),

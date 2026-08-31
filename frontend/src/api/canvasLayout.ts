@@ -2,8 +2,13 @@ import type { Connection, ETLNode } from '../types'
 
 // Layout constants (adapter-local; values mirror NodeBox geometry — header 44,
 // port row 22, +10 pad; column pitch mirrors the mock's 230).
-export const X0 = 40, Y0 = 160, COL_PITCH = 230, V_GAP = 40
-export const HEADER_H = 44, PORT_H = 22, PAD = 10
+export const X0 = 40,
+  Y0 = 160,
+  COL_PITCH = 230,
+  V_GAP = 40
+export const HEADER_H = 44,
+  PORT_H = 22,
+  PAD = 10
 export const nodeHeight = (n: { ports: unknown[] }) => HEADER_H + n.ports.length * PORT_H + PAD
 
 /** Unique-edge predecessor sets, keyed by node id (dedupes multi-field connectors). */
@@ -77,7 +82,9 @@ export function layoutNodes(nodes: ETLNode[], connections: Connection[]): void {
 
   const yById = new Map<string, number>()
   const avgPredY = (n: ETLNode): number => {
-    const ys = [...(preds.get(n.id) ?? [])].map(p => yById.get(p)).filter((y): y is number => y !== undefined)
+    const ys = [...(preds.get(n.id) ?? [])]
+      .map(p => yById.get(p))
+      .filter((y): y is number => y !== undefined)
     if (ys.length === 0) return 0
     return ys.reduce((a, b) => a + b, 0) / ys.length
   }

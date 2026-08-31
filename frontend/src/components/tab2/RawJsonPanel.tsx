@@ -29,9 +29,7 @@ export function serializeRecipe(content: unknown): string {
   return JSON.stringify(content ?? {}, null, 2)
 }
 
-type ParseResult =
-  | { ok: true; value: RecipeJson }
-  | { ok: false; message: string }
+type ParseResult = { ok: true; value: RecipeJson } | { ok: false; message: string }
 
 /** A recipe document is a JSON OBJECT. `JSON.parse` happily accepts `[]`,
  * `"x"`, `42` and `null` too, and every one of those would break the adapters
@@ -44,7 +42,13 @@ export function parseRecipeText(text: string): ParseResult {
     return { ok: false, message: (e as Error).message }
   }
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    return { ok: false, message: 'A recipe must be a JSON object (got ' + (Array.isArray(value) ? 'an array' : String(value === null ? 'null' : typeof value)) + ').' }
+    return {
+      ok: false,
+      message:
+        'A recipe must be a JSON object (got ' +
+        (Array.isArray(value) ? 'an array' : String(value === null ? 'null' : typeof value)) +
+        ').',
+    }
   }
   return { ok: true, value: value as RecipeJson }
 }
@@ -94,11 +98,16 @@ export function RawJsonPanel({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: PANEL_W, maxWidth: '92vw' }}>
       {metadata}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '5px 10px', background: 'var(--surface-2)',
-        borderBottom: '1px solid var(--border)',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '5px 10px',
+          background: 'var(--surface-2)',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
         <span style={{ fontSize: 10, color: '#4a5570' }}>Raw JSON</span>
         {editing && (
           <span style={{ fontSize: 10, color: '#fbbf24', fontFamily: 'JetBrains Mono, monospace' }}>
@@ -112,19 +121,32 @@ export function RawJsonPanel({
             <button
               onClick={() => onTextChange(null)}
               disabled={!editing}
-              style={{ ...ghostButtonStyle, opacity: editing ? 1 : 0.4, cursor: editing ? 'pointer' : 'default' }}
-            >Revert</button>
+              style={{
+                ...ghostButtonStyle,
+                opacity: editing ? 1 : 0.4,
+                cursor: editing ? 'pointer' : 'default',
+              }}
+            >
+              Revert
+            </button>
             <button
               onClick={apply}
               disabled={!parsed?.ok}
               style={{
-                padding: '5px 14px', borderRadius: 5,
-                background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-                color: '#4f9cf9', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
+                padding: '5px 14px',
+                borderRadius: 5,
+                background: 'rgba(79,156,249,0.15)',
+                border: '1px solid #4f9cf9',
+                color: '#4f9cf9',
+                fontSize: 11,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
                 opacity: parsed?.ok ? 1 : 0.4,
                 cursor: parsed?.ok ? 'pointer' : 'default',
               }}
-            >Apply</button>
+            >
+              Apply
+            </button>
           </>
         )}
       </div>
@@ -136,19 +158,37 @@ export function RawJsonPanel({
         spellCheck={false}
         onChange={e => onTextChange(e.target.value)}
         style={{
-          margin: 0, padding: '10px 12px',
-          height: EDITOR_H, resize: 'vertical',
-          background: 'var(--bg)', border: 'none', borderRadius: 0,
+          margin: 0,
+          padding: '10px 12px',
+          height: EDITOR_H,
+          resize: 'vertical',
+          background: 'var(--bg)',
+          border: 'none',
+          borderRadius: 0,
           borderBottom: '1px solid var(--border)',
-          fontSize: 11, color: '#c8d3e8',
+          fontSize: 11,
+          color: '#c8d3e8',
           fontFamily: 'JetBrains Mono, monospace',
-          lineHeight: 1.6, outline: 'none', whiteSpace: 'pre',
+          lineHeight: 1.6,
+          outline: 'none',
+          whiteSpace: 'pre',
         }}
       />
       {parsed && !parsed.ok && (
-        <div style={{ padding: '8px 12px', color: 'var(--red)', fontSize: 11, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div
+          style={{
+            padding: '8px 12px',
+            color: 'var(--red)',
+            fontSize: 11,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
           <div>{parsed.message}</div>
-          <div style={{ color: '#4a5570', fontSize: 10 }}>The draft is untouched until this parses.</div>
+          <div style={{ color: '#4a5570', fontSize: 10 }}>
+            The draft is untouched until this parses.
+          </div>
         </div>
       )}
     </div>

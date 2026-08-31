@@ -7,7 +7,9 @@ import React from 'react'
 import { useLayout, putLayout } from './layoutQueries'
 
 const server = setupServer(
-  http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+  http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () =>
+    HttpResponse.json({ version: 1, nodes: {} }),
+  ),
 )
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())

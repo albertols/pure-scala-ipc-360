@@ -83,7 +83,17 @@ function Label({ x, y, lines, size = 12, weight = 700, color = TEXT }: LabelProp
 
 // ─── Decorative glyphs (aria-hidden; every one sits beside a real text label) ──
 
-function Glyph({ x, y, color, children }: { x: number; y: number; color: string; children: ReactNode }) {
+function Glyph({
+  x,
+  y,
+  color,
+  children,
+}: {
+  x: number
+  y: number
+  color: string
+  children: ReactNode
+}) {
   return (
     <g transform={`translate(${x},${y})`} aria-hidden="true" style={{ color }}>
       {children}
@@ -94,7 +104,16 @@ function Glyph({ x, y, color, children }: { x: number; y: number; color: string;
 function IconIpc() {
   return (
     <>
-      <rect x="2" y="4" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" />
+      <rect
+        x="2"
+        y="4"
+        width="6"
+        height="6"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        fill="none"
+      />
       <line x1="4" y1="4" x2="4" y2="1" stroke="currentColor" strokeWidth="1.2" />
       <line x1="6" y1="4" x2="6" y2="1" stroke="currentColor" strokeWidth="1.2" />
       <line x1="8" y1="6.5" x2="12" y2="6.5" stroke="currentColor" strokeWidth="1.2" />
@@ -170,7 +189,13 @@ function IconSpring() {
         fill="none"
         strokeLinejoin="round"
       />
-      <path d="M2.5 11.5c2.2-2.3 4.4-4.5 8.5-8.3" stroke="currentColor" strokeWidth="1" fill="none" strokeLinecap="round" />
+      <path
+        d="M2.5 11.5c2.2-2.3 4.4-4.5 8.5-8.3"
+        stroke="currentColor"
+        strokeWidth="1"
+        fill="none"
+        strokeLinecap="round"
+      />
     </>
   )
 }
@@ -180,7 +205,11 @@ function IconAirflow() {
     <>
       <circle cx="7" cy="7" r="1.2" fill="currentColor" />
       <path d="M7 7C6.6 4.3 5 2.3 2.8 2c.3 2.6 1.9 4.4 4.2 5z" fill="currentColor" opacity="0.85" />
-      <path d="M7 7c2.6.2 4.7-1.1 5.4-3.5-2.6-.2-4.7 1.1-5.4 3.5z" fill="currentColor" opacity="0.7" />
+      <path
+        d="M7 7c2.6.2 4.7-1.1 5.4-3.5-2.6-.2-4.7 1.1-5.4 3.5z"
+        fill="currentColor"
+        opacity="0.7"
+      />
       <path d="M7 7c-1 2.5-.6 5 1.4 6.6.9-2.4.5-5-1.4-6.6z" fill="currentColor" opacity="0.55" />
     </>
   )
@@ -205,9 +234,33 @@ function IconGcp() {
 function IconRows() {
   return (
     <>
-      <line x1="2" y1="4" x2="12" y2="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <line x1="2" y1="10" x2="9" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <line
+        x1="2"
+        y1="4"
+        x2="12"
+        y2="4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="2"
+        y1="7"
+        x2="12"
+        y2="7"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="2"
+        y1="10"
+        x2="9"
+        y2="10"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
     </>
   )
 }
@@ -245,23 +298,62 @@ function TabRegion({ x, y, w, h, tab, ariaLabel, onActivate, children }: TabRegi
       onBlur={() => setFocused(false)}
       style={{ cursor: 'pointer' }}
     >
-      <rect x={x} y={y} width={w} height={h} rx={10} fill={SURFACE} stroke={accent} strokeWidth={focused ? 2.4 : 1.4} />
+      <rect
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        rx={10}
+        fill={SURFACE}
+        stroke={accent}
+        strokeWidth={focused ? 2.4 : 1.4}
+      />
       {children}
     </g>
   )
 }
 
-function StaticNode({ x, y, w, h, children }: { x: number; y: number; w: number; h: number; children: ReactNode }) {
+function StaticNode({
+  x,
+  y,
+  w,
+  h,
+  children,
+}: {
+  x: number
+  y: number
+  w: number
+  h: number
+  children: ReactNode
+}) {
   return (
     <g>
-      <rect x={x} y={y} width={w} height={h} rx={10} fill={SURFACE} stroke={BORDER} strokeWidth={1.2} />
+      <rect
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        rx={10}
+        fill={SURFACE}
+        stroke={BORDER}
+        strokeWidth={1.2}
+      />
       {children}
     </g>
   )
 }
 
 function Connector({ d }: { d: string }) {
-  return <path d={d} stroke={BORDER} strokeWidth={1.4} fill="none" markerEnd="url(#arch-diagram-arrow)" aria-hidden="true" />
+  return (
+    <path
+      d={d}
+      stroke={BORDER}
+      strokeWidth={1.4}
+      fill="none"
+      markerEnd="url(#arch-diagram-arrow)"
+      aria-hidden="true"
+    />
+  )
 }
 
 // ─── Layout ────────────────────────────────────────────────────────────────────
@@ -298,7 +390,15 @@ export function ArchitectureDiagram({ onEnter }: ArchitectureDiagramProps) {
       </title>
 
       <defs>
-        <marker id="arch-diagram-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <marker
+          id="arch-diagram-arrow"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
           <path d="M0,0 L10,5 L0,10 z" fill={BORDER} />
         </marker>
       </defs>
@@ -314,7 +414,15 @@ export function ArchitectureDiagram({ onEnter }: ArchitectureDiagramProps) {
       <Connector d="M390,458 L390,492" />
 
       {/* row A: IPC Powermart XML → parser → recipes/DDL */}
-      <TabRegion x={20} y={ROW_A_Y} w={230} h={ROW_A_H} tab="viewer" ariaLabel="IPC Powermart XML and the xmltobq corpus — open the IPC ETL Viewer tab" onActivate={() => onEnter('viewer')}>
+      <TabRegion
+        x={20}
+        y={ROW_A_Y}
+        w={230}
+        h={ROW_A_H}
+        tab="viewer"
+        ariaLabel="IPC Powermart XML and the xmltobq corpus — open the IPC ETL Viewer tab"
+        onActivate={() => onEnter('viewer')}
+      >
         <Glyph x={34} y={ROW_A_Y + 12} color={tabAccent('viewer')}>
           <IconIpc />
         </Glyph>
@@ -322,7 +430,14 @@ export function ArchitectureDiagram({ onEnter }: ArchitectureDiagramProps) {
           <IconXml />
         </Glyph>
         <Label x={34} y={ROW_A_Y + 44} lines={['IPC Powermart XML']} color={tabAccent('viewer')} />
-        <Label x={34} y={ROW_A_Y + 62} lines={['xmltobq corpus → Viewer']} size={10} weight={500} color={TEXT_MUTED} />
+        <Label
+          x={34}
+          y={ROW_A_Y + 62}
+          lines={['xmltobq corpus → Viewer']}
+          size={10}
+          weight={500}
+          color={TEXT_MUTED}
+        />
       </TabRegion>
 
       <StaticNode x={280} y={ROW_A_Y} w={190} h={ROW_A_H}>
@@ -330,40 +445,117 @@ export function ArchitectureDiagram({ onEnter }: ArchitectureDiagramProps) {
           <IconJava />
         </Glyph>
         <Label x={294} y={ROW_A_Y + 44} lines={['parser/ (Scala 2.12)']} size={11.5} />
-        <Label x={294} y={ROW_A_Y + 62} lines={['XML → JSON + DDL']} size={10} weight={500} color={TEXT_MUTED} />
+        <Label
+          x={294}
+          y={ROW_A_Y + 62}
+          lines={['XML → JSON + DDL']}
+          size={10}
+          weight={500}
+          color={TEXT_MUTED}
+        />
       </StaticNode>
 
-      <TabRegion x={500} y={ROW_A_Y} w={260} h={ROW_A_H} tab="modifier" ariaLabel="_ETL_*.json recipes and BigQuery DDL — open the ETL Modifier tab" onActivate={() => onEnter('modifier')}>
+      <TabRegion
+        x={500}
+        y={ROW_A_Y}
+        w={260}
+        h={ROW_A_H}
+        tab="modifier"
+        ariaLabel="_ETL_*.json recipes and BigQuery DDL — open the ETL Modifier tab"
+        onActivate={() => onEnter('modifier')}
+      >
         <Glyph x={514} y={ROW_A_Y + 12} color={tabAccent('modifier')}>
           <IconJson />
         </Glyph>
-        <Label x={514} y={ROW_A_Y + 44} lines={['_ETL_*.json recipes + DDL']} color={tabAccent('modifier')} />
-        <Label x={514} y={ROW_A_Y + 62} lines={['BigQuery DDL → Modifier']} size={10} weight={500} color={TEXT_MUTED} />
+        <Label
+          x={514}
+          y={ROW_A_Y + 44}
+          lines={['_ETL_*.json recipes + DDL']}
+          color={tabAccent('modifier')}
+        />
+        <Label
+          x={514}
+          y={ROW_A_Y + 62}
+          lines={['BigQuery DDL → Modifier']}
+          size={10}
+          weight={500}
+          color={TEXT_MUTED}
+        />
       </TabRegion>
 
       {/* row B: the three data roots that feed the backend */}
-      <TabRegion x={20} y={ROW_B_Y} w={230} h={ROW_B_H} tab="dag" ariaLabel="DWH_CONTROL control schema and workflows — open the ETL DAG tab" onActivate={() => onEnter('dag')}>
+      <TabRegion
+        x={20}
+        y={ROW_B_Y}
+        w={230}
+        h={ROW_B_H}
+        tab="dag"
+        ariaLabel="DWH_CONTROL control schema and workflows — open the ETL DAG tab"
+        onActivate={() => onEnter('dag')}
+      >
         <Glyph x={34} y={ROW_B_Y + 12} color={tabAccent('dag')}>
           <IconAirflow />
         </Glyph>
         <Label x={34} y={ROW_B_Y + 44} lines={['DWH_CONTROL']} color={tabAccent('dag')} />
-        <Label x={34} y={ROW_B_Y + 62} lines={['control schema, workflows → DAG']} size={10} weight={500} color={TEXT_MUTED} />
+        <Label
+          x={34}
+          y={ROW_B_Y + 62}
+          lines={['control schema, workflows → DAG']}
+          size={10}
+          weight={500}
+          color={TEXT_MUTED}
+        />
       </TabRegion>
 
-      <TabRegion x={280} y={ROW_B_Y} w={230} h={ROW_B_H} tab="operational" ariaLabel="composer b15 job history — open the ETL Operational tab" onActivate={() => onEnter('operational')}>
+      <TabRegion
+        x={280}
+        y={ROW_B_Y}
+        w={230}
+        h={ROW_B_H}
+        tab="operational"
+        ariaLabel="composer b15 job history — open the ETL Operational tab"
+        onActivate={() => onEnter('operational')}
+      >
         <Glyph x={294} y={ROW_B_Y + 12} color={tabAccent('operational')}>
           <IconRows />
         </Glyph>
-        <Label x={294} y={ROW_B_Y + 44} lines={['composer (b15 CSVs)']} color={tabAccent('operational')} />
-        <Label x={294} y={ROW_B_Y + 62} lines={['job history → Operational']} size={10} weight={500} color={TEXT_MUTED} />
+        <Label
+          x={294}
+          y={ROW_B_Y + 44}
+          lines={['composer (b15 CSVs)']}
+          color={tabAccent('operational')}
+        />
+        <Label
+          x={294}
+          y={ROW_B_Y + 62}
+          lines={['job history → Operational']}
+          size={10}
+          weight={500}
+          color={TEXT_MUTED}
+        />
       </TabRegion>
 
-      <TabRegion x={540} y={ROW_B_Y} w={230} h={ROW_B_H} tab="viewer" ariaLabel="xmltobq corpus — open the IPC ETL Viewer tab" onActivate={() => onEnter('viewer')}>
+      <TabRegion
+        x={540}
+        y={ROW_B_Y}
+        w={230}
+        h={ROW_B_H}
+        tab="viewer"
+        ariaLabel="xmltobq corpus — open the IPC ETL Viewer tab"
+        onActivate={() => onEnter('viewer')}
+      >
         <Glyph x={554} y={ROW_B_Y + 12} color={tabAccent('viewer')}>
           <IconXml />
         </Glyph>
         <Label x={554} y={ROW_B_Y + 44} lines={['xmltobq (corpus)']} color={tabAccent('viewer')} />
-        <Label x={554} y={ROW_B_Y + 62} lines={['IPC exports → Viewer']} size={10} weight={500} color={TEXT_MUTED} />
+        <Label
+          x={554}
+          y={ROW_B_Y + 62}
+          lines={['IPC exports → Viewer']}
+          size={10}
+          weight={500}
+          color={TEXT_MUTED}
+        />
       </TabRegion>
 
       {/* backend */}
@@ -372,7 +564,14 @@ export function ArchitectureDiagram({ onEnter }: ArchitectureDiagramProps) {
           <IconSpring />
         </Glyph>
         <Label x={286} y={BACKEND_Y + 42} lines={['backend/ (Spring Boot 3.3)']} size={11.5} />
-        <Label x={286} y={BACKEND_Y + 60} lines={['calls Scala in-JVM (ADR-0001)']} size={10} weight={500} color={TEXT_MUTED} />
+        <Label
+          x={286}
+          y={BACKEND_Y + 60}
+          lines={['calls Scala in-JVM (ADR-0001)']}
+          size={10}
+          weight={500}
+          color={TEXT_MUTED}
+        />
       </StaticNode>
 
       {/* frontend, one chip per TABS entry, sharing that tab's own accent + icon */}
@@ -383,11 +582,26 @@ export function ArchitectureDiagram({ onEnter }: ArchitectureDiagramProps) {
           const chipY = FRONTEND_Y + 44
           return (
             <g key={tab.id}>
-              <rect x={chipX} y={chipY} width={92} height={44} rx={7} fill="none" stroke={tab.accent} strokeWidth={1} />
+              <rect
+                x={chipX}
+                y={chipY}
+                width={92}
+                height={44}
+                rx={7}
+                fill="none"
+                stroke={tab.accent}
+                strokeWidth={1}
+              />
               <Glyph x={chipX + 8} y={chipY + 8} color={tab.accent}>
                 {tab.icon}
               </Glyph>
-              <Label x={chipX + 26} y={chipY + 18} lines={[tabLabel(tab.id).replace(/^ETL |^IPC ETL /, '')]} size={9.5} color={tab.accent} />
+              <Label
+                x={chipX + 26}
+                y={chipY + 18}
+                lines={[tabLabel(tab.id).replace(/^ETL |^IPC ETL /, '')]}
+                size={9.5}
+                color={tab.accent}
+              />
             </g>
           )
         })}
@@ -401,7 +615,12 @@ export function ArchitectureDiagram({ onEnter }: ArchitectureDiagramProps) {
         <Glyph x={244} y={GCP_Y + 10} color={TEXT_MUTED}>
           <IconSpark />
         </Glyph>
-        <Label x={262} y={GCP_Y + 22} lines={['GCP: BigQuery · Dataproc · Cloud Logging']} size={10.5} />
+        <Label
+          x={262}
+          y={GCP_Y + 22}
+          lines={['GCP: BigQuery · Dataproc · Cloud Logging']}
+          size={10.5}
+        />
       </StaticNode>
     </svg>
   )

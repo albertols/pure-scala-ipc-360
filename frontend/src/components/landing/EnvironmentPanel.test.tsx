@@ -5,8 +5,18 @@ import { EnvironmentPanel } from './EnvironmentPanel'
 afterEach(cleanup)
 
 const ROOTS = [
-  { name: 'corpus', resolved: '/repo/parser/src/main/resources/xmltobq', tier: 'real', status: 'ok' },
-  { name: 'composer', resolved: '/repo/backend/src/main/resources/mock/composer', tier: 'mock', status: 'ok' },
+  {
+    name: 'corpus',
+    resolved: '/repo/parser/src/main/resources/xmltobq',
+    tier: 'real',
+    status: 'ok',
+  },
+  {
+    name: 'composer',
+    resolved: '/repo/backend/src/main/resources/mock/composer',
+    tier: 'mock',
+    status: 'ok',
+  },
 ]
 
 describe('EnvironmentPanel', () => {
@@ -20,10 +30,19 @@ describe('EnvironmentPanel', () => {
 
   // The panel exists to answer "is this pointed at MY data" — a broken root must say why.
   it('surfaces the hint when a root is unhealthy', () => {
-    render(<EnvironmentPanel roots={[
-      { name: 'composer', resolved: '/nope', tier: 'absent', status: 'ko',
-        hint: 'set composerRoot in config.json' },
-    ]} />)
+    render(
+      <EnvironmentPanel
+        roots={[
+          {
+            name: 'composer',
+            resolved: '/nope',
+            tier: 'absent',
+            status: 'ko',
+            hint: 'set composerRoot in config.json',
+          },
+        ]}
+      />,
+    )
 
     expect(screen.getByText(/set composerRoot in config.json/)).toBeInTheDocument()
   })

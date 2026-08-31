@@ -14,7 +14,12 @@ describe('MascotScene', () => {
   })
 
   it('renders the pruning scene when a root is unhealthy', () => {
-    render(<MascotScene status="degraded" failingRoot={{ name: 'composer', hint: 'set composerRoot in config.json' }} />)
+    render(
+      <MascotScene
+        status="degraded"
+        failingRoot={{ name: 'composer', hint: 'set composerRoot in config.json' }}
+      />,
+    )
 
     expect(screen.getByTestId('mascot-scene')).toHaveAttribute('data-mood', 'degraded')
     expect(screen.getByTestId('overlay-twigs')).toBeInTheDocument()
@@ -24,7 +29,12 @@ describe('MascotScene', () => {
   // The mascot IS the readiness indicator — a degraded mood that does not say WHY
   // is just a sad picture. This is the whole point of binding it to diagnostics.
   it('names the failing root and its hint when degraded', () => {
-    render(<MascotScene status="degraded" failingRoot={{ name: 'composer', hint: 'set composerRoot in config.json' }} />)
+    render(
+      <MascotScene
+        status="degraded"
+        failingRoot={{ name: 'composer', hint: 'set composerRoot in config.json' }}
+      />,
+    )
 
     expect(screen.getByText(/composer/)).toBeInTheDocument()
     expect(screen.getByText(/set composerRoot in config.json/)).toBeInTheDocument()

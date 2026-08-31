@@ -6,8 +6,14 @@ import { http, HttpResponse } from 'msw'
 import type { ReactNode } from 'react'
 import { createElement } from 'react'
 import {
-  chunk, chunkRecipes, runsQuery, useRuns, useClusterIndex, useScopedRelationships,
-  MAX_RECIPES_PER_REQUEST, QUERY_BUDGET_BYTES,
+  chunk,
+  chunkRecipes,
+  runsQuery,
+  useRuns,
+  useClusterIndex,
+  useScopedRelationships,
+  MAX_RECIPES_PER_REQUEST,
+  QUERY_BUDGET_BYTES,
 } from './clusterQueries'
 
 const seenRecipeCounts: number[] = []
@@ -15,27 +21,57 @@ const seenRunUrls: string[] = []
 const seenRelationshipUrls: string[] = []
 
 const server = setupServer(
-  http.get('*/api/operational/clusters', () => HttpResponse.json({
-    mode: 'mock',
-    dates: ['2026-07-28', '2026-07-29'],
-    totals: { clusters: 2, recipes: 3, dates: 2, rows: 5 },
-    clusters: [
-      { name: 'cl-a', recipeCount: 2, dateIdx: [0, 1], rows: 4, ok: 3, ko: 1,
-        lastDate: '2026-07-29', lastStatus: 'SUCCESS' },
-      { name: 'cl-b', recipeCount: 1, dateIdx: [1], rows: 1, ok: 1, ko: 0,
-        lastDate: '2026-07-29', lastStatus: 'SUCCESS' },
-    ],
-  })),
+  http.get('*/api/operational/clusters', () =>
+    HttpResponse.json({
+      mode: 'mock',
+      dates: ['2026-07-28', '2026-07-29'],
+      totals: { clusters: 2, recipes: 3, dates: 2, rows: 5 },
+      clusters: [
+        {
+          name: 'cl-a',
+          recipeCount: 2,
+          dateIdx: [0, 1],
+          rows: 4,
+          ok: 3,
+          ko: 1,
+          lastDate: '2026-07-29',
+          lastStatus: 'SUCCESS',
+        },
+        {
+          name: 'cl-b',
+          recipeCount: 1,
+          dateIdx: [1],
+          rows: 1,
+          ok: 1,
+          ko: 0,
+          lastDate: '2026-07-29',
+          lastStatus: 'SUCCESS',
+        },
+      ],
+    }),
+  ),
   http.get('*/api/operational/runs', ({ request }) => {
     const recipes = new URL(request.url).searchParams.getAll('recipe')
     seenRecipeCounts.push(recipes.length)
     seenRunUrls.push(request.url)
     return HttpResponse.json({
       limit: 10,
-      byRecipe: Object.fromEntries(recipes.map(r => [r, [
-        { date: '2026-07-29', clusterName: 'cl-a', jobId: `job-${r}`,
-          appStartIso: '2026-07-29T04:52:00.000Z', durationMin: 1.5, status: 'SUCCESS', message: '' },
-      ]])),
+      byRecipe: Object.fromEntries(
+        recipes.map(r => [
+          r,
+          [
+            {
+              date: '2026-07-29',
+              clusterName: 'cl-a',
+              jobId: `job-${r}`,
+              appStartIso: '2026-07-29T04:52:00.000Z',
+              durationMin: 1.5,
+              status: 'SUCCESS',
+              message: '',
+            },
+          ],
+        ]),
+      ),
     })
   }),
   http.get('*/api/relationships', ({ request }) => {
@@ -76,8 +112,10 @@ describe('chunk', () => {
 // 170 names 8 196 B => 400. That is every cluster above ~166 recipes, i.e. exactly the
 // large ones this sub-project exists to serve. So the bound is accumulated encoded
 // BYTES, with the count cap kept as a second, simultaneous bound.
-const PROBE_NAMES = Array.from({ length: 400 }, (_, i) =>
-  `_ETL_m_CAS_SCALE_PROBE_${String(i).padStart(4, '0')}_PADDING.json`)   // exactly 40 chars
+const PROBE_NAMES = Array.from(
+  { length: 400 },
+  (_, i) => `_ETL_m_CAS_SCALE_PROBE_${String(i).padStart(4, '0')}_PADDING.json`,
+) // exactly 40 chars
 
 describe('chunkRecipes', () => {
   it('names of exactly the corpus mean length, so the budget maths is the real one', () => {
@@ -172,7 +210,7 @@ describe('useRuns', () => {
     expect(result.current.byRecipe).toEqual({})
   })
 
-  it('reports isError when one chunk fails, without losing the surviving chunk\'s data', async () => {
+  it("reports isError when one chunk fails, without losing the surviving chunk's data", async () => {
     server.use(
       http.get('*/api/operational/runs', ({ request }) => {
         const recipes = new URL(request.url).searchParams.getAll('recipe')
@@ -182,10 +220,22 @@ describe('useRuns', () => {
         if (recipes.length === 1) return new HttpResponse(null, { status: 500 })
         return HttpResponse.json({
           limit: 10,
-          byRecipe: Object.fromEntries(recipes.map(r => [r, [
-            { date: '2026-07-29', clusterName: 'cl-a', jobId: `job-${r}`,
-              appStartIso: '2026-07-29T04:52:00.000Z', durationMin: 1.5, status: 'SUCCESS', message: '' },
-          ]])),
+          byRecipe: Object.fromEntries(
+            recipes.map(r => [
+              r,
+              [
+                {
+                  date: '2026-07-29',
+                  clusterName: 'cl-a',
+                  jobId: `job-${r}`,
+                  appStartIso: '2026-07-29T04:52:00.000Z',
+                  durationMin: 1.5,
+                  status: 'SUCCESS',
+                  message: '',
+                },
+              ],
+            ]),
+          ),
         })
       }),
     )
@@ -225,10 +275,14 @@ describe('useScopedRelationships', () => {
     const sharedWrapper = ({ children }: { children: ReactNode }) =>
       createElement(QueryClientProvider, { client: qc }, children)
 
-    const { result: r1 } = renderHook(() => useScopedRelationships(['cl-b', 'cl-a']), { wrapper: sharedWrapper })
+    const { result: r1 } = renderHook(() => useScopedRelationships(['cl-b', 'cl-a']), {
+      wrapper: sharedWrapper,
+    })
     await waitFor(() => expect(r1.current.data).toBeDefined())
 
-    const { result: r2 } = renderHook(() => useScopedRelationships(['cl-a', 'cl-b']), { wrapper: sharedWrapper })
+    const { result: r2 } = renderHook(() => useScopedRelationships(['cl-a', 'cl-b']), {
+      wrapper: sharedWrapper,
+    })
     await waitFor(() => expect(r2.current.data).toBeDefined())
 
     // Same cache entry: the second render's data came from cache, not a second request.

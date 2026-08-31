@@ -158,8 +158,13 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
 - Parser regression is verified once at the module move (Task 1: pre/post-move
   byte-diff of full corpus regeneration) plus the ongoing corpus contract test above —
   there is no standing JUnit regen-diff harness.
-- `make check` adds `tsc --noEmit` + `pnpm format --check` (frontend format backlog
-  documented in root `README.md`; it doesn't fail the target while that backlog exists).
+- `make check` adds `tsc --noEmit` + `pnpm format:check`, both **unguarded** — either one
+  failing fails the target. The formatter is prettier, configured in
+  `frontend/.prettierrc` to the style the codebase was already written in (single quotes,
+  no semicolons, 100 cols). It covers `frontend/src/**/*.{ts,tsx}` only; markdown, the
+  JSON fixtures, `index.css` and the generated `types.gen.ts` are deliberately excluded
+  (`frontend/.prettierignore` says why for each). Run `cd frontend && pnpm format` before
+  committing frontend changes.
 - `make validate-loop` (`scripts/validate_loop.sh`) is the frontend→middleware→backend
   gate, chaining four sweeps against a booted backend before the frontend hook tests:
   (1) health/relationships/operational curls (`/api/health`, `/api/relationships`,

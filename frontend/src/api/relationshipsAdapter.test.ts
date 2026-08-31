@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
-  DENSITY_FOOTPRINT, DENSITY_GUTTER, DENSITY_PITCH, MIN_GUTTER, LAYER_RANK,
-  fitToViewport, toOperationalGraph, summarizeSnapshot,
+  DENSITY_FOOTPRINT,
+  DENSITY_GUTTER,
+  DENSITY_PITCH,
+  MIN_GUTTER,
+  LAYER_RANK,
+  fitToViewport,
+  toOperationalGraph,
+  summarizeSnapshot,
 } from './relationshipsAdapter'
 import type { RelationshipGraph, OperationalSummary, B15Row } from './queries'
 
@@ -156,7 +162,9 @@ describe('toOperationalGraph — cards, status, edges, layout', () => {
 describe('toOperationalGraph — casuistics', () => {
   it('(f) summary undefined => every card PENDING, no throw', () => {
     let view
-    expect(() => { view = toOperationalGraph(graph, undefined, '2026-07-29') }).not.toThrow()
+    expect(() => {
+      view = toOperationalGraph(graph, undefined, '2026-07-29')
+    }).not.toThrow()
     expect(view!.cards.length).toBeGreaterThan(0)
     for (const c of view!.cards) expect(c.status).toBe('PENDING')
   })
@@ -183,12 +191,30 @@ describe('toOperationalGraph — casuistics', () => {
     const scoped: RelationshipGraph = {
       nodes: [
         ...graph.nodes!,
-        { id: 'n_rdm', kind: 'recipe', name: '_ETL_neighbour_rdm.json', layer: 'RDM', neighbor: true },
-        { id: 'n_qdm', kind: 'recipe', name: '_ETL_neighbour_qdm.json', layer: 'QDM', neighbor: true },
+        {
+          id: 'n_rdm',
+          kind: 'recipe',
+          name: '_ETL_neighbour_rdm.json',
+          layer: 'RDM',
+          neighbor: true,
+        },
+        {
+          id: 'n_qdm',
+          kind: 'recipe',
+          name: '_ETL_neighbour_qdm.json',
+          layer: 'QDM',
+          neighbor: true,
+        },
       ],
       edges: [...graph.edges!, { from: 't_fact', to: 'n_rdm', kind: 'source' }],
       // CORE-only, exactly as the backend serves it for a scoped request.
-      meta: { entryCount: 9, skippedRows: 0, layers: ['STG', 'ODS', 'DWH'], scopedClusters: ['cl-x'], neighborCount: 2 },
+      meta: {
+        entryCount: 9,
+        skippedRows: 0,
+        layers: ['STG', 'ODS', 'DWH'],
+        scopedClusters: ['cl-x'],
+        neighborCount: 2,
+      },
     }
     const v = toOperationalGraph(scoped, summary, '2026-07-29')
 
@@ -230,11 +256,23 @@ describe('summarizeSnapshot', () => {
   it('a row for a recipe absent from the graph counts toward rows/recipes but contributes no table, and never throws', () => {
     const rows: B15Row[] = [{ recipeFilename: '_ETL_m_GHOST.json', status: 'SUCCESS' }]
     expect(() => summarizeSnapshot(rows, view.cards, view.edges)).not.toThrow()
-    expect(summarizeSnapshot(rows, view.cards, view.edges)).toEqual({ rows: 1, recipes: 1, tables: 0, ok: 1, ko: 0 })
+    expect(summarizeSnapshot(rows, view.cards, view.edges)).toEqual({
+      rows: 1,
+      recipes: 1,
+      tables: 0,
+      ok: 1,
+      ko: 0,
+    })
   })
 
   it('empty rows -> all zero', () => {
-    expect(summarizeSnapshot([], view.cards, view.edges)).toEqual({ rows: 0, recipes: 0, tables: 0, ok: 0, ko: 0 })
+    expect(summarizeSnapshot([], view.cards, view.edges)).toEqual({
+      rows: 0,
+      recipes: 0,
+      tables: 0,
+      ok: 0,
+      ko: 0,
+    })
   })
 
   it('an unrecognized/empty status counts toward neither OK nor KO', () => {
@@ -256,15 +294,17 @@ describe('density layout', () => {
     const compact = toOperationalGraph(graph, undefined, null, 'compact')
     const minimal = toOperationalGraph(graph, undefined, null, 'minimal')
 
-    const span = (v: typeof detailed) => Math.max(...v.cards.map(c => (c.y ?? 0)))
+    const span = (v: typeof detailed) => Math.max(...v.cards.map(c => c.y ?? 0))
     expect(span(compact)).toBeLessThan(span(detailed))
     expect(span(minimal)).toBeLessThan(span(compact))
   })
 
   it('keeps column order identical across densities', () => {
     const names = (d: 'detailed' | 'minimal') =>
-      toOperationalGraph(graph, undefined, null, d).cards
-        .slice().sort((a, b) => (a.x ?? 0) - (b.x ?? 0) || (a.y ?? 0) - (b.y ?? 0)).map(c => c.name)
+      toOperationalGraph(graph, undefined, null, d)
+        .cards.slice()
+        .sort((a, b) => (a.x ?? 0) - (b.x ?? 0) || (a.y ?? 0) - (b.y ?? 0))
+        .map(c => c.name)
     expect(names('minimal')).toEqual(names('detailed'))
   })
 
@@ -282,7 +322,10 @@ describe('fitToViewport', () => {
     // fixture as written contradicts its own `toBeGreaterThan(0.3)` assertion. Narrowed the
     // offset to a spread that genuinely needs shrinking but doesn't hit the floor, which is what
     // this test (as titled) is for; the floor itself is covered by the "enormous graph" test below.
-    const wide = [{ ...detailedView.cards[0]!, x: 0, y: 0 }, { ...detailedView.cards[0]!, id: 'z', x: 1200, y: 700 }]
+    const wide = [
+      { ...detailedView.cards[0]!, x: 0, y: 0 },
+      { ...detailedView.cards[0]!, id: 'z', x: 1200, y: 700 },
+    ]
     const fit = fitToViewport(wide, { width: 1000, height: 600 }, 'detailed')
 
     expect(fit.zoom).toBeGreaterThan(0.3)
@@ -290,24 +333,34 @@ describe('fitToViewport', () => {
   })
 
   it('never magnifies a small graph beyond 1', () => {
-    const fit = fitToViewport([{ ...detailedView.cards[0]!, x: 0, y: 0 }], { width: 1000, height: 600 }, 'detailed')
+    const fit = fitToViewport(
+      [{ ...detailedView.cards[0]!, x: 0, y: 0 }],
+      { width: 1000, height: 600 },
+      'detailed',
+    )
     expect(fit.zoom).toBe(1)
   })
 
   it('clamps at the 0.3 floor for an enormous graph', () => {
-    const huge = [{ ...detailedView.cards[0]!, x: 0, y: 0 }, { ...detailedView.cards[0]!, id: 'z', x: 90_000, y: 60_000 }]
+    const huge = [
+      { ...detailedView.cards[0]!, x: 0, y: 0 },
+      { ...detailedView.cards[0]!, id: 'z', x: 90_000, y: 60_000 },
+    ]
     expect(fitToViewport(huge, { width: 800, height: 500 }, 'detailed').zoom).toBe(0.3)
   })
 
   it('returns a neutral view for an empty graph', () => {
-    expect(fitToViewport([], { width: 800, height: 500 }, 'detailed')).toEqual({ zoom: 1, pan: { x: 40, y: 40 } })
+    expect(fitToViewport([], { width: 800, height: 500 }, 'detailed')).toEqual({
+      zoom: 1,
+      pan: { x: 40, y: 40 },
+    })
   })
 })
 
 // Item 9: `summarizeSnapshot` compared `row.status` against raw 'SUCCESS'/'FAILED' literals 250
 // lines below the STATUS_MAP that owns the canonical mapping in this same file. Two spellings of
 // one rule drift; the map is the rule.
-describe('summarizeSnapshot uses the file\'s own status map', () => {
+describe("summarizeSnapshot uses the file's own status map", () => {
   it('counts OK/KO through the same mapping every other reader uses', () => {
     const rows = [
       { recipeFilename: 'a.json', status: 'SUCCESS' },
@@ -322,11 +375,11 @@ describe('summarizeSnapshot uses the file\'s own status map', () => {
   })
 
   it('never counts a status the map does not classify', () => {
-    expect(summarizeSnapshot([{ recipeFilename: 'a.json', status: 'PENDING' }], [], []))
-      .toMatchObject({ ok: 0, ko: 0, rows: 1 })
+    expect(
+      summarizeSnapshot([{ recipeFilename: 'a.json', status: 'PENDING' }], [], []),
+    ).toMatchObject({ ok: 0, ko: 0, rows: 1 })
   })
 })
-
 
 // ─── density geometry (sub-project 12, defect 1) ────────────────────────────
 //
@@ -380,10 +433,13 @@ describe('layoutCards leaves no card overlapping another', () => {
     expect(cards.length).toBeGreaterThan(1)
     for (let i = 0; i < cards.length; i++) {
       for (let j = i + 1; j < cards.length; j++) {
-        const a = cards[i]!, b = cards[j]!
+        const a = cards[i]!,
+          b = cards[j]!
         const overlaps =
-          (a.x ?? 0) < (b.x ?? 0) + width && (b.x ?? 0) < (a.x ?? 0) + width &&
-          (a.y ?? 0) < (b.y ?? 0) + height && (b.y ?? 0) < (a.y ?? 0) + height
+          (a.x ?? 0) < (b.x ?? 0) + width &&
+          (b.x ?? 0) < (a.x ?? 0) + width &&
+          (a.y ?? 0) < (b.y ?? 0) + height &&
+          (b.y ?? 0) < (a.y ?? 0) + height
         expect(overlaps, `${a.name} overlaps ${b.name} at ${d}`).toBe(false)
       }
     }
@@ -394,7 +450,9 @@ describe('layoutCards leaves no card overlapping another', () => {
 
 describe('layer order', () => {
   it('runs STG, ODS, ETL, DWH, CDM, RDM, QDM, then OUTPUT and UNKNOWN', () => {
-    const order = Object.entries(LAYER_RANK).sort((a, b) => a[1] - b[1]).map(([k]) => k)
+    const order = Object.entries(LAYER_RANK)
+      .sort((a, b) => a[1] - b[1])
+      .map(([k]) => k)
     expect(order).toEqual(['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM', 'OUTPUT', 'UNKNOWN'])
   })
 
@@ -437,7 +495,10 @@ describe('graph.layers — the list the filter chips render', () => {
     // the backend's arrival order the CHIP order — so reordering LAYER_RANK moved the canvas
     // columns and left the toolbar alone. One dimension, one ordering.
     const scrambled = toOperationalGraph(
-      multiLayer(['CDM', 'DWH', 'ETL', 'ODS', 'RDM', 'QDM', 'STG']) as never, undefined, null)
+      multiLayer(['CDM', 'DWH', 'ETL', 'ODS', 'RDM', 'QDM', 'STG']) as never,
+      undefined,
+      null,
+    )
     expect(scrambled.layers).toEqual(['STG', 'ODS', 'ETL', 'DWH', 'CDM', 'RDM', 'QDM'])
   })
 

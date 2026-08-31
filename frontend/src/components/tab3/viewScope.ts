@@ -64,19 +64,22 @@ export function narrowSummaryToDates(
       .sort((a, b) => a - b)
     const last = history[history.length - 1]!
 
-    return [{
-      ...recipe,
-      history,
-      okCount: history.filter(h => h.status === 'SUCCESS').length,
-      koCount: history.filter(h => h.status === 'FAILED').length,
-      latestDate: last.date,
-      latestStatus: last.status,
-      avgDurationMin: durations.length === 0
-        ? undefined
-        : durations.reduce((a, b) => a + b, 0) / durations.length,
-      p50DurationMin: durations.length === 0 ? undefined : nearestRank(durations, 50),
-      p95DurationMin: durations.length === 0 ? undefined : nearestRank(durations, 95),
-    }]
+    return [
+      {
+        ...recipe,
+        history,
+        okCount: history.filter(h => h.status === 'SUCCESS').length,
+        koCount: history.filter(h => h.status === 'FAILED').length,
+        latestDate: last.date,
+        latestStatus: last.status,
+        avgDurationMin:
+          durations.length === 0
+            ? undefined
+            : durations.reduce((a, b) => a + b, 0) / durations.length,
+        p50DurationMin: durations.length === 0 ? undefined : nearestRank(durations, 50),
+        p95DurationMin: durations.length === 0 ? undefined : nearestRank(durations, 95),
+      },
+    ]
   })
 
   return { dates: (summary.dates ?? []).filter(d => keep.has(d)), recipes }

@@ -21,10 +21,15 @@ const REGISTRY: Registry = {
       name: 'DWH_ORDERS_FACT',
       columns: ['ORDER_ID', 'AMOUNT'],
       usedByRecipes: ['DWH/m_C/_ETL_m_C.json'],
-      variants: [{
-        columns: [{ name: 'ORDER_ID', type: 'STRING' }, { name: 'AMOUNT', type: 'NUMERIC' }],
-        mappingDirs: ['DWH/m_C'],
-      }],
+      variants: [
+        {
+          columns: [
+            { name: 'ORDER_ID', type: 'STRING' },
+            { name: 'AMOUNT', type: 'NUMERIC' },
+          ],
+          mappingDirs: ['DWH/m_C'],
+        },
+      ],
     },
     // Task 16: a DIVERGENT name — two real files, 2 and 1 columns, whose UNION
     // (3) matches neither. `columns` is that union.
@@ -34,7 +39,10 @@ const REGISTRY: Registry = {
       usedByRecipes: ['ODS/m_D/_ETL_m_D.json', 'ODS/m_E/_ETL_m_E.json'],
       variants: [
         {
-          columns: [{ name: 'REF_ID', type: 'STRING' }, { name: 'REF_CODE', type: 'STRING' }],
+          columns: [
+            { name: 'REF_ID', type: 'STRING' },
+            { name: 'REF_CODE', type: 'STRING' },
+          ],
           mappingDirs: ['ODS/m_D'],
         },
         { columns: [{ name: 'REF_NOTE', type: 'STRING' }], mappingDirs: ['ODS/m_E'] },
@@ -45,9 +53,7 @@ const REGISTRY: Registry = {
 }
 
 let responseBody: Registry = REGISTRY
-const server = setupServer(
-  http.get('/api/registry', () => HttpResponse.json(responseBody)),
-)
+const server = setupServer(http.get('/api/registry', () => HttpResponse.json(responseBody)))
 beforeAll(() => server.listen())
 afterEach(() => {
   server.resetHandlers()
@@ -114,18 +120,22 @@ describe('RegistrySearch (Task 13)', () => {
     renderSearch({ kind: 'ddl' })
 
     await waitFor(() => expect(screen.getByText('ODS_REFS')).toBeInTheDocument())
-    fireEvent.change(screen.getByPlaceholderText(/filter/i), { target: { value: 'NO_SUCH_TABLE_XYZ' } })
+    fireEvent.change(screen.getByPlaceholderText(/filter/i), {
+      target: { value: 'NO_SUCH_TABLE_XYZ' },
+    })
 
     expect(screen.queryByText('ODS_REFS')).not.toBeInTheDocument()
     expect(screen.getByText(/no tables match/i)).toBeInTheDocument()
   })
 
-  it('caps the rendered list and states truthfully how many are shown, reusing ExpressionDock\'s RENDER_CAP', async () => {
+  it("caps the rendered list and states truthfully how many are shown, reusing ExpressionDock's RENDER_CAP", async () => {
     responseBody = {
       sourceTables: [],
       targetTables: [],
       ddlTables: Array.from({ length: 200 }, (_, i) => ({
-        name: `TBL_${String(i).padStart(3, '0')}`, columns: [], usedByRecipes: [],
+        name: `TBL_${String(i).padStart(3, '0')}`,
+        columns: [],
+        usedByRecipes: [],
       })),
       layers: [],
     }
@@ -141,7 +151,7 @@ describe('RegistrySearch (Task 13)', () => {
   // COUNT is a fabrication for the 11 corpus names whose files disagree (116
   // where the real files hold 110 and 99). A row must never present that number
   // as the table's column count.
-  it('a divergent name reports its definitions\' own counts, never the unioned total', async () => {
+  it("a divergent name reports its definitions' own counts, never the unioned total", async () => {
     renderSearch({ kind: 'ddl' })
 
     await waitFor(() => expect(screen.getByText('ODS_REFS')).toBeInTheDocument())

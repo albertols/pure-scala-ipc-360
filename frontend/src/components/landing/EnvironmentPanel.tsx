@@ -106,10 +106,25 @@ export function EnvironmentPanel({ roots, gcpProjectId, region }: EnvironmentPan
       </div>
       <div
         data-testid="environment-gcp"
-        style={{ padding: '9px 11px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}
+        style={{
+          padding: '9px 11px',
+          borderTop: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
       >
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', minWidth: 92 }}>GCP</span>
-        <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: TEXT, wordBreak: 'break-word' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', minWidth: 92 }}>
+          GCP
+        </span>
+        <span
+          style={{
+            fontSize: 11,
+            fontFamily: 'JetBrains Mono, monospace',
+            color: TEXT,
+            wordBreak: 'break-word',
+          }}
+        >
           {gcpProjectId ?? 'not configured'}
           {region ? ` · ${region}` : ''}
         </span>

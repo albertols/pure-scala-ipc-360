@@ -45,7 +45,10 @@ const ABBR: Record<NodeType, string> = {
 
 /** Derive a 3-letter fallback label from an arbitrary IPC type string. */
 function fallbackLabel(typ: string): string {
-  return typ.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase()
+  return typ
+    .replace(/[^A-Za-z]/g, '')
+    .slice(0, 3)
+    .toUpperCase()
 }
 
 function isBlank(s: string | undefined | null): boolean {
@@ -60,7 +63,10 @@ function portDirection(portType: string | undefined): Port['direction'] {
 }
 
 /** Add every non-blank scalar string field of an object into a properties bag. */
-function collectScalarProps(props: Record<string, string>, obj: Record<string, unknown> | undefined | null): void {
+function collectScalarProps(
+  props: Record<string, string>,
+  obj: Record<string, unknown> | undefined | null,
+): void {
   if (!obj) return
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value !== 'string') continue
@@ -80,14 +86,24 @@ function findTransformation(
   return (folder?.transformations ?? []).find(t => t.name === transformationName)
 }
 
-function findSource(folder: components['schemas']['FolderDto'] | undefined, instance: InstanceDto): SourceDto | undefined {
-  const byTransformationName = (folder?.sources ?? []).find(s => s.name === instance.transformationName)
+function findSource(
+  folder: components['schemas']['FolderDto'] | undefined,
+  instance: InstanceDto,
+): SourceDto | undefined {
+  const byTransformationName = (folder?.sources ?? []).find(
+    s => s.name === instance.transformationName,
+  )
   if (byTransformationName) return byTransformationName
   return (folder?.sources ?? []).find(s => s.name === instance.name)
 }
 
-function findTarget(folder: components['schemas']['FolderDto'] | undefined, instance: InstanceDto): TargetDto | undefined {
-  const byTransformationName = (folder?.targets ?? []).find(t => t.name === instance.transformationName)
+function findTarget(
+  folder: components['schemas']['FolderDto'] | undefined,
+  instance: InstanceDto,
+): TargetDto | undefined {
+  const byTransformationName = (folder?.targets ?? []).find(
+    t => t.name === instance.transformationName,
+  )
   if (byTransformationName) return byTransformationName
   return (folder?.targets ?? []).find(t => t.name === instance.name)
 }

@@ -6,7 +6,14 @@ afterEach(() => cleanup())
 
 describe('CorpusSummary', () => {
   it('renders each {label, value} pair as "value label" in mono 10px', () => {
-    render(<CorpusSummary items={[{ label: 'xml', value: 81 }, { label: 'recipes', value: 86 }]} />)
+    render(
+      <CorpusSummary
+        items={[
+          { label: 'xml', value: 81 },
+          { label: 'recipes', value: 86 },
+        ]}
+      />,
+    )
 
     const xml = screen.getByText('81 xml')
     expect(xml).toBeInTheDocument()

@@ -87,7 +87,7 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
     return html.replace(`<!-- ${slotName} -->`, content)
   }
 
-  const title = config.title ?? "Figma Make App"
+  const title = config.title ?? 'Figma Make App'
   const description = config.description ?? ''
   const favicon = config.icons?.icon ?? ''
   const socialImage = config.openGraph?.image ?? ''
@@ -131,25 +131,53 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
 
         const tags: HtmlTagDescriptor[] = []
         if (description) {
-          tags.push({ tag: 'meta', attrs: { name: 'description', content: description }, injectTo: 'head' })
+          tags.push({
+            tag: 'meta',
+            attrs: { name: 'description', content: description },
+            injectTo: 'head',
+          })
         }
         if (config.robots?.index === false) {
-          tags.push({ tag: 'meta', attrs: { name: 'robots', content: 'noindex, nofollow' }, injectTo: 'head' })
+          tags.push({
+            tag: 'meta',
+            attrs: { name: 'robots', content: 'noindex, nofollow' },
+            injectTo: 'head',
+          })
         }
         if (favicon) {
           tags.push({ tag: 'link', attrs: { rel: 'icon', href: favicon }, injectTo: 'head' })
         }
         if (title) {
-          tags.push({ tag: 'meta', attrs: { property: 'og:title', content: title }, injectTo: 'head' })
+          tags.push({
+            tag: 'meta',
+            attrs: { property: 'og:title', content: title },
+            injectTo: 'head',
+          })
         }
         if (description) {
-          tags.push({ tag: 'meta', attrs: { property: 'og:description', content: description }, injectTo: 'head' })
+          tags.push({
+            tag: 'meta',
+            attrs: { property: 'og:description', content: description },
+            injectTo: 'head',
+          })
         }
         if (socialImage) {
           tags.push(
-            { tag: 'meta', attrs: { property: 'og:image', content: socialImage }, injectTo: 'head' },
-            { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' }, injectTo: 'head' },
-            { tag: 'meta', attrs: { name: 'twitter:image', content: socialImage }, injectTo: 'head' },
+            {
+              tag: 'meta',
+              attrs: { property: 'og:image', content: socialImage },
+              injectTo: 'head',
+            },
+            {
+              tag: 'meta',
+              attrs: { name: 'twitter:card', content: 'summary_large_image' },
+              injectTo: 'head',
+            },
+            {
+              tag: 'meta',
+              attrs: { name: 'twitter:image', content: socialImage },
+              injectTo: 'head',
+            },
           )
         }
 
@@ -252,7 +280,7 @@ function figmaErrorOverlayReplay(): Plugin {
         return origSend(...args)
       }) as typeof server.ws.send
 
-      server.ws.on('connection', (socket) => {
+      server.ws.on('connection', socket => {
         if (lastError !== null) {
           socket.send(JSON.stringify(lastError))
         }
@@ -313,7 +341,9 @@ function figmaReactRefreshBoundaryFallback(): Plugin {
  * into shipped bundles.
  */
 function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin {
-  const storiesGlob = Array.isArray(options.storiesGlob) ? options.storiesGlob : [options.storiesGlob]
+  const storiesGlob = Array.isArray(options.storiesGlob)
+    ? options.storiesGlob
+    : [options.storiesGlob]
   const ROUTE = '/.figma/make/kit.html'
   const VIRTUAL_ID = 'virtual:figma-stories'
   const RESOLVED_ID = '\0' + VIRTUAL_ID

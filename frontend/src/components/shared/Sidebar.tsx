@@ -7,27 +7,29 @@ const LAYER_COLORS: Record<string, string> = {
   SRC: '#34d399',
   TGT: '#f87171',
   root: '#4a5570',
-  DWH: '#fbbf24',  // --yellow
-  ETL: '#fb923c',  // --orange
-  QDM: '#f472b6',  // --pink
-  RDM: '#67e8f9',  // --cyan
-  STG: '#22d3ee',  // --teal
-  OUTPUT: '#a78bfa',  // --purple
+  DWH: '#fbbf24', // --yellow
+  ETL: '#fb923c', // --orange
+  QDM: '#f472b6', // --pink
+  RDM: '#67e8f9', // --cyan
+  STG: '#22d3ee', // --teal
+  OUTPUT: '#a78bfa', // --purple
 }
 
 function FileIcon({ type }: { type: 'json' | 'xml' }) {
   return (
-    <span style={{
-      fontFamily: 'JetBrains Mono, monospace',
-      fontSize: 8,
-      fontWeight: 700,
-      padding: '1px 4px',
-      borderRadius: 3,
-      background: type === 'json' ? 'rgba(251,191,36,0.15)' : 'rgba(34,211,238,0.15)',
-      color: type === 'json' ? '#fbbf24' : '#22d3ee',
-      border: `1px solid ${type === 'json' ? 'rgba(251,191,36,0.3)' : 'rgba(34,211,238,0.3)'}`,
-      flexShrink: 0,
-    }}>
+    <span
+      style={{
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: 8,
+        fontWeight: 700,
+        padding: '1px 4px',
+        borderRadius: 3,
+        background: type === 'json' ? 'rgba(251,191,36,0.15)' : 'rgba(34,211,238,0.15)',
+        color: type === 'json' ? '#fbbf24' : '#22d3ee',
+        border: `1px solid ${type === 'json' ? 'rgba(251,191,36,0.3)' : 'rgba(34,211,238,0.3)'}`,
+        flexShrink: 0,
+      }}
+    >
       {type.toUpperCase()}
     </span>
   )
@@ -45,10 +47,15 @@ function FileIcon({ type }: { type: 'json' | 'xml' }) {
 // needs at least one visible descendant (so a folder whose entire subtree was
 // filtered out — e.g. an XML-only mapping folder under Tab 2's recipe-only
 // filter — disappears rather than lingering as an empty row).
-function isNodeVisible(node: FSDir | FSFile, searchQuery: string, fileFilter?: (f: FSFile) => boolean): boolean {
+function isNodeVisible(
+  node: FSDir | FSFile,
+  searchQuery: string,
+  fileFilter?: (f: FSFile) => boolean,
+): boolean {
   if ('children' in node) {
     const dir = node as FSDir
-    const searchMatches = !searchQuery ||
+    const searchMatches =
+      !searchQuery ||
       JSON.stringify(dir.children).toLowerCase().includes(searchQuery.toLowerCase()) ||
       dir.name.toLowerCase().includes(searchQuery.toLowerCase())
     if (!searchMatches) return false
@@ -109,37 +116,71 @@ function TreeItem({
           className="tree-item"
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-            <path d={expanded ? 'M1 3l4 4 4-4' : 'M3 1l4 4-4 4'} stroke="#4a5570" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d={expanded ? 'M1 3l4 4 4-4' : 'M3 1l4 4-4 4'}
+              stroke="#4a5570"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           <svg width="13" height="12" viewBox="0 0 13 12" fill="none" style={{ flexShrink: 0 }}>
-            {expanded
-              ? <path d="M1 4h11l-1 6H2L1 4zM1 4V3a1 1 0 011-1h3l1 1.5H11a1 1 0 011 1" stroke={layerColor ?? '#7b88aa'} strokeWidth="1.1" fill={layerColor ? `${layerColor}18` : 'rgba(123,136,170,0.1)'} />
-              : <path d="M1 4h11v5.5a.5.5 0 01-.5.5h-10a.5.5 0 01-.5-.5V4zM1 4V3a1 1 0 011-1h3l1 1.5H1z" stroke={layerColor ?? '#4a5570'} strokeWidth="1.1" fill="rgba(74,85,112,0.1)" />
-            }
+            {expanded ? (
+              <path
+                d="M1 4h11l-1 6H2L1 4zM1 4V3a1 1 0 011-1h3l1 1.5H11a1 1 0 011 1"
+                stroke={layerColor ?? '#7b88aa'}
+                strokeWidth="1.1"
+                fill={layerColor ? `${layerColor}18` : 'rgba(123,136,170,0.1)'}
+              />
+            ) : (
+              <path
+                d="M1 4h11v5.5a.5.5 0 01-.5.5h-10a.5.5 0 01-.5-.5V4zM1 4V3a1 1 0 011-1h3l1 1.5H1z"
+                stroke={layerColor ?? '#4a5570'}
+                strokeWidth="1.1"
+                fill="rgba(74,85,112,0.1)"
+              />
+            )}
           </svg>
-          <span style={{ fontSize: 12, fontWeight: layerColor ? 600 : 400, color: layerColor ?? '#8494b8' }}>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: layerColor ? 600 : 400,
+              color: layerColor ?? '#8494b8',
+            }}
+          >
             {dir.name}
           </span>
           {layerColor && (
-            <span style={{
-              fontSize: 8, padding: '1px 4px', borderRadius: 3, marginLeft: 2,
-              background: `${layerColor}18`, color: layerColor,
-              border: `1px solid ${layerColor}33`, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700,
-            }}>{dir.layer}</span>
+            <span
+              style={{
+                fontSize: 8,
+                padding: '1px 4px',
+                borderRadius: 3,
+                marginLeft: 2,
+                background: `${layerColor}18`,
+                color: layerColor,
+                border: `1px solid ${layerColor}33`,
+                fontFamily: 'JetBrains Mono, monospace',
+                fontWeight: 700,
+              }}
+            >
+              {dir.layer}
+            </span>
           )}
         </div>
-        {expanded && dir.children.map((child, i) => (
-          <TreeItem
-            key={i}
-            node={child}
-            depth={depth + 1}
-            searchQuery={searchQuery}
-            selectedPath={selectedPath}
-            onSelectFile={onSelectFile}
-            fileFilter={fileFilter}
-            defaultExpanded={depth < 1}
-          />
-        ))}
+        {expanded &&
+          dir.children.map((child, i) => (
+            <TreeItem
+              key={i}
+              node={child}
+              depth={depth + 1}
+              searchQuery={searchQuery}
+              selectedPath={selectedPath}
+              onSelectFile={onSelectFile}
+              fileFilter={fileFilter}
+              defaultExpanded={depth < 1}
+            />
+          ))}
       </div>
     )
   }
@@ -165,14 +206,45 @@ function TreeItem({
       }}
     >
       <span style={{ width: 10 }} />
-      {isEtl && <span style={{ fontSize: 8, color: '#34d399', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>ETL</span>}
-      {isDdl && <span style={{ fontSize: 8, color: '#4f9cf9', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>DDL</span>}
+      {isEtl && (
+        <span
+          style={{
+            fontSize: 8,
+            color: '#34d399',
+            fontWeight: 700,
+            fontFamily: 'JetBrains Mono, monospace',
+            flexShrink: 0,
+          }}
+        >
+          ETL
+        </span>
+      )}
+      {isDdl && (
+        <span
+          style={{
+            fontSize: 8,
+            color: '#4f9cf9',
+            fontWeight: 700,
+            fontFamily: 'JetBrains Mono, monospace',
+            flexShrink: 0,
+          }}
+        >
+          DDL
+        </span>
+      )}
       {!isEtl && !isDdl && <span style={{ width: 14 }} />}
-      <span style={{
-        fontSize: 11, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        fontFamily: 'JetBrains Mono, monospace',
-        color: isEtl ? '#34d399' : isDdl ? '#4f9cf9' : isActive ? '#e2e8f8' : '#6b7a9c',
-      }}>
+      <span
+        style={{
+          fontSize: 11,
+          flex: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontFamily: 'JetBrains Mono, monospace',
+          color: isEtl ? '#34d399' : isDdl ? '#4f9cf9' : isActive ? '#e2e8f8' : '#6b7a9c',
+        }}
+      >
         {file.name}
       </span>
       <FileIcon type={file.type} />
@@ -207,18 +279,29 @@ export function Sidebar({
 }) {
   if (collapsed) {
     return (
-      <div style={{
-        width: 28,
-        flexShrink: 0,
-        background: 'var(--surface)',
-        borderRight: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        overflow: 'hidden',
-      }}>
+      <div
+        style={{
+          width: 28,
+          flexShrink: 0,
+          background: 'var(--surface)',
+          borderRight: '1px solid var(--border)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          overflow: 'hidden',
+        }}
+      >
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ marginTop: 10 }}>
-          <rect x="1" y="1" width="11" height="11" rx="2" stroke="#4a5570" strokeWidth="1.2" fill="none" />
+          <rect
+            x="1"
+            y="1"
+            width="11"
+            height="11"
+            rx="2"
+            stroke="#4a5570"
+            strokeWidth="1.2"
+            fill="none"
+          />
           <line x1="1" y1="5" x2="12" y2="5" stroke="#4a5570" strokeWidth="1.2" />
           <line x1="5" y1="5" x2="5" y2="12" stroke="#4a5570" strokeWidth="1.2" />
         </svg>
@@ -238,7 +321,13 @@ export function Sidebar({
             }}
           >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M3 1l4 4-4 4" stroke="#7b88aa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M3 1l4 4-4 4"
+                stroke="#7b88aa"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         )}
@@ -247,29 +336,50 @@ export function Sidebar({
   }
 
   return (
-    <div style={{
-      width: 240,
-      flexShrink: 0,
-      background: 'var(--surface)',
-      borderRight: '1px solid var(--border)',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    }}>
-      {/* header */}
-      <div style={{
-        padding: '10px 12px 8px',
-        borderBottom: '1px solid var(--border-subtle)',
+    <div
+      style={{
+        width: 240,
+        flexShrink: 0,
+        background: 'var(--surface)',
+        borderRight: '1px solid var(--border)',
         display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-      }}>
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      {/* header */}
+      <div
+        style={{
+          padding: '10px 12px 8px',
+          borderBottom: '1px solid var(--border-subtle)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-          <rect x="1" y="1" width="11" height="11" rx="2" stroke="#4a5570" strokeWidth="1.2" fill="none" />
+          <rect
+            x="1"
+            y="1"
+            width="11"
+            height="11"
+            rx="2"
+            stroke="#4a5570"
+            strokeWidth="1.2"
+            fill="none"
+          />
           <line x1="1" y1="5" x2="12" y2="5" stroke="#4a5570" strokeWidth="1.2" />
           <line x1="5" y1="5" x2="5" y2="12" stroke="#4a5570" strokeWidth="1.2" />
         </svg>
-        <span style={{ fontSize: 10, fontWeight: 600, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            color: '#4a5570',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+          }}
+        >
           Explorer
         </span>
         {onToggleCollapse && (
@@ -288,7 +398,13 @@ export function Sidebar({
             }}
           >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M7 1L3 5l4 4" stroke="#7b88aa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M7 1L3 5l4 4"
+                stroke="#7b88aa"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         )}

@@ -41,7 +41,9 @@ export function RelatedOverlay({
 }) {
   useEffect(() => {
     if (!onClose) return
-    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose])
@@ -69,21 +71,35 @@ export function RelatedOverlay({
     <div
       data-testid="related-overlay"
       style={{
-        background: 'var(--surface)', border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
         borderRadius: standalone ? 0 : 10,
         width: standalone ? '100%' : 'min(1180px, 94vw)',
         height: standalone ? '100%' : 'min(80vh, 720px)',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         boxShadow: standalone ? 'none' : '0 18px 60px rgba(0,0,0,0.55)',
       }}
       onClick={e => e.stopPropagation()}
     >
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '10px 14px', borderBottom: '1px solid var(--border)',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 14px',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>Lineage</span>
-        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
+        <span
+          style={{
+            fontSize: 11,
+            color: 'var(--text-muted)',
+            fontFamily: 'JetBrains Mono, monospace',
+          }}
+        >
           {focusedName}
         </span>
         <div style={{ flex: 1 }} />
@@ -91,8 +107,16 @@ export function RelatedOverlay({
           <button
             aria-label="Close related overlay"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 13 }}
-          >{'✕'}</button>
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-dim)',
+              cursor: 'pointer',
+              fontSize: 13,
+            }}
+          >
+            {'✕'}
+          </button>
         )}
       </div>
 
@@ -118,9 +142,13 @@ export function RelatedOverlay({
       data-testid="related-backdrop"
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 60,
+        position: 'fixed',
+        inset: 0,
+        zIndex: 60,
         background: 'rgba(4,6,12,0.62)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       {body}
@@ -134,5 +162,11 @@ export function readRelatedParam(): { nodeId: string; clusters: string[] } | nul
   const nodeId = params.get('related')
   if (!nodeId) return null
   const raw = params.get('clusters') ?? ''
-  return { nodeId, clusters: raw.split(',').map(c => c.trim()).filter(Boolean) }
+  return {
+    nodeId,
+    clusters: raw
+      .split(',')
+      .map(c => c.trim())
+      .filter(Boolean),
+  }
 }

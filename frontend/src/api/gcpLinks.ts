@@ -30,8 +30,11 @@ const EMPTY_MATRIX_SEGMENT = /;[A-Za-z0-9_]+=(?=[;?]|$)/g
  * matrix-safe placeholders keep their colons, and a matrix segment left empty is removed
  * entirely — never emitted as a bare `;key=`.
  */
-export function fillGcpUrl(template: string | undefined, fallback: string,
-    vars: Record<string, string>): string {
+export function fillGcpUrl(
+  template: string | undefined,
+  fallback: string,
+  vars: Record<string, string>,
+): string {
   const filled = (template || fallback).replace(/\{(\w+)\}/g, (_, key: string) => {
     const value = vars[key] ?? ''
     if (value === '') return ''
@@ -46,8 +49,10 @@ export function fillGcpUrl(template: string | undefined, fallback: string,
  * start. Without a cursor the link degrades to the job-id-only query, which is the shape that
  * works today; it never degrades to a broken one.
  */
-export function buildLoggingUrl(cfg: AppConfig | undefined,
-    v: { jobId: string; cursorTimestamp?: string }): string {
+export function buildLoggingUrl(
+  cfg: AppConfig | undefined,
+  v: { jobId: string; cursorTimestamp?: string },
+): string {
   return fillGcpUrl(cfg?.loggingUrl, DEFAULT_LOGGING_URL, {
     jobId: v.jobId,
     cursorTimestamp: v.cursorTimestamp ?? '',
@@ -58,13 +63,20 @@ export function buildLoggingUrl(cfg: AppConfig | undefined,
 
 export function buildDataprocJobUrl(cfg: AppConfig | undefined, v: { jobId: string }): string {
   return fillGcpUrl(cfg?.dataprocJobUrl, DEFAULT_DATAPROC_JOB_URL, {
-    jobId: v.jobId, project: cfg?.gcpProjectId ?? '', region: cfg?.region ?? '',
+    jobId: v.jobId,
+    project: cfg?.gcpProjectId ?? '',
+    region: cfg?.region ?? '',
   })
 }
 
-export function buildDataprocClusterUrl(cfg: AppConfig | undefined, v: { clusterName: string }): string {
+export function buildDataprocClusterUrl(
+  cfg: AppConfig | undefined,
+  v: { clusterName: string },
+): string {
   return fillGcpUrl(cfg?.dataprocClusterUrl, DEFAULT_DATAPROC_CLUSTER_URL, {
-    clusterName: v.clusterName, project: cfg?.gcpProjectId ?? '', region: cfg?.region ?? '',
+    clusterName: v.clusterName,
+    project: cfg?.gcpProjectId ?? '',
+    region: cfg?.region ?? '',
   })
 }
 

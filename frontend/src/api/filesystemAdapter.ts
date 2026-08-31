@@ -6,9 +6,7 @@ export function toFilesystem(node: TreeNode): FSDir {
     name: node.name ?? '',
     layer: (node.layer ?? undefined) as FSDir['layer'],
     children: (node.children ?? []).map(child =>
-      child.kind === 'dir' || child.kind === 'outputDir'
-        ? toFilesystem(child)
-        : toFile(child),
+      child.kind === 'dir' || child.kind === 'outputDir' ? toFilesystem(child) : toFile(child),
     ),
   }
 }
@@ -19,6 +17,9 @@ function toFile(node: TreeNode): FSFile {
     path: node.path ?? '',
     type: node.kind === 'xml' ? 'xml' : 'json',
     mapping: node.mappingPath ?? undefined,
-    recipe: node.kind === 'json' && (node.name ?? '').startsWith('_ETL_') ? (node.path ?? undefined) : undefined,
+    recipe:
+      node.kind === 'json' && (node.name ?? '').startsWith('_ETL_')
+        ? (node.path ?? undefined)
+        : undefined,
   }
 }

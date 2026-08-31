@@ -69,7 +69,7 @@ export function useResizableLayout(): {
   const [sizes, setSizes] = useState<LayoutSizes>(readStoredSizes)
 
   const setSize = useCallback((key: keyof LayoutSizes, px: number) => {
-    setSizes((prev) => {
+    setSizes(prev => {
       const next = { ...prev, [key]: Math.max(LAYOUT_MIN[key], px) }
       writeStoredSizes(next)
       return next

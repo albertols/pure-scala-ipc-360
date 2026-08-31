@@ -3,8 +3,13 @@ import { applyWheel, wheelActs, type CanvasView } from './canvasGestures'
 
 const VIEW: CanvasView = { zoom: 1, pan: { x: 100, y: 50 } }
 const input = (over: Partial<Parameters<typeof applyWheel>[1]> = {}) => ({
-  deltaX: 0, deltaY: 0, metaKey: false, ctrlKey: false, shiftKey: false,
-  cursor: { x: 400, y: 300 }, ...over,
+  deltaX: 0,
+  deltaY: 0,
+  metaKey: false,
+  ctrlKey: false,
+  shiftKey: false,
+  cursor: { x: 400, y: 300 },
+  ...over,
 })
 
 describe('applyWheel', () => {
@@ -67,6 +72,6 @@ describe('wheelActs', () => {
     expect(wheelActs(input({ metaKey: true, deltaY: -1 }))).toBe(true)
     expect(wheelActs(input({ shiftKey: true, deltaY: 1 }))).toBe(true)
     expect(wheelActs(input({ deltaY: 1 }))).toBe(true)
-    expect(wheelActs(input())).toBe(false)          // no delta at all
+    expect(wheelActs(input())).toBe(false) // no delta at all
   })
 })

@@ -36,7 +36,10 @@ describe('toCanvas — nodes, kinds, ports', () => {
     const g = toCanvas(diamond as MappingModel, 'DWH/m_SYN_DWH_ORDERS_FACT')
     expect(g.connections.length).toBeGreaterThan(0)
     const ids = new Set(g.nodes.map(n => n.id))
-    for (const c of g.connections) { expect(ids).toContain(c.fromNode); expect(ids).toContain(c.toNode) }
+    for (const c of g.connections) {
+      expect(ids).toContain(c.fromNode)
+      expect(ids).toContain(c.toNode)
+    }
     const linked = g.nodes.flatMap(n => n.ports).filter(p => p.linked)
     expect(linked.length).toBeGreaterThan(0)
   })
@@ -52,8 +55,12 @@ describe('toCanvas — nodes, kinds, ports', () => {
 
   it('dual-target mapping renders both targets', () => {
     const g = toCanvas(bridge as MappingModel, 'ETL/m_SYN_ETL_ORDERS_BRIDGE')
-    expect(g.nodes.filter(n => n.type === 'target').map(n => n.name).sort())
-      .toEqual(['ETL_SYN_ORDERS_AUDIT', 'ETL_SYN_ORDERS_BRIDGE'])
+    expect(
+      g.nodes
+        .filter(n => n.type === 'target')
+        .map(n => n.name)
+        .sort(),
+    ).toEqual(['ETL_SYN_ORDERS_AUDIT', 'ETL_SYN_ORDERS_BRIDGE'])
   })
 })
 
@@ -79,7 +86,8 @@ describe('toCanvas — layout', () => {
     }
     for (const arr of cols.values()) {
       arr.sort((a, b) => a.y - b.y)
-      for (let i = 1; i < arr.length; i++) expect(arr[i].y).toBeGreaterThanOrEqual(arr[i-1].y + arr[i-1].h + 40)
+      for (let i = 1; i < arr.length; i++)
+        expect(arr[i].y).toBeGreaterThanOrEqual(arr[i - 1].y + arr[i - 1].h + 40)
     }
   })
 

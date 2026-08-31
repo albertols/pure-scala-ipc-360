@@ -20,23 +20,17 @@ const DOM: XmlNode = {
             {
               name: 'SOURCE',
               attributes: { NAME: 'SRC_FIX', DATABASETYPE: 'Oracle' },
-              children: [
-                { name: 'SOURCEFIELD', attributes: { NAME: 'ID' }, children: [] },
-              ],
+              children: [{ name: 'SOURCEFIELD', attributes: { NAME: 'ID' }, children: [] }],
             },
             {
               name: 'TARGET',
               attributes: { NAME: 'TGT_FIX', DATABASETYPE: 'Oracle' },
-              children: [
-                { name: 'TARGETFIELD', attributes: { NAME: 'ID' }, children: [] },
-              ],
+              children: [{ name: 'TARGETFIELD', attributes: { NAME: 'ID' }, children: [] }],
             },
             {
               name: 'TRANSFORMATION',
               attributes: { NAME: 'EXP_FIX', TYPE: 'Expression' },
-              children: [
-                { name: 'TRANSFORMFIELD', attributes: { NAME: 'ID' }, children: [] },
-              ],
+              children: [{ name: 'TRANSFORMFIELD', attributes: { NAME: 'ID' }, children: [] }],
             },
             {
               name: 'MAPPING',
@@ -44,7 +38,11 @@ const DOM: XmlNode = {
               children: [
                 {
                   name: 'INSTANCE',
-                  attributes: { NAME: 'EXP_INST', TRANSFORMATION_NAME: 'EXP_FIX', TYPE: 'TRANSFORMATION' },
+                  attributes: {
+                    NAME: 'EXP_INST',
+                    TRANSFORMATION_NAME: 'EXP_FIX',
+                    TYPE: 'TRANSFORMATION',
+                  },
                   children: [],
                 },
               ],
@@ -71,20 +69,44 @@ const TWO_MAPPING_DOM: XmlNode = {
           name: 'FOLDER',
           attributes: { NAME: 'CDM' },
           children: [
-            { name: 'TRANSFORMATION', attributes: { NAME: 'EXP_ONE', TYPE: 'Expression' }, children: [] },
-            { name: 'TRANSFORMATION', attributes: { NAME: 'EXP_TWO', TYPE: 'Expression' }, children: [] },
+            {
+              name: 'TRANSFORMATION',
+              attributes: { NAME: 'EXP_ONE', TYPE: 'Expression' },
+              children: [],
+            },
+            {
+              name: 'TRANSFORMATION',
+              attributes: { NAME: 'EXP_TWO', TYPE: 'Expression' },
+              children: [],
+            },
             {
               name: 'MAPPING',
               attributes: { NAME: 'm_ONE' },
               children: [
-                { name: 'INSTANCE', attributes: { NAME: 'SHARED_INST', TRANSFORMATION_NAME: 'EXP_ONE', TYPE: 'TRANSFORMATION' }, children: [] },
+                {
+                  name: 'INSTANCE',
+                  attributes: {
+                    NAME: 'SHARED_INST',
+                    TRANSFORMATION_NAME: 'EXP_ONE',
+                    TYPE: 'TRANSFORMATION',
+                  },
+                  children: [],
+                },
               ],
             },
             {
               name: 'MAPPING',
               attributes: { NAME: 'm_TWO' },
               children: [
-                { name: 'INSTANCE', attributes: { NAME: 'SHARED_INST', TRANSFORMATION_NAME: 'EXP_TWO', TYPE: 'TRANSFORMATION' }, children: [] },
+                {
+                  name: 'INSTANCE',
+                  attributes: {
+                    NAME: 'SHARED_INST',
+                    TRANSFORMATION_NAME: 'EXP_TWO',
+                    TYPE: 'TRANSFORMATION',
+                  },
+                  children: [],
+                },
               ],
             },
           ],

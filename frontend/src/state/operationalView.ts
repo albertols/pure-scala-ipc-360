@@ -43,14 +43,29 @@ export const HISTORY_CAP = 25
 const STORAGE_KEY = 'etl360.tab3.view'
 
 /** Durable preferences. Everything else is session-lived: a selection should not outlive a reload. */
-export const PERSISTED_KEYS = ['density', 'paneWidth', 'paneCollapsed', 'timeViewCollapsed'] as const
+export const PERSISTED_KEYS = [
+  'density',
+  'paneWidth',
+  'paneCollapsed',
+  'timeViewCollapsed',
+] as const
 
 const DEFAULTS: OperationalViewState = {
-  selectedClusters: [], expandedCluster: null, deselectedRecipes: [], selectedDates: [],
-  density: 'detailed', zoom: 0.85, pan: { x: 40, y: 40 },
-  selectedNode: null, selectedDate: null, selectedRunDate: null,
-  paneWidth: 260, paneCollapsed: false, timeViewCollapsed: false,
-  nodeHistory: [], historyIndex: -1,
+  selectedClusters: [],
+  expandedCluster: null,
+  deselectedRecipes: [],
+  selectedDates: [],
+  density: 'detailed',
+  zoom: 0.85,
+  pan: { x: 40, y: 40 },
+  selectedNode: null,
+  selectedDate: null,
+  selectedRunDate: null,
+  paneWidth: 260,
+  paneCollapsed: false,
+  timeViewCollapsed: false,
+  nodeHistory: [],
+  historyIndex: -1,
 }
 
 const DENSITY_LEVELS: readonly CardDensity[] = ['detailed', 'compact', 'minimal']
@@ -66,13 +81,19 @@ const MAX_PANE_W = 420
  * so an unknown level is a TypeError on every render: Tab 3 white-screens on load, and because
  * the bad value is in localStorage it does so again on every reload, with no in-app way out.
  */
-const VALIDATORS: { [K in typeof PERSISTED_KEYS[number]]: (v: unknown) => OperationalViewState[K] | undefined } = {
-  density: v => (typeof v === 'string' && (DENSITY_LEVELS as readonly string[]).includes(v))
-    ? v as CardDensity : undefined,
-  paneWidth: v => (typeof v === 'number' && Number.isFinite(v))
-    ? Math.max(MIN_PANE_W, Math.min(MAX_PANE_W, v)) : undefined,
-  paneCollapsed: v => typeof v === 'boolean' ? v : undefined,
-  timeViewCollapsed: v => typeof v === 'boolean' ? v : undefined,
+const VALIDATORS: {
+  [K in (typeof PERSISTED_KEYS)[number]]: (v: unknown) => OperationalViewState[K] | undefined
+} = {
+  density: v =>
+    typeof v === 'string' && (DENSITY_LEVELS as readonly string[]).includes(v)
+      ? (v as CardDensity)
+      : undefined,
+  paneWidth: v =>
+    typeof v === 'number' && Number.isFinite(v)
+      ? Math.max(MIN_PANE_W, Math.min(MAX_PANE_W, v))
+      : undefined,
+  paneCollapsed: v => (typeof v === 'boolean' ? v : undefined),
+  timeViewCollapsed: v => (typeof v === 'boolean' ? v : undefined),
 }
 
 function hydrate(): OperationalViewState {
@@ -87,7 +108,7 @@ function hydrate(): OperationalViewState {
     }
     return { ...DEFAULTS, ...picked }
   } catch {
-    return { ...DEFAULTS }   // corrupt or unavailable storage must never break the tab
+    return { ...DEFAULTS } // corrupt or unavailable storage must never break the tab
   }
 }
 
@@ -99,7 +120,9 @@ function persist() {
     const out: Record<string, unknown> = {}
     for (const key of PERSISTED_KEYS) out[key] = state[key]
     localStorage.setItem(STORAGE_KEY, JSON.stringify(out))
-  } catch { /* private mode / quota — the view still works, it just will not be remembered */ }
+  } catch {
+    /* private mode / quota — the view still works, it just will not be remembered */
+  }
 }
 
 export function setOperationalView(patch: Partial<OperationalViewState>): void {
@@ -132,7 +155,7 @@ export function visitNode(visit: NodeVisit): void {
 export function stepHistory(delta: -1 | 1): void {
   const next = state.historyIndex + delta
   const visit = state.nodeHistory[next]
-  if (!visit) return                       // no-op at either end, rather than a clamped no-change
+  if (!visit) return // no-op at either end, rather than a clamped no-change
   setOperationalView({
     historyIndex: next,
     selectedNode: visit.nodeId,
@@ -154,9 +177,15 @@ export function resetOperationalView(): void {
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener)
-  return () => { listeners.delete(listener) }
+  return () => {
+    listeners.delete(listener)
+  }
 }
 
 export function useOperationalView(): OperationalViewState {
-  return useSyncExternalStore(subscribe, () => state, () => state)
+  return useSyncExternalStore(
+    subscribe,
+    () => state,
+    () => state,
+  )
 }

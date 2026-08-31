@@ -62,7 +62,10 @@ function findTargetStep(draft: RecipeJson, id: string): RecipeStepJson | undefin
  * than one step's `sources[]` (a router's group consumers are the canonical
  * case); the canvas already dedupes to a single node for it (recipeAdapter.ts's
  * `recipeToCanvas`), so this mirrors that same "first occurrence wins" choice. */
-function findSourceOccurrence(draft: RecipeJson, id: string): { stepName: string; source: RecipeSourceJson } | undefined {
+function findSourceOccurrence(
+  draft: RecipeJson,
+  id: string,
+): { stepName: string; source: RecipeSourceJson } | undefined {
   for (const step of draft.steps ?? []) {
     const source = step.sources?.find(s => s.name === id)
     if (source) return { stepName: step.target?.name ?? '', source }
@@ -76,7 +79,11 @@ function findSourceOccurrence(draft: RecipeJson, id: string): { stepName: string
  * already stored under its canonical name) — so a write always lands on
  * whichever key the node ALREADY carries rather than growing a stray parallel
  * canonical-named key next to a still-present anonymized one. */
-function resolveRawKey(raw: RawRecord, canonicalKey: string, keyAliases: Record<string, string>): string {
+function resolveRawKey(
+  raw: RawRecord,
+  canonicalKey: string,
+  keyAliases: Record<string, string>,
+): string {
   if (canonicalKey in raw) return canonicalKey
   for (const k of Object.keys(raw)) {
     if ((keyAliases[k] ?? k) === canonicalKey) return k
@@ -168,15 +175,29 @@ function FieldRow({
       data-testid={`inspector-field-${fieldName}`}
       data-focused={focused ? 'true' : undefined}
       style={{
-        border: `1px solid ${focused ? '#4f9cf9' : 'var(--border-subtle)'}`, borderRadius: 5, padding: 10,
-        display: 'flex', flexDirection: 'column', gap: 8,
-      }}>
-      <div style={{ fontSize: 10, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>{fieldName}</div>
-      <TextWidget label="Data type" value={field.dataType ?? ''} mono
-        onChange={v => onChange(editFieldDataType(draft, stepName, fieldName, v))} />
-      <FormulaWidget label="Formula" value={field.transformation}
+        border: `1px solid ${focused ? '#4f9cf9' : 'var(--border-subtle)'}`,
+        borderRadius: 5,
+        padding: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
+      <div style={{ fontSize: 10, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace' }}>
+        {fieldName}
+      </div>
+      <TextWidget
+        label="Data type"
+        value={field.dataType ?? ''}
+        mono
+        onChange={v => onChange(editFieldDataType(draft, stepName, fieldName, v))}
+      />
+      <FormulaWidget
+        label="Formula"
+        value={field.transformation}
         onFocus={() => onFocusFormula(stepName, fieldName)}
-        onChange={t => onChange(setFieldTransformation(draft, stepName, fieldName, t))} />
+        onChange={t => onChange(setFieldTransformation(draft, stepName, fieldName, t))}
+      />
     </div>
   )
 }
@@ -197,42 +218,77 @@ function AddFieldRow({ onAdd }: { onAdd: (fieldName: string) => void }) {
       <input
         value={name}
         onChange={e => setName(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') commit() }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') commit()
+        }}
         placeholder="field name…"
         style={{
-          flex: 1, background: 'var(--surface-2)', border: '1px solid var(--border)',
-          borderRadius: 4, color: '#c8d3e8', fontSize: 11, padding: '5px 8px',
-          fontFamily: 'JetBrains Mono, monospace', outline: 'none',
+          flex: 1,
+          background: 'var(--surface-2)',
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          color: '#c8d3e8',
+          fontSize: 11,
+          padding: '5px 8px',
+          fontFamily: 'JetBrains Mono, monospace',
+          outline: 'none',
         }}
       />
-      <button onClick={commit} style={{
-        padding: '5px 10px', borderRadius: 4,
-        background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-        color: '#4f9cf9', fontSize: 11, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
-      }}>+ field</button>
+      <button
+        onClick={commit}
+        style={{
+          padding: '5px 10px',
+          borderRadius: 4,
+          background: 'rgba(79,156,249,0.15)',
+          border: '1px solid #4f9cf9',
+          color: '#4f9cf9',
+          fontSize: 11,
+          cursor: 'pointer',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        + field
+      </button>
     </div>
   )
 }
 
 // ─── Delete control (moved verbatim from ETLModifier.tsx's DeleteNodeControl) ────
 
-function DeleteControl({ draft, nodeId, onDelete }: { draft: RecipeJson; nodeId: string; onDelete: (name: string) => void }) {
+function DeleteControl({
+  draft,
+  nodeId,
+  onDelete,
+}: {
+  draft: RecipeJson
+  nodeId: string
+  onDelete: (name: string) => void
+}) {
   const [armed, setArmed] = useState(false)
-  useEffect(() => { setArmed(false) }, [nodeId])
+  useEffect(() => {
+    setArmed(false)
+  }, [nodeId])
   const refCount = refsInto(draft, nodeId)
 
   return (
     <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
       {!armed ? (
-        <button onClick={() => setArmed(true)} style={dangerButtonStyle}>Delete</button>
+        <button onClick={() => setArmed(true)} style={dangerButtonStyle}>
+          Delete
+        </button>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ fontSize: 11, color: 'var(--red)' }}>
             {`Removes ${nodeId} and clears ${refCount} incoming reference(s)`}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setArmed(false)} style={ghostButtonStyle}>Cancel</button>
-            <button onClick={() => onDelete(nodeId)} style={dangerButtonStyle}>Confirm delete</button>
+            <button onClick={() => setArmed(false)} style={ghostButtonStyle}>
+              Cancel
+            </button>
+            <button onClick={() => onDelete(nodeId)} style={dangerButtonStyle}>
+              Confirm delete
+            </button>
           </div>
         </div>
       )}
@@ -251,7 +307,9 @@ function DeleteControl({ draft, nodeId, onDelete }: { draft: RecipeJson; nodeId:
 function HeaderRow({ title, onClose }: { title: string; onClose?: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-      <span style={{ fontSize: 14, color: '#4f9cf9', fontFamily: 'JetBrains Mono, monospace' }}>✎</span>
+      <span style={{ fontSize: 14, color: '#4f9cf9', fontFamily: 'JetBrains Mono, monospace' }}>
+        ✎
+      </span>
       <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8' }}>{title}</span>
       <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       {onClose && (
@@ -260,10 +318,18 @@ function HeaderRow({ title, onClose }: { title: string; onClose?: () => void }) 
           title="Close"
           onClick={onClose}
           style={{
-            background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 2px',
-            color: '#7b88aa', fontSize: 14, lineHeight: 1, fontFamily: 'JetBrains Mono, monospace',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0 2px',
+            color: '#7b88aa',
+            fontSize: 14,
+            lineHeight: 1,
+            fontFamily: 'JetBrains Mono, monospace',
           }}
-        >×</button>
+        >
+          ×
+        </button>
       )}
     </div>
   )
@@ -314,7 +380,8 @@ export function Inspector({
 }) {
   const targetStep = findTargetStep(draft, node.id)
   const sourceOcc = !targetStep ? findSourceOccurrence(draft, node.id) : undefined
-  const raw = (targetStep ? targetStep.target : sourceOcc?.source) as unknown as RawRecord | undefined
+  const raw = (targetStep ? targetStep.target : sourceOcc?.source) as unknown as
+    RawRecord | undefined
 
   // Hoisted above the early returns below: renaming is defined for every node
   // this component can render, including the declared-source-table case, which
@@ -341,16 +408,24 @@ export function Inspector({
     return (
       <section>
         <HeaderRow title={`Edit — ${node.id}`} onClose={onClose} />
-        <div style={{
-          padding: 16, background: 'var(--surface)',
-          border: '1px solid var(--border)', borderRadius: 7,
-          display: 'flex', flexDirection: 'column', gap: 16,
-        }}>
+        <div
+          style={{
+            padding: 16,
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 7,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+          }}
+        >
           <TextWidget label="Node name" value={node.id} onChange={handleRename} />
           <div style={{ fontSize: 11, color: '#4a5570', lineHeight: 1.5 }}>
-            Declared in <code style={{ fontFamily: 'JetBrains Mono, monospace' }}>table.sourceTableNames</code>, but
-            no step reads from it yet — a source table is a root, not a step, so it carries no properties of its own
-            until a step declares it as a source. Add a step fed by it (or wire one of its fields) to give it ports.
+            Declared in{' '}
+            <code style={{ fontFamily: 'JetBrains Mono, monospace' }}>table.sourceTableNames</code>,
+            but no step reads from it yet — a source table is a root, not a step, so it carries no
+            properties of its own until a step declares it as a source. Add a step fed by it (or
+            wire one of its fields) to give it ports.
           </div>
           <DeleteControl draft={draft} nodeId={node.id} onDelete={onDelete} />
         </div>
@@ -381,11 +456,17 @@ export function Inspector({
   return (
     <section>
       <HeaderRow title={`Edit — ${node.id}`} onClose={onClose} />
-      <div style={{
-        padding: 16, background: 'var(--surface)',
-        border: '1px solid var(--border)', borderRadius: 7,
-        display: 'flex', flexDirection: 'column', gap: 16,
-      }}>
+      <div
+        style={{
+          padding: 16,
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 7,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}
+      >
         <TextWidget label="Node name" value={node.id} onChange={handleRename} />
 
         {propertySpecs.map(spec => {
@@ -394,48 +475,129 @@ export function Inspector({
           const value = raw[rawKey]
           switch (spec.widget) {
             case 'toggle':
-              return <ToggleWidget key={key} label={key} value={Boolean(value)} onChange={v => commit(key, v)} />
-            case 'textarea':
-              return <TextareaWidget key={key} label={key} value={typeof value === 'string' ? value : ''} onChange={v => commit(key, v)} />
-            case 'stringList':
-              return <StringListWidget key={key} label={key} value={Array.isArray(value) ? value as string[] : []} onChange={v => commit(key, v)} />
-            case 'formula':
-              return <FormulaWidget key={key} label={key} value={value as RecipeTransformationJson | undefined} onChange={v => commit(key, v)} />
-            case 'rowTable': {
-              const rows = Array.isArray(value) ? value as RawRecord[] : []
               return (
-                <RowTableWidget key={key} label={key} value={rows}
+                <ToggleWidget
+                  key={key}
+                  label={key}
+                  value={Boolean(value)}
+                  onChange={v => commit(key, v)}
+                />
+              )
+            case 'textarea':
+              return (
+                <TextareaWidget
+                  key={key}
+                  label={key}
+                  value={typeof value === 'string' ? value : ''}
+                  onChange={v => commit(key, v)}
+                />
+              )
+            case 'stringList':
+              return (
+                <StringListWidget
+                  key={key}
+                  label={key}
+                  value={Array.isArray(value) ? (value as string[]) : []}
+                  onChange={v => commit(key, v)}
+                />
+              )
+            case 'formula':
+              return (
+                <FormulaWidget
+                  key={key}
+                  label={key}
+                  value={value as RecipeTransformationJson | undefined}
+                  onChange={v => commit(key, v)}
+                />
+              )
+            case 'rowTable': {
+              const rows = Array.isArray(value) ? (value as RawRecord[]) : []
+              return (
+                <RowTableWidget
+                  key={key}
+                  label={key}
+                  value={rows}
                   columns={deriveRowTableColumns(rows)}
-                  onChange={v => commit(key, v)} />
+                  onChange={v => commit(key, v)}
+                />
               )
             }
             case 'text':
             default:
-              return <TextWidget key={key} label={key} value={typeof value === 'string' ? value : (value === undefined ? '' : String(value))} onChange={v => commit(key, v)} />
+              return (
+                <TextWidget
+                  key={key}
+                  label={key}
+                  value={
+                    typeof value === 'string' ? value : value === undefined ? '' : String(value)
+                  }
+                  onChange={v => commit(key, v)}
+                />
+              )
           }
         })}
 
         {fieldTableSpecs.length > 0 && targetStep && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {fields.map(f => (
-              <FieldRow key={f.name} draft={draft} stepName={node.id} field={f}
-                onChange={onChange} onFocusFormula={onFocusFormula}
-                focused={!!focusField && f.name === focusField} />
+              <FieldRow
+                key={f.name}
+                draft={draft}
+                stepName={node.id}
+                field={f}
+                onChange={onChange}
+                onFocusFormula={onFocusFormula}
+                focused={!!focusField && f.name === focusField}
+              />
             ))}
-            <AddFieldRow onAdd={fieldName => onChange(addField(draft, { stepName: node.id, fieldName }))} />
+            <AddFieldRow
+              onAdd={fieldName => onChange(addField(draft, { stepName: node.id, fieldName }))}
+            />
           </div>
         )}
 
         {unrecognized.length > 0 && (
-          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ fontSize: 10, color: '#4a5570', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Unrecognized keys</div>
+          <div
+            style={{
+              borderTop: '1px solid var(--border-subtle)',
+              paddingTop: 12,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                color: '#4a5570',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}
+            >
+              Unrecognized keys
+            </div>
             {unrecognized.map(([k, v]) => (
               <div key={k} style={{ display: 'flex', gap: 8, fontSize: 11 }}>
-                <span style={{ color: '#4a5570', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>{k}</span>
-                <span style={{
-                  color: '#c8d3e8', fontFamily: 'JetBrains Mono, monospace',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>{JSON.stringify(v)}</span>
+                <span
+                  style={{
+                    color: '#4a5570',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    flexShrink: 0,
+                  }}
+                >
+                  {k}
+                </span>
+                <span
+                  style={{
+                    color: '#c8d3e8',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {JSON.stringify(v)}
+                </span>
               </div>
             ))}
           </div>

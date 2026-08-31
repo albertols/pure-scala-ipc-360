@@ -17,13 +17,20 @@ const HEAVY_RENDER_TIMEOUT = 20_000
 
 const ENTRIES: ExpressionEntry[] = [
   {
-    mappingPath: 'CDM/m_DM_INFOHUB_BIZLINK', layer: 'CDM',
-    transformation: 'EXP_FIX', port: 'COL_A_OUT', formula: 'LTRIM(COL_A)', origin: 'xml',
+    mappingPath: 'CDM/m_DM_INFOHUB_BIZLINK',
+    layer: 'CDM',
+    transformation: 'EXP_FIX',
+    port: 'COL_A_OUT',
+    formula: 'LTRIM(COL_A)',
+    origin: 'xml',
   },
   {
-    mappingPath: 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json', layer: 'ODS',
-    transformation: 'ODS_SYN_ORDERS', port: 'AMOUNT',
-    formula: 'ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)', origin: 'recipe',
+    mappingPath: 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json',
+    layer: 'ODS',
+    transformation: 'ODS_SYN_ORDERS',
+    port: 'AMOUNT',
+    formula: 'ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)',
+    origin: 'recipe',
   },
 ]
 
@@ -70,8 +77,12 @@ describe('ExpressionDock (Task 14)', () => {
     const recipeOnly: ExpressionEntry[] = [
       ENTRIES[1],
       {
-        mappingPath: 'CDM/m_FIX/_ETL_m_FIX.json', layer: 'CDM',
-        transformation: 'FIX_STEP', port: 'B', formula: 'UPPER(S.B)', origin: 'recipe',
+        mappingPath: 'CDM/m_FIX/_ETL_m_FIX.json',
+        layer: 'CDM',
+        transformation: 'FIX_STEP',
+        port: 'B',
+        formula: 'UPPER(S.B)',
+        origin: 'recipe',
       },
     ]
     function Host() {
@@ -93,7 +104,9 @@ describe('ExpressionDock (Task 14)', () => {
     expect(screen.getByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
     expect(screen.getByText('UPPER(S.B)')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByPlaceholderText('Filter expressions…'), { target: { value: 'UPPER' } })
+    fireEvent.change(screen.getByPlaceholderText('Filter expressions…'), {
+      target: { value: 'UPPER' },
+    })
 
     expect(screen.queryByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).not.toBeInTheDocument()
     expect(screen.getByText('UPPER(S.B)')).toBeInTheDocument()
@@ -127,27 +140,61 @@ const LONG = 'CONCAT(' + 'X'.repeat(4000) + ')'
 
 describe('ExpressionDock (Task 1 — clamp and cap)', () => {
   it('clamps a long formula and expands it on click', () => {
-    render(<ExpressionDock entries={[
-      { mappingPath: 'CDM/m_A', layer: 'CDM', transformation: 'EXP_A', port: 'P', formula: LONG, origin: 'recipe' },
-    ]} isLoading={false} error={null} filter="" onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+    render(
+      <ExpressionDock
+        entries={[
+          {
+            mappingPath: 'CDM/m_A',
+            layer: 'CDM',
+            transformation: 'EXP_A',
+            port: 'P',
+            formula: LONG,
+            origin: 'recipe',
+          },
+        ]}
+        isLoading={false}
+        error={null}
+        filter=""
+        onFilterChange={() => {}}
+        canInsert={false}
+        onInsert={() => {}}
+      />,
+    )
 
     const pre = screen.getByText(LONG)
-    expect(pre).toHaveStyle({ overflow: 'hidden' })      // clamped
+    expect(pre).toHaveStyle({ overflow: 'hidden' }) // clamped
     fireEvent.click(screen.getByRole('button', { name: /expand/i }))
     expect(screen.getByText(LONG)).not.toHaveStyle({ overflow: 'hidden' })
   })
 
-  it('caps the rendered list and states truthfully how many are shown', () => {
-    const many = Array.from({ length: 300 }, (_, i) => ({
-      mappingPath: 'CDM/m_A', layer: 'CDM', transformation: `EXP_${i}`, port: 'P',
-      formula: `LTRIM(C${i})`, origin: 'recipe' as const,
-    }))
-    render(<ExpressionDock entries={many} isLoading={false} error={null} filter=""
-      onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+  it(
+    'caps the rendered list and states truthfully how many are shown',
+    () => {
+      const many = Array.from({ length: 300 }, (_, i) => ({
+        mappingPath: 'CDM/m_A',
+        layer: 'CDM',
+        transformation: `EXP_${i}`,
+        port: 'P',
+        formula: `LTRIM(C${i})`,
+        origin: 'recipe' as const,
+      }))
+      render(
+        <ExpressionDock
+          entries={many}
+          isLoading={false}
+          error={null}
+          filter=""
+          onFilterChange={() => {}}
+          canInsert={false}
+          onInsert={() => {}}
+        />,
+      )
 
-    expect(screen.getAllByText(/^EXP_\d+\.P$/)).toHaveLength(150)
-    expect(screen.getByText(/showing 150 of 300/i)).toBeInTheDocument()
-  }, HEAVY_RENDER_TIMEOUT)
+      expect(screen.getAllByText(/^EXP_\d+\.P$/)).toHaveLength(150)
+      expect(screen.getByText(/showing 150 of 300/i)).toBeInTheDocument()
+    },
+    HEAVY_RENDER_TIMEOUT,
+  )
 
   // Regression (UX round 3, issue 2): the dock's list is a `flexDirection:
   // 'column'` container with `flex: 1` inside a FIXED-height shell, and each row
@@ -158,26 +205,61 @@ describe('ExpressionDock (Task 1 — clamp and cap)', () => {
   // painted as a stack of hairlines with every formula present in the DOM but
   // invisible (live-DOM evidence: row height 2px, full textContent intact).
   // jsdom performs no flex layout, so this pins the property that prevents it.
-  it('list rows and the footer opt out of flex shrinking, so a capped list scrolls instead of collapsing to hairlines', () => {
-    const many = Array.from({ length: 300 }, (_, i) => ({
-      mappingPath: 'CDM/m_A', layer: 'CDM', transformation: `EXP_${i}`, port: 'P',
-      formula: `LTRIM(C${i})`, origin: 'recipe' as const,
-    }))
-    render(<ExpressionDock entries={many} isLoading={false} error={null} filter=""
-      onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+  it(
+    'list rows and the footer opt out of flex shrinking, so a capped list scrolls instead of collapsing to hairlines',
+    () => {
+      const many = Array.from({ length: 300 }, (_, i) => ({
+        mappingPath: 'CDM/m_A',
+        layer: 'CDM',
+        transformation: `EXP_${i}`,
+        port: 'P',
+        formula: `LTRIM(C${i})`,
+        origin: 'recipe' as const,
+      }))
+      render(
+        <ExpressionDock
+          entries={many}
+          isLoading={false}
+          error={null}
+          filter=""
+          onFilterChange={() => {}}
+          canInsert={false}
+          onInsert={() => {}}
+        />,
+      )
 
-    const rows = screen.getAllByText(/^EXP_\d+\.P$/)
-      .map(el => el.closest('[draggable="true"]') as HTMLElement)
-    expect(rows).toHaveLength(150)
-    for (const row of rows) expect(row.style.flexShrink).toBe('0')
+      const rows = screen
+        .getAllByText(/^EXP_\d+\.P$/)
+        .map(el => el.closest('[draggable="true"]') as HTMLElement)
+      expect(rows).toHaveLength(150)
+      for (const row of rows) expect(row.style.flexShrink).toBe('0')
 
-    expect((screen.getByText(/showing 150 of 300/i) as HTMLElement).style.flexShrink).toBe('0')
-  }, HEAVY_RENDER_TIMEOUT)
+      expect((screen.getByText(/showing 150 of 300/i) as HTMLElement).style.flexShrink).toBe('0')
+    },
+    HEAVY_RENDER_TIMEOUT,
+  )
 
   it('shows no footer when nothing is hidden', () => {
-    render(<ExpressionDock entries={[
-      { mappingPath: 'CDM/m_A', layer: 'CDM', transformation: 'EXP_A', port: 'P', formula: 'LTRIM(A)', origin: 'recipe' },
-    ]} isLoading={false} error={null} filter="" onFilterChange={() => {}} canInsert={false} onInsert={() => {}} />)
+    render(
+      <ExpressionDock
+        entries={[
+          {
+            mappingPath: 'CDM/m_A',
+            layer: 'CDM',
+            transformation: 'EXP_A',
+            port: 'P',
+            formula: 'LTRIM(A)',
+            origin: 'recipe',
+          },
+        ]}
+        isLoading={false}
+        error={null}
+        filter=""
+        onFilterChange={() => {}}
+        canInsert={false}
+        onInsert={() => {}}
+      />,
+    )
 
     expect(screen.queryByText(/showing/i)).not.toBeInTheDocument()
   })

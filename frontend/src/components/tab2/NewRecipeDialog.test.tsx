@@ -10,15 +10,18 @@ import { NewRecipeDialog } from './NewRecipeDialog'
 // dialog's list is genuinely sourced from `GET /api/registry`, not some
 // other hardcoded/summary layer list that happens to overlap.
 const REGISTRY: Registry = {
-  sourceTables: [], targetTables: [], ddlTables: [],
+  sourceTables: [],
+  targetTables: [],
+  ddlTables: [],
   layers: ['CDM', 'ZTESTLAYER'],
 }
 
-const server = setupServer(
-  http.get('/api/registry', () => HttpResponse.json(REGISTRY)),
-)
+const server = setupServer(http.get('/api/registry', () => HttpResponse.json(REGISTRY)))
 beforeAll(() => server.listen())
-afterEach(() => { server.resetHandlers(); cleanup() })
+afterEach(() => {
+  server.resetHandlers()
+  cleanup()
+})
 afterAll(() => server.close())
 
 function renderDialog() {

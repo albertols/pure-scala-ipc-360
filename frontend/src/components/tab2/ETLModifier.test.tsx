@@ -26,7 +26,8 @@ const MINI = {
   steps: [
     {
       target: {
-        name: 'T', type: 'table',
+        name: 'T',
+        type: 'table',
         fields: [
           { name: 'A', dataType: 'String', transformation: { value: '1' } },
           { name: 'B', dataType: 'String', transformation: { source: 'S.B' } },
@@ -42,10 +43,16 @@ const MINI = {
 // generated DDL file) alongside the recipe — the Explorer's fileFilter must
 // keep only `_ETL_*.json` entries, so both siblings are exercised here.
 const TREE = {
-  name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
+  name: 'xmltobq',
+  path: '',
+  kind: 'dir',
+  layer: 'root',
   children: [
     {
-      name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
+      name: 'CDM',
+      path: 'CDM',
+      kind: 'dir',
+      layer: 'CDM',
       children: [
         { name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' },
         { name: 'm_FIX.xml', path: 'CDM/m_FIX/m_FIX.xml', kind: 'xml' },
@@ -79,7 +86,13 @@ const IPC_RULES = {
       { key: 'name', parserType: 'String', required: true, widget: 'text' },
       { key: 'type', parserType: 'String', required: true, widget: 'text' },
       { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-      { key: 'selectDistinct', parserType: 'Boolean', required: true, widget: 'toggle', ruleId: 'IPC-TYP-SOURCEQUALIFIER-001' },
+      {
+        key: 'selectDistinct',
+        parserType: 'Boolean',
+        required: true,
+        widget: 'toggle',
+        ruleId: 'IPC-TYP-SOURCEQUALIFIER-001',
+      },
       { key: 'sourceFilter', parserType: 'Option[String]', required: false, widget: 'textarea' },
       { key: 'sqlQuery', parserType: 'Option[String]', required: false, widget: 'textarea' },
       { key: 'userDefinedJoin', parserType: 'Option[String]', required: false, widget: 'textarea' },
@@ -96,31 +109,54 @@ const IPC_RULES = {
   connections: {
     table: { mayFeed: ['sourceQualifier', 'table', 'normalizer'] },
     sourceQualifier: {
-      mayFeed: ['table', 'unionInput', 'filter', 'joinerInput', 'aggregator', 'router', 'normalizer', 'java', 'storedProcedure'],
+      mayFeed: [
+        'table',
+        'unionInput',
+        'filter',
+        'joinerInput',
+        'aggregator',
+        'router',
+        'normalizer',
+        'java',
+        'storedProcedure',
+      ],
       active: true,
     },
   },
 }
 
 // Task 16: static corpus counts for the Explorer footer's corpus summary.
-const SUMMARY = { xmlCount: 81, recipeCount: 86, ddlCount: 212, dirCount: 119, layers: ['CDM', 'DWH', 'ETL', 'ODS', 'OUTPUT', 'QDM', 'RDM', 'STG'] }
+const SUMMARY = {
+  xmlCount: 81,
+  recipeCount: 86,
+  ddlCount: 212,
+  dirCount: 119,
+  layers: ['CDM', 'DWH', 'ETL', 'ODS', 'OUTPUT', 'QDM', 'RDM', 'STG'],
+}
 
 // Task 15: the "New recipe" dialog's own layer picker — deliberately carries
 // a layer ('ZTESTLAYER') found NOWHERE in SUMMARY.layers, so a test asserting
 // on it proves the dialog is genuinely reading `GET /api/registry` (Task 13)
 // rather than incidentally rendering an overlapping list from elsewhere.
-const REGISTRY = { sourceTables: [], targetTables: [], ddlTables: [], layers: ['CDM', 'ZTESTLAYER'] }
+const REGISTRY = {
+  sourceTables: [],
+  targetTables: [],
+  ddlTables: [],
+  layers: ['CDM', 'ZTESTLAYER'],
+}
 
 const server = setupServer(
   http.get('/api/tree', () => HttpResponse.json(TREE)),
   http.get('/api/summary', () => HttpResponse.json(SUMMARY)),
-  http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-    path: 'CDM/m_FIX/_ETL_m_FIX.json',
-    fileName: '_ETL_m_FIX.json',
-    sizeBytes: 321,
-    modifiedAt: '2026-07-31T00:00:00Z',
-    content: MINI,
-  })),
+  http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+    HttpResponse.json({
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      sizeBytes: 321,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: MINI,
+    }),
+  ),
   http.get('/api/ddl/CDM/m_FIX', () => HttpResponse.json({})),
   http.post('/api/recipes/validate', () => HttpResponse.json({ valid: true, errors: [] })),
   http.get('/api/expressions', () => HttpResponse.json([])),
@@ -128,11 +164,16 @@ const server = setupServer(
   // Task 10: unsaved-layout default (`{version:1,nodes:{}}` never 404s) — every
   // suite above this one renders the canvas, so this default keeps them
   // green without knowing about the layout sidecar at all.
-  http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+  http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () =>
+    HttpResponse.json({ version: 1, nodes: {} }),
+  ),
   http.get('/api/registry', () => HttpResponse.json(REGISTRY)),
 )
 beforeAll(() => server.listen())
-afterEach(() => { server.resetHandlers(); cleanup() })
+afterEach(() => {
+  server.resetHandlers()
+  cleanup()
+})
 afterAll(() => server.close())
 
 function renderModifier(searchQuery = '') {
@@ -163,53 +204,57 @@ async function loadAndSelectT() {
 const HEAVY_WALK_TIMEOUT = 20_000
 
 describe('ETLModifier — real recipes on the shared canvas', () => {
-  it('shows the empty hint, then renders the real recipe canvas after selecting an _ETL_*.json file', async () => {
-    renderModifier()
+  it(
+    'shows the empty hint, then renders the real recipe canvas after selecting an _ETL_*.json file',
+    async () => {
+      renderModifier()
 
-    expect(await screen.findByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
+      expect(await screen.findByText('Select an _ETL_*.json recipe to edit')).toBeInTheDocument()
 
-    const file = await screen.findByText('_ETL_m_FIX.json')
-    fireEvent.click(file)
+      const file = await screen.findByText('_ETL_m_FIX.json')
+      fireEvent.click(file)
 
-    // { selector: 'text' } excludes NodeBox's nested <title> a11y element.
-    const targetName = await screen.findByText('T', { selector: 'text' })
-    expect(targetName).toBeInTheDocument()
+      // { selector: 'text' } excludes NodeBox's nested <title> a11y element.
+      const targetName = await screen.findByText('T', { selector: 'text' })
+      expect(targetName).toBeInTheDocument()
 
-    // Toolbar identity: fileName as title (also still present in the tree).
-    expect(screen.getAllByText('_ETL_m_FIX.json').length).toBeGreaterThanOrEqual(2)
+      // Toolbar identity: fileName as title (also still present in the tree).
+      expect(screen.getAllByText('_ETL_m_FIX.json').length).toBeGreaterThanOrEqual(2)
 
-    // Source / Target lists (Task 4: moved into the drawer, not the page body)
-    // don't render their table names until their own tab is opened.
-    expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
+      // Source / Target lists (Task 4: moved into the drawer, not the page body)
+      // don't render their table names until their own tab is opened.
+      expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
 
-    // Raw JSON — and the Path / Size bytes / Modified metadata that now lives
-    // inside its panel (Task 4 moved it out of the always-visible header card,
-    // spec §5.2) — is not shown until toggled.
-    expect(screen.queryByText('S.B')).not.toBeInTheDocument()
-    expect(screen.queryByDisplayValue('CDM/m_FIX/_ETL_m_FIX.json')).not.toBeInTheDocument()
+      // Raw JSON — and the Path / Size bytes / Modified metadata that now lives
+      // inside its panel (Task 4 moved it out of the always-visible header card,
+      // spec §5.2) — is not shown until toggled.
+      expect(screen.queryByText('S.B')).not.toBeInTheDocument()
+      expect(screen.queryByDisplayValue('CDM/m_FIX/_ETL_m_FIX.json')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('{ raw JSON }'))
-    expect(await screen.findByText(/S\.B/)).toBeInTheDocument()
+      fireEvent.click(screen.getByText('{ raw JSON }'))
+      expect(await screen.findByText(/S\.B/)).toBeInTheDocument()
 
-    // RecipeDto metadata (Path / Size bytes / Modified) as read-only fields,
-    // now inside the { raw JSON } panel (Task 4).
-    expect(screen.getByDisplayValue('CDM/m_FIX/_ETL_m_FIX.json')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('321')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
+      // RecipeDto metadata (Path / Size bytes / Modified) as read-only fields,
+      // now inside the { raw JSON } panel (Task 4).
+      expect(screen.getByDisplayValue('CDM/m_FIX/_ETL_m_FIX.json')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('321')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('2026-07-31T00:00:00Z')).toBeInTheDocument()
 
-    // Source / Target lists driven from table.sourceTableNames/targetTableNames
-    // — still real values once their drawer tab is opened (Task 4 re-target of
-    // the original "Source / Target lists" assertion, which used to be visible
-    // inline with no tab to open at all).
-    fireEvent.click(screen.getByRole('button', { name: /^Source$/ }))
-    expect(screen.getByText('S', { selector: 'span' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /^Target$/ }))
-    expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
-    expect(screen.getByText('T', { selector: 'span' })).toBeInTheDocument()
+      // Source / Target lists driven from table.sourceTableNames/targetTableNames
+      // — still real values once their drawer tab is opened (Task 4 re-target of
+      // the original "Source / Target lists" assertion, which used to be visible
+      // inline with no tab to open at all).
+      fireEvent.click(screen.getByRole('button', { name: /^Source$/ }))
+      expect(screen.getByText('S', { selector: 'span' })).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: /^Target$/ }))
+      expect(screen.queryByText('S', { selector: 'span' })).not.toBeInTheDocument()
+      expect(screen.getByText('T', { selector: 'span' })).toBeInTheDocument()
 
-    // DDL section absent for an empty /api/ddl map.
-    expect(screen.queryByText('BigQuery DDL Schema')).not.toBeInTheDocument()
-  }, HEAVY_WALK_TIMEOUT)
+      // DDL section absent for an empty /api/ddl map.
+      expect(screen.queryByText('BigQuery DDL Schema')).not.toBeInTheDocument()
+    },
+    HEAVY_WALK_TIMEOUT,
+  )
 
   // Superseded by Task 14's Explorer scoping (below): a non-recipe .json leaf
   // like BIZLINK.json is now excluded from Tab 2's tree entirely by
@@ -219,7 +264,7 @@ describe('ETLModifier — real recipes on the shared canvas', () => {
 
   // Task 16: view-aware corpus summary — Explorer footer, static corpus counts
   // PLUS (once a recipe is open) that recipe's own steps/fields/sources.
-  it('renders the corpus summary in the Explorer footer, extended with the open recipe\'s steps/fields/sources', async () => {
+  it("renders the corpus summary in the Explorer footer, extended with the open recipe's steps/fields/sources", async () => {
     renderModifier()
 
     expect(await screen.findByText('86 recipes')).toBeInTheDocument()
@@ -241,11 +286,18 @@ describe('ETLModifier — real recipes on the shared canvas', () => {
 
 describe('ETLModifier — editing state (Task 8)', () => {
   it('editing a field formula dirties the SaveBar; Save validates then PUTs the draft with the dot-ref verbatim; SaveBar clears', async () => {
-    type CapturedPut = { baseModified?: string; content?: { steps?: { target?: { name?: string; fields?: { name?: string; transformation?: unknown }[] } }[] } }
+    type CapturedPut = {
+      baseModified?: string
+      content?: {
+        steps?: {
+          target?: { name?: string; fields?: { name?: string; transformation?: unknown }[] }
+        }[]
+      }
+    }
     let capturedBody: CapturedPut | null = null
     server.use(
       http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', async ({ request }) => {
-        capturedBody = await request.json() as CapturedPut
+        capturedBody = (await request.json()) as CapturedPut
         return HttpResponse.json({
           path: 'CDM/m_FIX/_ETL_m_FIX.json',
           fileName: '_ETL_m_FIX.json',
@@ -269,7 +321,10 @@ describe('ETLModifier — editing state (Task 8)', () => {
     const fieldB = capturedBody!.content!.steps![0].target!.fields!.find(f => f.name === 'B')!
     expect(fieldB.transformation).toEqual({ source: 'S.B' })
     const fieldA = capturedBody!.content!.steps![0].target!.fields!.find(f => f.name === 'A')!
-    expect(fieldA.transformation).toEqual({ name: 'EXP_TO_CHAR', parameters: [{ source: 'S.B' }, { value: "'X'" }] })
+    expect(fieldA.transformation).toEqual({
+      name: 'EXP_TO_CHAR',
+      parameters: [{ source: 'S.B' }, { value: "'X'" }],
+    })
 
     await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
   })
@@ -311,7 +366,10 @@ describe('ETLModifier — editing state (Task 8)', () => {
     server.use(
       http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', async () => {
         await new Promise(resolve => setTimeout(resolve, 60))
-        return HttpResponse.json({ title: 'Conflict', detail: 'Recipe changed since you loaded it.' }, { status: 409 })
+        return HttpResponse.json(
+          { title: 'Conflict', detail: 'Recipe changed since you loaded it.' },
+          { status: 409 },
+        )
       }),
     )
 
@@ -346,7 +404,11 @@ describe('ETLModifier — editing state (Task 8)', () => {
   it('surfaces a 409 (stale) PUT conflict in the --red idiom; SaveBar stays dirty', async () => {
     server.use(
       http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
-        HttpResponse.json({ title: 'Conflict', detail: 'Recipe changed since you loaded it.' }, { status: 409 })),
+        HttpResponse.json(
+          { title: 'Conflict', detail: 'Recipe changed since you loaded it.' },
+          { status: 409 },
+        ),
+      ),
     )
 
     const formula = await loadAndSelectT()
@@ -365,10 +427,12 @@ describe('ETLModifier — editing state (Task 8)', () => {
   it('surfaces validate() errors in the --red idiom without ever PUTting', async () => {
     let putCalled = false
     server.use(
-      http.post('/api/recipes/validate', () => HttpResponse.json({
-        valid: false,
-        errors: [{ path: '$.steps[0].target.fields[0].name', message: 'Field name required' }],
-      })),
+      http.post('/api/recipes/validate', () =>
+        HttpResponse.json({
+          valid: false,
+          errors: [{ path: '$.steps[0].target.fields[0].name', message: 'Field name required' }],
+        }),
+      ),
       http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => {
         putCalled = true
         return HttpResponse.json({})
@@ -454,10 +518,14 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
     await screen.findByText('Add table')
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_TBL' } })
-    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'T — table' }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'T — table' }),
+    )
     fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     expect(await screen.findByText('NEW_TBL', { selector: 'text' })).toBeInTheDocument()
@@ -465,19 +533,33 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
   })
 
   it('click-wire: OUT port on S then IN port on T writes the dot-ref via setFieldTransformation', async () => {
-    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      path: 'CDM/m_FIX/_ETL_m_FIX.json',
-      fileName: '_ETL_m_FIX.json',
-      sizeBytes: 200,
-      modifiedAt: '2026-07-31T00:00:00Z',
-      content: {
-        steps: [
-          { target: { name: 'S', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
-          { target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] }, sources: [] },
-        ],
-        table: { targetTableNames: ['T'], sourceTableNames: [] },
-      },
-    })))
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 200,
+          modifiedAt: '2026-07-31T00:00:00Z',
+          content: {
+            steps: [
+              {
+                target: {
+                  name: 'S',
+                  type: 'sourceQualifier',
+                  fields: [{ name: 'A', dataType: 'String' }],
+                },
+                sources: [],
+              },
+              {
+                target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] },
+                sources: [],
+              },
+            ],
+            table: { targetTableNames: ['T'], sourceTableNames: [] },
+          },
+        }),
+      ),
+    )
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
@@ -500,24 +582,32 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
   // ever opened the Inspector — every other click on the box silently armed a
   // wire whose only feedback was a small toolbar chip.
   it('clicking a port ROW opens the Inspector on that node and focuses that field — it does not arm a wire', async () => {
-    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      path: 'CDM/m_FIX/_ETL_m_FIX.json',
-      fileName: '_ETL_m_FIX.json',
-      sizeBytes: 200,
-      modifiedAt: '2026-07-31T00:00:00Z',
-      content: {
-        steps: [
-          {
-            target: {
-              name: 'S', type: 'sourceQualifier',
-              fields: [{ name: 'A', dataType: 'String' }, { name: 'B', dataType: 'String' }],
-            },
-            sources: [],
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 200,
+          modifiedAt: '2026-07-31T00:00:00Z',
+          content: {
+            steps: [
+              {
+                target: {
+                  name: 'S',
+                  type: 'sourceQualifier',
+                  fields: [
+                    { name: 'A', dataType: 'String' },
+                    { name: 'B', dataType: 'String' },
+                  ],
+                },
+                sources: [],
+              },
+            ],
+            table: { targetTableNames: [], sourceTableNames: [] },
           },
-        ],
-        table: { targetTableNames: [], sourceTableNames: [] },
-      },
-    })))
+        }),
+      ),
+    )
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
@@ -539,24 +629,32 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
   })
 
   it('a row click on the ALREADY-selected node re-focuses the new field instead of toggling the Inspector shut', async () => {
-    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      path: 'CDM/m_FIX/_ETL_m_FIX.json',
-      fileName: '_ETL_m_FIX.json',
-      sizeBytes: 200,
-      modifiedAt: '2026-07-31T00:00:00Z',
-      content: {
-        steps: [
-          {
-            target: {
-              name: 'S', type: 'sourceQualifier',
-              fields: [{ name: 'A', dataType: 'String' }, { name: 'B', dataType: 'String' }],
-            },
-            sources: [],
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 200,
+          modifiedAt: '2026-07-31T00:00:00Z',
+          content: {
+            steps: [
+              {
+                target: {
+                  name: 'S',
+                  type: 'sourceQualifier',
+                  fields: [
+                    { name: 'A', dataType: 'String' },
+                    { name: 'B', dataType: 'String' },
+                  ],
+                },
+                sources: [],
+              },
+            ],
+            table: { targetTableNames: [], sourceTableNames: [] },
           },
-        ],
-        table: { targetTableNames: [], sourceTableNames: [] },
-      },
-    })))
+        }),
+      ),
+    )
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
@@ -579,19 +677,33 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
   // same-node completion click must be ignored (wire mode stays armed), not
   // silently write S.A as a source of another field on S itself.
   it('click-wire: a completion click on the origin node is ignored (self-wire guard); wire mode stays armed', async () => {
-    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      path: 'CDM/m_FIX/_ETL_m_FIX.json',
-      fileName: '_ETL_m_FIX.json',
-      sizeBytes: 200,
-      modifiedAt: '2026-07-31T00:00:00Z',
-      content: {
-        steps: [
-          { target: { name: 'S', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
-          { target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] }, sources: [] },
-        ],
-        table: { targetTableNames: ['T'], sourceTableNames: [] },
-      },
-    })))
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 200,
+          modifiedAt: '2026-07-31T00:00:00Z',
+          content: {
+            steps: [
+              {
+                target: {
+                  name: 'S',
+                  type: 'sourceQualifier',
+                  fields: [{ name: 'A', dataType: 'String' }],
+                },
+                sources: [],
+              },
+              {
+                target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] },
+                sources: [],
+              },
+            ],
+            table: { targetTableNames: ['T'], sourceTableNames: [] },
+          },
+        }),
+      ),
+    )
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
@@ -620,7 +732,9 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
     fireEvent.click(screen.getByText('S', { selector: 'text' }))
     fireEvent.click(await screen.findByText('Delete'))
 
-    expect(await screen.findByText('Removes S and clears 1 incoming reference(s)')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Removes S and clears 1 incoming reference(s)'),
+    ).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Confirm delete'))
 
@@ -632,19 +746,33 @@ describe('ETLModifier — palette, click-wire, delete (Task 9 + 11)', () => {
 
 describe('ETLModifier — final-review wave', () => {
   it('deleting the wire-armed node clears wireFrom: the chip disappears and a later IN-port click writes no dangling dot-ref', async () => {
-    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      path: 'CDM/m_FIX/_ETL_m_FIX.json',
-      fileName: '_ETL_m_FIX.json',
-      sizeBytes: 200,
-      modifiedAt: '2026-07-31T00:00:00Z',
-      content: {
-        steps: [
-          { target: { name: 'S', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
-          { target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] }, sources: [] },
-        ],
-        table: { targetTableNames: ['T'], sourceTableNames: [] },
-      },
-    })))
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 200,
+          modifiedAt: '2026-07-31T00:00:00Z',
+          content: {
+            steps: [
+              {
+                target: {
+                  name: 'S',
+                  type: 'sourceQualifier',
+                  fields: [{ name: 'A', dataType: 'String' }],
+                },
+                sources: [],
+              },
+              {
+                target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] },
+                sources: [],
+              },
+            ],
+            table: { targetTableNames: ['T'], sourceTableNames: [] },
+          },
+        }),
+      ),
+    )
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
@@ -678,18 +806,29 @@ describe('ETLModifier — final-review wave', () => {
   // fields than what got mapped at insert time, so "+ field" then
   // click-wire into the new port must keep working on a dialog-inserted node.
   it('a dialog-inserted node can still gain more fields via "+ field", then click-wire into the new port writes the dot-ref', async () => {
-    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      path: 'CDM/m_FIX/_ETL_m_FIX.json',
-      fileName: '_ETL_m_FIX.json',
-      sizeBytes: 200,
-      modifiedAt: '2026-07-31T00:00:00Z',
-      content: {
-        steps: [
-          { target: { name: 'S', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
-        ],
-        table: { targetTableNames: [], sourceTableNames: [] },
-      },
-    })))
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 200,
+          modifiedAt: '2026-07-31T00:00:00Z',
+          content: {
+            steps: [
+              {
+                target: {
+                  name: 'S',
+                  type: 'sourceQualifier',
+                  fields: [{ name: 'A', dataType: 'String' }],
+                },
+                sources: [],
+              },
+            ],
+            table: { targetTableNames: [], sourceTableNames: [] },
+          },
+        }),
+      ),
+    )
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
@@ -701,10 +840,18 @@ describe('ETLModifier — final-review wave', () => {
     fireEvent.click(screen.getByText('target table'))
     await screen.findByText('Add table')
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEW_TBL' } })
-    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'S — sourceQualifier' }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-fedby')).getByRole('button', {
+        name: 'S — sourceQualifier',
+      }),
+    )
     fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
-    fireEvent.change(screen.getByLabelText('A mapped field name'), { target: { value: 'A_MAPPED' } })
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.change(screen.getByLabelText('A mapped field name'), {
+      target: { value: 'A_MAPPED' },
+    })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     const newNode = await screen.findByText('NEW_TBL', { selector: 'text' })
@@ -758,11 +905,17 @@ describe('ETLModifier — Task 11: source table vs transformation step', () => {
     // keep Insert disabled and this assertion would pass for the wrong
     // reason, masking whether the "at least one feeds" gate itself is doing
     // any work.
-    await waitFor(() => expect(screen.queryByText('Validating…')).not.toBeInTheDocument(), { timeout: 2000 })
+    await waitFor(() => expect(screen.queryByText('Validating…')).not.toBeInTheDocument(), {
+      timeout: 2000,
+    })
     expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
 
-    fireEvent.click(within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: 'T — table' }))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(
+      within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: 'T — table' }),
+    )
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     expect(await screen.findByText('NEW_SRC', { selector: 'text' })).toBeInTheDocument()
@@ -787,7 +940,9 @@ describe('ETLModifier — Task 11: source table vs transformation step', () => {
     // errors) — otherwise `isValidating` alone would keep Insert disabled and
     // this assertion would pass for the wrong reason, masking whether the
     // mapped-field gate itself is doing any work.
-    await waitFor(() => expect(screen.queryByText('Validating…')).not.toBeInTheDocument(), { timeout: 2000 })
+    await waitFor(() => expect(screen.queryByText('Validating…')).not.toBeInTheDocument(), {
+      timeout: 2000,
+    })
     expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -854,7 +1009,9 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
 
     // View loads the archived version read-only: banner + T_OLD on the canvas.
     fireEvent.click(screen.getByText('View'))
-    expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Viewing archived version 20260731-120000-000 — read-only'),
+    ).toBeInTheDocument()
     expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
 
     // Review finding: the raw JSON panel must follow the archive too — showing
@@ -872,7 +1029,9 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     // Restore -> rollback POST captured with the viewed version; banner clears.
     fireEvent.click(screen.getByText('Restore this version'))
     await waitFor(() => expect(capturedRollbackVersion).toBe('20260731-120000-000'))
-    await waitFor(() => expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument(),
+    )
 
     // The raw JSON panel's LIVE values are back (the recipe query was
     // invalidated and refetched — the base GET handler's own values, since
@@ -901,10 +1060,15 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
       steps: [{ target: { name: 'T_OLD', type: 'table', fields: [] }, sources: [] }],
       table: { targetTableNames: ['T_OLD'], sourceTableNames: [] },
     }
-    let live: { sizeBytes: number; modifiedAt: string; content: unknown } =
-      { sizeBytes: 321, modifiedAt: '2026-07-31T00:00:00Z', content: MINI }
+    let live: { sizeBytes: number; modifiedAt: string; content: unknown } = {
+      sizeBytes: 321,
+      modifiedAt: '2026-07-31T00:00:00Z',
+      content: MINI,
+    }
     const dto = () => ({
-      path: 'CDM/m_FIX/_ETL_m_FIX.json', fileName: '_ETL_m_FIX.json', ...live,
+      path: 'CDM/m_FIX/_ETL_m_FIX.json',
+      fileName: '_ETL_m_FIX.json',
+      ...live,
     })
     server.use(
       http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json(dto())),
@@ -946,10 +1110,14 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
     // read-only view mode, where `canUndo` is hardcoded false
     // (ETLModifier.tsx: `canUndo={isViewing ? false : history.canUndo}`) and
     // the assertion below would pass for entirely the wrong reason.
-    expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Viewing archived version 20260731-120000-000 — read-only'),
+    ).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Restore this version'))
-    await waitFor(() => expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByText(/Viewing archived version/)).not.toBeInTheDocument(),
+    )
 
     // The rollback landed: the refetched live file IS the archived content,
     // and the draft was re-baselined onto it (0 unsaved changes).
@@ -993,7 +1161,9 @@ describe('ETLModifier — history drawer + rollback (Task 10)', () => {
 
     fireEvent.click(screen.getByText('{ history }'))
     fireEvent.click(await screen.findByText('View'))
-    expect(await screen.findByText('Viewing archived version 20260731-120000-000 — read-only')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Viewing archived version 20260731-120000-000 — read-only'),
+    ).toBeInTheDocument()
     expect(await screen.findByText('T_OLD', { selector: 'text' })).toBeInTheDocument()
 
     // Close the drawer — the escape hatch back to the live draft (no rollback).
@@ -1026,10 +1196,14 @@ describe('ETLModifier — raw JSON editing (UX round 3)', () => {
 
     fireEvent.click(screen.getByText('{ raw JSON }'))
 
-    const edited = JSON.stringify({
-      steps: [{ target: { name: 'FROM_RAW', type: 'table', fields: [] }, sources: [] }],
-      table: { targetTableNames: ['FROM_RAW'], sourceTableNames: [] },
-    }, null, 2)
+    const edited = JSON.stringify(
+      {
+        steps: [{ target: { name: 'FROM_RAW', type: 'table', fields: [] }, sources: [] }],
+        table: { targetTableNames: ['FROM_RAW'], sourceTableNames: [] },
+      },
+      null,
+      2,
+    )
     fireEvent.change(rawEditor(), { target: { value: edited } })
     fireEvent.click(screen.getByText('Apply'))
 
@@ -1045,7 +1219,12 @@ describe('ETLModifier — raw JSON editing (UX round 3)', () => {
 
     fireEvent.click(screen.getByText('{ raw JSON }'))
     fireEvent.change(rawEditor(), {
-      target: { value: JSON.stringify({ steps: [{ target: { name: 'FROM_RAW', type: 'table', fields: [] }, sources: [] }], table: { targetTableNames: ['FROM_RAW'], sourceTableNames: [] } }) },
+      target: {
+        value: JSON.stringify({
+          steps: [{ target: { name: 'FROM_RAW', type: 'table', fields: [] }, sources: [] }],
+          table: { targetTableNames: ['FROM_RAW'], sourceTableNames: [] },
+        }),
+      },
     })
     fireEvent.click(screen.getByText('Apply'))
     await screen.findByText('FROM_RAW', { selector: 'text' })
@@ -1062,7 +1241,12 @@ describe('ETLModifier — raw JSON editing (UX round 3)', () => {
     // Dirty the draft first, so Discard is rendered at all (it is gated on
     // `changes > 0`) — the raw text itself is deliberately NOT a dirty op.
     fireEvent.click(screen.getByText('{ raw JSON }'))
-    fireEvent.change(rawEditor(), { target: { value: '{"steps":[{"target":{"name":"VIA_RAW","type":"table","fields":[]}}],"table":{"targetTableNames":["VIA_RAW"],"sourceTableNames":[]}}' } })
+    fireEvent.change(rawEditor(), {
+      target: {
+        value:
+          '{"steps":[{"target":{"name":"VIA_RAW","type":"table","fields":[]}}],"table":{"targetTableNames":["VIA_RAW"],"sourceTableNames":[]}}',
+      },
+    })
     fireEvent.click(screen.getByText('Apply'))
     await screen.findByText('VIA_RAW', { selector: 'text' })
 
@@ -1100,7 +1284,7 @@ describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
     let capturedBody: CapturedLayout | null = null
     server.use(
       http.put('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', async ({ request }) => {
-        capturedBody = await request.json() as CapturedLayout
+        capturedBody = (await request.json()) as CapturedLayout
         return HttpResponse.json(capturedBody)
       }),
     )
@@ -1135,9 +1319,14 @@ describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
     first.unmount()
     cleanup()
 
-    server.use(http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      version: 1, nodes: { T: { dx: 30, dy: -15 } },
-    })))
+    server.use(
+      http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          version: 1,
+          nodes: { T: { dx: 30, dy: -15 } },
+        }),
+      ),
+    )
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))
@@ -1174,9 +1363,14 @@ describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
     const baseRect = screen.getByTestId('ipc-node-T').querySelectorAll('rect[width="195"]')[1]!
     const baseX = Number(baseRect.getAttribute('x'))
 
-    server.use(http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      version: 1, nodes: { T: { dx: 40, dy: 0 } },
-    })))
+    server.use(
+      http.get('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          version: 1,
+          nodes: { T: { dx: 40, dy: 0 } },
+        }),
+      ),
+    )
     await queryClient.invalidateQueries({ queryKey: ['layout', 'CDM/m_FIX/_ETL_m_FIX.json'] })
 
     // Offsets DO update to the refetched layout...
@@ -1198,30 +1392,42 @@ describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
   it('switching recipes while a drag-debounce is pending cancels it — no stale PUT for the abandoned path', async () => {
     let fix1PutCalled = false
     server.use(
-      http.get('/api/tree', () => HttpResponse.json({
-        name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
-        children: [
-          {
-            name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM',
-            children: [
-              { name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' },
-              { name: '_ETL_m_FIX2.json', path: 'CDM/m_FIX2/_ETL_m_FIX2.json', kind: 'json' },
-            ],
+      http.get('/api/tree', () =>
+        HttpResponse.json({
+          name: 'xmltobq',
+          path: '',
+          kind: 'dir',
+          layer: 'root',
+          children: [
+            {
+              name: 'CDM',
+              path: 'CDM',
+              kind: 'dir',
+              layer: 'CDM',
+              children: [
+                { name: '_ETL_m_FIX.json', path: 'CDM/m_FIX/_ETL_m_FIX.json', kind: 'json' },
+                { name: '_ETL_m_FIX2.json', path: 'CDM/m_FIX2/_ETL_m_FIX2.json', kind: 'json' },
+              ],
+            },
+          ],
+        }),
+      ),
+      http.get('/api/recipes/CDM/m_FIX2/_ETL_m_FIX2.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX2/_ETL_m_FIX2.json',
+          fileName: '_ETL_m_FIX2.json',
+          sizeBytes: 50,
+          modifiedAt: '2026-07-31T01:00:00Z',
+          content: {
+            steps: [{ target: { name: 'T2', type: 'table', fields: [] }, sources: [] }],
+            table: { targetTableNames: ['T2'], sourceTableNames: [] },
           },
-        ],
-      })),
-      http.get('/api/recipes/CDM/m_FIX2/_ETL_m_FIX2.json', () => HttpResponse.json({
-        path: 'CDM/m_FIX2/_ETL_m_FIX2.json',
-        fileName: '_ETL_m_FIX2.json',
-        sizeBytes: 50,
-        modifiedAt: '2026-07-31T01:00:00Z',
-        content: {
-          steps: [{ target: { name: 'T2', type: 'table', fields: [] }, sources: [] }],
-          table: { targetTableNames: ['T2'], sourceTableNames: [] },
-        },
-      })),
+        }),
+      ),
       http.get('/api/ddl/CDM/m_FIX2', () => HttpResponse.json({})),
-      http.get('/api/layouts/CDM/m_FIX2/_ETL_m_FIX2.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+      http.get('/api/layouts/CDM/m_FIX2/_ETL_m_FIX2.json', () =>
+        HttpResponse.json({ version: 1, nodes: {} }),
+      ),
       http.put('/api/layouts/CDM/m_FIX/_ETL_m_FIX.json', () => {
         fix1PutCalled = true
         return HttpResponse.json({ version: 1, nodes: {} })
@@ -1258,17 +1464,28 @@ describe('ETLModifier — layout sidecar wiring (Task 10)', () => {
 
 const REGISTRY_ENTRIES = [
   {
-    mappingPath: 'CDM/m_DM_INFOHUB_BIZLINK', layer: 'CDM',
-    transformation: 'EXP_FIX', port: 'COL_A_OUT', formula: 'LTRIM(COL_A)', origin: 'xml',
+    mappingPath: 'CDM/m_DM_INFOHUB_BIZLINK',
+    layer: 'CDM',
+    transformation: 'EXP_FIX',
+    port: 'COL_A_OUT',
+    formula: 'LTRIM(COL_A)',
+    origin: 'xml',
   },
   {
-    mappingPath: 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json', layer: 'ODS',
-    transformation: 'ODS_SYN_ORDERS', port: 'AMOUNT',
-    formula: 'ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)', origin: 'recipe',
+    mappingPath: 'ODS/m_SYN_ODS_ORDERS/_ETL_m_SYN_ODS_ORDERS.json',
+    layer: 'ODS',
+    transformation: 'ODS_SYN_ORDERS',
+    port: 'AMOUNT',
+    formula: 'ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)',
+    origin: 'recipe',
   },
   {
-    mappingPath: 'CDM/m_FIX/_ETL_m_FIX.json', layer: 'CDM',
-    transformation: 'FIX_STEP', port: 'B', formula: 'UPPER(S.B)', origin: 'recipe',
+    mappingPath: 'CDM/m_FIX/_ETL_m_FIX.json',
+    layer: 'CDM',
+    transformation: 'FIX_STEP',
+    port: 'B',
+    formula: 'UPPER(S.B)',
+    origin: 'recipe',
   },
 ]
 
@@ -1293,7 +1510,9 @@ describe('ETLModifier — expression dock (Task 11/14)', () => {
     await screen.findByText('T', { selector: 'text' })
     await screen.findByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')
 
-    fireEvent.change(screen.getByPlaceholderText('Filter expressions…'), { target: { value: 'AMOUNT' } })
+    fireEvent.change(screen.getByPlaceholderText('Filter expressions…'), {
+      target: { value: 'AMOUNT' },
+    })
 
     expect(screen.queryByText('UPPER(S.B)')).not.toBeInTheDocument()
     expect(screen.getByText('ROUND(STG_L_SYN_ORDERS.AMOUNT, 2)')).toBeInTheDocument()
@@ -1330,11 +1549,11 @@ describe('ETLModifier — expression dock (Task 11/14)', () => {
     // region now owns the real (dynamic, Task 2/3) height via `sizes.canvasH`,
     // so the exact-height assertion moves there instead of disappearing.
     const svg = nodeText.closest('svg')!
-    const canvasRoot = svg.parentElement!            // IpcCanvas root div (flex: 1)
-    const host = canvasRoot.parentElement!           // ETLModifier's own data-region="canvas" wrapper
+    const canvasRoot = svg.parentElement! // IpcCanvas root div (flex: 1)
+    const host = canvasRoot.parentElement! // ETLModifier's own data-region="canvas" wrapper
     expect(host.style.display).toBe('flex')
 
-    const editorRegion = host.parentElement!         // EditorLayout's own data-region="canvas" region
+    const editorRegion = host.parentElement! // EditorLayout's own data-region="canvas" region
     expect(editorRegion.getAttribute('data-region')).toBe('canvas')
     expect(editorRegion.style.minHeight).toBe(`${LAYOUT_DEFAULT.canvasH}px`)
   })
@@ -1592,23 +1811,33 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     server.use(
       http.post('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
         capturedPost = await request.json()
-        return HttpResponse.json({
+        return HttpResponse.json(
+          {
+            path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+            fileName: '_ETL_m_NEW_ONE.json',
+            sizeBytes: 80,
+            modifiedAt: '2026-08-01T00:00:00Z',
+            content: capturedPost,
+          },
+          { status: 201 },
+        )
+      }),
+      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () =>
+        HttpResponse.json({
           path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
           fileName: '_ETL_m_NEW_ONE.json',
           sizeBytes: 80,
           modifiedAt: '2026-08-01T00:00:00Z',
-          content: capturedPost,
-        }, { status: 201 })
-      }),
-      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({
-        path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
-        fileName: '_ETL_m_NEW_ONE.json',
-        sizeBytes: 80,
-        modifiedAt: '2026-08-01T00:00:00Z',
-        content: capturedPost ?? { steps: [], table: { targetTableNames: [], sourceTableNames: [] } },
-      })),
+          content: capturedPost ?? {
+            steps: [],
+            table: { targetTableNames: [], sourceTableNames: [] },
+          },
+        }),
+      ),
       http.get('/api/ddl/CDM/m_NEW_ONE', () => HttpResponse.json({})),
-      http.get('/api/layouts/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+      http.get('/api/layouts/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () =>
+        HttpResponse.json({ version: 1, nodes: {} }),
+      ),
     )
 
     renderModifier()
@@ -1623,7 +1852,9 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     fireEvent.click(screen.getByText('source table'))
     await screen.findByText('Add source table')
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
@@ -1631,7 +1862,9 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     fireEvent.click(screen.getByText('Save Changes'))
 
     await waitFor(() => expect(capturedPost).not.toBeNull())
-    expect((capturedPost as { table: { sourceTableNames: string[] } }).table.sourceTableNames).toEqual(['NEWSRC'])
+    expect(
+      (capturedPost as { table: { sourceTableNames: string[] } }).table.sourceTableNames,
+    ).toEqual(['NEWSRC'])
     // Saved: the draft is no longer dirty, and the recipe behaves like any
     // other open one from here (PUT thereafter — see the next test).
     await waitFor(() => expect(screen.queryByText(/unsaved change/)).not.toBeInTheDocument())
@@ -1651,14 +1884,19 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
   it('re-fetches the registry after a save, so a freshly authored recipe is findable', async () => {
     let registryFetches = 0
     server.use(
-      http.get('/api/registry', () => { registryFetches += 1; return HttpResponse.json(REGISTRY) }),
-      http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-        path: 'CDM/m_FIX/_ETL_m_FIX.json',
-        fileName: '_ETL_m_FIX.json',
-        sizeBytes: 321,
-        modifiedAt: '2026-07-31T12:00:00Z',
-        content: MINI,
-      })),
+      http.get('/api/registry', () => {
+        registryFetches += 1
+        return HttpResponse.json(REGISTRY)
+      }),
+      http.put('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 321,
+          modifiedAt: '2026-07-31T12:00:00Z',
+          content: MINI,
+        }),
+      ),
     )
     const openRegistryPicker = async () => {
       fireEvent.click(screen.getByText('source table'))
@@ -1693,23 +1931,31 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
       http.post('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
         postCallCount += 1
         capturedPost = await request.json()
-        return HttpResponse.json({
+        return HttpResponse.json(
+          {
+            path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
+            fileName: '_ETL_m_NEW_ONE.json',
+            sizeBytes: 80,
+            modifiedAt: '2026-08-01T00:00:00Z',
+            content: capturedPost,
+          },
+          { status: 201 },
+        )
+      }),
+      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () =>
+        HttpResponse.json({
           path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
           fileName: '_ETL_m_NEW_ONE.json',
           sizeBytes: 80,
           modifiedAt: '2026-08-01T00:00:00Z',
-          content: capturedPost,
-        }, { status: 201 })
-      }),
-      http.get('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({
-        path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
-        fileName: '_ETL_m_NEW_ONE.json',
-        sizeBytes: 80,
-        modifiedAt: '2026-08-01T00:00:00Z',
-        content: capturedPost ?? { steps: [], table: { targetTableNames: [], sourceTableNames: [] } },
-      })),
+          content: capturedPost ?? {
+            steps: [],
+            table: { targetTableNames: [], sourceTableNames: [] },
+          },
+        }),
+      ),
       http.put('/api/recipes/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', async ({ request }) => {
-        capturedPut = await request.json() as { baseModified?: string; content?: unknown }
+        capturedPut = (await request.json()) as { baseModified?: string; content?: unknown }
         return HttpResponse.json({
           path: 'CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json',
           fileName: '_ETL_m_NEW_ONE.json',
@@ -1719,7 +1965,9 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
         })
       }),
       http.get('/api/ddl/CDM/m_NEW_ONE', () => HttpResponse.json({})),
-      http.get('/api/layouts/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () => HttpResponse.json({ version: 1, nodes: {} })),
+      http.get('/api/layouts/CDM/m_NEW_ONE/_ETL_m_NEW_ONE.json', () =>
+        HttpResponse.json({ version: 1, nodes: {} }),
+      ),
     )
 
     renderModifier()
@@ -1732,7 +1980,9 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     fireEvent.click(screen.getByText('source table'))
     await screen.findByText('Add source table')
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
 
@@ -1748,7 +1998,9 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     fireEvent.click(screen.getByText('source table'))
     await screen.findByText('Add source table')
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC2' } })
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
 
@@ -1763,7 +2015,11 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
   it('a 409 from a colliding name surfaces as a visible error, not a silent failure', async () => {
     server.use(
       http.post('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
-        HttpResponse.json({ title: 'Conflict', detail: 'Recipe already exists at CDM/m_FIX/_ETL_m_FIX.json' }, { status: 409 })),
+        HttpResponse.json(
+          { title: 'Conflict', detail: 'Recipe already exists at CDM/m_FIX/_ETL_m_FIX.json' },
+          { status: 409 },
+        ),
+      ),
     )
 
     renderModifier()
@@ -1779,7 +2035,9 @@ describe('ETLModifier — new recipe from scratch (Task 15)', () => {
     fireEvent.click(screen.getByText('source table'))
     await screen.findByText('Add source table')
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
     expect(await screen.findByText('1 unsaved change')).toBeInTheDocument()
 
@@ -1861,19 +2119,33 @@ describe('ETLModifier — UX round 4 (click reliability + drawer transformations
   })
 
   it('the Transformations drawer tab lists transformation-band steps and clicking one opens its Inspector', async () => {
-    server.use(http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () => HttpResponse.json({
-      path: 'CDM/m_FIX/_ETL_m_FIX.json',
-      fileName: '_ETL_m_FIX.json',
-      sizeBytes: 200,
-      modifiedAt: '2026-07-31T00:00:00Z',
-      content: {
-        steps: [
-          { target: { name: 'SQ_STEP', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
-          { target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] }, sources: [] },
-        ],
-        table: { targetTableNames: ['T'], sourceTableNames: [] },
-      },
-    })))
+    server.use(
+      http.get('/api/recipes/CDM/m_FIX/_ETL_m_FIX.json', () =>
+        HttpResponse.json({
+          path: 'CDM/m_FIX/_ETL_m_FIX.json',
+          fileName: '_ETL_m_FIX.json',
+          sizeBytes: 200,
+          modifiedAt: '2026-07-31T00:00:00Z',
+          content: {
+            steps: [
+              {
+                target: {
+                  name: 'SQ_STEP',
+                  type: 'sourceQualifier',
+                  fields: [{ name: 'A', dataType: 'String' }],
+                },
+                sources: [],
+              },
+              {
+                target: { name: 'T', type: 'table', fields: [{ name: 'X', dataType: 'String' }] },
+                sources: [],
+              },
+            ],
+            table: { targetTableNames: ['T'], sourceTableNames: [] },
+          },
+        }),
+      ),
+    )
 
     renderModifier()
     fireEvent.click(await screen.findByText('_ETL_m_FIX.json'))

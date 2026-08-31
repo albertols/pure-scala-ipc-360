@@ -19,19 +19,36 @@ const KEY_SCHEMA: Record<string, IpcKeySpec[]> = {
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'selectDistinct', parserType: 'Boolean', required: true, widget: 'toggle', ruleId: 'IPC-TYP-SOURCEQUALIFIER-001' },
+    {
+      key: 'selectDistinct',
+      parserType: 'Boolean',
+      required: true,
+      widget: 'toggle',
+      ruleId: 'IPC-TYP-SOURCEQUALIFIER-001',
+    },
   ],
   'target:aggregator': [
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'groupByFields', parserType: 'List[String]', required: true, widget: 'stringList', ruleId: 'IPC-TYP-AGGREGATOR-001' },
+    {
+      key: 'groupByFields',
+      parserType: 'List[String]',
+      required: true,
+      widget: 'stringList',
+      ruleId: 'IPC-TYP-AGGREGATOR-001',
+    },
   ],
   'target:filter': [
     { key: 'name', parserType: 'String', required: true, widget: 'text' },
     { key: 'type', parserType: 'String', required: true, widget: 'text' },
     { key: 'fields', parserType: 'List[Field]', required: true, widget: 'fieldTable' },
-    { key: 'filterCondition', parserType: 'RecipeTransformation', required: false, widget: 'formula' },
+    {
+      key: 'filterCondition',
+      parserType: 'RecipeTransformation',
+      required: false,
+      widget: 'formula',
+    },
   ],
   // Task 11: a source table's schema is `source:table`, not `target:table` — no
   // `fields` key at all (a bare `sources[]` entry carries no field list).
@@ -52,15 +69,45 @@ const CONNECTIONS: IpcConnections = {
   // all (the fan-in rule it would drive is backend/Task-9-only).
   table: { mayFeed: ['sourceQualifier', 'table', 'normalizer'] },
   sourceQualifier: {
-    mayFeed: ['table', 'unionInput', 'filter', 'joinerInput', 'aggregator', 'router', 'normalizer', 'java', 'storedProcedure'],
+    mayFeed: [
+      'table',
+      'unionInput',
+      'filter',
+      'joinerInput',
+      'aggregator',
+      'router',
+      'normalizer',
+      'java',
+      'storedProcedure',
+    ],
     active: true,
   },
   filter: {
-    mayFeed: ['table', 'unionInput', 'filter', 'joinerInput', 'aggregator', 'router', 'normalizer', 'java', 'storedProcedure'],
+    mayFeed: [
+      'table',
+      'unionInput',
+      'filter',
+      'joinerInput',
+      'aggregator',
+      'router',
+      'normalizer',
+      'java',
+      'storedProcedure',
+    ],
     active: true,
   },
   aggregator: {
-    mayFeed: ['table', 'unionInput', 'filter', 'joinerInput', 'aggregator', 'router', 'normalizer', 'java', 'storedProcedure'],
+    mayFeed: [
+      'table',
+      'unionInput',
+      'filter',
+      'joinerInput',
+      'aggregator',
+      'router',
+      'normalizer',
+      'java',
+      'storedProcedure',
+    ],
     active: true,
   },
 }
@@ -79,8 +126,12 @@ const DRAFT_WITH_FIELDS: RecipeJson = {
   steps: [
     {
       target: {
-        name: 'SQ1', type: 'sourceQualifier',
-        fields: [{ name: 'A', dataType: 'String' }, { name: 'B', dataType: 'Long' }],
+        name: 'SQ1',
+        type: 'sourceQualifier',
+        fields: [
+          { name: 'A', dataType: 'String' },
+          { name: 'B', dataType: 'Long' },
+        ],
       },
       sources: [],
     },
@@ -93,7 +144,10 @@ const DRAFT_WITH_FIELDS: RecipeJson = {
 // `table.mayFeed`) and FLT1 (filter, not in that list — the forbidden case).
 const SOURCE_MODE_DRAFT: RecipeJson = {
   steps: [
-    { target: { name: 'SQ1', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
+    {
+      target: { name: 'SQ1', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] },
+      sources: [],
+    },
     { target: { name: 'FLT1', type: 'filter', fields: [] }, sources: [] },
   ],
   table: { targetTableNames: ['SQ1', 'FLT1'], sourceTableNames: [] },
@@ -107,8 +161,16 @@ const EMPTY_DRAFT: RecipeJson = {
 }
 
 let lastValidateBody: RecipeJson | null = null
-let validateResponse: { valid: boolean; errors: { path: string; message: string }[]; warnings: { path: string; message: string }[]; checks: unknown[] } = {
-  valid: true, errors: [], warnings: [], checks: [],
+let validateResponse: {
+  valid: boolean
+  errors: { path: string; message: string }[]
+  warnings: { path: string; message: string }[]
+  checks: unknown[]
+} = {
+  valid: true,
+  errors: [],
+  warnings: [],
+  checks: [],
 }
 // Task 13: the registry picker's fixture — deliberately distinct source vs.
 // target names so a test can prove the dialog asks RegistrySearch for the
@@ -120,31 +182,47 @@ let validateResponse: { valid: boolean; errors: { path: string; message: string 
 // genuinely DIVERGENT name whose two real files disagree (DWH_SPLIT_FACT: 3 and
 // 2 columns, union 4 — the union is what must never be offered).
 const REGISTRY_FIXTURE: Registry = {
-  sourceTables: [{ name: 'STG_L_ORDERS', columns: [], usedByRecipes: ['STG/m_A/_ETL_m_A.json'], variants: [] }],
-  targetTables: [{ name: 'DWH_ORDERS_FACT', columns: [], usedByRecipes: ['DWH/m_C/_ETL_m_C.json'], variants: [] }],
+  sourceTables: [
+    { name: 'STG_L_ORDERS', columns: [], usedByRecipes: ['STG/m_A/_ETL_m_A.json'], variants: [] },
+  ],
+  targetTables: [
+    {
+      name: 'DWH_ORDERS_FACT',
+      columns: [],
+      usedByRecipes: ['DWH/m_C/_ETL_m_C.json'],
+      variants: [],
+    },
+  ],
   ddlTables: [
     {
       name: 'DWH_ORDERS_FACT',
       columns: ['AMOUNT', 'LOADED_AT', 'ORDER_ID', 'PAYLOAD'],
       usedByRecipes: ['DWH/m_C/_ETL_m_C.json'],
-      variants: [{
-        columns: [
-          { name: 'ORDER_ID', type: 'STRING' },
-          { name: 'AMOUNT', type: 'NUMERIC' },
-          { name: 'LOADED_AT', type: 'TIMESTAMP' },
-          { name: 'PAYLOAD', type: 'ARRAY<STRING>' },
-        ],
-        mappingDirs: ['DWH/m_C'],
-      }],
+      variants: [
+        {
+          columns: [
+            { name: 'ORDER_ID', type: 'STRING' },
+            { name: 'AMOUNT', type: 'NUMERIC' },
+            { name: 'LOADED_AT', type: 'TIMESTAMP' },
+            { name: 'PAYLOAD', type: 'ARRAY<STRING>' },
+          ],
+          mappingDirs: ['DWH/m_C'],
+        },
+      ],
     },
     {
       name: 'DWH_JOINED_FACT',
       columns: ['A', 'Z'],
       usedByRecipes: ['DWH/m_J/_ETL_m_J.json'],
-      variants: [{
-        columns: [{ name: 'A', type: 'STRING' }, { name: 'Z', type: 'INT64' }],
-        mappingDirs: ['DWH/m_J'],
-      }],
+      variants: [
+        {
+          columns: [
+            { name: 'A', type: 'STRING' },
+            { name: 'Z', type: 'INT64' },
+          ],
+          mappingDirs: ['DWH/m_J'],
+        },
+      ],
     },
     {
       name: 'DWH_SPLIT_FACT',
@@ -152,11 +230,18 @@ const REGISTRY_FIXTURE: Registry = {
       usedByRecipes: ['CDM/m_X/_ETL_m_X.json', 'ODS/m_Y/_ETL_m_Y.json'],
       variants: [
         {
-          columns: [{ name: 'A', type: 'STRING' }, { name: 'B', type: 'NUMERIC' }, { name: 'C', type: 'INT64' }],
+          columns: [
+            { name: 'A', type: 'STRING' },
+            { name: 'B', type: 'NUMERIC' },
+            { name: 'C', type: 'INT64' },
+          ],
           mappingDirs: ['CDM/m_X'],
         },
         {
-          columns: [{ name: 'A', type: 'STRING' }, { name: 'D', type: 'DATE' }],
+          columns: [
+            { name: 'A', type: 'STRING' },
+            { name: 'D', type: 'DATE' },
+          ],
           mappingDirs: ['ODS/m_Y', 'ODS/m_Z'],
         },
       ],
@@ -238,7 +323,11 @@ function renderDialogWithQuery(overrides: {
  * top of (name-gate tests still need this so the NEW mapped-field gate,
  * fix round 1, doesn't confound the condition each test means to isolate). */
 function selectSQ1AndMapFieldA() {
-  fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+  fireEvent.click(
+    within(screen.getByTestId('node-config-fedby')).getByRole('button', {
+      name: 'SQ1 — sourceQualifier',
+    }),
+  )
   fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
 }
 
@@ -317,20 +406,36 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
   // one the NEW node is assembling in its "fed by" picker.
   const FANIN_DRAFT: RecipeJson = {
     steps: [
-      { target: { name: 'SQ1', type: 'sourceQualifier', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
-      { target: { name: 'FLT1', type: 'filter', fields: [{ name: 'C', dataType: 'String' }] }, sources: [] },
+      {
+        target: {
+          name: 'SQ1',
+          type: 'sourceQualifier',
+          fields: [{ name: 'A', dataType: 'String' }],
+        },
+        sources: [],
+      },
+      {
+        target: { name: 'FLT1', type: 'filter', fields: [{ name: 'C', dataType: 'String' }] },
+        sources: [],
+      },
     ],
     table: { targetTableNames: ['SQ1', 'FLT1'], sourceTableNames: [] },
   }
 
-  let lastFanInBody: { pairings: { key: string; existingSourceKinds: string[]; candidateKind: string }[] } | null = null
+  let lastFanInBody: {
+    pairings: { key: string; existingSourceKinds: string[]; candidateKind: string }[]
+  } | null = null
   function serveFanIn(verdicts: Record<string, string>) {
-    server.use(http.post('/api/ipc/fan-in', async ({ request }) => {
-      lastFanInBody = await request.json() as typeof lastFanInBody
-      return HttpResponse.json({ verdicts })
-    }))
+    server.use(
+      http.post('/api/ipc/fan-in', async ({ request }) => {
+        lastFanInBody = (await request.json()) as typeof lastFanInBody
+        return HttpResponse.json({ verdicts })
+      }),
+    )
   }
-  afterEach(() => { lastFanInBody = null })
+  afterEach(() => {
+    lastFanInBody = null
+  })
 
   it('asks only about candidates joining a NON-EMPTY input group, and never asks about a candidate joining itself', async () => {
     serveFanIn({})
@@ -341,7 +446,11 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
     // existing group) — so there is nothing to ask.
     expect(lastFanInBody).toBeNull()
 
-    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-fedby')).getByRole('button', {
+        name: 'SQ1 — sourceQualifier',
+      }),
+    )
 
     await waitFor(() => expect(lastFanInBody).not.toBeNull(), { timeout: 2000 })
     // Exactly one question: may `filter` join a group already holding
@@ -358,8 +467,13 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
     const fedBy = within(screen.getByTestId('node-config-fedby'))
     fireEvent.click(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
 
-    await waitFor(() => expect(fedBy.getByRole('button', { name: /FLT1/ })).toBeDisabled(), { timeout: 2000 })
-    expect(fedBy.getByRole('button', { name: /FLT1/ })).toHaveAttribute('title', expect.stringMatching(/fan-in/i))
+    await waitFor(() => expect(fedBy.getByRole('button', { name: /FLT1/ })).toBeDisabled(), {
+      timeout: 2000,
+    })
+    expect(fedBy.getByRole('button', { name: /FLT1/ })).toHaveAttribute(
+      'title',
+      expect.stringMatching(/fan-in/i),
+    )
     // SQ1 stays clickable — but only VACUOUSLY here (residuals pass): SQ1's own
     // group is empty after self-exclusion, so it is never asked about and its
     // verdict is `undefined`, which no `blocked` expression could disable. The
@@ -389,8 +503,11 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
     fireEvent.click(fedBy.getByRole('button', { name: 'FLT1 — filter' }))
 
     await waitFor(
-      () => expect(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
-        .toHaveAttribute('title', expect.stringMatching(/fan-in/i)),
+      () =>
+        expect(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' })).toHaveAttribute(
+          'title',
+          expect.stringMatching(/fan-in/i),
+        ),
       { timeout: 2000 },
     )
     expect(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' })).not.toBeDisabled()
@@ -409,8 +526,11 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
     fireEvent.click(feeds.getByRole('button', { name: 'T — table' }))
 
     await waitFor(
-      () => expect(feeds.getByRole('button', { name: 'T — table' }))
-        .toHaveAttribute('title', expect.stringMatching(/fan-in/i)),
+      () =>
+        expect(feeds.getByRole('button', { name: 'T — table' })).toHaveAttribute(
+          'title',
+          expect.stringMatching(/fan-in/i),
+        ),
       { timeout: 2000 },
     )
     expect(feeds.getByRole('button', { name: 'T — table' })).not.toBeDisabled()
@@ -424,9 +544,18 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
   it('the fan-in warning banner never names a candidate the matrix has already forbidden', async () => {
     const draft: RecipeJson = {
       steps: [
-        { target: { name: 'SRC1', type: 'table', fields: [{ name: 'A', dataType: 'String' }] }, sources: [] },
-        { target: { name: 'SRC2', type: 'table', fields: [{ name: 'B', dataType: 'String' }] }, sources: [] },
-        { target: { name: 'FLT1', type: 'filter', fields: [{ name: 'C', dataType: 'String' }] }, sources: [] },
+        {
+          target: { name: 'SRC1', type: 'table', fields: [{ name: 'A', dataType: 'String' }] },
+          sources: [],
+        },
+        {
+          target: { name: 'SRC2', type: 'table', fields: [{ name: 'B', dataType: 'String' }] },
+          sources: [],
+        },
+        {
+          target: { name: 'FLT1', type: 'filter', fields: [{ name: 'C', dataType: 'String' }] },
+          sources: [],
+        },
       ],
       table: { targetTableNames: ['SRC1', 'SRC2', 'FLT1'], sourceTableNames: [] },
     }
@@ -443,14 +572,18 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
     expect(banner).not.toHaveTextContent(/FLT1/)
     // The contradiction this pins: FLT1 states the opposite on its own button.
     expect(fedBy.getByRole('button', { name: /FLT1/ })).toBeDisabled()
-    expect(fedBy.getByRole('button', { name: /FLT1/ }))
-      .toHaveAttribute('title', 'filter may not feed sourceQualifier')
+    expect(fedBy.getByRole('button', { name: /FLT1/ })).toHaveAttribute(
+      'title',
+      'filter may not feed sourceQualifier',
+    )
     // ...and the same contradiction in VISUAL form: the warn-yellow border is
     // for candidates the banner speaks about, so an already-forbidden candidate
     // must not wear it either. SRC2 (legal + warn) proves the assertion is not
     // vacuous — it DOES wear it.
     expect(fedBy.getByRole('button', { name: /SRC2/ }).getAttribute('style')).toContain('--yellow')
-    expect(fedBy.getByRole('button', { name: /FLT1/ }).getAttribute('style')).not.toContain('--yellow')
+    expect(fedBy.getByRole('button', { name: /FLT1/ }).getAttribute('style')).not.toContain(
+      '--yellow',
+    )
   })
 
   it('a warn verdict is surfaced without blocking — "cannot be determined" never refuses a link', async () => {
@@ -460,7 +593,11 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
     fireEvent.click(fedBy.getByRole('button', { name: 'SQ1 — sourceQualifier' }))
 
     await waitFor(
-      () => expect(fedBy.getByRole('button', { name: /FLT1/ })).toHaveAttribute('title', expect.stringMatching(/fan-in/i)),
+      () =>
+        expect(fedBy.getByRole('button', { name: /FLT1/ })).toHaveAttribute(
+          'title',
+          expect.stringMatching(/fan-in/i),
+        ),
       { timeout: 2000 },
     )
     expect(fedBy.getByRole('button', { name: /FLT1/ })).not.toBeDisabled()
@@ -503,7 +640,11 @@ describe('NodeConfigDialog — fan-in verdicts (final review, BLOCKING 3)', () =
 describe('NodeConfigDialog — map fields', () => {
   it("offers a step-target upstream's own fields with dataType; checking one adds it to the preview's fields[]", () => {
     renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
-    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-fedby')).getByRole('button', {
+        name: 'SQ1 — sourceQualifier',
+      }),
+    )
 
     expect(screen.getByText('A')).toBeInTheDocument()
     expect(screen.getByText('(String)')).toBeInTheDocument()
@@ -515,13 +656,19 @@ describe('NodeConfigDialog — map fields', () => {
     expect(screen.getByText(/"source": "SQ1\.A"/)).toBeInTheDocument()
   })
 
-  it('mapped field name and dataType default to the upstream field\'s own and stay editable', () => {
+  it("mapped field name and dataType default to the upstream field's own and stay editable", () => {
     renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
-    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-fedby')).getByRole('button', {
+        name: 'SQ1 — sourceQualifier',
+      }),
+    )
     fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
 
     expect(screen.getByDisplayValue('A')).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText('A mapped field name'), { target: { value: 'A_RENAMED' } })
+    fireEvent.change(screen.getByLabelText('A mapped field name'), {
+      target: { value: 'A_RENAMED' },
+    })
 
     expect(screen.getByText(/"name": "A_RENAMED"/)).toBeInTheDocument()
     expect(screen.getByText(/"source": "SQ1\.A"/)).toBeInTheDocument()
@@ -529,7 +676,9 @@ describe('NodeConfigDialog — map fields', () => {
 
   it('an upstream step target with no fields yet shows an honest empty state, not a fabricated field', () => {
     renderDialog({ kind: 'sourceQualifier', draft: MINI })
-    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'T — table' }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'T — table' }),
+    )
 
     expect(screen.getByText('No fields on this node yet.')).toBeInTheDocument()
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
@@ -537,7 +686,9 @@ describe('NodeConfigDialog — map fields', () => {
 
   it('an upstream with no step target (a bare table source) offers free-text entry, never a fabricated name', () => {
     renderDialog({ kind: 'sourceQualifier', draft: MINI })
-    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'S — table' }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'S — table' }),
+    )
 
     // No field list exists to enumerate — nothing is invented.
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
@@ -552,7 +703,11 @@ describe('NodeConfigDialog — map fields', () => {
     validateResponse = { valid: true, errors: [], warnings: [], checks: [] }
     renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'FLT2' } })
-    fireEvent.click(within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: 'SQ1 — sourceQualifier' }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-fedby')).getByRole('button', {
+        name: 'SQ1 — sourceQualifier',
+      }),
+    )
 
     await waitFor(() => expect(lastValidateBody).not.toBeNull(), { timeout: 2000 })
 
@@ -566,10 +721,15 @@ describe('NodeConfigDialog — validation gate', () => {
       valid: false,
       errors: [{ path: '$.steps[1]', message: 'step "FLT2" has no outbound reference' }],
       warnings: [],
-      checks: [{
-        ruleId: 'IPC-FLW-003', severity: 'error', status: 'fail', path: '$.steps[1]',
-        message: 'step "FLT2" has no outbound reference',
-      }],
+      checks: [
+        {
+          ruleId: 'IPC-FLW-003',
+          severity: 'error',
+          status: 'fail',
+          path: '$.steps[1]',
+          message: 'step "FLT2" has no outbound reference',
+        },
+      ],
     }
     renderDialog({ kind: 'filter', draft: DRAFT_WITH_FIELDS })
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'FLT2' } })
@@ -586,14 +746,18 @@ describe('NodeConfigDialog — validation gate', () => {
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'FLT2' } })
     selectSQ1AndMapFieldA()
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     expect(onInsert).toHaveBeenCalledTimes(1)
     const [next] = onInsert.mock.calls[0] as [RecipeJson]
     const added = next.steps!.find(s => s.target?.name === 'FLT2')!
     expect(added.target!.type).toBe('filter')
-    expect(added.target!.fields).toEqual([{ name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } }])
+    expect(added.target!.fields).toEqual([
+      { name: 'A', dataType: 'String', transformation: { source: 'SQ1.A' } },
+    ])
     expect(added.sources).toEqual([{ name: 'SQ1', type: 'sourceQualifier' }])
     expect(onCancel).not.toHaveBeenCalled()
   })
@@ -614,7 +778,9 @@ describe('NodeConfigDialog — validation gate', () => {
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'FLT2' } })
     selectSQ1AndMapFieldA()
 
-    expect(await screen.findByText(/Conformance check failed to run/i, {}, { timeout: 2000 })).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Conformance check failed to run/i, {}, { timeout: 2000 }),
+    ).toBeInTheDocument()
     expect(screen.queryByText(/0 errors · 0 warnings/)).not.toBeInTheDocument()
     // The disabled Insert now has a stated reason rather than being mute.
     expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
@@ -630,7 +796,7 @@ describe('NodeConfigDialog — validation gate', () => {
 // a new `steps[]` entry (the shape `buildStep`/`insertConfiguredStep` produce
 // for every other kind).
 describe('NodeConfigDialog — source-table mode (Task 11)', () => {
-  it('renders the source:table schema (primaryKeys), never target:table\'s name/type/fields widgets', () => {
+  it("renders the source:table schema (primaryKeys), never target:table's name/type/fields widgets", () => {
     renderDialog({ kind: SOURCE_TABLE_TYPE, draft: SOURCE_MODE_DRAFT })
     expect(screen.getByText('Add source table')).toBeInTheDocument()
     expect(screen.getByText('primaryKeys')).toBeInTheDocument()
@@ -666,16 +832,24 @@ describe('NodeConfigDialog — source-table mode (Task 11)', () => {
 
     expect(screen.getByRole('button', { name: 'Insert' })).toBeDisabled()
 
-    fireEvent.click(within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: /SQ1/ }))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    fireEvent.click(
+      within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: /SQ1/ }),
+    )
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
   })
 
-  it('onInsert commits via insertSourceTable: appends to the chosen step\'s sources[] and table.sourceTableNames, never a new step', async () => {
+  it("onInsert commits via insertSourceTable: appends to the chosen step's sources[] and table.sourceTableNames, never a new step", async () => {
     const { onInsert } = renderDialog({ kind: SOURCE_TABLE_TYPE, draft: SOURCE_MODE_DRAFT })
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
-    fireEvent.click(within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: /SQ1/ }))
+    fireEvent.click(
+      within(screen.getByTestId('node-config-feeds')).getByRole('button', { name: /SQ1/ }),
+    )
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     expect(onInsert).toHaveBeenCalledTimes(1)
@@ -714,12 +888,15 @@ describe('NodeConfigDialog — empty-draft accommodation (Task 15)', () => {
     validateResponse = {
       valid: false,
       errors: [{ path: '$.steps', message: 'steps must be a non-empty array' }],
-      warnings: [], checks: [],
+      warnings: [],
+      checks: [],
     }
     renderDialog({ kind: SOURCE_TABLE_TYPE, draft: EMPTY_DRAFT })
 
     // Nothing to feed — genuinely nothing exists yet, not a stale render.
-    expect(within(screen.getByTestId('node-config-feeds')).getByText('No existing nodes.')).toBeInTheDocument()
+    expect(
+      within(screen.getByTestId('node-config-feeds')).getByText('No existing nodes.'),
+    ).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
     await waitFor(() => expect(lastValidateBody).not.toBeNull(), { timeout: 2000 })
@@ -730,7 +907,9 @@ describe('NodeConfigDialog — empty-draft accommodation (Task 15)', () => {
   it('a non-source kind still cannot be inserted first on an empty draft — nothing upstream to map fields from', () => {
     renderDialog({ kind: 'sourceQualifier', draft: EMPTY_DRAFT })
 
-    expect(within(screen.getByTestId('node-config-fedby')).getByText('No existing nodes.')).toBeInTheDocument()
+    expect(
+      within(screen.getByTestId('node-config-fedby')).getByText('No existing nodes.'),
+    ).toBeInTheDocument()
     expect(screen.queryByTestId('node-config-fieldmap')).not.toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'SQ_FIRST' } })
@@ -748,7 +927,9 @@ describe('NodeConfigDialog — empty-draft accommodation (Task 15)', () => {
     renderDialog({ kind: SOURCE_TABLE_TYPE, draft: EMPTY_DRAFT })
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NEWSRC' } })
 
-    expect(await screen.findByText(/Conformance check failed to run/i, {}, { timeout: 2000 })).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Conformance check failed to run/i, {}, { timeout: 2000 }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled()
     expect(screen.queryByText(/Insert stays disabled/i)).not.toBeInTheDocument()
   })
@@ -760,7 +941,9 @@ describe('NodeConfigDialog — empty-draft accommodation (Task 15)', () => {
     }
     renderDialog({ kind: 'sourceQualifier', draft: draftAfterFirstInsert })
 
-    const candidate = within(screen.getByTestId('node-config-fedby')).getByRole('button', { name: /NEWSRC/ })
+    const candidate = within(screen.getByTestId('node-config-fedby')).getByRole('button', {
+      name: /NEWSRC/,
+    })
     expect(candidate).not.toBeDisabled()
   })
 })
@@ -881,7 +1064,9 @@ describe('NodeConfigDialog — target DDL columns as fields (Task 16)', () => {
     expect(within(offer).getByText(/1 DDL definition/i)).toBeInTheDocument()
 
     fireEvent.click(within(offer).getByRole('button', { name: /Use 4 columns/ }))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     const [next] = onInsert.mock.calls[0] as [RecipeJson]
@@ -931,7 +1116,11 @@ describe('NodeConfigDialog — target DDL columns as fields (Task 16)', () => {
     // present it as "no match".
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'DWH_ORDERS_FACT' } })
 
-    const note = await screen.findByTestId('node-config-targetddl-unavailable', {}, { timeout: 2000 })
+    const note = await screen.findByTestId(
+      'node-config-targetddl-unavailable',
+      {},
+      { timeout: 2000 },
+    )
     expect(note).toHaveTextContent(/could not be checked/i)
     expect(screen.queryByTestId('node-config-targetddl')).not.toBeInTheDocument()
   })
@@ -956,14 +1145,16 @@ describe('NodeConfigDialog — target DDL columns as fields (Task 16)', () => {
     expect(screen.getByText(/"fields": \[\]/)).toBeInTheDocument()
   })
 
-  it('choosing one variant fields the step with exactly that variant\'s columns', async () => {
+  it("choosing one variant fields the step with exactly that variant's columns", async () => {
     const { onInsert } = renderDialogWithQuery({ kind: 'table', draft: DRAFT_WITH_FIELDS })
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'DWH_SPLIT_FACT' } })
 
     const offer = await screen.findByTestId('node-config-targetddl')
     fireEvent.click(within(offer).getByRole('button', { name: /Use 2 columns/ }))
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     const [next] = onInsert.mock.calls[0] as [RecipeJson]
@@ -982,7 +1173,9 @@ describe('NodeConfigDialog — target DDL columns as fields (Task 16)', () => {
     const offer = await screen.findByTestId('node-config-targetddl')
     fireEvent.click(within(offer).getByRole('button', { name: /Use 2 columns/ }))
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), { timeout: 2000 })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Insert' })).not.toBeDisabled(), {
+      timeout: 2000,
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Insert' }))
 
     const [next] = onInsert.mock.calls[0] as [RecipeJson]

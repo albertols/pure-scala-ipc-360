@@ -73,31 +73,56 @@ export function EditorToolbar({
   onRedo: () => void
 }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '10px 16px',
-      background: 'var(--surface)',
-      borderBottom: '1px solid var(--border)',
-    }}>
-      <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#e2e8f8', whiteSpace: 'nowrap' }}>{fileName}</h2>
-      <span style={{
-        fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 600,
-        background: 'rgba(79,156,249,0.15)',
-        color: '#4f9cf9',
-        border: '1px solid rgba(79,156,249,0.3)',
-        fontFamily: 'JetBrains Mono, monospace',
-        whiteSpace: 'nowrap',
-      }}>{layerChip}</span>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 16px',
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
+      }}
+    >
+      <h2
+        style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#e2e8f8', whiteSpace: 'nowrap' }}
+      >
+        {fileName}
+      </h2>
+      <span
+        style={{
+          fontSize: 10,
+          padding: '2px 8px',
+          borderRadius: 4,
+          fontWeight: 600,
+          background: 'rgba(79,156,249,0.15)',
+          color: '#4f9cf9',
+          border: '1px solid rgba(79,156,249,0.3)',
+          fontFamily: 'JetBrains Mono, monospace',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {layerChip}
+      </span>
 
       <div style={{ flex: 1 }} />
 
       {conformance}
 
-      <button onClick={onToggleHistory} style={{
-        padding: '5px 12px', borderRadius: 5,
-        background: historyOpen ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
-        color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-      }}>{'{ history }'}</button>
+      <button
+        onClick={onToggleHistory}
+        style={{
+          padding: '5px 12px',
+          borderRadius: 5,
+          background: historyOpen ? 'var(--surface-3)' : 'transparent',
+          border: '1px solid var(--border)',
+          color: '#7b88aa',
+          fontSize: 11,
+          cursor: 'pointer',
+          fontFamily: 'JetBrains Mono, monospace',
+        }}
+      >
+        {'{ history }'}
+      </button>
 
       {/* Focus mode deep link (Task 15) — opens THIS recipe alone, full-viewport,
           in a new tab. */}
@@ -105,28 +130,54 @@ export function EditorToolbar({
         onClick={onOpenFocus}
         title="Open in a new tab, isolated"
         style={{
-          padding: '5px 12px', borderRadius: 5,
-          background: 'transparent', border: '1px solid var(--border)',
-          color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-        }}>{'⤢'}</button>
+          padding: '5px 12px',
+          borderRadius: 5,
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          color: '#7b88aa',
+          fontSize: 11,
+          cursor: 'pointer',
+          fontFamily: 'JetBrains Mono, monospace',
+        }}
+      >
+        {'⤢'}
+      </button>
 
       <div style={{ position: 'relative' }}>
-        <button onClick={onToggleRaw} style={{
-          padding: '5px 12px', borderRadius: 5,
-          background: showRaw ? 'var(--surface-3)' : 'transparent', border: '1px solid var(--border)',
-          color: '#7b88aa', fontSize: 11, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-        }}>{'{ raw JSON }'}</button>
+        <button
+          onClick={onToggleRaw}
+          style={{
+            padding: '5px 12px',
+            borderRadius: 5,
+            background: showRaw ? 'var(--surface-3)' : 'transparent',
+            border: '1px solid var(--border)',
+            color: '#7b88aa',
+            fontSize: 11,
+            cursor: 'pointer',
+            fontFamily: 'JetBrains Mono, monospace',
+          }}
+        >
+          {'{ raw JSON }'}
+        </button>
 
         {/* No `width` on the dropdown any more (UX round 3, issue 4): the
             raw-JSON panel is an editor now and sizes ITSELF (`RawJsonPanel`'s
             PANEL_W, which clamps against the viewport), so this wrapper only
             positions it. A fixed 420px here would have re-clamped it. */}
         {showRaw && (
-          <div style={{
-            position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 20,
-            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6,
-            overflow: 'hidden',
-          }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              marginTop: 6,
+              zIndex: 20,
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 6,
+              overflow: 'hidden',
+            }}
+          >
             {rawContent}
           </div>
         )}
@@ -139,23 +190,44 @@ export function EditorToolbar({
           onClick={onCancelWire}
           title="Click to cancel"
           style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '3px 10px', borderRadius: 5,
-            background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-            color: '#4f9cf9', fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
-            cursor: 'pointer', whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '3px 10px',
+            borderRadius: 5,
+            background: 'rgba(79,156,249,0.15)',
+            border: '1px solid #4f9cf9',
+            color: '#4f9cf9',
+            fontSize: 11,
+            fontFamily: 'JetBrains Mono, monospace',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
           }}
         >{`wire: ${wireFrom.nodeId}.${wireFrom.portName} → click an IN port`}</div>
       )}
 
       {changes > 0 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          fontSize: 11, color: '#fbbf24', whiteSpace: 'nowrap',
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 11,
+            color: '#fbbf24',
+            whiteSpace: 'nowrap',
+          }}
+        >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <circle cx="6" cy="6" r="5" stroke="#fbbf24" strokeWidth="1.2" />
-            <line x1="6" y1="3.5" x2="6" y2="6.5" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" />
+            <line
+              x1="6"
+              y1="3.5"
+              x2="6"
+              y2="6.5"
+              stroke="#fbbf24"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
             <circle cx="6" cy="8.5" r="0.8" fill="#fbbf24" />
           </svg>
           {changes} unsaved change{changes !== 1 ? 's' : ''}
@@ -172,28 +244,52 @@ export function EditorToolbar({
         disabled={!canUndo}
         aria-label="Undo"
         title="Undo"
-        style={{ ...ghostButtonStyle, opacity: canUndo ? 1 : 0.4, cursor: canUndo ? 'pointer' : 'default' }}
-      >{'↶'}</button>
+        style={{
+          ...ghostButtonStyle,
+          opacity: canUndo ? 1 : 0.4,
+          cursor: canUndo ? 'pointer' : 'default',
+        }}
+      >
+        {'↶'}
+      </button>
       <button
         onClick={onRedo}
         disabled={!canRedo}
         aria-label="Redo"
         title="Redo"
-        style={{ ...ghostButtonStyle, opacity: canRedo ? 1 : 0.4, cursor: canRedo ? 'pointer' : 'default' }}
-      >{'↷'}</button>
+        style={{
+          ...ghostButtonStyle,
+          opacity: canRedo ? 1 : 0.4,
+          cursor: canRedo ? 'pointer' : 'default',
+        }}
+      >
+        {'↷'}
+      </button>
 
       {changes > 0 && (
         <>
-          <button onClick={onDiscard} style={ghostButtonStyle}>Discard</button>
-          <button onClick={onSave} disabled={saving} style={{
-            padding: '5px 16px', borderRadius: 5,
-            background: 'rgba(79,156,249,0.15)', border: '1px solid #4f9cf9',
-            color: '#4f9cf9', fontSize: 12, fontWeight: 600,
-            display: 'flex', alignItems: 'center', gap: 6,
-            cursor: saving ? 'default' : 'pointer',
-            opacity: saving ? 0.6 : 1,
-            whiteSpace: 'nowrap',
-          }}>
+          <button onClick={onDiscard} style={ghostButtonStyle}>
+            Discard
+          </button>
+          <button
+            onClick={onSave}
+            disabled={saving}
+            style={{
+              padding: '5px 16px',
+              borderRadius: 5,
+              background: 'rgba(79,156,249,0.15)',
+              border: '1px solid #4f9cf9',
+              color: '#4f9cf9',
+              fontSize: 12,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              cursor: saving ? 'default' : 'pointer',
+              opacity: saving ? 0.6 : 1,
+              whiteSpace: 'nowrap',
+            }}
+          >
             {saving && <Spinner size={11} />}
             Save Changes
           </button>

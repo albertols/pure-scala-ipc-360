@@ -9,7 +9,8 @@ const server = setupServer(
     HttpResponse.json(
       { title: 'Not found', status: 404, detail: 'No recipe at missing.json' },
       { status: 404, headers: { 'Content-Type': 'application/problem+json' } },
-    )),
+    ),
+  ),
 )
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())

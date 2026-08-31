@@ -7,10 +7,15 @@ import React from 'react'
 import { useTree } from './queries'
 
 const server = setupServer(
-  http.get('/api/tree', () => HttpResponse.json({
-    name: 'xmltobq', path: '', kind: 'dir', layer: 'root',
-    children: [{ name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM', children: [] }],
-  })),
+  http.get('/api/tree', () =>
+    HttpResponse.json({
+      name: 'xmltobq',
+      path: '',
+      kind: 'dir',
+      layer: 'root',
+      children: [{ name: 'CDM', path: 'CDM', kind: 'dir', layer: 'CDM', children: [] }],
+    }),
+  ),
 )
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())

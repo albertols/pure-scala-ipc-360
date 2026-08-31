@@ -1,11 +1,32 @@
 import { useState, useRef, useCallback, useMemo, useEffect, memo } from 'react'
 import type { OperationalCard as CardData, CardDensity } from '../../types'
 import type { ApiError } from '../../api/client'
-import { useOperationalSummary, useOperational, useAppConfig, useDiagnostics } from '../../api/queries'
+import {
+  useOperationalSummary,
+  useOperational,
+  useAppConfig,
+  useDiagnostics,
+} from '../../api/queries'
 import type { AppConfig, RelationshipGraph } from '../../api/queries'
-import { useClusterIndex, useScopedRelationships, useRuns, type RunT } from '../../api/clusterQueries'
-import { setOperationalView, useOperationalView, visitNode, stepHistory } from '../../state/operationalView'
-import { toOperationalGraph, summarizeSnapshot, fitToViewport, DENSITY_FOOTPRINT, type OperationalEdge } from '../../api/relationshipsAdapter'
+import {
+  useClusterIndex,
+  useScopedRelationships,
+  useRuns,
+  type RunT,
+} from '../../api/clusterQueries'
+import {
+  setOperationalView,
+  useOperationalView,
+  visitNode,
+  stepHistory,
+} from '../../state/operationalView'
+import {
+  toOperationalGraph,
+  summarizeSnapshot,
+  fitToViewport,
+  DENSITY_FOOTPRINT,
+  type OperationalEdge,
+} from '../../api/relationshipsAdapter'
 import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../../api/gcpLinks'
 import { OperationalCard } from '../shared/OperationalCard'
 import { pickDefaultRun } from '../shared/RunPicker'
@@ -49,9 +70,10 @@ function resolvePreview(
   edges: OperationalEdge[],
   nodeById: Map<string, NodeDto>,
 ): { recipePath: string | null; mappingPath: string | null } {
-  const recipeId = card.kind === 'recipe'
-    ? card.id
-    : edges.find(e => e.kind === 'writes' && e.toId === card.id)?.fromId
+  const recipeId =
+    card.kind === 'recipe'
+      ? card.id
+      : edges.find(e => e.kind === 'writes' && e.toId === card.id)?.fromId
   const node = recipeId ? nodeById.get(recipeId) : undefined
   const mappingPath = node?.mappingPath ?? null
   const name = node?.name ?? null
@@ -61,17 +83,31 @@ function resolvePreview(
 
 function StatusSummary({ cards }: { cards: CardData[] }) {
   const counts = { OK: 0, KO: 0, RUNNING: 0, PENDING: 0 }
-  cards.forEach(c => { counts[c.status]++ })
-  const color: Record<string, string> = { OK: '#34d399', KO: '#f87171', RUNNING: '#fbbf24', PENDING: '#4a5570' }
+  cards.forEach(c => {
+    counts[c.status]++
+  })
+  const color: Record<string, string> = {
+    OK: '#34d399',
+    KO: '#f87171',
+    RUNNING: '#fbbf24',
+    PENDING: '#4a5570',
+  }
   return (
     <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-      {Object.entries(counts).map(([s, n]) => n > 0 && (
-        <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: color[s] }} />
-          <span style={{ fontSize: 11, color: '#c8d3e8', fontFamily: 'JetBrains Mono, monospace' }}>{n}</span>
-          <span style={{ fontSize: 11, color: '#4a5570' }}>{s}</span>
-        </div>
-      ))}
+      {Object.entries(counts).map(
+        ([s, n]) =>
+          n > 0 && (
+            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: color[s] }} />
+              <span
+                style={{ fontSize: 11, color: '#c8d3e8', fontFamily: 'JetBrains Mono, monospace' }}
+              >
+                {n}
+              </span>
+              <span style={{ fontSize: 11, color: '#4a5570' }}>{s}</span>
+            </div>
+          ),
+      )}
     </div>
   )
 }
@@ -139,7 +175,9 @@ const RelationshipGraph = memo(function RelationshipGraph({
   // handlers relied on `onMouseLeave` for that, which a tab SWITCH never fires — and since
   // Task 12 keeps tabs mounted, a drag interrupted that way left the store holding the pre-drag
   // pan while the DOM showed the dragged one. Mirrors ClusterPane.tsx's `activeDragListeners`.
-  const activeDragListeners = useRef<{ onMove: (e: MouseEvent) => void; onUp: () => void } | null>(null)
+  const activeDragListeners = useRef<{ onMove: (e: MouseEvent) => void; onUp: () => void } | null>(
+    null,
+  )
   // Read by the window listener below, so a zoom change mid-gesture is seen rather than frozen
   // at mousedown time (the synthetic handler got this for free by being re-created per render).
   const zoomRef = useRef(zoom)
@@ -175,78 +213,112 @@ const RelationshipGraph = memo(function RelationshipGraph({
     dragging.current = false
   }, [onPan])
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if ((e.target as Element).closest('[data-card]')) return
-    detachDrag()
-    dragging.current = true
-    dragMoved.current = false
-    dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
-
-    const onMove = (ev: MouseEvent) => {
-      if (!dragging.current) return
-      dragMoved.current = true
-      const next = { x: ev.clientX - dragStart.current.x, y: ev.clientY - dragStart.current.y }
-      lastDragPan.current = next
-      if (contentRef.current) {
-        contentRef.current.style.transform = `translate(${next.x}px,${next.y}px) scale(${zoomRef.current})`
-      }
-      if (patternRef.current) {
-        patternRef.current.setAttribute('x', String(next.x % DOT_PITCH))
-        patternRef.current.setAttribute('y', String(next.y % DOT_PITCH))
-      }
-    }
-    const onUp = () => {
-      commitDrag()
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if ((e.target as Element).closest('[data-card]')) return
       detachDrag()
-    }
-    activeDragListeners.current = { onMove, onUp }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }, [pan, commitDrag, detachDrag])
+      dragging.current = true
+      dragMoved.current = false
+      dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
 
-  const onWheel = useCallback((e: React.WheelEvent) => {
-    const rect = containerRef.current?.getBoundingClientRect()
-    const input = {
-      deltaX: e.deltaX, deltaY: e.deltaY,
-      metaKey: e.metaKey, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey,
-      cursor: { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) },
-    }
-    if (!wheelActs(input)) return
-    e.preventDefault()
-    e.stopPropagation()
-    const next = applyWheel({ zoom, pan }, input)
-    setOperationalView({ zoom: next.zoom, pan: next.pan })
-  }, [zoom, pan])
+      const onMove = (ev: MouseEvent) => {
+        if (!dragging.current) return
+        dragMoved.current = true
+        const next = { x: ev.clientX - dragStart.current.x, y: ev.clientY - dragStart.current.y }
+        lastDragPan.current = next
+        if (contentRef.current) {
+          contentRef.current.style.transform = `translate(${next.x}px,${next.y}px) scale(${zoomRef.current})`
+        }
+        if (patternRef.current) {
+          patternRef.current.setAttribute('x', String(next.x % DOT_PITCH))
+          patternRef.current.setAttribute('y', String(next.y % DOT_PITCH))
+        }
+      }
+      const onUp = () => {
+        commitDrag()
+        detachDrag()
+      }
+      activeDragListeners.current = { onMove, onUp }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    },
+    [pan, commitDrag, detachDrag],
+  )
+
+  const onWheel = useCallback(
+    (e: React.WheelEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect()
+      const input = {
+        deltaX: e.deltaX,
+        deltaY: e.deltaY,
+        metaKey: e.metaKey,
+        ctrlKey: e.ctrlKey,
+        shiftKey: e.shiftKey,
+        cursor: { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) },
+      }
+      if (!wheelActs(input)) return
+      e.preventDefault()
+      e.stopPropagation()
+      const next = applyWheel({ zoom, pan }, input)
+      setOperationalView({ zoom: next.zoom, pan: next.pan })
+    },
+    [zoom, pan],
+  )
 
   return (
     <div
       ref={containerRef}
       data-testid="operational-canvas"
-      style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--bg)', cursor: 'grab' }}
+      style={{
+        flex: 1,
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'var(--bg)',
+        cursor: 'grab',
+      }}
       onMouseDown={onMouseDown}
       onWheel={onWheel}
     >
       {/* dot grid */}
-      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+      <svg
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+        }}
+      >
         <defs>
-          <pattern ref={patternRef} id="odot" x={pan.x % DOT_PITCH} y={pan.y % DOT_PITCH}
-            width={DOT_PITCH} height={DOT_PITCH} patternUnits="userSpaceOnUse">
+          <pattern
+            ref={patternRef}
+            id="odot"
+            x={pan.x % DOT_PITCH}
+            y={pan.y % DOT_PITCH}
+            width={DOT_PITCH}
+            height={DOT_PITCH}
+            patternUnits="userSpaceOnUse"
+          >
             <circle cx={DOT_PITCH / 2} cy={DOT_PITCH / 2} r="0.7" fill="rgba(42,48,80,0.7)" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#odot)" />
       </svg>
 
-      <div ref={contentRef} style={{
-        transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})`,
-        transformOrigin: '0 0',
-        position: 'absolute',
-        width: CANVAS_W,
-        height: CANVAS_H,
-      }}>
+      <div
+        ref={contentRef}
+        style={{
+          transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})`,
+          transformOrigin: '0 0',
+          position: 'absolute',
+          width: CANVAS_W,
+          height: CANVAS_H,
+        }}
+      >
         {/* SVG edges */}
         <svg
-          width={CANVAS_W} height={CANVAS_H}
+          width={CANVAS_W}
+          height={CANVAS_H}
           style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
         >
           <defs>
@@ -262,12 +334,13 @@ const RelationshipGraph = memo(function RelationshipGraph({
             const to = byId[e.toId]!
             const fx = (from.x ?? 0) + 120
             const fy = (from.y ?? 0) + 50
-            const tx = (to.x ?? 0)
+            const tx = to.x ?? 0
             const ty = (to.y ?? 0) + 50
             const hi = selected === e.fromId || selected === e.toId
             const dx = Math.abs(tx - fx) * 0.45
             return (
-              <path key={i}
+              <path
+                key={i}
                 d={`M ${fx} ${fy} C ${fx + dx} ${fy} ${tx - dx} ${ty} ${tx} ${ty}`}
                 fill="none"
                 stroke={hi ? '#4f9cf9' : '#1e2438'}
@@ -297,7 +370,10 @@ const RelationshipGraph = memo(function RelationshipGraph({
               // A 1-hop neighbour is context, not scope: readable, visibly not what you asked for.
               opacity: card.neighbor ? 0.45 : 1,
             }}
-            onClick={e => { e.stopPropagation(); onSelect(selected === card.id ? null : card.id) }}
+            onClick={e => {
+              e.stopPropagation()
+              onSelect(selected === card.id ? null : card.id)
+            }}
           >
             <OperationalCard
               card={card}
@@ -319,12 +395,20 @@ const RelationshipGraph = memo(function RelationshipGraph({
           aria-label="Clear node selection"
           onClick={() => onSelect(null)}
           style={{
-            position: 'absolute', top: 12, right: 12,
-            background: 'var(--surface)', border: '1px solid var(--border)',
-            borderRadius: 5, color: '#7b88aa', fontSize: 11, cursor: 'pointer',
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 5,
+            color: '#7b88aa',
+            fontSize: 11,
+            cursor: 'pointer',
             padding: '4px 10px',
           }}
-        >Clear selection</button>
+        >
+          Clear selection
+        </button>
       )}
 
       {/* Task 16: view-aware corpus summary — floating bottom-left chip (no
@@ -334,11 +418,18 @@ const RelationshipGraph = memo(function RelationshipGraph({
           PROP rather than a store read inside this component, which is memo'd over its props —
           a store read would slip past that memo boundary. */}
       {summaryVisible && summaryItems.length > 0 && (
-        <div data-testid="snapshot-chip" style={{
-          position: 'absolute', bottom: 14, left: 14,
-          padding: '5px 10px', background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 5,
-        }}>
+        <div
+          data-testid="snapshot-chip"
+          style={{
+            position: 'absolute',
+            bottom: 14,
+            left: 14,
+            padding: '5px 10px',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 5,
+          }}
+        >
           <CorpusSummary items={summaryItems} />
         </div>
       )}
@@ -410,7 +501,10 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   // than re-deriving from `selected` on every render — so the overlay keeps
   // showing the recipe it was opened for even if the selection changes or
   // clears underneath it while it's open.
-  const [preview, setPreview] = useState<{ recipePath: string | null; mappingPath: string | null } | null>(null)
+  const [preview, setPreview] = useState<{
+    recipePath: string | null
+    mappingPath: string | null
+  } | null>(null)
   /** Node id whose neighbourhood the hovering "Show all related" window is focused on. */
   const [relatedNode, setRelatedNode] = useState<string | null>(null)
   /**
@@ -437,7 +531,8 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
     if (!el || typeof ResizeObserver === 'undefined') return
     const ro = new ResizeObserver(entries => {
       const rect = entries[0]?.contentRect
-      if (rect && rect.width > 0 && rect.height > 0) viewportRef.current = { width: rect.width, height: rect.height }
+      if (rect && rect.width > 0 && rect.height > 0)
+        viewportRef.current = { width: rect.width, height: rect.height }
     })
     ro.observe(el)
     return () => ro.disconnect()
@@ -488,7 +583,8 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   }
   const handleTimeChange = (v: TimeSelection) => {
     setOperationalView({
-      selectedDate: availableDates.length > 0 ? nearestAvailableDate(v.date, availableDates) : v.date,
+      selectedDate:
+        availableDates.length > 0 ? nearestAvailableDate(v.date, availableDates) : v.date,
     })
     setTimeMeta({ hour: v.hour, precision: v.precision, isNow: v.isNow })
   }
@@ -512,12 +608,17 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
     if (view.selectedDate !== null && view.selectedDates.includes(view.selectedDate)) return
     setOperationalView({
       selectedDate: nearestAvailableDate(
-        view.selectedDate ?? view.selectedDates[0]!, view.selectedDates),
+        view.selectedDate ?? view.selectedDates[0]!,
+        view.selectedDates,
+      ),
     })
   }, [view.selectedDates, view.selectedDate])
 
   const graph = useMemo(
-    () => (rel.data ? toOperationalGraph(rel.data, scopedSummary, view.selectedDate, view.density) : null),
+    () =>
+      rel.data
+        ? toOperationalGraph(rel.data, scopedSummary, view.selectedDate, view.density)
+        : null,
     [rel.data, scopedSummary, view.selectedDate, view.density],
   )
 
@@ -536,8 +637,8 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   // update — otherwise a Compact re-layout could leave the view panned/zoomed for the OLD
   // (wider) Detailed extent, defeating the point of "fitting more flow on screen".
   const onCycleDensity = () => {
-    const next: CardDensity = view.density === 'detailed' ? 'compact'
-      : view.density === 'compact' ? 'minimal' : 'detailed'
+    const next: CardDensity =
+      view.density === 'detailed' ? 'compact' : view.density === 'compact' ? 'minimal' : 'detailed'
     const relaid = toOperationalGraph(rel.data!, scopedSummary, view.selectedDate, next)
     setOperationalView({ density: next, ...fitToViewport(relaid.cards, viewportRef.current, next) })
   }
@@ -547,13 +648,17 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   // `withoutDeselectedRecipes` drops the unchecked recipe cards, and the canvas's edge pass drops
   // the edges that touched them. Because `recipeNames` is derived from this list, an unchecked
   // recipe also stops costing a slot in the run-history request.
-  const cards = useMemo(() => withoutDeselectedRecipes(graph?.cards ?? [], view.deselectedRecipes).filter(c => {
-    if (layerFilter.length > 0 && !layerFilter.includes(c.layer)) return false
-    if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
-    if (statusFilter.length > 0 && !statusFilter.includes(c.status)) return false
-    if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
-    return true
-  }), [graph, view.deselectedRecipes, layerFilter, kindFilter, statusFilter, searchQuery])
+  const cards = useMemo(
+    () =>
+      withoutDeselectedRecipes(graph?.cards ?? [], view.deselectedRecipes).filter(c => {
+        if (layerFilter.length > 0 && !layerFilter.includes(c.layer)) return false
+        if (kindFilter !== 'ALL' && c.kind !== kindFilter) return false
+        if (statusFilter.length > 0 && !statusFilter.includes(c.status)) return false
+        if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
+        return true
+      }),
+    [graph, view.deselectedRecipes, layerFilter, kindFilter, statusFilter, searchQuery],
+  )
 
   const recipeNames = useMemo(
     () => cards.filter(c => c.kind === 'recipe').map(c => c.name),
@@ -571,16 +676,21 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   // Task 16: date-scoped chip counts, derived client-side from `graph` + `snapshot` (the selected
   // date's raw b15 rows) — no new endpoint.
   const snapshotSummary = useMemo(
-    () => (graph && snapshot.data ? summarizeSnapshot(snapshot.data.rows ?? [], graph.cards, graph.edges) : null),
+    () =>
+      graph && snapshot.data
+        ? summarizeSnapshot(snapshot.data.rows ?? [], graph.cards, graph.edges)
+        : null,
     [graph, snapshot.data],
   )
-  const summaryItems: SummaryItem[] = snapshotSummary ? [
-    { label: 'b15 rows', value: snapshotSummary.rows },
-    { label: 'recipes', value: snapshotSummary.recipes },
-    { label: 'tables', value: snapshotSummary.tables },
-    { label: 'OK', value: snapshotSummary.ok },
-    { label: 'KO', value: snapshotSummary.ko },
-  ] : []
+  const summaryItems: SummaryItem[] = snapshotSummary
+    ? [
+        { label: 'b15 rows', value: snapshotSummary.rows },
+        { label: 'recipes', value: snapshotSummary.recipes },
+        { label: 'tables', value: snapshotSummary.tables },
+        { label: 'OK', value: snapshotSummary.ok },
+        { label: 'KO', value: snapshotSummary.ko },
+      ]
+    : []
 
   const totals = index.data?.totals
   const totalsLine = totals
@@ -603,7 +713,9 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
       label: hasSelection
         ? `Building graph for ${nf.format(view.selectedClusters.length)} ${view.selectedClusters.length === 1 ? 'cluster' : 'clusters'}…`
         : 'Waiting for a cluster selection',
-      detail: graph ? `${nf.format(nodeCount)} nodes · ${nf.format(neighborCount)} from neighbours` : null,
+      detail: graph
+        ? `${nf.format(nodeCount)} nodes · ${nf.format(neighborCount)} from neighbours`
+        : null,
       done: !!graph,
       active: hasSelection && rel.isLoading,
     },
@@ -612,7 +724,10 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
       // Only once there IS a graph — before that "0 recipes" is not a resolved total, it is the
       // absence of one, and the whole point of this panel is that it never states a number it
       // has not actually resolved.
-      detail: graph && !runs.isLoading ? `${nf.format(recipeNames.length)} recipes · up to 10 runs each` : null,
+      detail:
+        graph && !runs.isLoading
+          ? `${nf.format(recipeNames.length)} recipes · up to 10 runs each`
+          : null,
       done: !!graph && !runs.isLoading,
       active: runs.isLoading,
     },
@@ -644,14 +759,16 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
     () => withoutDeselectedRecipes(graph?.cards ?? [], view.deselectedRecipes),
     [graph, view.deselectedRecipes],
   )
-  const selectionSummary: SelectionSummary | null = graph ? {
-    recipes: shownCards.filter(c => c.kind === 'recipe' && !c.neighbor).length,
-    dates: selectionDateCount,
-    ok: selectedClusterRows.reduce((n, c) => n + (c.ok ?? 0), 0),
-    ko: selectedClusterRows.reduce((n, c) => n + (c.ko ?? 0), 0),
-    nodes: shownCards.length,
-    neighbors: neighborCount,
-  } : null
+  const selectionSummary: SelectionSummary | null = graph
+    ? {
+        recipes: shownCards.filter(c => c.kind === 'recipe' && !c.neighbor).length,
+        dates: selectionDateCount,
+        ok: selectedClusterRows.reduce((n, c) => n + (c.ok ?? 0), 0),
+        ko: selectedClusterRows.reduce((n, c) => n + (c.ko ?? 0), 0),
+        nodes: shownCards.length,
+        neighbors: neighborCount,
+      }
+    : null
 
   // 1. The index itself is the only thing every path needs.
   if (index.isLoading) {
@@ -671,8 +788,11 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
     return (
       <div style={{ padding: 16 }}>
         <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No b15 history</div>
-        <DataRootsPanel diagnostics={diagnostics.data} isLoading={diagnostics.isLoading}
-            error={diagnostics.error as ApiError | null} />
+        <DataRootsPanel
+          diagnostics={diagnostics.data}
+          isLoading={diagnostics.isLoading}
+          error={diagnostics.error as ApiError | null}
+        />
       </div>
     )
   }
@@ -687,23 +807,42 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
         <div
           data-testid="cluster-prompt"
           style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 10,
-            background: 'var(--bg)', padding: 24, textAlign: 'center',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            background: 'var(--bg)',
+            padding: 24,
+            textAlign: 'center',
           }}
         >
-          <div aria-hidden="true" style={{ fontSize: 26, color: 'var(--text-dim)', lineHeight: 1 }}>{'◇'}</div>
-          <div style={{ fontSize: 13, color: 'var(--text)' }}>Select a cluster to load its graph</div>
+          <div aria-hidden="true" style={{ fontSize: 26, color: 'var(--text-dim)', lineHeight: 1 }}>
+            {'◇'}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text)' }}>
+            Select a cluster to load its graph
+          </div>
           {totalsLine && (
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'var(--text-muted)',
+                fontFamily: 'JetBrains Mono, monospace',
+              }}
+            >
               {totalsLine}
             </div>
           )}
           <div style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 380, lineHeight: 1.5 }}>
             Nothing is fetched until you choose one — the whole corpus is never loaded at once.
           </div>
-          <DataRootsChip diagnostics={diagnostics.data} isLoading={diagnostics.isLoading}
-            error={diagnostics.error as ApiError | null} />
+          <DataRootsChip
+            diagnostics={diagnostics.data}
+            isLoading={diagnostics.isLoading}
+            error={diagnostics.error as ApiError | null}
+          />
         </div>
       </div>
     )
@@ -756,8 +895,11 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
         <ClusterPane />
         <div style={{ flex: 1, overflow: 'auto', padding: 16, background: 'var(--bg)' }}>
           <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>No relationship entries</div>
-          <DataRootsPanel diagnostics={diagnostics.data} isLoading={diagnostics.isLoading}
-            error={diagnostics.error as ApiError | null} />
+          <DataRootsPanel
+            diagnostics={diagnostics.data}
+            isLoading={diagnostics.isLoading}
+            error={diagnostics.error as ApiError | null}
+          />
         </div>
       </div>
     )
@@ -765,9 +907,15 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
 
   const paneFilterCount = view.deselectedRecipes.length + view.selectedDates.length
   const paneFilterLabel = [
-    view.deselectedRecipes.length > 0 ? `${nf.format(view.deselectedRecipes.length)} recipes hidden` : '',
-    view.selectedDates.length > 0 ? `${nf.format(view.selectedDates.length)} of ${nf.format(availableDates.length)} days` : '',
-  ].filter(Boolean).join(' · ')
+    view.deselectedRecipes.length > 0
+      ? `${nf.format(view.deselectedRecipes.length)} recipes hidden`
+      : '',
+    view.selectedDates.length > 0
+      ? `${nf.format(view.selectedDates.length)} of ${nf.format(availableDates.length)} days`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   const selectedCard = view.selectedNode ? graph.cards.find(c => c.id === view.selectedNode) : null
 
@@ -781,9 +929,11 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   const selectedRuns = selectedCard ? (runsByRecipe[selectedCard.name] ?? []) : []
   const selectedRun = pickDefaultRun(selectedRuns, view.selectedRunDate)
   const linkJobId = selectedRun?.jobId || selectedCard?.jobId || ''
-  const clusterName = selectedRun?.clusterName
-    || (selectedCard
-      ? (summary.data?.recipes?.find(r => r.recipeFilename === selectedCard.name)?.lastClusterName ?? '')
+  const clusterName =
+    selectedRun?.clusterName ||
+    (selectedCard
+      ? (summary.data?.recipes?.find(r => r.recipeFilename === selectedCard.name)
+          ?.lastClusterName ?? '')
       : '')
   const loggingHref = buildLoggingUrl(cfg.data, {
     jobId: linkJobId,
@@ -793,36 +943,70 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   const bigQueryHref = buildBigQueryUrl(cfg.data)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
-
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
       {searchPanel}
       <SelectionStrip summary={selectionSummary} />
 
       {/* toolbar */}
-      <div style={{
-        padding: '10px 16px',
-        borderBottom: '1px solid var(--border)',
-        background: 'var(--surface)',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 12,
-        alignItems: 'center',
-      }}>
+      <div
+        style={{
+          padding: '10px 16px',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--surface)',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 12,
+          alignItems: 'center',
+        }}
+      >
         {/* search */}
         <div style={{ position: 'relative' }}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
-            style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 13 13"
+            fill="none"
+            style={{
+              position: 'absolute',
+              left: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+            }}
+          >
             <circle cx="5.5" cy="5.5" r="4" stroke="#4a5570" strokeWidth="1.4" />
-            <line x1="8.5" y1="8.5" x2="11.5" y2="11.5" stroke="#4a5570" strokeWidth="1.4" strokeLinecap="round" />
+            <line
+              x1="8.5"
+              y1="8.5"
+              x2="11.5"
+              y2="11.5"
+              stroke="#4a5570"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
           </svg>
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Filter this canvas…"
             style={{
-              background: 'var(--surface-2)', border: '1px solid var(--border)',
-              borderRadius: 5, color: '#c8d3e8', fontSize: 11, padding: '5px 10px 5px 26px',
-              outline: 'none', width: 200, fontFamily: 'Inter, sans-serif',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 5,
+              color: '#c8d3e8',
+              fontSize: 11,
+              padding: '5px 10px 5px 26px',
+              outline: 'none',
+              width: 200,
+              fontFamily: 'Inter, sans-serif',
             }}
           />
         </div>
@@ -831,22 +1015,39 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
         {/* The toolbar IS the legend (ADR-0017): the control you filter a dimension with carries
             that dimension's colour, so there is no separate legend block that can drift from the
             cards it describes. `ALL` stays neutral in every group — it is not a value. */}
-        <MultiFilterChips testId="layer-filter" label="Layer" options={graph.layers}
-          selected={layerFilter} onToggle={setLayerFilter}
-          colors={Object.fromEntries(graph.layers.map(l => [l, layerColor(l)]))} />
-        <FilterChips label="Kind" options={['ALL', 'recipe', 'table']} value={kindFilter} onChange={setKindFilter}
-          colors={{ recipe: kindPalette('recipe').accent, table: kindPalette('table').accent }} />
+        <MultiFilterChips
+          testId="layer-filter"
+          label="Layer"
+          options={graph.layers}
+          selected={layerFilter}
+          onToggle={setLayerFilter}
+          colors={Object.fromEntries(graph.layers.map(l => [l, layerColor(l)]))}
+        />
+        <FilterChips
+          label="Kind"
+          options={['ALL', 'recipe', 'table']}
+          value={kindFilter}
+          onChange={setKindFilter}
+          colors={{ recipe: kindPalette('recipe').accent, table: kindPalette('table').accent }}
+        />
         {/* RUNNING isn't a real operational state (mock/real history only ever
             resolves OK/KO/PENDING) — swapped for PENDING per the plan's ledger note. */}
-        <MultiFilterChips testId="status-filter" label="Status" options={['OK', 'KO', 'PENDING']}
-          selected={statusFilter} onToggle={setStatusFilter}
-          colors={{ OK: '#34d399', KO: '#f87171', PENDING: '#4a5570' }} />
+        <MultiFilterChips
+          testId="status-filter"
+          label="Status"
+          options={['OK', 'KO', 'PENDING']}
+          selected={statusFilter}
+          onToggle={setStatusFilter}
+          colors={{ OK: '#34d399', KO: '#f87171', PENDING: '#4a5570' }}
+        />
 
         <div style={{ flex: 1 }} />
         {/* A failed runs chunk leaves its recipes ABSENT from `byRecipe`, which renders exactly
             like "never ran". Say so instead. */}
         {runs.isError && (
-          <span style={{ fontSize: 11, color: 'var(--red)', fontFamily: 'JetBrains Mono, monospace' }}>
+          <span
+            style={{ fontSize: 11, color: 'var(--red)', fontFamily: 'JetBrains Mono, monospace' }}
+          >
             Run history unavailable
           </span>
         )}
@@ -860,16 +1061,24 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
             title="Recipe/date filters set in the cluster pane. Click to clear them."
             onClick={() => setOperationalView({ deselectedRecipes: [], selectedDates: [] })}
             style={{
-              padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
-              fontFamily: 'JetBrains Mono, monospace', color: 'var(--text)',
-              background: 'var(--surface-3)', border: '1px solid var(--border)',
+              padding: '2px 8px',
+              borderRadius: 4,
+              fontSize: 10,
+              cursor: 'pointer',
+              fontFamily: 'JetBrains Mono, monospace',
+              color: 'var(--text)',
+              background: 'var(--surface-3)',
+              border: '1px solid var(--border)',
             }}
           >
             {paneFilterLabel}
           </button>
         )}
-        <DataRootsChip diagnostics={diagnostics.data} isLoading={diagnostics.isLoading}
-            error={diagnostics.error as ApiError | null} />
+        <DataRootsChip
+          diagnostics={diagnostics.data}
+          isLoading={diagnostics.isLoading}
+          error={diagnostics.error as ApiError | null}
+        />
         <StatusSummary cards={shownCards} />
 
         {/* The collapsed TIME VIEW's stand-in. Carries the snapshot the canvas is showing, so
@@ -880,8 +1089,13 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
             aria-label="Show time view"
             title="Show the time view"
             onClick={() => setOperationalView({ timeViewCollapsed: false })}
-            style={{ ...zoomBtn, width: 'auto', padding: '0 10px', fontSize: 10,
-                     fontFamily: 'JetBrains Mono, monospace' }}
+            style={{
+              ...zoomBtn,
+              width: 'auto',
+              padding: '0 10px',
+              fontSize: 10,
+              fontFamily: 'JetBrains Mono, monospace',
+            }}
           >
             {`⏱ ${view.selectedDate ?? '—'} · ${timeMeta.hour}h ▾`}
           </button>
@@ -893,18 +1107,42 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
         <button
           aria-label={`Density: ${view.density}`}
           onClick={onCycleDensity}
-          style={{ ...zoomBtn, width: 'auto', padding: '0 10px', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
+          style={{
+            ...zoomBtn,
+            width: 'auto',
+            padding: '0 10px',
+            fontSize: 10,
+            fontFamily: 'JetBrains Mono, monospace',
+          }}
         >
           {view.density}
         </button>
 
         {/* zoom */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button onClick={() => setOperationalView({ zoom: Math.max(0.3, view.zoom - 0.15) })} style={zoomBtn}>−</button>
-          <span style={{ fontSize: 10, color: '#4a5570', fontFamily: 'JetBrains Mono, monospace', width: 34, textAlign: 'center' }}>
+          <button
+            onClick={() => setOperationalView({ zoom: Math.max(0.3, view.zoom - 0.15) })}
+            style={zoomBtn}
+          >
+            −
+          </button>
+          <span
+            style={{
+              fontSize: 10,
+              color: '#4a5570',
+              fontFamily: 'JetBrains Mono, monospace',
+              width: 34,
+              textAlign: 'center',
+            }}
+          >
             {Math.round(view.zoom * 100)}%
           </span>
-          <button onClick={() => setOperationalView({ zoom: Math.min(2, view.zoom + 0.15) })} style={zoomBtn}>+</button>
+          <button
+            onClick={() => setOperationalView({ zoom: Math.min(2, view.zoom + 0.15) })}
+            style={zoomBtn}
+          >
+            +
+          </button>
           {/* Task 17: the wheel itself now zooms/pans (cmd/ctrl+wheel, shift+wheel) — this is the
               only place that says so. */}
           <InfoTooltip text="⌘/Ctrl + wheel to zoom · Shift + wheel to pan" placement="bottom" />
@@ -917,10 +1155,17 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
           whole bar is returned to the canvas rather than leaving a residual strip; the toolbar
           chip above keeps the active snapshot named. */}
       {!view.timeViewCollapsed && (
-        <div data-testid="time-view-bar" style={{
-          padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
+        <div
+          data-testid="time-view-bar"
+          style={{
+            padding: '8px 16px',
+            borderBottom: '1px solid var(--border)',
+            background: 'var(--surface)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
           <TimePicker value={timeVal} onChange={handleTimeChange} />
           <AvailabilityCalendar
             availableDates={availableDates}
@@ -934,7 +1179,9 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
             title="Hide the time view and give the bar back to the canvas"
             onClick={() => setOperationalView({ timeViewCollapsed: true })}
             style={{ ...zoomBtn, width: 22, height: 22, fontSize: 11 }}
-          >{'✕'}</button>
+          >
+            {'✕'}
+          </button>
         </div>
       )}
 
@@ -948,9 +1195,11 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
           selected={view.selectedNode}
           // Every selection joins the navigation trail, so ◀ unwinds canvas clicks and Related
           // hops through the same stack. Deselection (null) is not a stop on a trail.
-          onSelect={id => id === null
-            ? setOperationalView({ selectedNode: null })
-            : visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan })}
+          onSelect={id =>
+            id === null
+              ? setOperationalView({ selectedNode: null })
+              : visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan })
+          }
           zoom={view.zoom}
           pan={view.pan}
           onPan={onPan}
@@ -966,18 +1215,36 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
 
         {/* detail side panel */}
         {selectedCard && (
-          <div data-testid="details-panel" style={{
-            width: 300, flexShrink: 0,
-            background: 'var(--surface)', borderLeft: '1px solid var(--border)',
-            overflow: 'auto', padding: '16px',
-            display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
+          <div
+            data-testid="details-panel"
+            style={{
+              width: 300,
+              flexShrink: 0,
+              background: 'var(--surface)',
+              borderLeft: '1px solid var(--border)',
+              overflow: 'auto',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8', flex: 1 }}>Details</span>
-              <button aria-label="Close details" onClick={() => setOperationalView({ selectedNode: null })}
-                style={{ background: 'none', border: 'none', color: '#4a5570', cursor: 'pointer' }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8', flex: 1 }}>
+                Details
+              </span>
+              <button
+                aria-label="Close details"
+                onClick={() => setOperationalView({ selectedNode: null })}
+                style={{ background: 'none', border: 'none', color: '#4a5570', cursor: 'pointer' }}
+              >
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M2 2l9 9M11 2L2 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path
+                    d="M2 2l9 9M11 2L2 11"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
             </div>
@@ -993,7 +1260,16 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
 
             {/* related cards */}
             <div>
-              <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: '#4a5570',
+                  marginBottom: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                }}
+              >
                 {/* Following a lineage used to be a one-way trip: each Related click replaced the
                     selection with no record of where you came from. */}
                 <button
@@ -1002,16 +1278,23 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
                   disabled={view.historyIndex <= 0}
                   onClick={() => stepHistory(-1)}
                   style={historyBtn(view.historyIndex > 0)}
-                >{'◀'}</button>
+                >
+                  {'◀'}
+                </button>
                 <button
                   aria-label="Forward to next node"
                   title="Forward"
                   disabled={view.historyIndex >= view.nodeHistory.length - 1}
                   onClick={() => stepHistory(1)}
                   style={historyBtn(view.historyIndex < view.nodeHistory.length - 1)}
-                >{'▶'}</button>
+                >
+                  {'▶'}
+                </button>
                 <span style={{ marginLeft: 2 }}>Related ({selectedCard.relations.length})</span>
-                <InfoTooltip text="Tables and recipes that directly exchange data with this node." placement="right" />
+                <InfoTooltip
+                  text="Tables and recipes that directly exchange data with this node."
+                  placement="right"
+                />
                 <div style={{ flex: 1 }} />
                 {/* An ANCHOR, never a button. Left-click opens the in-app window; ⌘/Ctrl-click,
                     middle-click and "Open link in new tab" all fall through to the browser, which
@@ -1026,20 +1309,29 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
                   }}
                   title="Show all related — click to open here, ⌘/middle-click for a new tab"
                   style={{
-                    fontSize: 10, color: 'var(--blue)', textDecoration: 'none',
-                    padding: '1px 6px', borderRadius: 4,
-                    border: '1px solid rgba(79,156,249,0.25)', background: 'rgba(79,156,249,0.1)',
+                    fontSize: 10,
+                    color: 'var(--blue)',
+                    textDecoration: 'none',
+                    padding: '1px 6px',
+                    borderRadius: 4,
+                    border: '1px solid rgba(79,156,249,0.25)',
+                    background: 'rgba(79,156,249,0.1)',
                   }}
-                >Show all related ↗</a>
+                >
+                  Show all related ↗
+                </a>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {selectedCard.relations.map(rid => {
                   const relCard = graph.cards.find(c => c.id === rid)
                   if (!relCard) return null
                   return (
-                    <div key={rid} data-testid="related-card"
+                    <div
+                      key={rid}
+                      data-testid="related-card"
                       onClick={() => visitNode({ nodeId: rid, zoom: view.zoom, pan: view.pan })}
-                      style={{ cursor: 'pointer' }}>
+                      style={{ cursor: 'pointer' }}
+                    >
                       <OperationalCard card={relCard} density="compact" />
                     </div>
                   )
@@ -1081,7 +1373,10 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
           // same back/forward trail as a canvas click — but the flow itself stays put.
           onFocus={id => visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan })}
           // Double click re-seeds the flow on that node.
-          onReseed={id => { visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan }); setRelatedNode(id) }}
+          onReseed={id => {
+            visitNode({ nodeId: id, zoom: view.zoom, pan: view.pan })
+            setRelatedNode(id)
+          }}
           onClose={() => setRelatedNode(null)}
         />
       )}
@@ -1118,10 +1413,17 @@ function PreviewButton({ enabled, onClick }: { enabled: boolean; onClick: () => 
       onClick={enabled ? onClick : undefined}
       disabled={!enabled}
       style={{
-        display: 'flex', alignItems: 'center', gap: 7, width: '100%',
-        padding: '6px 10px', borderRadius: 5, textAlign: 'left',
-        background: 'var(--surface-2)', border: '1px solid var(--border)',
-        color: enabled ? '#7b88aa' : '#3a4160', fontSize: 11,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7,
+        width: '100%',
+        padding: '6px 10px',
+        borderRadius: 5,
+        textAlign: 'left',
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border)',
+        color: enabled ? '#7b88aa' : '#3a4160',
+        fontSize: 11,
         cursor: enabled ? 'pointer' : 'default',
         fontFamily: 'inherit',
       }}
@@ -1136,14 +1438,31 @@ function PreviewButton({ enabled, onClick }: { enabled: boolean; onClick: () => 
   )
 }
 
-function GCPLink({ icon, label, href }: { icon: Parameters<typeof GCPIcon>[0]['service']; label: string; href: string }) {
+function GCPLink({
+  icon,
+  label,
+  href,
+}: {
+  icon: Parameters<typeof GCPIcon>[0]['service']
+  label: string
+  href: string
+}) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer"
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       style={{
-        display: 'flex', alignItems: 'center', gap: 7,
-        padding: '6px 10px', borderRadius: 5, textDecoration: 'none',
-        background: 'var(--surface-2)', border: '1px solid var(--border)',
-        color: '#7b88aa', fontSize: 11,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7,
+        padding: '6px 10px',
+        borderRadius: 5,
+        textDecoration: 'none',
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border)',
+        color: '#7b88aa',
+        fontSize: 11,
         transition: 'border-color 0.1s',
       }}
     >
@@ -1155,7 +1474,11 @@ function GCPLink({ icon, label, href }: { icon: Parameters<typeof GCPIcon>[0]['s
 }
 
 function FilterChips({
-  label, options, value, onChange, colors,
+  label,
+  options,
+  value,
+  onChange,
+  colors,
 }: {
   label: string
   options: string[]
@@ -1169,15 +1492,24 @@ function FilterChips({
       {options.map(o => {
         const c = colors?.[o]
         return (
-          <button key={o} onClick={() => onChange(o)} style={{
-            padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
-            fontFamily: 'JetBrains Mono, monospace',
-            // An unselected chip keeps its palette COLOUR (that is what makes the row a legend)
-            // but not its background or border — so "which filter is on?" survives the tinting.
-            background: value === o ? (c ? `${c}22` : 'var(--surface-3)') : 'transparent',
-            border: `1px solid ${value === o ? (c ?? 'var(--border)') : 'transparent'}`,
-            color: value === o ? (c ?? '#e2e8f8') : (c ?? '#4a5570'),
-          }}>{o}</button>
+          <button
+            key={o}
+            onClick={() => onChange(o)}
+            style={{
+              padding: '2px 8px',
+              borderRadius: 4,
+              fontSize: 10,
+              cursor: 'pointer',
+              fontFamily: 'JetBrains Mono, monospace',
+              // An unselected chip keeps its palette COLOUR (that is what makes the row a legend)
+              // but not its background or border — so "which filter is on?" survives the tinting.
+              background: value === o ? (c ? `${c}22` : 'var(--surface-3)') : 'transparent',
+              border: `1px solid ${value === o ? (c ?? 'var(--border)') : 'transparent'}`,
+              color: value === o ? (c ?? '#e2e8f8') : (c ?? '#4a5570'),
+            }}
+          >
+            {o}
+          </button>
         )
       })}
     </div>
@@ -1193,20 +1525,33 @@ export function relatedHref(nodeId: string, clusters: string[]): string {
 /** ◀ / ▶ — visibly inert at the ends rather than merely unresponsive. */
 function historyBtn(enabled: boolean): React.CSSProperties {
   return {
-    width: 18, height: 18, padding: 0, borderRadius: 4,
+    width: 18,
+    height: 18,
+    padding: 0,
+    borderRadius: 4,
     background: enabled ? 'var(--surface-3)' : 'transparent',
     border: `1px solid ${enabled ? 'var(--border)' : 'transparent'}`,
     color: enabled ? 'var(--text)' : '#2a3050',
     cursor: enabled ? 'pointer' : 'default',
-    fontSize: 9, lineHeight: 1,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 9,
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 }
 
 const zoomBtn: React.CSSProperties = {
-  width: 24, height: 24, background: 'var(--surface-2)',
-  border: '1px solid var(--border)', borderRadius: 4,
-  color: '#7b88aa', cursor: 'pointer', fontSize: 14,
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  width: 24,
+  height: 24,
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border)',
+  borderRadius: 4,
+  color: '#7b88aa',
+  cursor: 'pointer',
+  fontSize: 14,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   fontFamily: 'monospace',
 }

@@ -3,7 +3,10 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { SelectionStrip } from './SelectionStrip'
 import { resetOperationalView, setOperationalView } from '../../state/operationalView'
 
-beforeEach(() => { localStorage.clear(); resetOperationalView() })
+beforeEach(() => {
+  localStorage.clear()
+  resetOperationalView()
+})
 afterEach(cleanup)
 
 const SUMMARY = { recipes: 187, dates: 14, ok: 1842, ko: 6, nodes: 312, neighbors: 41 }

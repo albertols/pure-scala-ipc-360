@@ -49,7 +49,10 @@ const EMPTY_FS: FSDir = { name: 'xmltobq', layer: 'root', children: [] }
 // (source-table mode, `NodeConfigDialog.tsx`) is what makes the FIRST
 // insertion into this possible at all: see its file-header comment for the
 // full ordering-problem writeup.
-const EMPTY_RECIPE_DRAFT: RecipeJson = { steps: [], table: { targetTableNames: [], sourceTableNames: [] } }
+const EMPTY_RECIPE_DRAFT: RecipeJson = {
+  steps: [],
+  table: { targetTableNames: [], sourceTableNames: [] },
+}
 
 // ─── Explorer scoping + info copy (Task 14) ────────────────────────────────────
 //
@@ -58,7 +61,8 @@ const EMPTY_RECIPE_DRAFT: RecipeJson = { steps: [], table: { targetTableNames: [
 // only recipes (`fileFilter`, spec §6.8) and explains the omission (both here
 // and in the empty state below) rather than silently hiding the XML.
 const RECIPE_ONLY_FILTER = (f: FSFile) => f.name.startsWith('_ETL_') && f.name.endsWith('.json')
-const EXPLORER_INFO_COPY = 'The Modifier edits the platform-agnostic _ETL_*.json recipes XMLParser produces from native IPC .xml exports. The source XML lives in the IPC ETL Viewer tab.'
+const EXPLORER_INFO_COPY =
+  'The Modifier edits the platform-agnostic _ETL_*.json recipes XMLParser produces from native IPC .xml exports. The source XML lives in the IPC ETL Viewer tab.'
 
 // ─── Layout offsets ⇄ wire DTO (Task 10) ───────────────────────────────────────
 // Two vocabularies meet at this boundary and nowhere else: IpcCanvas's in-memory
@@ -68,7 +72,9 @@ const EXPLORER_INFO_COPY = 'The Modifier edits the platform-agnostic _ETL_*.json
 
 /** `LayoutDto.nodes` (dx/dy) -> IpcCanvas's `offsets` prop shape (x/y). Missing
  * dx/dy (an empty/partial sidecar) fall back to 0, matching "no offset". */
-function toCanvasOffsets(nodes: Record<string, NodeOffset> | undefined): Record<string, { x: number; y: number }> {
+function toCanvasOffsets(
+  nodes: Record<string, NodeOffset> | undefined,
+): Record<string, { x: number; y: number }> {
   if (!nodes) return {}
   return Object.fromEntries(
     Object.entries(nodes).map(([id, off]) => [id, { x: off.dx ?? 0, y: off.dy ?? 0 }]),
@@ -76,10 +82,10 @@ function toCanvasOffsets(nodes: Record<string, NodeOffset> | undefined): Record<
 }
 
 /** IpcCanvas's `offsets` prop shape (x/y) -> the `putLayout` wire body (dx/dy). */
-function toWireOffsets(offsets: Record<string, { x: number; y: number }>): Record<string, { dx: number; dy: number }> {
-  return Object.fromEntries(
-    Object.entries(offsets).map(([id, { x, y }]) => [id, { dx: x, dy: y }]),
-  )
+function toWireOffsets(
+  offsets: Record<string, { x: number; y: number }>,
+): Record<string, { dx: number; dy: number }> {
+  return Object.fromEntries(Object.entries(offsets).map(([id, { x, y }]) => [id, { dx: x, dy: y }]))
 }
 
 /** Debounce interval (ms) between a node drag settling and the layout PUT firing. */
@@ -118,10 +124,17 @@ function EditableField({
     <div>
       <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 3 }}>{label}</div>
       <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
-        <input value={value} onChange={e => onChange(e.target.value)}
+        <input
+          value={value}
+          onChange={e => onChange(e.target.value)}
           style={sharedStyle}
-          onFocus={e => { e.target.style.borderColor = '#4f9cf9' }}
-          onBlur={e => { e.target.style.borderColor = 'var(--border)'; onCommit?.() }}
+          onFocus={e => {
+            e.target.style.borderColor = '#4f9cf9'
+          }}
+          onBlur={e => {
+            e.target.style.borderColor = 'var(--border)'
+            onCommit?.()
+          }}
         />
         <CopyButton value={value} />
       </div>
@@ -131,7 +144,17 @@ function EditableField({
 
 // ─── Section Header ───────────────────────────────────────────────────────────
 
-function SectionHeader({ icon, label, color, extra }: { icon: string; label: string; color: string; extra?: React.ReactNode }) {
+function SectionHeader({
+  icon,
+  label,
+  color,
+  extra,
+}: {
+  icon: string
+  label: string
+  color: string
+  extra?: React.ReactNode
+}) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
       <span style={{ fontSize: 14, color, fontFamily: 'JetBrains Mono, monospace' }}>{icon}</span>
@@ -152,7 +175,17 @@ function TableNameList({ names, emptyLabel }: { names: string[]; emptyLabel: str
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {names.map(name => (
         <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              fontSize: 11,
+              fontFamily: 'JetBrains Mono, monospace',
+              color: '#c8d3e8',
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {name}
           </span>
           <CopyButton value={name} size={11} />
@@ -164,7 +197,10 @@ function TableNameList({ names, emptyLabel }: { names: string[]; emptyLabel: str
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function ETLModifier({ searchQuery, focusRecipe }: {
+export function ETLModifier({
+  searchQuery,
+  focusRecipe,
+}: {
   searchQuery: string
   /** Focus mode (Task 15): when set, this recipe seeds `recipePath` directly
    * (no click-through-the-tree) and the whole Explorer disappears — the
@@ -216,7 +252,10 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // registry row can offer "Insert" only while there's somewhere for it to write.
   const expr = useExpressions()
   const [exprFilter, setExprFilter] = useState('')
-  const [focusedFormula, setFocusedFormula] = useState<{ stepName: string; fieldName: string } | null>(null)
+  const [focusedFormula, setFocusedFormula] = useState<{
+    stepName: string
+    fieldName: string
+  } | null>(null)
 
   // Schema-driven Inspector (Task 12): the per-kind key schema + alias tables the
   // Inspector renders from — fetched once here (staleTime: Infinity, same as the
@@ -322,12 +361,15 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // they've navigated away from — this effect's cleanup runs on every
   // recipePath change AND on unmount (React calls a cleanup function on both).
   const layoutSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  useEffect(() => () => {
-    if (layoutSaveTimer.current) {
-      clearTimeout(layoutSaveTimer.current)
-      layoutSaveTimer.current = null
-    }
-  }, [recipePath])
+  useEffect(
+    () => () => {
+      if (layoutSaveTimer.current) {
+        clearTimeout(layoutSaveTimer.current)
+        layoutSaveTimer.current = null
+      }
+    },
+    [recipePath],
+  )
 
   // Best-effort layout persistence (review finding, fix round 1): a failed PUT
   // (network error, 5xx) must not block editing — layout is a nudge, not a
@@ -385,13 +427,17 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // nothing has been saved) and `content` mirrors the live draft, same as
   // every other field here would once the recipe is real.
   const authoringFileName = recipePath ? recipePath.slice(recipePath.lastIndexOf('/') + 1) : ''
-  const headerRecipe: RecipeFile | null = isViewing && viewedRecipe
-    ? viewedRecipe
-    : authoring
-      ? { path: recipePath ?? '', fileName: authoringFileName }
-      : (rec.data ?? null)
+  const headerRecipe: RecipeFile | null =
+    isViewing && viewedRecipe
+      ? viewedRecipe
+      : authoring
+        ? { path: recipePath ?? '', fileName: authoringFileName }
+        : (rec.data ?? null)
   const graph = useMemo(
-    () => (content && recipePath ? recipeToCanvas(content, recipePath, ipcRules.data?.typeAliases ?? {}) : null),
+    () =>
+      content && recipePath
+        ? recipeToCanvas(content, recipePath, ipcRules.data?.typeAliases ?? {})
+        : null,
     [content, recipePath, ipcRules.data?.typeAliases],
   )
 
@@ -400,15 +446,22 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // sources (spec §7.1's Tab 2 row).
   const summary = useSummary()
   const summaryItems: SummaryItem[] = [
-    ...(summary.data ? [
-      { label: 'recipes', value: summary.data.recipeCount ?? 0 },
-      { label: 'layers', value: summary.data.layers?.length ?? 0 },
-    ] : []),
-    ...(content ? [
-      { label: 'steps', value: content.steps?.length ?? 0 },
-      { label: 'fields', value: (content.steps ?? []).reduce((n, s) => n + fieldsOf(s.target).length, 0) },
-      { label: 'sources', value: content.table?.sourceTableNames?.length ?? 0 },
-    ] : []),
+    ...(summary.data
+      ? [
+          { label: 'recipes', value: summary.data.recipeCount ?? 0 },
+          { label: 'layers', value: summary.data.layers?.length ?? 0 },
+        ]
+      : []),
+    ...(content
+      ? [
+          { label: 'steps', value: content.steps?.length ?? 0 },
+          {
+            label: 'fields',
+            value: (content.steps ?? []).reduce((n, s) => n + fieldsOf(s.target).length, 0),
+          },
+          { label: 'sources', value: content.table?.sourceTableNames?.length ?? 0 },
+        ]
+      : []),
   ]
 
   // Conformance chip (Task 13): validates whichever content is CURRENT — the
@@ -418,7 +471,13 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
   // desync the index and mislabel nodes). No local rule mirror — the full
   // 35-rule catalogue runs debounced against POST /api/recipes/validate
   // (spec §6.5 ruling, recorded in ipcRules.ts).
-  const { checks, errors: ipcErrors, warnings: ipcWarnings, isValidating, failed: validationFailed } = useValidation(content)
+  const {
+    checks,
+    errors: ipcErrors,
+    warnings: ipcWarnings,
+    isValidating,
+    failed: validationFailed,
+  } = useValidation(content)
   const nodeStatus = useMemo(() => nodeStatusFrom(checks, graph), [checks, graph])
 
   const recipeSlash = recipePath ? recipePath.lastIndexOf('/') : -1
@@ -600,7 +659,11 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
     if (wireFrom && isInEligible) {
       if (nodeId === wireFrom.nodeId) return
       const { nodeId: fromNode, portName: fromPort } = wireFrom
-      applyEdit(d => setFieldTransformation(d, nodeId, port.name || fromPort, { source: `${fromNode}.${fromPort}` }))
+      applyEdit(d =>
+        setFieldTransformation(d, nodeId, port.name || fromPort, {
+          source: `${fromNode}.${fromPort}`,
+        }),
+      )
       setWireFrom(null)
       return
     }
@@ -737,7 +800,10 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
         await apiSend('POST', `/recipes/${recipePath}`, draft)
         setAuthoring(false)
       } else {
-        await apiSend('PUT', `/recipes/${recipePath}`, { baseModified: rec.data!.modifiedAt, content: draft })
+        await apiSend('PUT', `/recipes/${recipePath}`, {
+          baseModified: rec.data!.modifiedAt,
+          content: draft,
+        })
       }
       await queryClient.invalidateQueries({ queryKey: ['recipe', recipePath] })
       // `useRegistry` is `staleTime: Infinity`, so without this the cached
@@ -769,10 +835,14 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
         <button
           onClick={() => setShowNewRecipeDialog(true)}
           style={{ ...ghostButtonStyle, width: '100%', textAlign: 'center' }}
-        >+ New recipe</button>
+        >
+          + New recipe
+        </button>
       </div>
       {loading ? (
-        <div style={{ padding: 12 }}><LoadingState label="Loading corpus…" /></div>
+        <div style={{ padding: 12 }}>
+          <LoadingState label="Loading corpus…" />
+        </div>
       ) : error ? (
         <div style={{ color: 'var(--red)', fontSize: 12, padding: 12 }}>
           <div>{error.title}</div>
@@ -798,9 +868,11 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
             onToggleCollapse={() => setSidebarCollapsed(c => !c)}
             extraContent={sidebarExtra}
             fileFilter={RECIPE_ONLY_FILTER}
-            footer={<div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 12px' }}>
-              <CorpusSummary items={summaryItems} />
-            </div>}
+            footer={
+              <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 12px' }}>
+                <CorpusSummary items={summaryItems} />
+              </div>
+            }
           />
           {/* Explorer scoping info affordance (Task 14, spec §6.8) — an overlay
               rather than a Sidebar prop, since Sidebar's header markup itself
@@ -816,15 +888,66 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
       )}
 
       {!recipePath ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5570', flexDirection: 'column', gap: 8 }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#4a5570',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+        >
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect x="8" y="4" width="24" height="32" rx="3" stroke="#2a3050" strokeWidth="1.5" fill="none" />
-            <line x1="13" y1="12" x2="27" y2="12" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="13" y1="18" x2="27" y2="18" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="13" y1="24" x2="20" y2="24" stroke="#2a3050" strokeWidth="1.5" strokeLinecap="round" />
+            <rect
+              x="8"
+              y="4"
+              width="24"
+              height="32"
+              rx="3"
+              stroke="#2a3050"
+              strokeWidth="1.5"
+              fill="none"
+            />
+            <line
+              x1="13"
+              y1="12"
+              x2="27"
+              y2="12"
+              stroke="#2a3050"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <line
+              x1="13"
+              y1="18"
+              x2="27"
+              y2="18"
+              stroke="#2a3050"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <line
+              x1="13"
+              y1="24"
+              x2="20"
+              y2="24"
+              stroke="#2a3050"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
           <span style={{ fontSize: 12 }}>Select an _ETL_*.json recipe to edit</span>
-          <span style={{ fontSize: 11, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.5 }}>
+          <span
+            style={{
+              fontSize: 11,
+              color: 'var(--text-dim)',
+              maxWidth: 340,
+              textAlign: 'center',
+              lineHeight: 1.5,
+            }}
+          >
             {EXPLORER_INFO_COPY}
           </span>
         </div>
@@ -833,7 +956,18 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
           <LoadingState label="Loading recipe…" />
         </div>
       ) : !authoring && recError ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4, color: 'var(--red)', fontSize: 12 }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            gap: 4,
+            color: 'var(--red)',
+            fontSize: 12,
+          }}
+        >
           <div>{recError.title}</div>
           {recError.detail && <div>{recError.detail}</div>}
         </div>
@@ -862,7 +996,9 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                 // full-viewport, in a new tab (encodeURIComponent: recipe paths
                 // carry '/' and are user-visible corpus paths, so an unencoded
                 // one would produce a malformed URL).
-                onOpenFocus={() => recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')}
+                onOpenFocus={() =>
+                  recipePath && window.open(`?focus=${encodeURIComponent(recipePath)}`, '_blank')
+                }
                 showRaw={showRaw}
                 onToggleRaw={() => setShowRaw(r => !r)}
                 // Raw JSON is an EDITOR now (UX round 3, issue 4), not a
@@ -885,10 +1021,33 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                          always-visible header card — reference metadata, not
                          per-second information, and the canvas needs the
                          vertical space (spec §5.2). */
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, borderBottom: '1px solid var(--border)' }}>
-                        <EditableField label="Path" value={headerRecipe?.path ?? ''} onChange={() => {}} mono />
-                        <EditableField label="Size bytes" value={String(headerRecipe?.sizeBytes ?? '')} onChange={() => {}} mono />
-                        <EditableField label="Modified" value={headerRecipe?.modifiedAt ?? ''} onChange={() => {}} mono />
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 12,
+                          padding: 12,
+                          borderBottom: '1px solid var(--border)',
+                        }}
+                      >
+                        <EditableField
+                          label="Path"
+                          value={headerRecipe?.path ?? ''}
+                          onChange={() => {}}
+                          mono
+                        />
+                        <EditableField
+                          label="Size bytes"
+                          value={String(headerRecipe?.sizeBytes ?? '')}
+                          onChange={() => {}}
+                          mono
+                        />
+                        <EditableField
+                          label="Modified"
+                          value={headerRecipe?.modifiedAt ?? ''}
+                          onChange={() => {}}
+                          mono
+                        />
                       </div>
                     }
                   />
@@ -912,11 +1071,18 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                 onRedo={handleRedo}
               />
               {(validationErrors.length > 0 || saveError) && (
-                <div style={{
-                  padding: '10px 16px', background: 'var(--surface)',
-                  borderTop: '1px solid var(--red)', color: 'var(--red)', fontSize: 11,
-                  display: 'flex', flexDirection: 'column', gap: 4,
-                }}>
+                <div
+                  style={{
+                    padding: '10px 16px',
+                    background: 'var(--surface)',
+                    borderTop: '1px solid var(--red)',
+                    color: 'var(--red)',
+                    fontSize: 11,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4,
+                  }}
+                >
                   {validationErrors.map((e, i) => (
                     <div key={i}>
                       {e.path && <div style={{ fontSize: 9, opacity: 0.7 }}>{e.path}</div>}
@@ -981,30 +1147,45 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
           }
           drawer={[
             {
-              id: 'source', label: 'Source',
+              id: 'source',
+              label: 'Source',
               content: (
                 <section>
                   <SectionHeader icon="→" label="Source" color="#34d399" />
-                  <div style={{
-                    padding: '16px', background: 'var(--surface)',
-                    border: '1px solid rgba(52,211,153,0.2)', borderRadius: 7,
-                  }}>
-                    <TableNameList names={content?.table?.sourceTableNames ?? []} emptyLabel="No source tables found in this recipe." />
+                  <div
+                    style={{
+                      padding: '16px',
+                      background: 'var(--surface)',
+                      border: '1px solid rgba(52,211,153,0.2)',
+                      borderRadius: 7,
+                    }}
+                  >
+                    <TableNameList
+                      names={content?.table?.sourceTableNames ?? []}
+                      emptyLabel="No source tables found in this recipe."
+                    />
                   </div>
                 </section>
               ),
             },
             {
-              id: 'transformations', label: 'Transformations',
+              id: 'transformations',
+              label: 'Transformations',
               content: (
                 <section>
                   <SectionHeader icon="⚙" label="Transformations" color="#818cf8" />
-                  <div style={{
-                    padding: '16px', background: 'var(--surface)',
-                    border: '1px solid rgba(129,140,248,0.2)', borderRadius: 7,
-                  }}>
+                  <div
+                    style={{
+                      padding: '16px',
+                      background: 'var(--surface)',
+                      border: '1px solid rgba(129,140,248,0.2)',
+                      borderRadius: 7,
+                    }}
+                  >
                     {transformationNodes.length === 0 ? (
-                      <div style={{ color: '#4a5570', fontSize: 11 }}>No transformation steps in this recipe.</div>
+                      <div style={{ color: '#4a5570', fontSize: 11 }}>
+                        No transformation steps in this recipe.
+                      </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {transformationNodes.map(n => {
@@ -1014,21 +1195,45 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
                               key={n.id}
                               onClick={() => handleSelectNode(n.id)}
                               style={{
-                                display: 'flex', alignItems: 'center', gap: 8,
-                                width: '100%', textAlign: 'left', cursor: 'pointer',
-                                padding: '5px 8px', borderRadius: 5,
-                                background: 'transparent', border: '1px solid var(--border-subtle)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                width: '100%',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                padding: '5px 8px',
+                                borderRadius: 5,
+                                background: 'transparent',
+                                border: '1px solid var(--border-subtle)',
                               }}
                             >
-                              <span style={{
-                                fontSize: 8.5, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace',
-                                color: chip.color, background: chip.bg, border: `1px solid ${chip.border}`,
-                                borderRadius: 4, padding: '2px 6px', flexShrink: 0,
-                              }}>{n.label}</span>
-                              <span style={{
-                                fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8',
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                              }}>{n.name}</span>
+                              <span
+                                style={{
+                                  fontSize: 8.5,
+                                  fontWeight: 700,
+                                  fontFamily: 'JetBrains Mono, monospace',
+                                  color: chip.color,
+                                  background: chip.bg,
+                                  border: `1px solid ${chip.border}`,
+                                  borderRadius: 4,
+                                  padding: '2px 6px',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {n.label}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontFamily: 'JetBrains Mono, monospace',
+                                  color: '#c8d3e8',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {n.name}
+                              </span>
                             </button>
                           )
                         })}
@@ -1039,54 +1244,103 @@ export function ETLModifier({ searchQuery, focusRecipe }: {
               ),
             },
             {
-              id: 'target', label: 'Target',
+              id: 'target',
+              label: 'Target',
               content: (
                 <section>
-                  <SectionHeader icon="⬡" label="Target" color="#f87171" extra={<GCPIcon service="bigquery" size={16} />} />
-                  <div style={{
-                    padding: '16px', background: 'var(--surface)',
-                    border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7,
-                  }}>
-                    <TableNameList names={content?.table?.targetTableNames ?? []} emptyLabel="No target tables found in this recipe." />
+                  <SectionHeader
+                    icon="⬡"
+                    label="Target"
+                    color="#f87171"
+                    extra={<GCPIcon service="bigquery" size={16} />}
+                  />
+                  <div
+                    style={{
+                      padding: '16px',
+                      background: 'var(--surface)',
+                      border: '1px solid rgba(248,113,113,0.2)',
+                      borderRadius: 7,
+                    }}
+                  >
+                    <TableNameList
+                      names={content?.table?.targetTableNames ?? []}
+                      emptyLabel="No target tables found in this recipe."
+                    />
                   </div>
                 </section>
               ),
             },
             {
-              id: 'ddl', label: 'BigQuery DDL',
+              id: 'ddl',
+              label: 'BigQuery DDL',
               // hidden entirely when the map is empty or errored
-              content: !ddl.error && ddlEntries.length > 0 ? (
-                <section>
-                  <SectionHeader icon="⬡" label="BigQuery DDL Schema" color="#4f9cf9" extra={<GCPIcon service="bigquery" size={16} />} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {ddlEntries.map(([table, cols]) => (
-                      <div key={table}>
-                        <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>{table}</div>
-                        <DDLViewer cols={cols} />
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              ) : null,
+              content:
+                !ddl.error && ddlEntries.length > 0 ? (
+                  <section>
+                    <SectionHeader
+                      icon="⬡"
+                      label="BigQuery DDL Schema"
+                      color="#4f9cf9"
+                      extra={<GCPIcon service="bigquery" size={16} />}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {ddlEntries.map(([table, cols]) => (
+                        <div key={table}>
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: '#4a5570',
+                              marginBottom: 6,
+                              fontFamily: 'JetBrains Mono, monospace',
+                            }}
+                          >
+                            {table}
+                          </div>
+                          <DDLViewer cols={cols} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ) : null,
             },
             {
-              id: 'edge', label: 'Edge',
+              id: 'edge',
+              label: 'Edge',
               // selected-edge delete control (Task 9) — also disabled while viewing
-              content: selectedEdge && !isViewing ? (
-                <section>
-                  <SectionHeader icon="⌫" label="Edge" color="var(--red)" />
-                  <div style={{
-                    padding: 16, background: 'var(--surface)',
-                    border: '1px solid var(--border)', borderRadius: 7,
-                    display: 'flex', alignItems: 'center', gap: 12,
-                  }}>
-                    <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#c8d3e8', flex: 1 }}>
-                      {`${selectedEdge.fromNode}.${selectedEdge.fromPort || '·'} → ${selectedEdge.toNode}.${selectedEdge.toPort || '·'}`}
-                    </span>
-                    <button onClick={() => handleDeleteEdge(selectedEdge)} style={dangerButtonStyle}>Delete</button>
-                  </div>
-                </section>
-              ) : null,
+              content:
+                selectedEdge && !isViewing ? (
+                  <section>
+                    <SectionHeader icon="⌫" label="Edge" color="var(--red)" />
+                    <div
+                      style={{
+                        padding: 16,
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 7,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontFamily: 'JetBrains Mono, monospace',
+                          color: '#c8d3e8',
+                          flex: 1,
+                        }}
+                      >
+                        {`${selectedEdge.fromNode}.${selectedEdge.fromPort || '·'} → ${selectedEdge.toNode}.${selectedEdge.toPort || '·'}`}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteEdge(selectedEdge)}
+                        style={dangerButtonStyle}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </section>
+                ) : null,
             },
           ]}
         />
