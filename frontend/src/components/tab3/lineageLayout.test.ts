@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   layoutLineage,
   countCrossings,
+  applyOffsets,
   TIER_OF,
   LINEAGE_FOOTPRINT,
   DUMMY_HEIGHT,
@@ -196,5 +197,65 @@ describe('geometry', () => {
     const empty = layoutLineage([], [])
     expect(empty.nodes).toHaveLength(0)
     expect(empty.bands).toHaveLength(0)
+  })
+})
+
+describe('applyOffsets', () => {
+  // a --writes--> b, adjacent columns, so the edge has exactly two points and both are real.
+  const simple = () => layoutLineage([n('a', 0, 'STG'), n('b', 1, 'DWH')], [e('a', 'b')])
+
+  it('is identity when nothing has been dragged', () => {
+    const base = simple()
+    expect(applyOffsets(base, {})).toEqual(base)
+  })
+
+  it('moves the card', () => {
+    const base = simple()
+    const a0 = base.nodes.find(p => p.id === 'a')!
+    const moved = applyOffsets(base, { a: { dx: 40, dy: 25 } })
+    const a1 = moved.nodes.find(p => p.id === 'a')!
+    expect(a1.x).toBe(a0.x + 40)
+    expect(a1.y).toBe(a0.y + 25)
+  })
+
+  it('re-anchors the OUTGOING edge onto the dragged card', () => {
+    // This is the defect: the card moved and the arrow stayed behind.
+    const moved = applyOffsets(simple(), { a: { dx: 40, dy: 25 } })
+    const a = moved.nodes.find(p => p.id === 'a')!
+    expect(moved.edges[0]!.points[0]).toEqual({
+      x: a.x + LINEAGE_FOOTPRINT.width,
+      y: a.y + LINEAGE_FOOTPRINT.height / 2,
+    })
+  })
+
+  it('re-anchors the INCOMING edge onto the dragged card', () => {
+    const moved = applyOffsets(simple(), { b: { dx: -12, dy: 60 } })
+    const b = moved.nodes.find(p => p.id === 'b')!
+    const pts = moved.edges[0]!.points
+    expect(pts[pts.length - 1]).toEqual({
+      x: b.x,
+      y: b.y + LINEAGE_FOOTPRINT.height / 2,
+    })
+  })
+
+  it('leaves interior lane waypoints where the layout put them', () => {
+    // A long edge travels a reserved lane through dummies. Dropping those waypoints would
+    // straighten it back through the cards routing exists to avoid.
+    const base = layoutLineage(
+      [n('a', 0, 'STG'), n('m', 1, 'STG'), n('z', 2, 'DWH')],
+      [e('a', 'z'), e('a', 'm')],
+    )
+    const long = base.edges.find(x => x.from === 'a' && x.to === 'z')!
+    expect(long.points.length).toBeGreaterThan(2)
+    const moved = applyOffsets(base, { a: { dx: 30, dy: 0 } })
+    const movedLong = moved.edges.find(x => x.from === 'a' && x.to === 'z')!
+    expect(movedLong.points.slice(1, -1)).toEqual(long.points.slice(1, -1))
+  })
+
+  it('does not mutate the layout it was given', () => {
+    const base = simple()
+    const before = JSON.parse(JSON.stringify(base))
+    applyOffsets(base, { a: { dx: 40, dy: 25 } })
+    expect(base).toEqual(before)
   })
 })

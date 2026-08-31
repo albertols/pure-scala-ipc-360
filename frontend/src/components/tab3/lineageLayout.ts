@@ -101,6 +101,19 @@ const median = (xs: number[]): number => {
   return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2
 }
 
+/** Where an edge meets a card: the right edge leaving it, the left edge entering it, vertically
+ *  centred. A dummy is a lane waypoint, so an edge passes through its centre.
+ *
+ *  Module-level because `applyOffsets` must re-anchor a dragged card by exactly the same rule
+ *  `layoutLineage` used — two copies would drift and the arrow would land beside the card. */
+function anchorAt(p: PlacedNode, side: 'out' | 'in'): { x: number; y: number } {
+  if (p.isDummy) return { x: p.x, y: p.y + DUMMY_HEIGHT / 2 }
+  return {
+    x: side === 'out' ? p.x + LINEAGE_FOOTPRINT.width : p.x,
+    y: p.y + LINEAGE_FOOTPRINT.height / 2,
+  }
+}
+
 export function layoutLineage(
   nodes: LineageNodeT[],
   edges: LineageT['edges'],
@@ -263,14 +276,7 @@ export function layoutLineage(
   })
 
   // ── 5. Edge polylines from the chains ─────────────────────────────────────
-  const anchor = (id: string, side: 'out' | 'in') => {
-    const p = posById.get(id)!
-    if (p.isDummy) return { x: p.x, y: p.y + DUMMY_HEIGHT / 2 }
-    return {
-      x: side === 'out' ? p.x + LINEAGE_FOOTPRINT.width : p.x,
-      y: p.y + LINEAGE_FOOTPRINT.height / 2,
-    }
-  }
+  const anchor = (id: string, side: 'out' | 'in') => anchorAt(posById.get(id)!, side)
 
   const routed: RoutedEdge[] = []
   edges.forEach((edge, i) => {
@@ -322,4 +328,42 @@ export function countCrossings(layout: LineageLayout): number {
     }
   }
   return crossings
+}
+
+/**
+ * Drag offsets applied to a computed layout — cards AND the edge endpoints anchored to them.
+ *
+ * Dragging is an ADD-ON: offsets are never fed back into `layoutLineage`, so `applyOffsets(l, {})`
+ * is `l` and "reset layout" returns exactly what the layout engine computed. The default has to
+ * be excellent on its own.
+ *
+ * Only the FIRST and LAST point of an edge move. The points between are dummy lane waypoints
+ * reserved so a long edge does not vanish behind the cards it spans (50 of 81 real lineages have
+ * one); dropping them would straighten the edge back through those cards, re-creating the exact
+ * defect routing exists to fix. A far drag therefore bends such an edge — the cheaper cost, and
+ * the honest one: the arrow still lands on the card.
+ */
+export function applyOffsets(
+  layout: LineageLayout,
+  offsets: Record<string, { dx: number; dy: number }>,
+): LineageLayout {
+  if (Object.keys(offsets).length === 0) return layout
+
+  const nodes = layout.nodes.map(p => {
+    const o = offsets[p.id]
+    return o && (o.dx !== 0 || o.dy !== 0) ? { ...p, x: p.x + o.dx, y: p.y + o.dy } : p
+  })
+  const posById = new Map(nodes.map(p => [p.id, p]))
+
+  const edges = layout.edges.map(edge => {
+    const from = posById.get(edge.from)
+    const to = posById.get(edge.to)
+    if (!from && !to) return edge
+    const points = [...edge.points]
+    if (from) points[0] = anchorAt(from, 'out')
+    if (to) points[points.length - 1] = anchorAt(to, 'in')
+    return { ...edge, points }
+  })
+
+  return { ...layout, nodes, edges }
 }

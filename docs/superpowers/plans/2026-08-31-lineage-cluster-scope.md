@@ -908,7 +908,7 @@ Spec §4. Defect 3, part 1. No component change yet; this is the engine and its 
 - Produces: `anchorAt(p: PlacedNode, side: 'out' | 'in') → { x: number; y: number }` (module-level, replacing the closure inside `layoutLineage`); `applyOffsets(layout: LineageLayout, offsets: Record<string, { dx: number; dy: number }>) → LineageLayout`.
 - Consumed by: Task 5 (`LineageFlow`).
 
-- [ ] **Step 1: Write the failing test (append to `lineageLayout.test.ts`)**
+- [x] **Step 1: Write the failing test (append to `lineageLayout.test.ts`)**
 
 ```ts
 describe('applyOffsets', () => {
@@ -974,12 +974,12 @@ describe('applyOffsets', () => {
 
 Add `applyOffsets` to the existing import block at the top of the file.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- lineageLayout`
 Expected: FAIL — `applyOffsets is not a function` / TS error on the import.
 
-- [ ] **Step 3: Hoist `anchor` to module scope**
+- [x] **Step 3: Hoist `anchor` to module scope**
 
 In `lineageLayout.ts`, delete the local `anchor` closure inside `layoutLineage`
 (`lineageLayout.ts:266-273`) and add this above `layoutLineage`:
@@ -1005,7 +1005,7 @@ Inside `layoutLineage`, replace the deleted closure's call sites by keeping a th
   const anchor = (id: string, side: 'out' | 'in') => anchorAt(posById.get(id)!, side)
 ```
 
-- [ ] **Step 4: Write `applyOffsets` at the end of `lineageLayout.ts`**
+- [x] **Step 4: Write `applyOffsets` at the end of `lineageLayout.ts`**
 
 ```ts
 /**
@@ -1047,12 +1047,12 @@ export function applyOffsets(
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `cd frontend && pnpm test -- lineageLayout`
 Expected: PASS — the pre-existing layout tests plus the six new ones.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
