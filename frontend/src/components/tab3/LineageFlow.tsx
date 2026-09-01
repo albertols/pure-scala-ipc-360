@@ -9,6 +9,7 @@ import { OperationalCard } from '../shared/OperationalCard'
 import { MultiFilterChips } from '../shared/MultiFilterChips'
 import { layerColor, kindPalette, statusColor } from '../../theme/semanticColors'
 import { layoutLineage, applyOffsets, LINEAGE_FOOTPRINT } from './lineageLayout'
+import { useDockWidth, DockSplitter } from '../shared/useDockWidth'
 import type { ApiError } from '../../api/client'
 import type { OperationalCard as CardData } from '../../types'
 
@@ -97,6 +98,7 @@ export function LineageFlow({
   const [offsets, setOffsets] = useState<Record<string, { dx: number; dy: number }>>({})
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<{ id: string; x: number; y: number } | null>(null)
+  const dock = useDockWidth('etl360.tab3.lineageDetailsW', { dflt: 264, min: 220, max: 640 })
 
   const lineage = useLineage(nodeId, limit)
   const layout = useMemo(
@@ -510,70 +512,77 @@ export function LineageFlow({
         </div>
 
         {selectedNode && (
-          <div
-            data-testid="lineage-details"
-            style={{
-              width: 264,
-              flexShrink: 0,
-              overflow: 'auto',
-              borderLeft: '1px solid var(--border)',
-              paddingLeft: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', flex: 1 }}>
-                Details
-              </span>
-              <button
-                aria-label="Close details"
-                onClick={() => setSelected(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#4a5570',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-            <OperationalCard
-              card={toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING')}
-              selected
+          <>
+            <DockSplitter
+              testId="lineage-details-splitter"
+              width={dock.width}
+              onResize={dock.setWidth}
             />
-            <button
-              aria-label="Center lineage here"
-              onClick={() => onReseed?.(selectedNode.id)}
-              style={{ ...chipBtn, width: '100%', padding: '5px 8px' }}
+            <div
+              data-testid="lineage-details"
+              style={{
+                width: dock.width,
+                flexShrink: 0,
+                overflow: 'auto',
+                borderLeft: '1px solid var(--border)',
+                paddingLeft: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
             >
-              ⌖ center lineage here
-            </button>
-            {selectedNode.clusters.length > 0 && (
-              <div>
-                <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 4 }}>Clusters</div>
-                {selectedNode.clusters.map(c => (
-                  <div
-                    key={c}
-                    style={{
-                      fontSize: 10,
-                      color: 'var(--text-muted)',
-                      fontFamily: 'JetBrains Mono, monospace',
-                      padding: '2px 0',
-                    }}
-                  >
-                    {c}
-                  </div>
-                ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', flex: 1 }}>
+                  Details
+                </span>
+                <button
+                  aria-label="Close details"
+                  onClick={() => setSelected(null)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#4a5570',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                  }}
+                >
+                  ✕
+                </button>
               </div>
-            )}
-            <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
-              {`hop ${selectedNode.hop === 0 ? '0 (seed)' : selectedNode.hop > 0 ? `+${selectedNode.hop} downstream` : `${selectedNode.hop} upstream`}`}
+              <OperationalCard
+                card={toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING')}
+                selected
+              />
+              <button
+                aria-label="Center lineage here"
+                onClick={() => onReseed?.(selectedNode.id)}
+                style={{ ...chipBtn, width: '100%', padding: '5px 8px' }}
+              >
+                ⌖ center lineage here
+              </button>
+              {selectedNode.clusters.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 4 }}>Clusters</div>
+                  {selectedNode.clusters.map(c => (
+                    <div
+                      key={c}
+                      style={{
+                        fontSize: 10,
+                        color: 'var(--text-muted)',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        padding: '2px 0',
+                      }}
+                    >
+                      {c}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
+                {`hop ${selectedNode.hop === 0 ? '0 (seed)' : selectedNode.hop > 0 ? `+${selectedNode.hop} downstream` : `${selectedNode.hop} upstream`}`}
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

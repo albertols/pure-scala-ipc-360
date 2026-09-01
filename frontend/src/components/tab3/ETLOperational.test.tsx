@@ -1490,3 +1490,22 @@ describe('multi-select Layer and Status filters', () => {
     // this tab's graph has a single layer, which made an order assertion here vacuous.
   })
 })
+
+describe('the details panel resizes', () => {
+  it('drags to a new width and persists it', async () => {
+    localStorage.removeItem('etl360.tab3.detailsW')
+    renderTab()
+    // Same idiom the surrounding tests use to open the panel.
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+
+    const panel = await screen.findByTestId('details-panel')
+    expect(panel).toHaveStyle({ width: '300px' })
+
+    fireEvent.pointerDown(screen.getByTestId('details-splitter'), { clientX: 800 })
+    fireEvent.pointerMove(window, { clientX: 700 })
+    fireEvent.pointerUp(window)
+
+    await waitFor(() => expect(panel).toHaveStyle({ width: '400px' }))
+    expect(localStorage.getItem('etl360.tab3.detailsW')).toBe('400')
+  })
+})

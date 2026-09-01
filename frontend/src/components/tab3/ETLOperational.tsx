@@ -36,6 +36,7 @@ import { MultiFilterChips } from '../shared/MultiFilterChips'
 import { TimePicker, type TimeSelection, type Precision } from '../shared/TimePicker'
 import { GCPIcon } from '../shared/GCPIcon'
 import { InfoTooltip } from '../shared/InfoTooltip'
+import { useDockWidth, DockSplitter } from '../shared/useDockWidth'
 import { PreviewOverlay } from './PreviewOverlay'
 import { RelatedOverlay } from './RelatedOverlay'
 import { OperationalSearch } from './OperationalSearch'
@@ -467,6 +468,8 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
   // render — an inline arrow here defeated both, forcing the graph to re-render alongside every
   // unrelated store update (a wheel zoom, a run selection, …) even when pan itself hadn't moved.
   const onPan = useCallback((pan: { x: number; y: number }) => setOperationalView({ pan }), [])
+
+  const detailsDock = useDockWidth('etl360.tab3.detailsW', { dflt: 300, min: 240, max: 720 })
 
   const index = useClusterIndex()
   // `enabled: key.length > 0` lives inside the hook: `GET /api/relationships?clusters=` with an
@@ -1215,149 +1218,163 @@ export function ETLOperational({ searchQuery: globalQuery = '' }: { searchQuery?
 
         {/* detail side panel */}
         {selectedCard && (
-          <div
-            data-testid="details-panel"
-            style={{
-              width: 300,
-              flexShrink: 0,
-              background: 'var(--surface)',
-              borderLeft: '1px solid var(--border)',
-              overflow: 'auto',
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8', flex: 1 }}>
-                Details
-              </span>
-              <button
-                aria-label="Close details"
-                onClick={() => setOperationalView({ selectedNode: null })}
-                style={{ background: 'none', border: 'none', color: '#4a5570', cursor: 'pointer' }}
-              >
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path
-                    d="M2 2l9 9M11 2L2 11"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <OperationalCard
-              card={selectedCard}
-              selected
-              runs={selectedRuns}
-              selectedRunDate={view.selectedRunDate}
-              onSelectRun={run => setOperationalView({ selectedRunDate: run.date ?? null })}
-              config={cfg.data}
+          <>
+            <DockSplitter
+              testId="details-splitter"
+              width={detailsDock.width}
+              onResize={detailsDock.setWidth}
             />
+            <div
+              data-testid="details-panel"
+              style={{
+                width: detailsDock.width,
+                flexShrink: 0,
+                background: 'var(--surface)',
+                borderLeft: '1px solid var(--border)',
+                overflow: 'auto',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f8', flex: 1 }}>
+                  Details
+                </span>
+                <button
+                  aria-label="Close details"
+                  onClick={() => setOperationalView({ selectedNode: null })}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#4a5570',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path
+                      d="M2 2l9 9M11 2L2 11"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
 
-            {/* related cards */}
-            <div>
-              <div
-                style={{
-                  fontSize: 10,
-                  color: '#4a5570',
-                  marginBottom: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                }}
-              >
-                {/* Following a lineage used to be a one-way trip: each Related click replaced the
+              <OperationalCard
+                card={selectedCard}
+                selected
+                runs={selectedRuns}
+                selectedRunDate={view.selectedRunDate}
+                onSelectRun={run => setOperationalView({ selectedRunDate: run.date ?? null })}
+                config={cfg.data}
+              />
+
+              {/* related cards */}
+              <div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: '#4a5570',
+                    marginBottom: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  {/* Following a lineage used to be a one-way trip: each Related click replaced the
                     selection with no record of where you came from. */}
-                <button
-                  aria-label="Back to previous node"
-                  title="Back to the previous node and the view you left it at"
-                  disabled={view.historyIndex <= 0}
-                  onClick={() => stepHistory(-1)}
-                  style={historyBtn(view.historyIndex > 0)}
-                >
-                  {'◀'}
-                </button>
-                <button
-                  aria-label="Forward to next node"
-                  title="Forward"
-                  disabled={view.historyIndex >= view.nodeHistory.length - 1}
-                  onClick={() => stepHistory(1)}
-                  style={historyBtn(view.historyIndex < view.nodeHistory.length - 1)}
-                >
-                  {'▶'}
-                </button>
-                <span style={{ marginLeft: 2 }}>Related ({selectedCard.relations.length})</span>
-                <InfoTooltip
-                  text="Tables and recipes that directly exchange data with this node."
-                  placement="right"
-                />
-                <div style={{ flex: 1 }} />
-                {/* An ANCHOR, never a button. Left-click opens the in-app window; ⌘/Ctrl-click,
+                  <button
+                    aria-label="Back to previous node"
+                    title="Back to the previous node and the view you left it at"
+                    disabled={view.historyIndex <= 0}
+                    onClick={() => stepHistory(-1)}
+                    style={historyBtn(view.historyIndex > 0)}
+                  >
+                    {'◀'}
+                  </button>
+                  <button
+                    aria-label="Forward to next node"
+                    title="Forward"
+                    disabled={view.historyIndex >= view.nodeHistory.length - 1}
+                    onClick={() => stepHistory(1)}
+                    style={historyBtn(view.historyIndex < view.nodeHistory.length - 1)}
+                  >
+                    {'▶'}
+                  </button>
+                  <span style={{ marginLeft: 2 }}>Related ({selectedCard.relations.length})</span>
+                  <InfoTooltip
+                    text="Tables and recipes that directly exchange data with this node."
+                    placement="right"
+                  />
+                  <div style={{ flex: 1 }} />
+                  {/* An ANCHOR, never a button. Left-click opens the in-app window; ⌘/Ctrl-click,
                     middle-click and "Open link in new tab" all fall through to the browser, which
                     already implements every one of those gestures correctly. Nothing here
                     reimplements them, and there is no window.open. */}
-                <a
-                  href={relatedHref(selectedCard.id, view.selectedClusters)}
-                  onClick={e => {
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
-                    e.preventDefault()
-                    setRelatedNode(selectedCard.id)
-                  }}
-                  title="Show all related — click to open here, ⌘/middle-click for a new tab"
-                  style={{
-                    fontSize: 10,
-                    color: 'var(--blue)',
-                    textDecoration: 'none',
-                    padding: '1px 6px',
-                    borderRadius: 4,
-                    border: '1px solid rgba(79,156,249,0.25)',
-                    background: 'rgba(79,156,249,0.1)',
-                  }}
-                >
-                  Show all related ↗
-                </a>
+                  <a
+                    href={relatedHref(selectedCard.id, view.selectedClusters)}
+                    onClick={e => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+                      e.preventDefault()
+                      setRelatedNode(selectedCard.id)
+                    }}
+                    title="Show all related — click to open here, ⌘/middle-click for a new tab"
+                    style={{
+                      fontSize: 10,
+                      color: 'var(--blue)',
+                      textDecoration: 'none',
+                      padding: '1px 6px',
+                      borderRadius: 4,
+                      border: '1px solid rgba(79,156,249,0.25)',
+                      background: 'rgba(79,156,249,0.1)',
+                    }}
+                  >
+                    Show all related ↗
+                  </a>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {selectedCard.relations.map(rid => {
+                    const relCard = graph.cards.find(c => c.id === rid)
+                    if (!relCard) return null
+                    return (
+                      <div
+                        key={rid}
+                        data-testid="related-card"
+                        onClick={() => visitNode({ nodeId: rid, zoom: view.zoom, pan: view.pan })}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <OperationalCard card={relCard} density="compact" />
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {selectedCard.relations.map(rid => {
-                  const relCard = graph.cards.find(c => c.id === rid)
-                  if (!relCard) return null
-                  return (
-                    <div
-                      key={rid}
-                      data-testid="related-card"
-                      onClick={() => visitNode({ nodeId: rid, zoom: view.zoom, pan: view.pan })}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <OperationalCard card={relCard} density="compact" />
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
 
-            {/* preview overlay affordance (Task 9) */}
-            <div>
-              <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>Preview</div>
-              <PreviewButton
-                enabled={!!previewTarget.recipePath}
-                onClick={() => setPreview(previewTarget)}
-              />
-            </div>
+              {/* preview overlay affordance (Task 9) */}
+              <div>
+                <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>Preview</div>
+                <PreviewButton
+                  enabled={!!previewTarget.recipePath}
+                  onClick={() => setPreview(previewTarget)}
+                />
+              </div>
 
-            {/* GCP quick links */}
-            <div>
-              <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>GCP Quick Links</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <GCPLink icon="bigquery" label="Open in BigQuery" href={bigQueryHref} />
-                <GCPLink icon="monitoring" label="Monitoring Dashboard" href={monitoringHref} />
-                <GCPLink icon="logging" label="Cloud Logging" href={loggingHref} />
+              {/* GCP quick links */}
+              <div>
+                <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 8 }}>
+                  GCP Quick Links
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <GCPLink icon="bigquery" label="Open in BigQuery" href={bigQueryHref} />
+                  <GCPLink icon="monitoring" label="Monitoring Dashboard" href={monitoringHref} />
+                  <GCPLink icon="logging" label="Cloud Logging" href={loggingHref} />
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 

@@ -1401,7 +1401,7 @@ Defect 1, part 2.
 **Interfaces:**
 - Consumes: `useDockWidth`, `DockSplitter` (Task 6).
 
-- [ ] **Step 1: Write the failing test (append to `ETLOperational.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `ETLOperational.test.tsx`)**
 
 ```tsx
 describe('the details panel resizes', () => {
@@ -1424,12 +1424,12 @@ describe('the details panel resizes', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- ETLOperational`
 Expected: FAIL — `details-splitter` is not in the document.
 
-- [ ] **Step 3: Wire the Tab 3 panel**
+- [x] **Step 3: Wire the Tab 3 panel**
 
 In `ETLOperational.tsx`, add the imports:
 
@@ -1471,7 +1471,7 @@ Then wrap the detail side panel — replace `{selectedCard && (` … `<div data-
 
 and close it with `</div></>)` where the panel's `</div>)}` currently is.
 
-- [ ] **Step 4: Wire the lineage dock**
+- [x] **Step 4: Wire the lineage dock**
 
 In `LineageFlow.tsx`, add the same import and:
 
@@ -1506,12 +1506,12 @@ Replace `{selectedNode && (` … `width: 264,` with:
 
 and close it with `</div></>)`.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test -- 'ETLOperational|LineageFlow' && npx tsc --noEmit`
 Expected: PASS, no type errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
