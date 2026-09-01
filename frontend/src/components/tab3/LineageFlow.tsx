@@ -95,7 +95,8 @@ export function LineageFlow({
 }: {
   nodeId: string
   statusById?: Record<string, CardData['status']>
-  /** Clusters currently scoped in the main view — the strip marks which of the lineage's are in it. */
+  /** The operator's current cluster preference(s) — passed through to `useLineage` as `prefer`,
+   *  read by the server only when `cluster === 'auto'` (spec §3.5's resolution order). */
   selectedClusters?: string[]
   /** The cluster to scope the lineage query to — `null` unscoped, `'auto'` server-resolved, or a
    *  name. Owned by the host (Task 12's `RelatedOverlay`); this component only reports back. */

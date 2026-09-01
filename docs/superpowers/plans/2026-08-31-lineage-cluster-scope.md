@@ -2456,10 +2456,13 @@ with the nodes actually on screen.
 - Modify: `frontend/src/components/tab3/RelatedOverlay.tsx`
 - Modify: `frontend/src/components/tab3/RelatedOverlay.test.tsx`
 
+[Ruling L, 2026-09-01: RelatedOverlay.test.tsx did not exist — created here, modelled on
+LineageFlow.test.tsx, with explicit afterEach(cleanup).]
+
 **Interfaces:**
 - Consumes: `LineageFlow`'s `cluster` / `onClusterChange` / `onActiveCluster` (Task 11).
 
-- [ ] **Step 1: Write the failing test (append to `RelatedOverlay.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `RelatedOverlay.test.tsx`)**
 
 ```tsx
 it('scopes the status graph to the ACTIVE cluster, not the left-rail selection', async () => {
@@ -2481,12 +2484,12 @@ it('scopes the status graph to the ACTIVE cluster, not the left-rail selection',
 Reuse whatever msw server, `GRAPH` fixture and `wrapper` the existing `RelatedOverlay.test.tsx`
 already defines; do not add a second harness.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- RelatedOverlay`
 Expected: FAIL — only `cl-selected` was ever requested.
 
-- [ ] **Step 3: Own the state**
+- [x] **Step 3: Own the state**
 
 In `RelatedOverlay.tsx`:
 
@@ -2536,12 +2539,12 @@ and pass the props through:
 Update the component's doc comment: `clusters` is now the *preference* fed to `auto`, and the
 status scope follows the active cluster.
 
-- [ ] **Step 4: Run the whole frontend suite**
+- [x] **Step 4: Run the whole frontend suite**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit && pnpm format:check`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/RelatedOverlay.tsx \
