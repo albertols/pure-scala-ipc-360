@@ -1167,7 +1167,7 @@ Spec §6. Defect 1, part 1. Shared module and its tests; no host adopts it yet.
 - Produces: `useDockWidth(storageKey: string, bounds: { dflt: number; min: number; max: number }) → { width: number; setWidth: (px: number) => void; reset: () => void }`; `DockSplitter({ width, onResize, testId }: { width: number; onResize: (px: number) => void; testId?: string })`.
 - Consumed by: Task 7 (both `Details` panes).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it, beforeEach } from 'vitest'
@@ -1241,12 +1241,12 @@ describe('useDockWidth', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- useDockWidth`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 import { useCallback, useRef, useState } from 'react'
@@ -1372,12 +1372,12 @@ export function DockSplitter({
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd frontend && pnpm test -- useDockWidth`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
