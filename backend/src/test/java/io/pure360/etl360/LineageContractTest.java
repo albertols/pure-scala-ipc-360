@@ -131,4 +131,80 @@ class LineageContractTest {
             .andReturn().getResponse().getContentAsString();
         assertThat(a).isEqualTo(b);
     }
+
+    // ── ADR-0021: cluster scope ───────────────────────────────────────────────
+
+    private JsonNode scoped(String cluster) throws Exception {
+        String body = mvc.perform(get("/api/operational/lineage")
+                .param("node", SEED).param("limit", "600").param("cluster", cluster))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        return mapper.readTree(body);
+    }
+
+    private String firstOption() throws Exception {
+        JsonNode d = lineage(SEED, "600");
+        assertThat(d.get("clusterOptions")).as("seed reaches a cluster").isNotEmpty();
+        return d.get("clusterOptions").get(0).get("name").asText();
+    }
+
+    @Test
+    void unscopedCarriesANullActiveClusterAndTheSeedsOptions() throws Exception {
+        JsonNode d = lineage(SEED, "600");
+        assertThat(d.get("activeCluster").isNull()).isTrue();
+        d.get("clusterOptions").forEach(o -> {
+            assertThat(o.get("name").asText()).isNotBlank();
+            assertThat(o.get("recipes").asInt()).isGreaterThan(0);
+        });
+    }
+
+    @Test
+    void aScopedCallReportsTheClusterItScopedTo() throws Exception {
+        String c = firstOption();
+        assertThat(scoped(c).get("activeCluster").asText()).isEqualTo(c);
+    }
+
+    @Test
+    void aScopedCallIsSmallerThanOrEqualToTheUnscopedOne() throws Exception {
+        String c = firstOption();
+        assertThat(scoped(c).get("nodes").size())
+            .isLessThanOrEqualTo(lineage(SEED, "600").get("nodes").size());
+    }
+
+    @Test
+    void everyScopedEdgeEndpointIsStillAReturnedNode() throws Exception {
+        JsonNode d = scoped(firstOption());
+        Set<String> ids = new HashSet<>();
+        d.get("nodes").forEach(n -> ids.add(n.get("id").asText()));
+        d.get("edges").forEach(e -> {
+            assertThat(ids).as("edge from").contains(e.get("from").asText());
+            assertThat(ids).as("edge to").contains(e.get("to").asText());
+        });
+    }
+
+    @Test
+    void autoResolvesAClusterWithoutTheCallerNamingOne() throws Exception {
+        String body = mvc.perform(get("/api/operational/lineage")
+                .param("node", SEED).param("cluster", "auto"))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        assertThat(mapper.readTree(body).get("activeCluster").asText()).isEqualTo(firstOption());
+    }
+
+    @Test
+    void autoHonoursPrefer() throws Exception {
+        JsonNode opts = lineage(SEED, "600").get("clusterOptions");
+        String tail = opts.get(opts.size() - 1).get("name").asText();
+        String body = mvc.perform(get("/api/operational/lineage")
+                .param("node", SEED).param("cluster", "auto").param("prefer", "nope," + tail))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        assertThat(mapper.readTree(body).get("activeCluster").asText()).isEqualTo(tail);
+    }
+
+    @Test
+    void anUnknownClusterIs400() throws Exception {
+        mvc.perform(get("/api/operational/lineage").param("node", SEED).param("cluster", "nope"))
+           .andExpect(status().isBadRequest());
+    }
 }

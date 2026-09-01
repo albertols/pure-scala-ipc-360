@@ -1,16 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useLineage,
+  useRuns,
   LINEAGE_DEFAULT_LIMIT,
   LINEAGE_MAX_LIMIT,
   type LineageNodeT,
 } from '../../api/clusterQueries'
 import { OperationalCard } from '../shared/OperationalCard'
+import { NodeDetails } from '../shared/NodeDetails'
+import { resolvePreview } from '../shared/nodePreview'
 import { MultiFilterChips } from '../shared/MultiFilterChips'
 import { layerColor, kindPalette, statusColor } from '../../theme/semanticColors'
-import { layoutLineage, LINEAGE_FOOTPRINT, type PlacedNode } from './lineageLayout'
+import { layoutLineage, applyOffsets, LINEAGE_FOOTPRINT } from './lineageLayout'
+import { useDockWidth, DockSplitter } from '../shared/useDockWidth'
 import type { ApiError } from '../../api/client'
 import type { OperationalCard as CardData } from '../../types'
+import type { OperationalEdge } from '../../api/relationshipsAdapter'
+import type { AppConfig, RelationshipGraph } from '../../api/queries'
+
+type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
 
 // ─── LineageFlow ────────────────────────────────────────────────────────────
 //
@@ -77,17 +85,43 @@ export function LineageFlow({
   nodeId,
   statusById = {},
   selectedClusters = [],
+  cluster = null,
   onSelect,
   onReseed,
+  onClusterChange,
+  onActiveCluster,
+  extras,
+  onPreview,
 }: {
   nodeId: string
   statusById?: Record<string, CardData['status']>
-  /** Clusters currently scoped in the main view — the strip marks which of the lineage's are in it. */
+  /** The operator's current cluster preference(s) — passed through to `useLineage` as `prefer`,
+   *  read by the server only when `cluster === 'auto'` (spec §3.5's resolution order). */
   selectedClusters?: string[]
+  /** The cluster to scope the lineage query to — `null` unscoped, `'auto'` server-resolved, or a
+   *  name. Owned by the host (Task 12's `RelatedOverlay`); this component only reports back. */
+  cluster?: string | null
   /** Single click. Also syncs the canvas behind the overlay (spec §6.3). */
   onSelect?: (nodeId: string) => void
   /** Double click, or the dock's explicit control. */
   onReseed?: (nodeId: string) => void
+  /** A cluster chip (or a gateway) was clicked — the host owns `cluster`, so this is how a
+   *  switch is requested. */
+  onClusterChange?: (name: string) => void
+  /** The server's resolved active cluster for this lineage, reported after every fetch. */
+  onActiveCluster?: (name: string | null) => void
+  /** The scoped graph the host already holds, so the dock can resolve a preview target and build
+   *  GCP links — undefined in the tests that render this component bare. `lastClusterByRecipe`
+   *  is the Dataproc-link fallback for a recipe with no run history, sourced from the host's own
+   *  operational summary (the dock has none of its own). */
+  extras?: {
+    edges: OperationalEdge[]
+    nodeById: Map<string, NodeDto>
+    config?: AppConfig
+    lastClusterByRecipe?: Record<string, string>
+  }
+  /** The dock's "Open preview" affordance. */
+  onPreview?: (nodeId: string) => void
 }) {
   const [limit, setLimit] = useState(LINEAGE_DEFAULT_LIMIT)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -97,12 +131,28 @@ export function LineageFlow({
   const [offsets, setOffsets] = useState<Record<string, { dx: number; dy: number }>>({})
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<{ id: string; x: number; y: number } | null>(null)
+  const dock = useDockWidth('etl360.tab3.lineageDetailsW', { dflt: 264, min: 220, max: 640 })
 
-  const lineage = useLineage(nodeId, limit)
+  const lineage = useLineage(nodeId, limit, cluster, selectedClusters)
+  // The cluster the server actually resolved to (or null unscoped) — reported back to the host
+  // on every fetch, since the host (not this component) owns `cluster`.
+  const active = lineage.data?.activeCluster ?? null
+  useEffect(() => {
+    onActiveCluster?.(active)
+  }, [active])
+  // The dock's own run history. Hooks cannot be conditional, so this always runs — scoped to at
+  // most one recipe name, which `useRuns` treats as a single cheap chunk. A TABLE selection (or
+  // no selection yet) costs nothing: `useRuns([])` fires no request, same as Tab 3's own panel
+  // never inventing runs for a table.
+  const selectedForRuns = lineage.data?.nodes.find(n => n.id === selected)
+  const dockRuns = useRuns(selectedForRuns?.kind === 'recipe' ? [selectedForRuns.name] : [], 10)
   const layout = useMemo(
     () => (lineage.data ? layoutLineage(lineage.data.nodes, lineage.data.edges) : null),
     [lineage.data],
   )
+  // Cards AND edges are drawn from the OFFSET layout, so an arrow stays attached to the card it
+  // points at. `applyOffsets({})` is identity, so `reset layout` is exactly `layoutLineage`.
+  const view = useMemo(() => (layout ? applyOffsets(layout, offsets) : null), [layout, offsets])
 
   // Reset manual arrangement whenever the lineage itself changes — offsets are keyed by node id
   // and would otherwise land on unrelated nodes after a re-seed.
@@ -110,11 +160,6 @@ export function LineageFlow({
     setOffsets({})
     setSelected(null)
   }, [nodeId])
-
-  const at = (p: PlacedNode) => {
-    const o = offsets[p.id]
-    return { x: p.x + (o?.dx ?? 0), y: p.y + (o?.dy ?? 0) }
-  }
 
   // Ancestors + descendants of the traced node, over the ORIGINAL edges (not the routed chains,
   // whose dummies are not nodes anyone can trace to).
@@ -176,10 +221,19 @@ export function LineageFlow({
     window.addEventListener('pointerup', up)
   }
 
-  if (lineage.isLoading) {
+  // A cluster switch is a different graph, not a filter, so the canvas is replaced rather than
+  // spinner-ed over: showing stale nodes under a spinner would imply they belong to the cluster
+  // being loaded.
+  const switching = cluster !== null && cluster !== 'auto' && active !== null && cluster !== active
+  if (switching || (lineage.isFetching && !lineage.data)) {
     return (
-      <div style={{ padding: 16, fontSize: 12, color: 'var(--text-dim)' }}>
-        Tracing the lineage…
+      <div
+        data-testid="lineage-switching"
+        style={{ padding: 16, fontSize: 12, color: 'var(--text-dim)' }}
+      >
+        {cluster && cluster !== 'auto'
+          ? `Loading from cluster: ${cluster}…`
+          : 'Tracing the lineage…'}
       </div>
     )
   }
@@ -194,7 +248,7 @@ export function LineageFlow({
   }
 
   const data = lineage.data!
-  if (data.nodes.length === 0 || !layout) {
+  if (data.nodes.length === 0 || !layout || !view) {
     return (
       <div
         data-testid="lineage-empty"
@@ -210,15 +264,13 @@ export function LineageFlow({
   const downstream = data.nodes.filter(n => n.hop > 0).length
   const dimmedCount = data.nodes.filter(n => !matchesFilter(n)).length
 
-  const clusterCounts = new Map<string, number>()
-  for (const n of data.nodes)
-    for (const c of n.clusters) clusterCounts.set(c, (clusterCounts.get(c) ?? 0) + 1)
-  const clusters = [...clusterCounts.entries()].sort(
-    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-  )
-
   const layers = [...new Set(data.nodes.map(n => n.layer))]
   const selectedNode = selected ? byId.get(selected) : null
+  // Hoisted so the `card` and the `previewTarget` resolution below can't construct two
+  // divergent cards for the same selection (fix-round 1, minor finding).
+  const selectedCard = selectedNode
+    ? toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING')
+    : null
 
   const isDim = (n: LineageNodeT) => !matchesFilter(n) || (traced !== null && !traced.has(n.id))
 
@@ -270,37 +322,43 @@ export function LineageFlow({
           </span>
         </div>
 
-        {clusters.length > 0 && (
+        {data.clusterOptions.length > 0 && (
           <div
             data-testid="lineage-clusters"
             style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}
           >
-            <span style={{ fontSize: 10, color: '#4a5570' }}>Clusters:</span>
-            {clusters.map(([name, count]) => {
-              const inScope = selectedClusters.includes(name)
-              return (
-                <span
-                  key={name}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    fontSize: 10,
-                    padding: '1px 7px',
-                    borderRadius: 999,
-                    fontFamily: 'JetBrains Mono, monospace',
-                    // A cluster outside the current selection is CONTEXT — the lineage crossed into
-                    // it, and saying so is the point of not scoping the fetch.
-                    background: inScope ? 'var(--surface-3)' : 'transparent',
-                    border: `1px solid ${inScope ? 'var(--border)' : 'var(--border-subtle)'}`,
-                    color: inScope ? 'var(--text)' : 'var(--text-dim)',
-                  }}
-                >
-                  {name}
-                  <span style={{ color: 'var(--text-muted)' }}>{count}</span>
-                </span>
-              )
-            })}
+            <span style={{ fontSize: 10, color: '#4a5570' }}>Cluster:</span>
+            {[...data.clusterOptions]
+              // Active first: the switcher's job is to say where you ARE before offering
+              // where you could go.
+              .sort((a, b) => Number(b.name === active) - Number(a.name === active))
+              .map(o => {
+                const isActive = o.name === active
+                return (
+                  <button
+                    key={o.name}
+                    data-testid="lineage-cluster-chip"
+                    data-active={isActive ? 'true' : undefined}
+                    onClick={() => onClusterChange?.(o.name)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      fontSize: 10,
+                      padding: '1px 7px',
+                      borderRadius: 999,
+                      cursor: 'pointer',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      background: isActive ? 'var(--surface-3)' : 'transparent',
+                      border: `1px solid ${isActive ? 'var(--border)' : 'var(--border-subtle)'}`,
+                      color: isActive ? 'var(--text)' : 'var(--text-dim)',
+                    }}
+                  >
+                    {o.name}
+                    <span style={{ color: 'var(--text-muted)' }}>{o.recipes}</span>
+                  </button>
+                )
+              })}
           </div>
         )}
 
@@ -331,11 +389,9 @@ export function LineageFlow({
           data-testid="lineage-scroll"
           style={{ flex: 1, overflow: 'auto', minHeight: 0, position: 'relative' }}
         >
-          <div
-            style={{ position: 'relative', width: layout.width + RAIL_W, height: layout.height }}
-          >
+          <div style={{ position: 'relative', width: view.width + RAIL_W, height: view.height }}>
             {/* tier rails — sticky so the band a node sits in stays named while scrolling */}
-            {layout.bands.map(b => (
+            {view.bands.map(b => (
               <div
                 key={b.tier}
                 data-testid="lineage-band"
@@ -343,7 +399,7 @@ export function LineageFlow({
                   position: 'absolute',
                   left: 0,
                   top: b.y - 8,
-                  width: layout.width + RAIL_W,
+                  width: view.width + RAIL_W,
                   height: b.height + 16,
                   background: BAND_TINT[b.tier],
                   borderRadius: 8,
@@ -354,8 +410,8 @@ export function LineageFlow({
             ))}
 
             <svg
-              width={layout.width + RAIL_W}
-              height={layout.height}
+              width={view.width + RAIL_W}
+              height={view.height}
               style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
             >
               <defs>
@@ -380,7 +436,7 @@ export function LineageFlow({
                   <path d="M0 1 L6 3.5 L0 6 Z" fill="#4f9cf9" />
                 </marker>
               </defs>
-              {layout.edges.map((e, i) => {
+              {view.edges.map((e, i) => {
                 const hot = traced !== null && traced.has(e.from) && traced.has(e.to)
                 const dim = traced !== null && !hot
                 const shifted = e.points.map(p => ({
@@ -405,11 +461,11 @@ export function LineageFlow({
               })}
             </svg>
 
-            {layout.nodes
+            {view.nodes
               .filter(p => !p.isDummy)
               .map(p => {
                 const n = p.node!
-                const pos = at(p)
+                const pos = p
                 const isSeed = p.id === data.seed
                 const dim = isDim(n)
                 const hot = traced !== null && traced.has(n.id)
@@ -424,6 +480,14 @@ export function LineageFlow({
                     onMouseEnter={() => setHovered(n.id)}
                     onMouseLeave={() => setHovered(null)}
                     onClick={() => {
+                      if (n.gateway) {
+                        // Walking a gateway is the "traceback": go to that cluster, seeded on the
+                        // recipe the operator pointed at.
+                        const target = n.clusters[0]
+                        if (target) onClusterChange?.(target)
+                        onReseed?.(n.id)
+                        return
+                      }
                       setSelected(n.id)
                       onSelect?.(n.id)
                     }}
@@ -445,10 +509,39 @@ export function LineageFlow({
                       borderRadius: 8,
                     }}
                   >
-                    <OperationalCard
-                      card={toCard(n, statusById[n.id] ?? 'PENDING')}
-                      density="compact"
-                    />
+                    {n.gateway ? (
+                      <div
+                        data-testid="lineage-gateway"
+                        style={{
+                          border: `1px dashed ${kindPalette('recipe').accent}`,
+                          borderRadius: 6,
+                          background: 'var(--surface-2)',
+                          padding: '6px 8px',
+                          opacity: 0.72,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: 'var(--text-muted)',
+                            fontFamily: 'JetBrains Mono, monospace',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {n.name}
+                        </div>
+                        <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>
+                          {`↳ ${n.clusters[0] ?? 'other cluster'}`}
+                        </div>
+                      </div>
+                    ) : (
+                      <OperationalCard
+                        card={toCard(n, statusById[n.id] ?? 'PENDING')}
+                        density="compact"
+                      />
+                    )}
                   </div>
                 )
               })}
@@ -456,14 +549,14 @@ export function LineageFlow({
             {/* Tier labels, painted above the cards. They are sticky, so once the flow is
                 scrolled they travel over whatever card is beneath — hence the opaque backing
                 rather than bare text. */}
-            {layout.bands.map(b => (
+            {view.bands.map(b => (
               <div
                 key={`${b.tier}-label`}
                 style={{
                   position: 'absolute',
                   left: 0,
                   top: b.y - 6,
-                  width: layout.width + RAIL_W,
+                  width: view.width + RAIL_W,
                   height: 16,
                   pointerEvents: 'none',
                   zIndex: 5,
@@ -491,7 +584,7 @@ export function LineageFlow({
             ))}
 
             {/* hop ruler */}
-            {[...new Map(layout.nodes.filter(p => !p.isDummy).map(p => [p.node!.hop, p])).entries()]
+            {[...new Map(view.nodes.filter(p => !p.isDummy).map(p => [p.node!.hop, p])).entries()]
               .sort((a, b) => a[0] - b[0])
               .map(([hop, p]) => (
                 <div
@@ -499,7 +592,7 @@ export function LineageFlow({
                   style={{
                     position: 'absolute',
                     left: p.x + RAIL_W,
-                    top: layout.height - 4,
+                    top: view.height - 4,
                     width: LINEAGE_FOOTPRINT.width,
                     textAlign: 'center',
                     fontSize: 9,
@@ -514,70 +607,49 @@ export function LineageFlow({
         </div>
 
         {selectedNode && (
-          <div
-            data-testid="lineage-details"
-            style={{
-              width: 264,
-              flexShrink: 0,
-              overflow: 'auto',
-              borderLeft: '1px solid var(--border)',
-              paddingLeft: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', flex: 1 }}>
-                Details
-              </span>
-              <button
-                aria-label="Close details"
-                onClick={() => setSelected(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#4a5570',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-            <OperationalCard
-              card={toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING')}
-              selected
+          <>
+            <DockSplitter
+              testId="lineage-details-splitter"
+              width={dock.width}
+              onResize={dock.setWidth}
             />
-            <button
-              aria-label="Center lineage here"
-              onClick={() => onReseed?.(selectedNode.id)}
-              style={{ ...chipBtn, width: '100%', padding: '5px 8px' }}
+            <div
+              data-testid="lineage-details"
+              style={{
+                width: dock.width,
+                flexShrink: 0,
+                overflow: 'auto',
+                borderLeft: '1px solid var(--border)',
+                paddingLeft: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
             >
-              ⌖ center lineage here
-            </button>
-            {selectedNode.clusters.length > 0 && (
-              <div>
-                <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 4 }}>Clusters</div>
-                {selectedNode.clusters.map(c => (
-                  <div
-                    key={c}
-                    style={{
-                      fontSize: 10,
-                      color: 'var(--text-muted)',
-                      fontFamily: 'JetBrains Mono, monospace',
-                      padding: '2px 0',
-                    }}
-                  >
-                    {c}
-                  </div>
-                ))}
-              </div>
-            )}
-            <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
-              {`hop ${selectedNode.hop === 0 ? '0 (seed)' : selectedNode.hop > 0 ? `+${selectedNode.hop} downstream` : `${selectedNode.hop} upstream`}`}
+              <NodeDetails
+                card={selectedCard!}
+                runs={dockRuns.byRecipe[selectedNode.name] ?? []}
+                config={extras?.config}
+                previewTarget={
+                  extras
+                    ? resolvePreview(selectedCard!, extras.edges, extras.nodeById)
+                    : { recipePath: null, mappingPath: null }
+                }
+                onPreview={() => onPreview?.(selectedNode.id)}
+                fallbackClusterName={extras?.lastClusterByRecipe?.[selectedNode.name] ?? ''}
+                clusters={selectedNode.clusters}
+                hopLabel={`hop ${
+                  selectedNode.hop === 0
+                    ? '0 (seed)'
+                    : selectedNode.hop > 0
+                      ? `+${selectedNode.hop} downstream`
+                      : `${selectedNode.hop} upstream`
+                }`}
+                onCenterLineage={() => onReseed?.(selectedNode.id)}
+                onClose={() => setSelected(null)}
+              />
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

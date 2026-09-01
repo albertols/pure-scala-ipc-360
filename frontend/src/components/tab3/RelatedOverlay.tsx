@@ -1,9 +1,12 @@
-import { useEffect, useMemo } from 'react'
-import { useOperationalSummary } from '../../api/queries'
+import { useEffect, useMemo, useState } from 'react'
+import { useAppConfig, useOperationalSummary } from '../../api/queries'
 import { useScopedRelationships } from '../../api/clusterQueries'
 import { toOperationalGraph } from '../../api/relationshipsAdapter'
 import { LineageFlow } from './LineageFlow'
 import type { OperationalCard as CardData } from '../../types'
+import type { RelationshipGraph } from '../../api/queries'
+
+type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
 
 /**
  * One node's full lineage, focused.
@@ -16,9 +19,11 @@ import type { OperationalCard as CardData } from '../../types'
  * and standalone at `?related=<nodeId>&clusters=<names>` in a real browser tab. They cannot
  * drift because they are the same component.
  *
- * `clusters` no longer scopes the lineage itself — that is unscoped by design (ADR-0020) — but
- * it still scopes the STATUS overlay below, so a card's OK/KO reflects the snapshot the operator
- * is looking at rather than an all-time aggregate.
+ * `clusters` no longer scopes the lineage itself — that is unscoped by design (ADR-0020). Since
+ * ADR-0021 it is only the PREFERENCE fed to the lineage's `auto` cluster resolution (spec §3.6);
+ * once that fetch reports back an ACTIVE cluster, THIS component re-scopes the status overlay,
+ * edges and preview to follow it instead, so a card's OK/KO describes the graph actually drawn
+ * rather than the left rail's original selection or an all-time aggregate.
  */
 export function RelatedOverlay({
   nodeId,
@@ -26,6 +31,7 @@ export function RelatedOverlay({
   selectedDate = null,
   onFocus,
   onReseed,
+  onPreview,
   onClose,
   standalone = false,
 }: {
@@ -36,6 +42,8 @@ export function RelatedOverlay({
   onFocus?: (nodeId: string) => void
   /** Double click, or the dock's centre control: re-seeds the lineage. */
   onReseed?: (nodeId: string) => void
+  /** The dock's "Open preview" affordance, threaded through from the host. */
+  onPreview?: (nodeId: string) => void
   onClose?: () => void
   standalone?: boolean
 }) {
@@ -48,12 +56,49 @@ export function RelatedOverlay({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose])
 
-  // Status only. The lineage itself comes from `LineageFlow`'s own unscoped fetch; this scoped
-  // graph is what colours the cards that happen to be in the current selection, so the flow
-  // agrees with the canvas behind it. Nodes outside the selection simply have no status here and
-  // render PENDING, which is honest — this snapshot says nothing about them.
-  const rel = useScopedRelationships(clusters)
-  const summary = useOperationalSummary(clusters.length > 0, clusters)
+  // `auto` on open: the server picks the operator's selected cluster when the seed belongs to one
+  // of them, else the seed's largest (spec §3.5). It cannot be resolved here — a table's cluster
+  // membership lives only in the L2L graph joined against the b15 index, which ADR-0014 exists to
+  // stop this client fetching unscoped.
+  const [cluster, setCluster] = useState<string | null>('auto')
+  const [active, setActive] = useState<string | null>(null)
+
+  // Re-seeding starts the resolution over — but only `cluster` resets. `active` is owned by
+  // LineageFlow's report: a same-commit cached resolution (TanStack Query serving an already-warm
+  // queryKey synchronously, within its 30s staleTime) reports BEFORE this effect runs — React
+  // fires passive effects child-before-parent in one commit — and nulling `active` here would
+  // permanently overwrite a correct report, since the child's `[active]`-keyed effect never
+  // re-fires on an unchanged value (Ruling N). Keeping the previous `active` during a new node's
+  // in-flight window is deliberate — the old scope stays until the new one is known, rather than
+  // flashing unscoped.
+  useEffect(() => {
+    setCluster('auto')
+  }, [nodeId])
+
+  // Status, edges and preview all describe the nodes actually on screen. Before ADR-0021 this
+  // read the left-rail selection, which after a gateway walk described a different cluster
+  // entirely.
+  const scope = active ? [active] : clusters
+  const rel = useScopedRelationships(scope)
+  const summary = useOperationalSummary(scope.length > 0, scope)
+  // Deviation (brief's one-liner `new Map(nodes.map(n => [n.id, n]))` doesn't type-check: the
+  // served node's `id` is `string | undefined`, so `.map()` alone can't narrow it for `Map<string,
+  // …>`) — guarded the same way `ETLOperational.tsx`'s own `nodeById` already does.
+  const nodeById = useMemo(() => {
+    const m = new Map<string, NodeDto>()
+    for (const n of rel.data?.nodes ?? []) if (n.id) m.set(n.id, n)
+    return m
+  }, [rel.data])
+  const cfg = useAppConfig()
+  // Sourced the same way `ETLOperational.tsx`'s own panel resolves a Dataproc fallback: each
+  // recipe's last-known cluster, from the same scoped summary this overlay already fetches for
+  // status. The dock has no summary of its own — this is how it gets a fallback at all.
+  const lastClusterByRecipe = useMemo(() => {
+    const m: Record<string, string> = {}
+    for (const r of summary.data?.recipes ?? [])
+      if (r.recipeFilename && r.lastClusterName) m[r.recipeFilename] = r.lastClusterName
+    return m
+  }, [summary.data])
 
   const graph = useMemo(
     () => (rel.data ? toOperationalGraph(rel.data, summary.data, selectedDate, 'compact') : null),
@@ -125,6 +170,11 @@ export function RelatedOverlay({
           nodeId={nodeId}
           statusById={statusById}
           selectedClusters={clusters}
+          cluster={cluster}
+          onClusterChange={setCluster}
+          onActiveCluster={setActive}
+          extras={{ edges: graph?.edges ?? [], nodeById, config: cfg.data, lastClusterByRecipe }}
+          onPreview={onPreview}
           // Single click selects — it opens the dock AND syncs the canvas behind (spec §6.3).
           onSelect={onFocus}
           // Double click (or the dock's ⌖) re-seeds. Splitting the two is what lets a card be

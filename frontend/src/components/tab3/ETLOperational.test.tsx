@@ -347,6 +347,11 @@ const server = setupServer(
       ],
       truncated: false,
       totalReachable: 3,
+      // Task 11 deviation: this mock predates Task 10's LineageT.activeCluster/clusterOptions and
+      // was never updated then (Task 10's Files list didn't touch this file) — LineageFlow read
+      // only per-node `clusters` until Task 11 started reading the top-level field directly.
+      activeCluster: null,
+      clusterOptions: [{ name: 'cl-a', recipes: 1 }],
     })
   }),
   http.get('/api/operational/search', ({ request }) => {
@@ -1488,5 +1493,24 @@ describe('multi-select Layer and Status filters', () => {
     expect(labels[0]).toBe('ALL')
     // Chip ORDER is asserted in relationshipsAdapter.test.ts, against a multi-layer fixture —
     // this tab's graph has a single layer, which made an order assertion here vacuous.
+  })
+})
+
+describe('the details panel resizes', () => {
+  it('drags to a new width and persists it', async () => {
+    localStorage.removeItem('etl360.tab3.detailsW')
+    renderTab()
+    // Same idiom the surrounding tests use to open the panel.
+    fireEvent.click(await screen.findByText('_ETL_m_CAS_T.json'))
+
+    const panel = await screen.findByTestId('details-panel')
+    expect(panel).toHaveStyle({ width: '300px' })
+
+    fireEvent.pointerDown(screen.getByTestId('details-splitter'), { clientX: 800 })
+    fireEvent.pointerMove(window, { clientX: 700 })
+    fireEvent.pointerUp(window)
+
+    await waitFor(() => expect(panel).toHaveStyle({ width: '400px' }))
+    expect(localStorage.getItem('etl360.tab3.detailsW')).toBe('400')
   })
 })

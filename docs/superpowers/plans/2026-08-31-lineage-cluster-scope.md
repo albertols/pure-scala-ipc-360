@@ -82,7 +82,7 @@ Pure extraction. `/search` behaviour must not change — that is what the existi
 - Produces: `TableClusters.of(RelationshipsDto graph)` → instance; `Set<String> recipeIdsFor(String tableId)`; `Set<String> tableIds()`; `List<String> clustersFor(String tableId, Map<String, List<String>> clustersByRecipe)` (name-ascending).
 - Consumed by: Task 2 (`LineageService`), and `ClusterController.tableHits` in this task.
 
-- [ ] **Step 0: Branch**
+- [x] **Step 0: Branch**
 
 ```bash
 git checkout -b feat/etl360-lineage-cluster-scope
@@ -90,7 +90,7 @@ git checkout -b feat/etl360-lineage-cluster-scope
 
 Task 15 merges this branch; every task below commits onto it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -161,12 +161,12 @@ class TableClustersTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=TableClustersTest`
 Expected: compile failure — `package io.pure360.etl360.service.support.TableClusters does not exist`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```java
 package io.pure360.etl360.service.support;
@@ -248,12 +248,12 @@ public final class TableClusters {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `mvn -q -am -pl backend test -Dtest=TableClustersTest`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Rewrite `ClusterController.tableHits` to read it**
+- [x] **Step 5: Rewrite `ClusterController.tableHits` to read it**
 
 Replace the body of `tableHits` (`ClusterController.java:224-256`) with:
 
@@ -276,12 +276,12 @@ Replace the body of `tableHits` (`ClusterController.java:224-256`) with:
 
 Add `import io.pure360.etl360.service.support.TableClusters;`. Remove the now-unused `LinkedHashSet` / `TreeSet` imports **only if** no other method in the file still uses them (`search` uses `TreeSet`, so keep that one).
 
-- [ ] **Step 6: Prove `/search` did not change**
+- [x] **Step 6: Prove `/search` did not change**
 
 Run: `mvn -q -am -pl backend test -Dtest='OperationalSearchContractTest,TableClustersTest'`
 Expected: PASS, `OperationalSearchContractTest` **unedited**.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/service/support/TableClusters.java \
@@ -304,10 +304,10 @@ existing contract tests keep passing untouched.
 
 **Interfaces:**
 - Consumes: `TableClusters.of/recipeIdsFor/tableIds` (Task 1); `ClusterIndexService.index()` → `Index.clustersByRecipe()` (`Map<String,List<String>>`), `Index.byCluster()` (`Map<String,ClusterEntry>`, `ClusterEntry.recipes()` name-ascending).
-- Produces: `LineageService.lineage(String seed, int limit, String clusterSpec, List<String> prefer)` → `LineageDto`; the 2-arg `lineage(String, int)` overload delegating with `(null, List.of())`. `LineageDto.ClusterOptionDto(String name, int recipes)`. `LineageDto.LineageNodeDto` gains a trailing `boolean gateway`. Constant `LineageService.AUTO = "auto"`.
+- Produces: `LineageService.lineage(String seed, int limit, String clusterSpec, List<String> prefer)` → `LineageDto` — the ONLY `lineage` method; the 2-arg `lineage(String, int)` overload this bullet originally promised was dropped as dead code (its only caller, `ClusterController`, is rewritten by Task 3 to pass all four arguments, so it would ship with zero callers) — `ClusterController` instead passes `(node, limit, null, List.of())` for the unscoped default. `LineageDto.ClusterOptionDto(String name, int recipes)`. `LineageDto.LineageNodeDto` gains a trailing `boolean gateway`. Constant `LineageService.AUTO = "auto"`.
 - Consumed by: Task 3 (controller), Task 10 (TS types mirror this shape).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```java
 package io.pure360.etl360.service;
@@ -439,12 +439,12 @@ class LineageScopeTest {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=LineageScopeTest`
 Expected: compile failure — `lineage(String,int,String,List)` and `activeCluster()` do not exist.
 
-- [ ] **Step 3: Widen `LineageDto`**
+- [x] **Step 3: Widen `LineageDto`**
 
 Replace `backend/src/main/java/io/pure360/etl360/api/dto/LineageDto.java` with:
 
@@ -496,7 +496,7 @@ public record LineageDto(String seed, List<LineageNodeDto> nodes,
 }
 ```
 
-- [ ] **Step 4: Rewrite `LineageService`**
+- [x] **Step 4: Rewrite `LineageService`**
 
 Replace `backend/src/main/java/io/pure360/etl360/service/LineageService.java` with:
 
@@ -725,13 +725,13 @@ public class LineageService {
 }
 ```
 
-- [ ] **Step 5: Run the new tests and the untouched contract tests**
+- [x] **Step 5: Run the new tests and the untouched contract tests**
 
 Run: `mvn -q -am -pl backend test -Dtest='LineageScopeTest,LineageContractTest'`
 Expected: PASS. `LineageContractTest` is **unedited** — that is the proof the unscoped default
 did not move.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/dto/LineageDto.java \
@@ -755,7 +755,7 @@ Spec §3.4.
 - Consumes: `LineageService.lineage(seed, limit, clusterSpec, prefer)`, `LineageService.AUTO` (Task 2).
 - Produces: `GET /api/operational/lineage?node=&limit=&cluster=&prefer=`.
 
-- [ ] **Step 1: Write the failing test (append to `LineageContractTest`, edit nothing above it)**
+- [x] **Step 1: Write the failing test (append to `LineageContractTest`, edit nothing above it)**
 
 ```java
     // ── ADR-0021: cluster scope ───────────────────────────────────────────────
@@ -835,13 +835,13 @@ Spec §3.4.
     }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `mvn -q -am -pl backend test -Dtest=LineageContractTest`
 Expected: FAIL — `activeCluster` is absent from the response because the controller never passes
 `cluster` through, and `cluster=nope` returns 200.
 
-- [ ] **Step 3: Widen the endpoint**
+- [x] **Step 3: Widen the endpoint**
 
 Replace the `lineage` handler (`ClusterController.java:162-170`) with:
 
@@ -876,17 +876,17 @@ Replace the `lineage` handler (`ClusterController.java:162-170`) with:
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `mvn -q -am -pl backend test -Dtest=LineageContractTest`
 Expected: PASS — all ten original tests plus the seven appended ones.
 
-- [ ] **Step 5: Run the whole backend suite**
+- [x] **Step 5: Run the whole backend suite**
 
 Run: `mvn -q -am -pl backend test`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/io/pure360/etl360/api/ClusterController.java \
@@ -908,7 +908,7 @@ Spec §4. Defect 3, part 1. No component change yet; this is the engine and its 
 - Produces: `anchorAt(p: PlacedNode, side: 'out' | 'in') → { x: number; y: number }` (module-level, replacing the closure inside `layoutLineage`); `applyOffsets(layout: LineageLayout, offsets: Record<string, { dx: number; dy: number }>) → LineageLayout`.
 - Consumed by: Task 5 (`LineageFlow`).
 
-- [ ] **Step 1: Write the failing test (append to `lineageLayout.test.ts`)**
+- [x] **Step 1: Write the failing test (append to `lineageLayout.test.ts`)**
 
 ```ts
 describe('applyOffsets', () => {
@@ -974,12 +974,12 @@ describe('applyOffsets', () => {
 
 Add `applyOffsets` to the existing import block at the top of the file.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- lineageLayout`
 Expected: FAIL — `applyOffsets is not a function` / TS error on the import.
 
-- [ ] **Step 3: Hoist `anchor` to module scope**
+- [x] **Step 3: Hoist `anchor` to module scope**
 
 In `lineageLayout.ts`, delete the local `anchor` closure inside `layoutLineage`
 (`lineageLayout.ts:266-273`) and add this above `layoutLineage`:
@@ -1005,7 +1005,7 @@ Inside `layoutLineage`, replace the deleted closure's call sites by keeping a th
   const anchor = (id: string, side: 'out' | 'in') => anchorAt(posById.get(id)!, side)
 ```
 
-- [ ] **Step 4: Write `applyOffsets` at the end of `lineageLayout.ts`**
+- [x] **Step 4: Write `applyOffsets` at the end of `lineageLayout.ts`**
 
 ```ts
 /**
@@ -1047,12 +1047,12 @@ export function applyOffsets(
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `cd frontend && pnpm test -- lineageLayout`
 Expected: PASS — the pre-existing layout tests plus the six new ones.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
@@ -1076,7 +1076,7 @@ Defect 3, part 2. Wiring only — the geometry is already proven.
 - Consumes: `applyOffsets` (Task 4).
 - Produces: nothing new; `LineageFlow`'s props are unchanged.
 
-- [ ] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
 
 ```ts
 describe('dragging keeps the arrows attached', () => {
@@ -1107,13 +1107,13 @@ describe('dragging keeps the arrows attached', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: FAIL — the edge `d` attributes are unchanged after the drag, because edges are drawn
 from `layout.edges` and never see the offsets.
 
-- [ ] **Step 3: Render from the offset layout**
+- [x] **Step 3: Render from the offset layout**
 
 In `LineageFlow.tsx`, immediately after the existing `layout` memo, add:
 
@@ -1134,17 +1134,17 @@ Delete the `at()` helper (`LineageFlow.tsx:114-117`). Then:
 
 Import `applyOffsets` alongside `layoutLineage` from `./lineageLayout`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: PASS.
 
-- [ ] **Step 5: Type-check**
+- [x] **Step 5: Type-check**
 
 Run: `cd frontend && npx tsc --noEmit`
 Expected: no output.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
@@ -1167,7 +1167,7 @@ Spec §6. Defect 1, part 1. Shared module and its tests; no host adopts it yet.
 - Produces: `useDockWidth(storageKey: string, bounds: { dflt: number; min: number; max: number }) → { width: number; setWidth: (px: number) => void; reset: () => void }`; `DockSplitter({ width, onResize, testId }: { width: number; onResize: (px: number) => void; testId?: string })`.
 - Consumed by: Task 7 (both `Details` panes).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it, beforeEach } from 'vitest'
@@ -1241,12 +1241,12 @@ describe('useDockWidth', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- useDockWidth`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 import { useCallback, useRef, useState } from 'react'
@@ -1372,12 +1372,12 @@ export function DockSplitter({
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd frontend && pnpm test -- useDockWidth`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
@@ -1401,7 +1401,7 @@ Defect 1, part 2.
 **Interfaces:**
 - Consumes: `useDockWidth`, `DockSplitter` (Task 6).
 
-- [ ] **Step 1: Write the failing test (append to `ETLOperational.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `ETLOperational.test.tsx`)**
 
 ```tsx
 describe('the details panel resizes', () => {
@@ -1424,12 +1424,12 @@ describe('the details panel resizes', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- ETLOperational`
 Expected: FAIL — `details-splitter` is not in the document.
 
-- [ ] **Step 3: Wire the Tab 3 panel**
+- [x] **Step 3: Wire the Tab 3 panel**
 
 In `ETLOperational.tsx`, add the imports:
 
@@ -1471,7 +1471,7 @@ Then wrap the detail side panel — replace `{selectedCard && (` … `<div data-
 
 and close it with `</div></>)` where the panel's `</div>)}` currently is.
 
-- [ ] **Step 4: Wire the lineage dock**
+- [x] **Step 4: Wire the lineage dock**
 
 In `LineageFlow.tsx`, add the same import and:
 
@@ -1506,12 +1506,12 @@ Replace `{selectedNode && (` … `width: 264,` with:
 
 and close it with `</div></>)`.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test -- 'ETLOperational|LineageFlow' && npx tsc --noEmit`
 Expected: PASS, no type errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
@@ -1540,7 +1540,7 @@ yet.
   - `NodeDetails(props)` where props are `{ card: CardData; runs?: RunT[]; selectedRunDate?: string | null; onSelectRun?: (run: RunT) => void; config?: AppConfig; previewTarget: { recipePath: string | null; mappingPath: string | null }; onPreview: () => void; fallbackClusterName?: string; clusters?: string[]; hopLabel?: string | null; onCenterLineage?: () => void; related?: ReactNode; onClose: () => void }`.
 - Consumed by: Task 9 (both hosts).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { describe, expect, it, vi } from 'vitest'
@@ -1650,12 +1650,12 @@ describe('NodeDetails', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- NodeDetails`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Move `resolvePreview` into `shared/nodePreview.ts`**
+- [x] **Step 3: Move `resolvePreview` into `shared/nodePreview.ts`**
 
 Cut `resolvePreview` verbatim from `ETLOperational.tsx:68-82` into a new file:
 
@@ -1686,7 +1686,7 @@ If the `OperationalEdge` / `NodeDto` import paths in `ETLOperational.tsx` differ
 that file already uses rather than guessing. Import `resolvePreview` back into
 `ETLOperational.tsx` from `'../shared/nodePreview'` so it still compiles.
 
-- [ ] **Step 4: Write `NodeDetails.tsx`**
+- [x] **Step 4: Write `NodeDetails.tsx`**
 
 Move `PreviewButton` and `GCPLink` verbatim from `ETLOperational.tsx:1406-1473` into this file
 (keeping their comments) and delete them from `ETLOperational.tsx`. Then:
@@ -1846,12 +1846,12 @@ import { GCPIcon } from './GCPIcon'
 import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../../api/gcpLinks'
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `cd frontend && pnpm test -- NodeDetails && npx tsc --noEmit`
 Expected: PASS, no type errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
@@ -1878,7 +1878,7 @@ Defect 4, part 2. This is where the lineage dock actually gains Preview and the 
 - Consumes: `NodeDetails`, `resolvePreview` (Task 8).
 - Produces: `LineageFlow` gains optional props `nodeDetailsExtras?: { edges: OperationalEdge[]; nodeById: Map<string, NodeDto>; config?: AppConfig }` — supplied by `RelatedOverlay` so the dock can resolve a preview target and build GCP links.
 
-- [ ] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
 
 ```tsx
 describe('the lineage dock is the full Details panel', () => {
@@ -1912,12 +1912,12 @@ describe('the lineage dock is the full Details panel', () => {
 
 Add `within` to the `@testing-library/react` import at the top of the file.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: FAIL — "Open preview" is not in the dock.
 
-- [ ] **Step 3: Replace the Tab 3 panel body**
+- [x] **Step 3: Replace the Tab 3 panel body**
 
 In `ETLOperational.tsx`, replace everything **inside** `<div data-testid="details-panel">` (the
 header, `OperationalCard`, related block, Preview block and GCP block) with:
@@ -1948,7 +1948,7 @@ locals (`ETLOperational.tsx:929-943`) — `NodeDetails` computes them — and dr
 `buildLoggingUrl` / `buildDataprocClusterUrl` / `buildBigQueryUrl` / `pickDefaultRun` /
 `GCPIcon` imports.
 
-- [ ] **Step 4: Replace the lineage dock body**
+- [x] **Step 4: Replace the lineage dock body**
 
 In `LineageFlow.tsx`, replace everything inside `<div data-testid="lineage-details">` with:
 
@@ -1983,7 +1983,7 @@ Add the props `extras?: { edges: OperationalEdge[]; nodeById: Map<string, NodeDt
 and `onPreview?: (nodeId: string) => void` to `LineageFlow`'s signature, both optional so the
 existing tests keep rendering `<LineageFlow nodeId="seed" />` unchanged.
 
-- [ ] **Step 5: Feed the dock from `RelatedOverlay`**
+- [x] **Step 5: Feed the dock from `RelatedOverlay`**
 
 In `RelatedOverlay.tsx`, build the extras from the scoped graph it already holds and pass them
 plus a preview handler through:
@@ -2013,12 +2013,12 @@ Add `onPreview?: (nodeId: string) => void` to `RelatedOverlay`'s props and have
 `resolvePreview(card, graph.edges, nodeById)` it already uses for its own panel. `useAppConfig`
 is the config hook `ETLOperational.tsx:479` already uses; import it from `api/queries`.
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS across the whole frontend suite, no type errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
@@ -2044,11 +2044,16 @@ Spec §3.4, §3.3. Defect 2, part 1.
 - Produces: `LineageNodeT` gains `gateway?: boolean`; `LineageT` gains `activeCluster: string | null` and `clusterOptions: { name: string; recipes: number }[]`; `useLineage(nodeId: string | null, limit?: number, cluster?: string | null, prefer?: string[])`.
 - Consumed by: Task 11 (switcher), Task 12 (`RelatedOverlay`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 First extend the fixture at the top of `LineageFlow.test.tsx`. `NODES` and `EDGES` stay exactly
 as they are — the existing tests count on them — and the gateway is added alongside, so
 `NODES.length + 1` below is a real assertion rather than a tautology:
+
+[Ruling M, 2026-09-01: three pre-existing assertions are RESPONSE-derived, not NODES/EDGES-derived
+— the header up/down counts, the "N of 312" truncation line, and the DOM edge count — and update
+alongside the fixture: 3 downstream, 8 of 312, EDGES.length + 1. The gateway is a drawn node with
+a drawn edge.]
 
 ```tsx
 // A recipe in ANOTHER cluster that reads t_out — the boundary. Kept out of NODES so the
@@ -2109,12 +2114,12 @@ describe('cluster scope', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: FAIL — `lineage-gateway` is not in the document.
 
-- [ ] **Step 3: Widen the client types and hook**
+- [x] **Step 3: Widen the client types and hook**
 
 In `clusterQueries.ts`:
 
@@ -2175,7 +2180,7 @@ export const useLineage = (
   })
 ```
 
-- [ ] **Step 4: Render the stub**
+- [x] **Step 4: Render the stub**
 
 In `LineageFlow.tsx`'s node map, branch before `<OperationalCard>`:
 
@@ -2218,12 +2223,12 @@ In `LineageFlow.tsx`'s node map, branch before `<OperationalCard>`:
 No new colour: `kindPalette('recipe').accent` is ADR-0017's existing recipe hue, and
 `semanticColors.ts` stays the only file that maps a kind to one.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test -- 'LineageFlow|clusterQueries' && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
@@ -2249,7 +2254,7 @@ Spec §3.6. Defect 2, part 2.
 - Produces: `LineageFlow` gains props `cluster?: string | null`, `onClusterChange?: (name: string) => void`, `onActiveCluster?: (name: string | null) => void`.
 - Consumed by: Task 12 (`RelatedOverlay` owns the state).
 
-- [ ] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
 
 ```tsx
 describe('the cluster switcher', () => {
@@ -2302,12 +2307,12 @@ describe('the cluster switcher', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: FAIL — `lineage-cluster-chip` and `lineage-switching` are not in the document.
 
-- [ ] **Step 3: Take the cluster props and thread them into the query**
+- [x] **Step 3: Take the cluster props and thread them into the query**
 
 In `LineageFlow.tsx`'s signature add:
 
@@ -2333,7 +2338,7 @@ Report the resolution back to the host:
   }, [active])
 ```
 
-- [ ] **Step 4: Replace the `Clusters:` strip with the switcher**
+- [x] **Step 4: Replace the `Clusters:` strip with the switcher**
 
 Replace the whole `{clusters.length > 0 && (…)}` block with:
 
@@ -2381,7 +2386,7 @@ Replace the whole `{clusters.length > 0 && (…)}` block with:
 
 Delete the now-dead `clusterCounts` / `clusters` locals above the return.
 
-- [ ] **Step 5: Gateway click switches and re-seeds**
+- [x] **Step 5: Gateway click switches and re-seeds**
 
 In the node map's click handler:
 
@@ -2400,7 +2405,7 @@ In the node map's click handler:
                     }}
 ```
 
-- [ ] **Step 6: The switching state**
+- [x] **Step 6: The switching state**
 
 Add above the loading guard:
 
@@ -2425,12 +2430,12 @@ Add above the loading guard:
 
 and delete the old `if (lineage.isLoading)` block it replaces.
 
-- [ ] **Step 7: Run tests to verify they pass**
+- [x] **Step 7: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test -- LineageFlow && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
@@ -2451,10 +2456,16 @@ with the nodes actually on screen.
 - Modify: `frontend/src/components/tab3/RelatedOverlay.tsx`
 - Modify: `frontend/src/components/tab3/RelatedOverlay.test.tsx`
 
+[Ruling L, 2026-09-01: RelatedOverlay.test.tsx did not exist — created here, modelled on
+LineageFlow.test.tsx, with explicit afterEach(cleanup).]
+
+[Ruling N, 2026-09-01: the nodeId reset effect must not null `active` — a same-commit cached
+report from LineageFlow fires first and would be permanently overwritten; regression test added.]
+
 **Interfaces:**
 - Consumes: `LineageFlow`'s `cluster` / `onClusterChange` / `onActiveCluster` (Task 11).
 
-- [ ] **Step 1: Write the failing test (append to `RelatedOverlay.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `RelatedOverlay.test.tsx`)**
 
 ```tsx
 it('scopes the status graph to the ACTIVE cluster, not the left-rail selection', async () => {
@@ -2476,12 +2487,12 @@ it('scopes the status graph to the ACTIVE cluster, not the left-rail selection',
 Reuse whatever msw server, `GRAPH` fixture and `wrapper` the existing `RelatedOverlay.test.tsx`
 already defines; do not add a second harness.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- RelatedOverlay`
 Expected: FAIL — only `cl-selected` was ever requested.
 
-- [ ] **Step 3: Own the state**
+- [x] **Step 3: Own the state**
 
 In `RelatedOverlay.tsx`:
 
@@ -2531,12 +2542,12 @@ and pass the props through:
 Update the component's doc comment: `clusters` is now the *preference* fed to `auto`, and the
 status scope follows the active cluster.
 
-- [ ] **Step 4: Run the whole frontend suite**
+- [x] **Step 4: Run the whole frontend suite**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit && pnpm format:check`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/tab3/RelatedOverlay.tsx \
@@ -2557,7 +2568,7 @@ git commit -m "feat(tab3): status follows the lineage's active cluster"
 **Interfaces:**
 - Consumes: the endpoint from Task 3, the view from Tasks 10–12.
 
-- [ ] **Step 1: Write ADR-0021**
+- [x] **Step 1: Write ADR-0021**
 
 ```markdown
 # ADR-0021: The lineage is cluster-scoped, and every crossing is named
@@ -2621,7 +2632,7 @@ name) and `prefer` (the caller's selection, read only under `auto`).
   own clusters and re-imports the sprawl being fixed.
 ```
 
-- [ ] **Step 2: Mark ADR-0020 superseded in part**
+- [x] **Step 2: Mark ADR-0020 superseded in part**
 
 Change ADR-0020's status line to:
 
@@ -2631,7 +2642,7 @@ Change ADR-0020's status line to:
 the endpoint's default.
 ```
 
-- [ ] **Step 3: Extend the `validate-loop` lineage block**
+- [x] **Step 3: Extend the `validate-loop` lineage block**
 
 Append after the existing `unknown lineage node should be 404` check in
 `scripts/validate_loop.sh`:
@@ -2673,14 +2684,14 @@ curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/lineage?n
 
 Add `export SEED CL` immediately after `CL` is computed, so the heredoc's Python can read them.
 
-- [ ] **Step 4: Run the gate**
+- [x] **Step 4: Run the gate**
 
 Run: `make validate-loop`
 Expected: PASS, including the new `lineage scoped to …` line. The committed-mock floors
 (`21 clusters · 30 recipes · 14 dates · 417 rows`, readiness `81 XML · 86 recipes · 212 DDL`,
 `22` workflows) must be unchanged.
 
-- [ ] **Step 5: Update the docs**
+- [x] **Step 5: Update the docs**
 
 - `docs/architecture.md` — in the endpoint table, extend the `/api/operational/lineage` row's
   params to `node, limit, cluster, prefer` and note the scoped mode with a pointer to ADR-0021.
@@ -2690,12 +2701,12 @@ Expected: PASS, including the new `lineage scoped to …` line. The committed-mo
   Add `frontend/src/components/shared/NodeDetails.tsx` as the one Details body for Tab 3's panel
   and the lineage dock.
 
-- [ ] **Step 6: Full gate sweep**
+- [x] **Step 6: Full gate sweep**
 
 Run: `make check && make test && make validate-loop`
 Expected: all three PASS from a clean build.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add docs/adr/0021-lineage-cluster-scope.md docs/adr/0020-lineage-flow.md \
@@ -2714,11 +2725,11 @@ settled here, in a browser, against the user's real export.
 **Files:**
 - Modify: `docs/superpowers/specs/2026-08-31-lineage-cluster-scope-design.md` (append §11 results)
 
-- [ ] **Step 1: Boot the suite**
+- [x] **Step 1: Boot the suite**
 
 Run: `make dev` (backend :8080, frontend :8443). Wait for both to answer.
 
-- [ ] **Step 2: Drive Tab 3 with the Chrome plugin**
+- [x] **Step 2: Drive Tab 3 with the Chrome plugin**
 
 Load the `claude-in-chrome` skill first, then `tabs_context_mcp` before creating any tab. Walk the
 nine acceptance criteria from spec §8, in order, capturing a screenshot for each:
@@ -2738,12 +2749,12 @@ nine acceptance criteria from spec §8, in order, capturing a screenshot for eac
    `activeCluster: null`.
 9. Re-run `make check && make test && make validate-loop`.
 
-- [ ] **Step 3: Record the results**
+- [x] **Step 3: Record the results**
 
 Append a `## 11. Acceptance walk results (2026-08-31)` section to the spec: one line per criterion
 with PASS/FAIL and what was observed. A FAIL becomes a new task in this plan, not a footnote.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-08-31-lineage-cluster-scope-design.md \

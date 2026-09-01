@@ -14,6 +14,7 @@ import io.pure360.etl360.service.LineageService;
 import io.pure360.etl360.service.RelationshipService;
 import io.pure360.etl360.service.support.InvalidRequestException;
 import io.pure360.etl360.service.support.NotFoundException;
+import io.pure360.etl360.service.support.TableClusters;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,11 +25,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -153,20 +152,32 @@ public class ClusterController {
     static final int LINEAGE_MAX_LIMIT = 600;
 
     /**
-     * One node's transitive upstream AND downstream closure — see {@link LineageDto} and ADR-0020.
+     * One node's transitive upstream AND downstream closure — see {@link LineageDto}, ADR-0020 and
+     * ADR-0021.
      *
      * <p>Unlike {@code /search}, an unknown {@code node} IS a 404: the caller here has a node id
      * in hand (it came from a graph this server served), so a miss means something is genuinely
      * wrong rather than that the user is still typing.
+     *
+     * <p>{@code cluster} is absent for the unscoped closure (ADR-0020's contract, unchanged),
+     * {@code auto} to let the server resolve the seed's cluster, or a name. An unknown NAME is a
+     * 400 rather than a 404 because — unlike {@code node} — a cluster name can reach this endpoint
+     * from a URL an operator typed. {@code prefer} is the caller's current selection and is read
+     * only when {@code cluster=auto}.
      */
     @GetMapping("/lineage")
     public LineageDto lineage(@RequestParam("node") String node,
-                              @RequestParam(name = "limit", defaultValue = "" + LINEAGE_DEFAULT_LIMIT) int limit) {
+                              @RequestParam(name = "limit", defaultValue = "" + LINEAGE_DEFAULT_LIMIT) int limit,
+                              @RequestParam(name = "cluster", required = false) String cluster,
+                              @RequestParam(name = "prefer", required = false) String prefer) {
         if (limit < 1 || limit > LINEAGE_MAX_LIMIT) {
             throw new InvalidRequestException(
                 "limit must be between 1 and " + LINEAGE_MAX_LIMIT + ", got " + limit);
         }
-        return lineage.lineage(node, limit);
+        List<String> preferred = prefer == null || prefer.isBlank() ? List.of()
+            : java.util.Arrays.stream(prefer.split(",")).map(String::trim)
+                .filter(s -> !s.isEmpty()).toList();
+        return lineage.lineage(node, limit, cluster, preferred);
     }
 
     static final int SEARCH_MIN_Q = 2;
@@ -223,35 +234,15 @@ public class ClusterController {
      */
     private List<SearchHitsDto.HitDto> tableHits(String needle, Map<String, List<String>> clustersByRecipe) {
         RelationshipsDto graph = relationships.graph();
-        Map<String, RelationshipsDto.NodeDto> byId = new LinkedHashMap<>();
-        for (RelationshipsDto.NodeDto n : graph.nodes()) if (n.id() != null) byId.put(n.id(), n);
-
-        Map<String, Set<String>> recipeIdsByTableId = new LinkedHashMap<>();
-        for (RelationshipsDto.EdgeDto e : graph.edges()) {
-            RelationshipsDto.NodeDto from = byId.get(e.from());
-            RelationshipsDto.NodeDto to = byId.get(e.to());
-            if (from == null || to == null) continue;
-            if ("recipe".equals(from.kind()) && "table".equals(to.kind())) {
-                recipeIdsByTableId.computeIfAbsent(to.id(), x -> new LinkedHashSet<>()).add(from.id());
-            } else if ("table".equals(from.kind()) && "recipe".equals(to.kind())) {
-                recipeIdsByTableId.computeIfAbsent(from.id(), x -> new LinkedHashSet<>()).add(to.id());
-            }
-        }
+        TableClusters joins = TableClusters.of(graph);
 
         Map<String, SearchHitsDto.HitDto> matched = new java.util.TreeMap<>();
         for (RelationshipsDto.NodeDto node : graph.nodes()) {
             if (!"table".equals(node.kind()) || node.name() == null) continue;
             if (!node.name().toLowerCase(Locale.ROOT).contains(needle)) continue;
-            Set<String> clusters = new TreeSet<>();
-            for (String recipeId : recipeIdsByTableId.getOrDefault(node.id(), Set.of())) {
-                RelationshipsDto.NodeDto recipe = byId.get(recipeId);
-                if (recipe != null && recipe.name() != null) {
-                    clusters.addAll(clustersByRecipe.getOrDefault(recipe.name(), List.of()));
-                }
-            }
             matched.putIfAbsent(node.name(), new SearchHitsDto.HitDto("table", node.name(),
                 node.layer() == null || node.layer().isEmpty() ? UNKNOWN_LAYER : node.layer(),
-                List.copyOf(clusters)));
+                joins.clustersFor(node.id(), clustersByRecipe)));
         }
         return List.copyOf(matched.values());
     }

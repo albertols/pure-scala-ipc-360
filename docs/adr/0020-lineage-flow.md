@@ -1,6 +1,8 @@
 # ADR-0020: Lineage is a bounded, unscoped, breadth-first closure
 
-**Status:** Accepted
+**Status:** Accepted. Its "Not cluster-scoped" decision is superseded by
+`0021-lineage-cluster-scope.md`; every other decision here stands, and the unscoped mode remains
+the endpoint's default.
 
 ## Context
 
