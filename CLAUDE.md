@@ -324,9 +324,9 @@ checklist): `docs/visual-guide.md`.
   alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
   expression grammar. Start at `docs/ipc/README.md`.
 - Current spec/plan:
-  `docs/superpowers/specs/2026-08-29-operational-clarity-design.md` +
-  `docs/superpowers/plans/2026-08-29-operational-clarity.md`
-  (previous sub-project: `…/2026-08-28-landing-page-design.md` + its plan)
+  `docs/superpowers/specs/2026-08-31-lineage-cluster-scope-design.md` +
+  `docs/superpowers/plans/2026-08-31-lineage-cluster-scope.md`
+  (previous sub-project: `…/2026-08-29-operational-clarity-design.md` + its plan)
 - Parser deep-dive: `parser/src/main/scala/io/pure360/ipc/xmltojson/README.md`,
   `_DWH_Transformations_and_XML_Parsing.md`
 - Dev harness, prerequisites, `.env.example` reference: root `README.md`

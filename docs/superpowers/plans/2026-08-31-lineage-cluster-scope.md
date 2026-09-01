@@ -2766,16 +2766,16 @@ git commit -m "docs(spec): sub-project 13 acceptance walk results"
 
 ## Task 15: merge
 
-- [ ] **Step 1: Confirm the ledger is closed**
+- [x] **Step 1: Confirm the ledger is closed**
 
 Every checkbox in this plan is ticked, and spec §10 records any deviation with its reason.
 
-- [ ] **Step 2: Final gate from a clean build**
+- [x] **Step 2: Final gate from a clean build**
 
 Run: `make check && make test && make validate-loop`
 Expected: all PASS. Paste the actual output into the merge commit body — evidence, not assertion.
 
-- [ ] **Step 3: Merge**
+- [x] **Step 3: Merge**
 
 ```bash
 git checkout main
@@ -2783,7 +2783,7 @@ git merge --no-ff feat/etl360-lineage-cluster-scope \
   -m "Merge branch 'feat/etl360-lineage-cluster-scope' into main — cluster-scoped lineage (ADR-0021)"
 ```
 
-- [ ] **Step 4: Close the ledger**
+- [x] **Step 4: Close the ledger**
 
 ```bash
 git add docs/superpowers/plans/2026-08-31-lineage-cluster-scope.md
