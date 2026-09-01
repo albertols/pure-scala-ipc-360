@@ -1,9 +1,12 @@
 import { useEffect, useMemo } from 'react'
-import { useOperationalSummary } from '../../api/queries'
+import { useAppConfig, useOperationalSummary } from '../../api/queries'
 import { useScopedRelationships } from '../../api/clusterQueries'
 import { toOperationalGraph } from '../../api/relationshipsAdapter'
 import { LineageFlow } from './LineageFlow'
 import type { OperationalCard as CardData } from '../../types'
+import type { RelationshipGraph } from '../../api/queries'
+
+type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
 
 /**
  * One node's full lineage, focused.
@@ -26,6 +29,7 @@ export function RelatedOverlay({
   selectedDate = null,
   onFocus,
   onReseed,
+  onPreview,
   onClose,
   standalone = false,
 }: {
@@ -36,6 +40,8 @@ export function RelatedOverlay({
   onFocus?: (nodeId: string) => void
   /** Double click, or the dock's centre control: re-seeds the lineage. */
   onReseed?: (nodeId: string) => void
+  /** The dock's "Open preview" affordance, threaded through from the host. */
+  onPreview?: (nodeId: string) => void
   onClose?: () => void
   standalone?: boolean
 }) {
@@ -54,6 +60,15 @@ export function RelatedOverlay({
   // render PENDING, which is honest — this snapshot says nothing about them.
   const rel = useScopedRelationships(clusters)
   const summary = useOperationalSummary(clusters.length > 0, clusters)
+  // Deviation (brief's one-liner `new Map(nodes.map(n => [n.id, n]))` doesn't type-check: the
+  // served node's `id` is `string | undefined`, so `.map()` alone can't narrow it for `Map<string,
+  // …>`) — guarded the same way `ETLOperational.tsx`'s own `nodeById` already does.
+  const nodeById = useMemo(() => {
+    const m = new Map<string, NodeDto>()
+    for (const n of rel.data?.nodes ?? []) if (n.id) m.set(n.id, n)
+    return m
+  }, [rel.data])
+  const cfg = useAppConfig()
 
   const graph = useMemo(
     () => (rel.data ? toOperationalGraph(rel.data, summary.data, selectedDate, 'compact') : null),
@@ -125,6 +140,8 @@ export function RelatedOverlay({
           nodeId={nodeId}
           statusById={statusById}
           selectedClusters={clusters}
+          extras={{ edges: graph?.edges ?? [], nodeById, config: cfg.data }}
+          onPreview={onPreview}
           // Single click selects — it opens the dock AND syncs the canvas behind (spec §6.3).
           onSelect={onFocus}
           // Double click (or the dock's ⌖) re-seeds. Splitting the two is what lets a card be

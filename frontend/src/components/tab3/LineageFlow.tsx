@@ -6,12 +6,18 @@ import {
   type LineageNodeT,
 } from '../../api/clusterQueries'
 import { OperationalCard } from '../shared/OperationalCard'
+import { NodeDetails } from '../shared/NodeDetails'
+import { resolvePreview } from '../shared/nodePreview'
 import { MultiFilterChips } from '../shared/MultiFilterChips'
 import { layerColor, kindPalette, statusColor } from '../../theme/semanticColors'
 import { layoutLineage, applyOffsets, LINEAGE_FOOTPRINT } from './lineageLayout'
 import { useDockWidth, DockSplitter } from '../shared/useDockWidth'
 import type { ApiError } from '../../api/client'
 import type { OperationalCard as CardData } from '../../types'
+import type { OperationalEdge } from '../../api/relationshipsAdapter'
+import type { AppConfig, RelationshipGraph } from '../../api/queries'
+
+type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
 
 // ─── LineageFlow ────────────────────────────────────────────────────────────
 //
@@ -80,6 +86,8 @@ export function LineageFlow({
   selectedClusters = [],
   onSelect,
   onReseed,
+  extras,
+  onPreview,
 }: {
   nodeId: string
   statusById?: Record<string, CardData['status']>
@@ -89,6 +97,11 @@ export function LineageFlow({
   onSelect?: (nodeId: string) => void
   /** Double click, or the dock's explicit control. */
   onReseed?: (nodeId: string) => void
+  /** The scoped graph the host already holds, so the dock can resolve a preview target and build
+   *  GCP links — undefined in the tests that render this component bare. */
+  extras?: { edges: OperationalEdge[]; nodeById: Map<string, NodeDto>; config?: AppConfig }
+  /** The dock's "Open preview" affordance. */
+  onPreview?: (nodeId: string) => void
 }) {
   const [limit, setLimit] = useState(LINEAGE_DEFAULT_LIMIT)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -531,56 +544,30 @@ export function LineageFlow({
                 gap: 10,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', flex: 1 }}>
-                  Details
-                </span>
-                <button
-                  aria-label="Close details"
-                  onClick={() => setSelected(null)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#4a5570',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-              <OperationalCard
+              <NodeDetails
                 card={toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING')}
-                selected
+                config={extras?.config}
+                previewTarget={
+                  extras
+                    ? resolvePreview(
+                        toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING'),
+                        extras.edges,
+                        extras.nodeById,
+                      )
+                    : { recipePath: null, mappingPath: null }
+                }
+                onPreview={() => onPreview?.(selectedNode.id)}
+                clusters={selectedNode.clusters}
+                hopLabel={`hop ${
+                  selectedNode.hop === 0
+                    ? '0 (seed)'
+                    : selectedNode.hop > 0
+                      ? `+${selectedNode.hop} downstream`
+                      : `${selectedNode.hop} upstream`
+                }`}
+                onCenterLineage={() => onReseed?.(selectedNode.id)}
+                onClose={() => setSelected(null)}
               />
-              <button
-                aria-label="Center lineage here"
-                onClick={() => onReseed?.(selectedNode.id)}
-                style={{ ...chipBtn, width: '100%', padding: '5px 8px' }}
-              >
-                ⌖ center lineage here
-              </button>
-              {selectedNode.clusters.length > 0 && (
-                <div>
-                  <div style={{ fontSize: 10, color: '#4a5570', marginBottom: 4 }}>Clusters</div>
-                  {selectedNode.clusters.map(c => (
-                    <div
-                      key={c}
-                      style={{
-                        fontSize: 10,
-                        color: 'var(--text-muted)',
-                        fontFamily: 'JetBrains Mono, monospace',
-                        padding: '2px 0',
-                      }}
-                    >
-                      {c}
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
-                {`hop ${selectedNode.hop === 0 ? '0 (seed)' : selectedNode.hop > 0 ? `+${selectedNode.hop} downstream` : `${selectedNode.hop} upstream`}`}
-              </div>
             </div>
           </>
         )}

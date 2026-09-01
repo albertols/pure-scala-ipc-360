@@ -1,12 +1,14 @@
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import { LineageFlow, RAIL_W } from './LineageFlow'
 import { layoutLineage, LINEAGE_FOOTPRINT } from './lineageLayout'
+import { buildBigQueryUrl } from '../../api/gcpLinks'
 import type { LineageNodeT, LineageT } from '../../api/clusterQueries'
+import type { AppConfig } from '../../api/queries'
 
 // A 5-node chain with the seed in the middle: two hops upstream, two downstream.
 const NODES: LineageNodeT[] = [
@@ -334,5 +336,49 @@ describe('LineageFlow — the trace survives reaching for the dock', () => {
     fireEvent.mouseEnter(screen.getByTestId('lineage-seed'))
     fireEvent.mouseLeave(screen.getByTestId('lineage-seed'))
     expect(container.querySelectorAll('[data-traced="true"]').length).toBe(pinned)
+  })
+})
+
+describe('the lineage dock is the full Details panel', () => {
+  it('shows Preview and the GCP links for a selected node', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    fireEvent.click(await screen.findByTestId('lineage-seed'))
+
+    const dock = await screen.findByTestId('lineage-details')
+    expect(within(dock).getByText('Open preview')).toBeInTheDocument()
+    expect(within(dock).getByText('Open in BigQuery')).toBeInTheDocument()
+    expect(within(dock).getByText('Monitoring Dashboard')).toBeInTheDocument()
+    expect(within(dock).getByText('Cloud Logging')).toBeInTheDocument()
+  })
+
+  it('keeps the hop line and the centre control', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    fireEvent.click(await screen.findByTestId('lineage-seed'))
+    const dock = await screen.findByTestId('lineage-details')
+    expect(within(dock).getByText(/hop 0 \(seed\)/)).toBeInTheDocument()
+    expect(within(dock).getByLabelText('Center lineage here')).toBeInTheDocument()
+  })
+
+  it('does NOT duplicate the flow as a Related list', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    fireEvent.click(await screen.findByTestId('lineage-seed'))
+    const dock = await screen.findByTestId('lineage-details')
+    expect(within(dock).queryByText(/^Related/)).toBeNull()
+  })
+
+  // The Task 8 review's point: `NodeDetails`'s own tests assert the GCP links by their TEXT
+  // only — a fake `previewTarget`/no `config` at all. This is the one place a REAL host
+  // (`RelatedOverlay`, via `extras.config`) actually supplies a config and a selected node, so
+  // it is the only place ADR-0015's anchoring — the link's `href` actually being what
+  // `gcpLinks.ts`'s builder produces for that config — is exercised at all.
+  it('anchors a GCP link on the config the host supplies, not a placeholder', async () => {
+    const config = { bigQueryUrl: 'https://example.com/bq?project={project}' } as AppConfig
+    render(<LineageFlow nodeId="seed" extras={{ edges: [], nodeById: new Map(), config }} />, {
+      wrapper,
+    })
+    fireEvent.click(await screen.findByTestId('lineage-seed'))
+    const dock = await screen.findByTestId('lineage-details')
+    const link = within(dock).getByText('Open in BigQuery').closest('a')!
+    expect(link.getAttribute('href')).toBe(buildBigQueryUrl(config))
   })
 })

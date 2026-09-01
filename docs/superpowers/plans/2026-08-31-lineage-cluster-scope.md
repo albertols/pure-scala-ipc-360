@@ -1878,7 +1878,7 @@ Defect 4, part 2. This is where the lineage dock actually gains Preview and the 
 - Consumes: `NodeDetails`, `resolvePreview` (Task 8).
 - Produces: `LineageFlow` gains optional props `nodeDetailsExtras?: { edges: OperationalEdge[]; nodeById: Map<string, NodeDto>; config?: AppConfig }` — supplied by `RelatedOverlay` so the dock can resolve a preview target and build GCP links.
 
-- [ ] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
 
 ```tsx
 describe('the lineage dock is the full Details panel', () => {
@@ -1912,12 +1912,12 @@ describe('the lineage dock is the full Details panel', () => {
 
 Add `within` to the `@testing-library/react` import at the top of the file.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: FAIL — "Open preview" is not in the dock.
 
-- [ ] **Step 3: Replace the Tab 3 panel body**
+- [x] **Step 3: Replace the Tab 3 panel body**
 
 In `ETLOperational.tsx`, replace everything **inside** `<div data-testid="details-panel">` (the
 header, `OperationalCard`, related block, Preview block and GCP block) with:
@@ -1948,7 +1948,7 @@ locals (`ETLOperational.tsx:929-943`) — `NodeDetails` computes them — and dr
 `buildLoggingUrl` / `buildDataprocClusterUrl` / `buildBigQueryUrl` / `pickDefaultRun` /
 `GCPIcon` imports.
 
-- [ ] **Step 4: Replace the lineage dock body**
+- [x] **Step 4: Replace the lineage dock body**
 
 In `LineageFlow.tsx`, replace everything inside `<div data-testid="lineage-details">` with:
 
@@ -1983,7 +1983,7 @@ Add the props `extras?: { edges: OperationalEdge[]; nodeById: Map<string, NodeDt
 and `onPreview?: (nodeId: string) => void` to `LineageFlow`'s signature, both optional so the
 existing tests keep rendering `<LineageFlow nodeId="seed" />` unchanged.
 
-- [ ] **Step 5: Feed the dock from `RelatedOverlay`**
+- [x] **Step 5: Feed the dock from `RelatedOverlay`**
 
 In `RelatedOverlay.tsx`, build the extras from the scoped graph it already holds and pass them
 plus a preview handler through:
@@ -2013,12 +2013,12 @@ Add `onPreview?: (nodeId: string) => void` to `RelatedOverlay`'s props and have
 `resolvePreview(card, graph.edges, nodeById)` it already uses for its own panel. `useAppConfig`
 is the config hook `ETLOperational.tsx:479` already uses; import it from `api/queries`.
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test && npx tsc --noEmit`
 Expected: PASS across the whole frontend suite, no type errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..
