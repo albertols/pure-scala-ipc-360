@@ -54,6 +54,20 @@ const LINEAGE: LineageT = {
   totalReachable: 7,
 }
 
+// One recipe in the fixture (`r_up`, kind 'recipe') carries a served run, so the dock's
+// run-anchored links have something real to anchor on — the rest of the fixture's nodes are
+// tables, which legitimately have no runs (Tab 3's own panel behaves the same way).
+const RUNS_BY_RECIPE = {
+  '_ETL_up.json': [
+    {
+      date: '2026-08-30',
+      clusterName: 'cl-a',
+      jobId: 'job-777',
+      appStartIso: '2026-08-30T04:00:00Z',
+    },
+  ],
+}
+
 const server = setupServer(
   http.get('/api/operational/lineage', ({ request }) => {
     const url = new URL(request.url)
@@ -72,6 +86,9 @@ const server = setupServer(
     return HttpResponse.json(LINEAGE)
   }),
   http.get('/api/config', () => HttpResponse.json({})),
+  http.get('/api/operational/runs', () =>
+    HttpResponse.json({ limit: 10, byRecipe: RUNS_BY_RECIPE }),
+  ),
 )
 beforeAll(() => server.listen())
 afterEach(() => {
@@ -380,5 +397,20 @@ describe('the lineage dock is the full Details panel', () => {
     const dock = await screen.findByTestId('lineage-details')
     const link = within(dock).getByText('Open in BigQuery').closest('a')!
     expect(link.getAttribute('href')).toBe(buildBigQueryUrl(config))
+  })
+
+  // Fix round 1: the brief's original JSX passed neither `runs` nor `fallbackClusterName`, so
+  // Cloud Logging/Monitoring always anchored on an empty job id/cluster name — a link that looks
+  // live and goes nowhere. The BigQuery test above proves `config` is threaded; only a
+  // run-anchored link proves the dock's OWN run history (`useRuns`, fetched at the top level) is
+  // actually reaching `NodeDetails`.
+  it("anchors the Cloud Logging link on the selected recipe's served run, not an empty job id", async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    fireEvent.click(await screen.findByText('_ETL_up.json'))
+    const dock = await screen.findByTestId('lineage-details')
+    const link = await within(dock).findByText('Cloud Logging')
+    await waitFor(() =>
+      expect(link.closest('a')!.getAttribute('href')).toContain(encodeURIComponent('job-777')),
+    )
   })
 })

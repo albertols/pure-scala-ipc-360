@@ -69,6 +69,15 @@ export function RelatedOverlay({
     return m
   }, [rel.data])
   const cfg = useAppConfig()
+  // Sourced the same way `ETLOperational.tsx`'s own panel resolves a Dataproc fallback: each
+  // recipe's last-known cluster, from the same scoped summary this overlay already fetches for
+  // status. The dock has no summary of its own — this is how it gets a fallback at all.
+  const lastClusterByRecipe = useMemo(() => {
+    const m: Record<string, string> = {}
+    for (const r of summary.data?.recipes ?? [])
+      if (r.recipeFilename && r.lastClusterName) m[r.recipeFilename] = r.lastClusterName
+    return m
+  }, [summary.data])
 
   const graph = useMemo(
     () => (rel.data ? toOperationalGraph(rel.data, summary.data, selectedDate, 'compact') : null),
@@ -140,7 +149,7 @@ export function RelatedOverlay({
           nodeId={nodeId}
           statusById={statusById}
           selectedClusters={clusters}
-          extras={{ edges: graph?.edges ?? [], nodeById, config: cfg.data }}
+          extras={{ edges: graph?.edges ?? [], nodeById, config: cfg.data, lastClusterByRecipe }}
           onPreview={onPreview}
           // Single click selects — it opens the dock AND syncs the canvas behind (spec §6.3).
           onSelect={onFocus}

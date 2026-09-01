@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useLineage,
+  useRuns,
   LINEAGE_DEFAULT_LIMIT,
   LINEAGE_MAX_LIMIT,
   type LineageNodeT,
@@ -98,8 +99,15 @@ export function LineageFlow({
   /** Double click, or the dock's explicit control. */
   onReseed?: (nodeId: string) => void
   /** The scoped graph the host already holds, so the dock can resolve a preview target and build
-   *  GCP links — undefined in the tests that render this component bare. */
-  extras?: { edges: OperationalEdge[]; nodeById: Map<string, NodeDto>; config?: AppConfig }
+   *  GCP links — undefined in the tests that render this component bare. `lastClusterByRecipe`
+   *  is the Dataproc-link fallback for a recipe with no run history, sourced from the host's own
+   *  operational summary (the dock has none of its own). */
+  extras?: {
+    edges: OperationalEdge[]
+    nodeById: Map<string, NodeDto>
+    config?: AppConfig
+    lastClusterByRecipe?: Record<string, string>
+  }
   /** The dock's "Open preview" affordance. */
   onPreview?: (nodeId: string) => void
 }) {
@@ -114,6 +122,12 @@ export function LineageFlow({
   const dock = useDockWidth('etl360.tab3.lineageDetailsW', { dflt: 264, min: 220, max: 640 })
 
   const lineage = useLineage(nodeId, limit)
+  // The dock's own run history. Hooks cannot be conditional, so this always runs — scoped to at
+  // most one recipe name, which `useRuns` treats as a single cheap chunk. A TABLE selection (or
+  // no selection yet) costs nothing: `useRuns([])` fires no request, same as Tab 3's own panel
+  // never inventing runs for a table.
+  const selectedForRuns = lineage.data?.nodes.find(n => n.id === selected)
+  const dockRuns = useRuns(selectedForRuns?.kind === 'recipe' ? [selectedForRuns.name] : [], 10)
   const layout = useMemo(
     () => (lineage.data ? layoutLineage(lineage.data.nodes, lineage.data.edges) : null),
     [lineage.data],
@@ -232,6 +246,11 @@ export function LineageFlow({
 
   const layers = [...new Set(data.nodes.map(n => n.layer))]
   const selectedNode = selected ? byId.get(selected) : null
+  // Hoisted so the `card` and the `previewTarget` resolution below can't construct two
+  // divergent cards for the same selection (fix-round 1, minor finding).
+  const selectedCard = selectedNode
+    ? toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING')
+    : null
 
   const isDim = (n: LineageNodeT) => !matchesFilter(n) || (traced !== null && !traced.has(n.id))
 
@@ -545,18 +564,16 @@ export function LineageFlow({
               }}
             >
               <NodeDetails
-                card={toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING')}
+                card={selectedCard!}
+                runs={dockRuns.byRecipe[selectedNode.name] ?? []}
                 config={extras?.config}
                 previewTarget={
                   extras
-                    ? resolvePreview(
-                        toCard(selectedNode, statusById[selectedNode.id] ?? 'PENDING'),
-                        extras.edges,
-                        extras.nodeById,
-                      )
+                    ? resolvePreview(selectedCard!, extras.edges, extras.nodeById)
                     : { recipePath: null, mappingPath: null }
                 }
                 onPreview={() => onPreview?.(selectedNode.id)}
+                fallbackClusterName={extras?.lastClusterByRecipe?.[selectedNode.name] ?? ''}
                 clusters={selectedNode.clusters}
                 hopLabel={`hop ${
                   selectedNode.hop === 0
