@@ -1540,7 +1540,7 @@ yet.
   - `NodeDetails(props)` where props are `{ card: CardData; runs?: RunT[]; selectedRunDate?: string | null; onSelectRun?: (run: RunT) => void; config?: AppConfig; previewTarget: { recipePath: string | null; mappingPath: string | null }; onPreview: () => void; fallbackClusterName?: string; clusters?: string[]; hopLabel?: string | null; onCenterLineage?: () => void; related?: ReactNode; onClose: () => void }`.
 - Consumed by: Task 9 (both hosts).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { describe, expect, it, vi } from 'vitest'
@@ -1650,12 +1650,12 @@ describe('NodeDetails', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- NodeDetails`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Move `resolvePreview` into `shared/nodePreview.ts`**
+- [x] **Step 3: Move `resolvePreview` into `shared/nodePreview.ts`**
 
 Cut `resolvePreview` verbatim from `ETLOperational.tsx:68-82` into a new file:
 
@@ -1686,7 +1686,7 @@ If the `OperationalEdge` / `NodeDto` import paths in `ETLOperational.tsx` differ
 that file already uses rather than guessing. Import `resolvePreview` back into
 `ETLOperational.tsx` from `'../shared/nodePreview'` so it still compiles.
 
-- [ ] **Step 4: Write `NodeDetails.tsx`**
+- [x] **Step 4: Write `NodeDetails.tsx`**
 
 Move `PreviewButton` and `GCPLink` verbatim from `ETLOperational.tsx:1406-1473` into this file
 (keeping their comments) and delete them from `ETLOperational.tsx`. Then:
@@ -1846,12 +1846,12 @@ import { GCPIcon } from './GCPIcon'
 import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../../api/gcpLinks'
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `cd frontend && pnpm test -- NodeDetails && npx tsc --noEmit`
 Expected: PASS, no type errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..

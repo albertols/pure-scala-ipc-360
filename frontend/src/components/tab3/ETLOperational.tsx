@@ -30,6 +30,7 @@ import {
 import { buildLoggingUrl, buildDataprocClusterUrl, buildBigQueryUrl } from '../../api/gcpLinks'
 import { OperationalCard } from '../shared/OperationalCard'
 import { pickDefaultRun } from '../shared/RunPicker'
+import { resolvePreview } from '../shared/nodePreview'
 import { CorpusSummary, type SummaryItem } from '../shared/CorpusSummary'
 import { layerColor, kindPalette } from '../../theme/semanticColors'
 import { MultiFilterChips } from '../shared/MultiFilterChips'
@@ -57,30 +58,6 @@ const nf = new Intl.NumberFormat('en-US')
 const DOT_PITCH = 24
 
 type NodeDto = NonNullable<RelationshipGraph['nodes']>[number]
-
-/**
- * Task 9: resolve the recipe/mapping path a card's "Open preview" affordance
- * should open. Recipe card -> its own node (`mappingPath` = recipe directory,
- * `name` = recipe filename). Table card -> the FIRST `writes` edge into it
- * (adapter edge order, i.e. graph order) -> that recipe's node. Both fields
- * null when unresolvable (e.g. a source-only table, or a recipe absent from
- * the corpus) — the caller disables the affordance in that case.
- */
-function resolvePreview(
-  card: CardData,
-  edges: OperationalEdge[],
-  nodeById: Map<string, NodeDto>,
-): { recipePath: string | null; mappingPath: string | null } {
-  const recipeId =
-    card.kind === 'recipe'
-      ? card.id
-      : edges.find(e => e.kind === 'writes' && e.toId === card.id)?.fromId
-  const node = recipeId ? nodeById.get(recipeId) : undefined
-  const mappingPath = node?.mappingPath ?? null
-  const name = node?.name ?? null
-  if (!mappingPath || !name) return { recipePath: null, mappingPath }
-  return { recipePath: `${mappingPath}/${name}`, mappingPath }
-}
 
 function StatusSummary({ cards }: { cards: CardData[] }) {
   const counts = { OK: 0, KO: 0, RUNNING: 0, PENDING: 0 }
