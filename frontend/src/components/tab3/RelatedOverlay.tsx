@@ -63,10 +63,16 @@ export function RelatedOverlay({
   const [cluster, setCluster] = useState<string | null>('auto')
   const [active, setActive] = useState<string | null>(null)
 
-  // Re-seeding on another node starts the resolution over.
+  // Re-seeding starts the resolution over — but only `cluster` resets. `active` is owned by
+  // LineageFlow's report: a same-commit cached resolution (TanStack Query serving an already-warm
+  // queryKey synchronously, within its 30s staleTime) reports BEFORE this effect runs — React
+  // fires passive effects child-before-parent in one commit — and nulling `active` here would
+  // permanently overwrite a correct report, since the child's `[active]`-keyed effect never
+  // re-fires on an unchanged value (Ruling N). Keeping the previous `active` during a new node's
+  // in-flight window is deliberate — the old scope stays until the new one is known, rather than
+  // flashing unscoped.
   useEffect(() => {
     setCluster('auto')
-    setActive(null)
   }, [nodeId])
 
   // Status, edges and preview all describe the nodes actually on screen. Before ADR-0021 this

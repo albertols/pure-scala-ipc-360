@@ -2459,6 +2459,9 @@ with the nodes actually on screen.
 [Ruling L, 2026-09-01: RelatedOverlay.test.tsx did not exist — created here, modelled on
 LineageFlow.test.tsx, with explicit afterEach(cleanup).]
 
+[Ruling N, 2026-09-01: the nodeId reset effect must not null `active` — a same-commit cached
+report from LineageFlow fires first and would be permanently overwritten; regression test added.]
+
 **Interfaces:**
 - Consumes: `LineageFlow`'s `cluster` / `onClusterChange` / `onActiveCluster` (Task 11).
 
