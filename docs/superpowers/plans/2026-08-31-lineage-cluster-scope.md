@@ -2044,11 +2044,16 @@ Spec §3.4, §3.3. Defect 2, part 1.
 - Produces: `LineageNodeT` gains `gateway?: boolean`; `LineageT` gains `activeCluster: string | null` and `clusterOptions: { name: string; recipes: number }[]`; `useLineage(nodeId: string | null, limit?: number, cluster?: string | null, prefer?: string[])`.
 - Consumed by: Task 11 (switcher), Task 12 (`RelatedOverlay`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 First extend the fixture at the top of `LineageFlow.test.tsx`. `NODES` and `EDGES` stay exactly
 as they are — the existing tests count on them — and the gateway is added alongside, so
 `NODES.length + 1` below is a real assertion rather than a tautology:
+
+[Ruling M, 2026-09-01: three pre-existing assertions are RESPONSE-derived, not NODES/EDGES-derived
+— the header up/down counts, the "N of 312" truncation line, and the DOM edge count — and update
+alongside the fixture: 3 downstream, 8 of 312, EDGES.length + 1. The gateway is a drawn node with
+a drawn edge.]
 
 ```tsx
 // A recipe in ANOTHER cluster that reads t_out — the boundary. Kept out of NODES so the
@@ -2109,12 +2114,12 @@ describe('cluster scope', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: FAIL — `lineage-gateway` is not in the document.
 
-- [ ] **Step 3: Widen the client types and hook**
+- [x] **Step 3: Widen the client types and hook**
 
 In `clusterQueries.ts`:
 
@@ -2175,7 +2180,7 @@ export const useLineage = (
   })
 ```
 
-- [ ] **Step 4: Render the stub**
+- [x] **Step 4: Render the stub**
 
 In `LineageFlow.tsx`'s node map, branch before `<OperationalCard>`:
 
@@ -2218,12 +2223,12 @@ In `LineageFlow.tsx`'s node map, branch before `<OperationalCard>`:
 No new colour: `kindPalette('recipe').accent` is ADR-0017's existing recipe hue, and
 `semanticColors.ts` stays the only file that maps a kind to one.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test -- 'LineageFlow|clusterQueries' && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..

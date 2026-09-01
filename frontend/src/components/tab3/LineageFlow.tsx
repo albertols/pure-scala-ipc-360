@@ -475,10 +475,39 @@ export function LineageFlow({
                       borderRadius: 8,
                     }}
                   >
-                    <OperationalCard
-                      card={toCard(n, statusById[n.id] ?? 'PENDING')}
-                      density="compact"
-                    />
+                    {n.gateway ? (
+                      <div
+                        data-testid="lineage-gateway"
+                        style={{
+                          border: `1px dashed ${kindPalette('recipe').accent}`,
+                          borderRadius: 6,
+                          background: 'var(--surface-2)',
+                          padding: '6px 8px',
+                          opacity: 0.72,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: 'var(--text-muted)',
+                            fontFamily: 'JetBrains Mono, monospace',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {n.name}
+                        </div>
+                        <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>
+                          {`↳ ${n.clusters[0] ?? 'other cluster'}`}
+                        </div>
+                      </div>
+                    ) : (
+                      <OperationalCard
+                        card={toCard(n, statusById[n.id] ?? 'PENDING')}
+                        density="compact"
+                      />
+                    )}
                   </div>
                 )
               })}

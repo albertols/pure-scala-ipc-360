@@ -151,6 +151,9 @@ export interface LineageNodeT {
   layer: string
   hop: number
   clusters: string[]
+  /** True for a recipe OUTSIDE the active cluster that touches a table inside it. The traversal
+   *  stopped there; it is drawn as a stub naming its cluster. Always false when unscoped. */
+  gateway?: boolean
 }
 
 export interface LineageT {
@@ -159,21 +162,39 @@ export interface LineageT {
   edges: { from: string; to: string; kind: 'source' | 'lookup' | 'writes' }[]
   truncated: boolean
   totalReachable: number
+  /** The cluster actually scoped to, or null when unscoped. */
+  activeCluster: string | null
+  /** The SEED's own candidate clusters, count-descending then name — the switcher's contents. */
+  clusterOptions: { name: string; recipes: number }[]
 }
 
 export const LINEAGE_DEFAULT_LIMIT = 150
 export const LINEAGE_MAX_LIMIT = 600
 
 /**
- * One node's transitive lineage. NOT cluster-scoped by design — lineage crosses cluster
- * boundaries, and stopping at the selection would draw a complete-looking flow that is not one
- * (ADR-0020). Bounded by node count instead, which is what keeps it a purposeful slice.
+ * One node's transitive lineage, optionally scoped to one b15 cluster.
+ *
+ * ADR-0020 shipped this unscoped, and on a real export that meant 150 drawn nodes out of 14 535
+ * reachable ones across 21 clusters. ADR-0021 scopes it and keeps ADR-0020's reasoning by making
+ * the boundary explicit: a cluster crossing is a GATEWAY stub naming where the chain continues,
+ * never a silent stop. `cluster` is `null` for the unscoped closure, `'auto'` to let the server
+ * resolve the seed's cluster, or a name; `prefer` is the caller's current selection and is read
+ * only when `cluster === 'auto'`.
  */
-export const useLineage = (nodeId: string | null, limit: number = LINEAGE_DEFAULT_LIMIT) =>
+export const useLineage = (
+  nodeId: string | null,
+  limit: number = LINEAGE_DEFAULT_LIMIT,
+  cluster: string | null = null,
+  prefer: string[] = [],
+) =>
   useQuery({
-    queryKey: ['lineage', nodeId, limit],
-    queryFn: () =>
-      apiGet<LineageT>(`/operational/lineage?node=${encodeURIComponent(nodeId!)}&limit=${limit}`),
+    queryKey: ['lineage', nodeId, limit, cluster, prefer.join(',')],
+    queryFn: () => {
+      const params = new URLSearchParams({ node: nodeId!, limit: String(limit) })
+      if (cluster) params.set('cluster', cluster)
+      if (cluster === 'auto' && prefer.length > 0) params.set('prefer', prefer.join(','))
+      return apiGet<LineageT>(`/operational/lineage?${params}`)
+    },
     staleTime: STALE_MS,
     enabled: !!nodeId,
   })

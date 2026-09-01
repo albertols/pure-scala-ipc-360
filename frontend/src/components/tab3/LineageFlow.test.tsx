@@ -46,12 +46,30 @@ const EDGES: LineageT['edges'] = [
   { from: 't_src', to: 'r_side', kind: 'source' },
   { from: 'r_side', to: 't_side', kind: 'writes' },
 ]
+// A recipe in ANOTHER cluster that reads t_out — the boundary. Kept out of NODES so the
+// existing fixtures and their tests are untouched.
+const GATEWAY: LineageNodeT = {
+  id: 'r_far',
+  kind: 'recipe',
+  name: '_ETL_far.json',
+  layer: 'CDM',
+  hop: 3,
+  clusters: ['cl-far'],
+  gateway: true,
+}
+const GATEWAY_EDGE = { from: 't_out', to: 'r_far', kind: 'source' as const }
+
 const LINEAGE: LineageT = {
   seed: 'seed',
-  nodes: NODES,
-  edges: EDGES,
+  nodes: [...NODES, GATEWAY],
+  edges: [...EDGES, GATEWAY_EDGE],
   truncated: false,
-  totalReachable: 7,
+  totalReachable: 8,
+  activeCluster: 'cl-a',
+  clusterOptions: [
+    { name: 'cl-a', recipes: 3 },
+    { name: 'cl-far', recipes: 1 },
+  ],
 }
 
 // One recipe in the fixture (`r_up`, kind 'recipe') carries a served run, so the dock's
@@ -78,6 +96,8 @@ const server = setupServer(
         edges: [],
         truncated: false,
         totalReachable: 0,
+        activeCluster: null,
+        clusterOptions: [],
       })
     }
     if (url.searchParams.get('node') === 'big') {
@@ -120,14 +140,16 @@ describe('LineageFlow', () => {
 
   it('counts upstream and downstream separately in the header', async () => {
     render(<LineageFlow nodeId="seed" />, { wrapper })
+    // 3 downstream, not 2: the cl-far gateway (hop 3) is a drawn downstream node.
     expect(await screen.findByTestId('lineage-summary')).toHaveTextContent(
-      /3 upstream .* 2 downstream/,
+      /3 upstream .* 3 downstream/,
     )
   })
 
   it('states what it is not showing when the budget was spent', async () => {
     render(<LineageFlow nodeId="big" />, { wrapper })
-    expect(await screen.findByTestId('lineage-truncation')).toHaveTextContent(/7 of 312/)
+    // 8, not 7: data.nodes.length includes the gateway.
+    expect(await screen.findByTestId('lineage-truncation')).toHaveTextContent(/8 of 312/)
   })
 
   it('says nothing about truncation when nothing was truncated', async () => {
@@ -146,7 +168,8 @@ describe('LineageFlow', () => {
   it('draws an edge for every pair it placed', async () => {
     const { container } = render(<LineageFlow nodeId="seed" />, { wrapper })
     await screen.findByText('ODS.MIDDLE')
-    expect(container.querySelectorAll('[data-lineage-edge]').length).toBe(EDGES.length)
+    // + the gateway edge, which must be drawn (a floating stub would be a silent boundary).
+    expect(container.querySelectorAll('[data-lineage-edge]').length).toBe(EDGES.length + 1)
   })
 
   it('is honest about an empty lineage rather than rendering a blank panel', async () => {
@@ -412,5 +435,24 @@ describe('the lineage dock is the full Details panel', () => {
     await waitFor(() =>
       expect(link.closest('a')!.getAttribute('href')).toContain(encodeURIComponent('job-777')),
     )
+  })
+})
+
+describe('cluster scope', () => {
+  it('draws an out-of-cluster recipe as a stub, not a full card', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    const stub = await screen.findByTestId('lineage-gateway')
+    // The stub names the recipe AND the cluster the chain continues into — that is what stops
+    // the flow looking complete where it is not.
+    expect(stub).toHaveTextContent('_ETL_far.json')
+    expect(stub).toHaveTextContent('cl-far')
+    // It is a stub: no OperationalCard status pill inside it.
+    expect(within(stub).queryByText('PENDING')).toBeNull()
+  })
+
+  it('still counts the stub as a node', async () => {
+    render(<LineageFlow nodeId="seed" />, { wrapper })
+    const summary = await screen.findByTestId('lineage-summary')
+    expect(summary).toHaveTextContent(`${NODES.length + 1} nodes`)
   })
 })
