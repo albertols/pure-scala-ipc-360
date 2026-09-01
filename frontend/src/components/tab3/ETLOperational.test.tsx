@@ -347,6 +347,11 @@ const server = setupServer(
       ],
       truncated: false,
       totalReachable: 3,
+      // Task 11 deviation: this mock predates Task 10's LineageT.activeCluster/clusterOptions and
+      // was never updated then (Task 10's Files list didn't touch this file) — LineageFlow read
+      // only per-node `clusters` until Task 11 started reading the top-level field directly.
+      activeCluster: null,
+      clusterOptions: [{ name: 'cl-a', recipes: 1 }],
     })
   }),
   http.get('/api/operational/search', ({ request }) => {

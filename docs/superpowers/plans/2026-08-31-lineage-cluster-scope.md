@@ -2254,7 +2254,7 @@ Spec §3.6. Defect 2, part 2.
 - Produces: `LineageFlow` gains props `cluster?: string | null`, `onClusterChange?: (name: string) => void`, `onActiveCluster?: (name: string | null) => void`.
 - Consumed by: Task 12 (`RelatedOverlay` owns the state).
 
-- [ ] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
+- [x] **Step 1: Write the failing test (append to `LineageFlow.test.tsx`)**
 
 ```tsx
 describe('the cluster switcher', () => {
@@ -2307,12 +2307,12 @@ describe('the cluster switcher', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && pnpm test -- LineageFlow`
 Expected: FAIL — `lineage-cluster-chip` and `lineage-switching` are not in the document.
 
-- [ ] **Step 3: Take the cluster props and thread them into the query**
+- [x] **Step 3: Take the cluster props and thread them into the query**
 
 In `LineageFlow.tsx`'s signature add:
 
@@ -2338,7 +2338,7 @@ Report the resolution back to the host:
   }, [active])
 ```
 
-- [ ] **Step 4: Replace the `Clusters:` strip with the switcher**
+- [x] **Step 4: Replace the `Clusters:` strip with the switcher**
 
 Replace the whole `{clusters.length > 0 && (…)}` block with:
 
@@ -2386,7 +2386,7 @@ Replace the whole `{clusters.length > 0 && (…)}` block with:
 
 Delete the now-dead `clusterCounts` / `clusters` locals above the return.
 
-- [ ] **Step 5: Gateway click switches and re-seeds**
+- [x] **Step 5: Gateway click switches and re-seeds**
 
 In the node map's click handler:
 
@@ -2405,7 +2405,7 @@ In the node map's click handler:
                     }}
 ```
 
-- [ ] **Step 6: The switching state**
+- [x] **Step 6: The switching state**
 
 Add above the loading guard:
 
@@ -2430,12 +2430,12 @@ Add above the loading guard:
 
 and delete the old `if (lineage.isLoading)` block it replaces.
 
-- [ ] **Step 7: Run tests to verify they pass**
+- [x] **Step 7: Run tests to verify they pass**
 
 Run: `cd frontend && pnpm test -- LineageFlow && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 cd frontend && pnpm format && cd ..

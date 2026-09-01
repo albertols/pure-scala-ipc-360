@@ -456,3 +456,51 @@ describe('cluster scope', () => {
     expect(summary).toHaveTextContent(`${NODES.length + 1} nodes`)
   })
 })
+
+describe('the cluster switcher', () => {
+  it('lists the seed clusters with the active one first and marked', async () => {
+    render(<LineageFlow nodeId="seed" cluster="cl-a" />, { wrapper })
+    const strip = await screen.findByTestId('lineage-clusters')
+    const chips = within(strip).getAllByTestId('lineage-cluster-chip')
+    expect(chips[0]).toHaveTextContent('cl-a')
+    expect(chips[0]).toHaveAttribute('data-active', 'true')
+  })
+
+  it('reports a switch to the host', async () => {
+    const picked: string[] = []
+    render(<LineageFlow nodeId="seed" cluster="cl-a" onClusterChange={c => picked.push(c)} />, {
+      wrapper,
+    })
+    const strip = await screen.findByTestId('lineage-clusters')
+    fireEvent.click(within(strip).getAllByTestId('lineage-cluster-chip')[1]!)
+    expect(picked).toEqual(['cl-far'])
+  })
+
+  it('clicking a gateway switches to its cluster and re-seeds on it', async () => {
+    const picked: string[] = []
+    const seeded: string[] = []
+    render(
+      <LineageFlow
+        nodeId="seed"
+        cluster="cl-a"
+        onClusterChange={c => picked.push(c)}
+        onReseed={id => seeded.push(id)}
+      />,
+      { wrapper },
+    )
+    fireEvent.click(await screen.findByTestId('lineage-gateway'))
+    expect(picked).toEqual(['cl-far'])
+    expect(seeded).toEqual(['r_far'])
+  })
+
+  it('says which cluster it is loading while the switch is in flight', async () => {
+    // A cluster switch is not a filter — it is a different graph. A spinner over stale nodes
+    // would imply otherwise.
+    const { rerender } = render(<LineageFlow nodeId="seed" cluster="cl-a" />, { wrapper })
+    await screen.findByTestId('lineage-seed')
+    rerender(<LineageFlow nodeId="seed" cluster="cl-far" />)
+    expect(await screen.findByTestId('lineage-switching')).toHaveTextContent(
+      'Loading from cluster: cl-far',
+    )
+  })
+})
