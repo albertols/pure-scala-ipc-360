@@ -2568,7 +2568,7 @@ git commit -m "feat(tab3): status follows the lineage's active cluster"
 **Interfaces:**
 - Consumes: the endpoint from Task 3, the view from Tasks 10–12.
 
-- [ ] **Step 1: Write ADR-0021**
+- [x] **Step 1: Write ADR-0021**
 
 ```markdown
 # ADR-0021: The lineage is cluster-scoped, and every crossing is named
@@ -2632,7 +2632,7 @@ name) and `prefer` (the caller's selection, read only under `auto`).
   own clusters and re-imports the sprawl being fixed.
 ```
 
-- [ ] **Step 2: Mark ADR-0020 superseded in part**
+- [x] **Step 2: Mark ADR-0020 superseded in part**
 
 Change ADR-0020's status line to:
 
@@ -2642,7 +2642,7 @@ Change ADR-0020's status line to:
 the endpoint's default.
 ```
 
-- [ ] **Step 3: Extend the `validate-loop` lineage block**
+- [x] **Step 3: Extend the `validate-loop` lineage block**
 
 Append after the existing `unknown lineage node should be 404` check in
 `scripts/validate_loop.sh`:
@@ -2684,14 +2684,14 @@ curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/lineage?n
 
 Add `export SEED CL` immediately after `CL` is computed, so the heredoc's Python can read them.
 
-- [ ] **Step 4: Run the gate**
+- [x] **Step 4: Run the gate**
 
 Run: `make validate-loop`
 Expected: PASS, including the new `lineage scoped to …` line. The committed-mock floors
 (`21 clusters · 30 recipes · 14 dates · 417 rows`, readiness `81 XML · 86 recipes · 212 DDL`,
 `22` workflows) must be unchanged.
 
-- [ ] **Step 5: Update the docs**
+- [x] **Step 5: Update the docs**
 
 - `docs/architecture.md` — in the endpoint table, extend the `/api/operational/lineage` row's
   params to `node, limit, cluster, prefer` and note the scoped mode with a pointer to ADR-0021.
@@ -2701,12 +2701,12 @@ Expected: PASS, including the new `lineage scoped to …` line. The committed-mo
   Add `frontend/src/components/shared/NodeDetails.tsx` as the one Details body for Tab 3's panel
   and the lineage dock.
 
-- [ ] **Step 6: Full gate sweep**
+- [x] **Step 6: Full gate sweep**
 
 Run: `make check && make test && make validate-loop`
 Expected: all three PASS from a clean build.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add docs/adr/0021-lineage-cluster-scope.md docs/adr/0020-lineage-flow.md \

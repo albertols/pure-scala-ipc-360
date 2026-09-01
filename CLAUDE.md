@@ -223,10 +223,14 @@ mvn -q -pl parser compile exec:java -Dexec.args="--xmlPath <file-or-dir> --gener
   `GET /api/operational/lineage?node=&limit=` (`docs/adr/0020-lineage-flow.md`) backs Tab 3's
   "Show all related", which is a full upstream+downstream flow rather than a one-hop list. It is
   **breadth-first on purpose** — the node budget must cut the furthest hops, never an arbitrary
-  branch — and **not cluster-scoped**, because lineage crosses cluster boundaries and stopping at
-  the selection would draw a complete-looking flow that is not one. `make validate-loop` asserts
-  both directions are reached, that every edge endpoint is a returned node, and that a capped
-  result reports `truncated` with a surviving `totalReachable`.
+  branch. `make validate-loop` asserts both directions are reached, that every edge endpoint is a
+  returned node, and that a capped result reports `truncated` with a surviving `totalReachable`.
+  It is optionally **cluster-scoped** via `?cluster=`/`?prefer=` (`docs/adr/0021-lineage-cluster-scope.md`):
+  a recipe outside the scoped cluster is returned as a named `gateway` stub instead of silently
+  disappearing, so every crossing is explicit; the unscoped mode (no `?cluster=`) is unchanged from
+  ADR-0020, byte for byte. `make validate-loop` also asserts the scoped result is a strict subset of
+  the unscoped one and that an unknown cluster is a 400. Tab 3's lineage dock and its main details
+  panel share one Details body, `frontend/src/components/shared/NodeDetails.tsx`.
 
 ## Corpus caveats
 
@@ -315,7 +319,7 @@ checklist): `docs/visual-guide.md`.
   `LayerToLayerService`, `Etl360Properties`, `scripts/dev.sh`, `XMLParser.scala`,
   `frontend/vite.config.ts`) — change one of those and update the doc in the same commit.
 - API endpoints, sequence diagrams, config reference: `docs/architecture.md`
-- Design rationale: `docs/adr/0001`–`0020`
+- Design rationale: `docs/adr/0001`–`0021`
 - `docs/ipc/` — the IPC (Informatica PowerCenter) conformance wiki: provenance policy,
   alias table, per-kind transformation pages, the full `IPC-*` rule catalogue, and the
   expression grammar. Start at `docs/ipc/README.md`.

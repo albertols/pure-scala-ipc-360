@@ -182,6 +182,40 @@ assert d["totalReachable"] > 2, "totalReachable did not survive truncation"
 curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/lineage?node=table:NOPE" | grep -q 404 \
   || fail "unknown lineage node should be 404"
 
+# ADR-0021. Scoped lineage: a strict subset, with every crossing named rather than silent.
+CL=$(curl -sf "localhost:8080/api/operational/lineage?node=table:$SEED" \
+  | python3 -c 'import json,sys; o=json.load(sys.stdin)["clusterOptions"]; print(o[0]["name"] if o else "")')
+[ -n "$CL" ] || fail "lineage seed reaches no cluster — the scope test cannot run"
+export SEED CL
+curl -sf "localhost:8080/api/operational/lineage?node=table:$SEED&limit=600&cluster=$CL" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+ids = {n['id'] for n in d['nodes']}
+assert d['activeCluster'] == '$CL', 'activeCluster disagrees with the request'
+assert 'table:$SEED' in ids, 'the seed must always be in scope'
+gw = {n['id'] for n in d['nodes'] if n.get('gateway')}
+for e in d['edges']:
+    assert e['from'] in ids and e['to'] in ids, 'edge endpoint outside the returned nodes'
+    # Terminal: no returned path leaves the cluster and comes back.
+    assert not (e['from'] in gw and e['to'] in gw), 'two gateways joined by an edge'
+for n in d['nodes']:
+    if n.get('gateway'):
+        assert n['clusters'], 'a gateway must name the cluster it continues into'
+print(f\"[validate-loop] lineage scoped to {d['activeCluster']}: {len(ids)} nodes, {len(gw)} gateways\")
+" || fail "lineage cluster scope"
+# The unscoped response must be a SUPERSET — scoping narrows, it never invents.
+python3 - <<'PYEOF' || fail "scoped lineage is not a subset of the unscoped one"
+import json, urllib.request, os
+seed = os.environ["SEED"]; cl = os.environ["CL"]
+get = lambda q: json.load(urllib.request.urlopen(
+    f"http://localhost:8080/api/operational/lineage?node=table:{seed}&limit=600{q}"))
+allids = {n["id"] for n in get("")["nodes"]}
+sub = {n["id"] for n in get(f"&cluster={cl}")["nodes"]}
+assert sub <= allids, sorted(sub - allids)[:5]
+PYEOF
+curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/operational/lineage?node=table:$SEED&cluster=nope" \
+  | grep -q 400 || fail "unknown lineage cluster should be 400"
+
 echo "[validate-loop] b15 status vocabulary…"
 # ADR-0018. The committed mock writes only canonical tokens, so an unrecognized one here means
 # either the mock drifted or the normalizer regressed. FAILURE must be in the KO vocabulary —
