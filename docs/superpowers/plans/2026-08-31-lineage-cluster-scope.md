@@ -2725,11 +2725,11 @@ settled here, in a browser, against the user's real export.
 **Files:**
 - Modify: `docs/superpowers/specs/2026-08-31-lineage-cluster-scope-design.md` (append §11 results)
 
-- [ ] **Step 1: Boot the suite**
+- [x] **Step 1: Boot the suite**
 
 Run: `make dev` (backend :8080, frontend :8443). Wait for both to answer.
 
-- [ ] **Step 2: Drive Tab 3 with the Chrome plugin**
+- [x] **Step 2: Drive Tab 3 with the Chrome plugin**
 
 Load the `claude-in-chrome` skill first, then `tabs_context_mcp` before creating any tab. Walk the
 nine acceptance criteria from spec §8, in order, capturing a screenshot for each:
@@ -2749,12 +2749,12 @@ nine acceptance criteria from spec §8, in order, capturing a screenshot for eac
    `activeCluster: null`.
 9. Re-run `make check && make test && make validate-loop`.
 
-- [ ] **Step 3: Record the results**
+- [x] **Step 3: Record the results**
 
 Append a `## 11. Acceptance walk results (2026-08-31)` section to the spec: one line per criterion
 with PASS/FAIL and what was observed. A FAIL becomes a new task in this plan, not a footnote.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-08-31-lineage-cluster-scope-design.md \
